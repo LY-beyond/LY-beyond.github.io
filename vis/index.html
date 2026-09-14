@@ -21,6 +21,7 @@
       </a>
       <nav class="topnav" aria-label="站点导航">
         <a href="#chapters">📚 章节</a>
+        <a href="#quiz">📝 测验</a>
         <a href="#howto">▶️ 使用方式</a>
         <a href="#about">ℹ️ 关于</a>
       </nav>
@@ -182,6 +183,17 @@
       </div>
     </section>
 
+    <!-- ============ 学习成果检验（答题系统） ============ -->
+    <section id="quiz" class="section">
+      <h2 class="section-title">📝 学习成果检验</h2>
+      <p class="section-lead">
+        学完 9 章，来一次随机小测：从题库中，
+        随机抽 <strong>8 道选择题</strong>与 <strong>2 道判断题</strong>；
+        提交后立即判分、给出逐题解析，答错的题自动进「错题本」，成绩自动记入「历史成绩」。
+      </p>
+      <div id="quiz-root" class="quiz"></div>
+    </section>
+
     <!-- ============ 使用方式 ============ -->
     <section id="howto" class="section">
       <h2 class="section-title">▶️ 使用方式</h2>
@@ -234,5 +246,7 @@
   </footer>
 
   <script src="i18n.js"></script>
+  <script src="quiz-data.js"></script>
+  <script src="quiz.js"></script>
 </body>
 </html>

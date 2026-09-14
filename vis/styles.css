@@ -453,6 +453,475 @@ code {
 .footer p { margin: 0 0 6px; }
 .footer-meta { font-family: var(--font-mono); font-size: 12px; }
 
+/* ---------------- 学习成果检验（答题系统） ---------------- */
+/* 与 .card 同一套思路：只声明一个主色，底 / 边 / 光晕全部由它派生；
+   所有颜色、间距、圆角都取自 tokens.css，本段不出现硬编码色值 */
+
+.quiz-empty {
+  margin: 0;
+  padding: 20px;
+  border: 1px dashed var(--c-line-2);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-size: 14px;
+}
+
+.quiz-card {
+  --quiz-accent: var(--c-primary);
+  --quiz-soft:   color-mix(in srgb, var(--quiz-accent) var(--mix-soft), var(--c-surface));
+  --quiz-line:   color-mix(in srgb, var(--quiz-accent) var(--mix-halo), var(--c-border));
+
+  padding: var(--space-lg);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 52%, var(--quiz-soft) 100%);
+  border: 1px solid var(--quiz-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.quiz-title { font-size: 18px; margin-bottom: 8px; }
+.quiz-desc { margin: 0 0 14px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-subtitle { font-size: 16px; margin: var(--space-lg) 0 var(--space); }
+
+/* 规则清单：圆点用伪元素画，不引图标字体 */
+.quiz-rules { display: grid; gap: 6px; margin: 0; }
+.quiz-rules li { position: relative; padding-left: 22px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-rules li::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: .62em;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-primary);
+}
+
+/* ---------- 按钮 ---------- */
+.quiz-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space);
+}
+
+.quiz-actions--tight { margin-top: 12px; }
+
+.quiz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+
+.quiz-btn:hover:not(:disabled) {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  transform: translateY(-1px);
+}
+
+.quiz-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.quiz-btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary));
+  color: var(--c-on-primary);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--c-primary) 30%, transparent);
+}
+
+.quiz-btn--primary:hover:not(:disabled) {
+  color: var(--c-on-primary);
+  box-shadow: var(--shadow-hover);
+}
+
+.quiz-btn--ghost {
+  background: transparent;
+  border-style: dashed;
+  color: var(--c-text-soft);
+}
+
+.quiz-btn--ghost:hover:not(:disabled) {
+  color: var(--c-text);
+  border-color: var(--c-text-soft);
+}
+
+.quiz-btn--danger {
+  border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border));
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+  color: var(--c-danger);
+}
+
+.quiz-btn--danger:hover:not(:disabled) { border-color: var(--c-danger); color: var(--c-danger); }
+
+.quiz-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.quiz-notice {
+  margin: var(--space) 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-size: 13.5px;
+}
+
+/* ---------- 进度条 ---------- */
+.quiz-progress { margin-bottom: var(--space); }
+
+.quiz-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space);
+  font-size: 14px;
+  color: var(--c-text-soft);
+}
+
+.quiz-progress-head b { color: var(--c-text); font-size: 16px; }
+.quiz-progress-count { font-family: var(--font-mono); font-size: 12.5px; }
+
+.quiz-progress-bar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  overflow: hidden;
+}
+
+.quiz-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--c-primary-2), var(--c-primary));
+  transition: width var(--dur-base) var(--ease);
+}
+
+/* ---------- 题干与选项 ---------- */
+.quiz-qmeta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+.quiz-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.quiz-tag--chapter {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-primary) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+}
+
+.quiz-tag--type {
+  background: color-mix(in srgb, var(--c-info) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-info) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-info) var(--mix-ink), var(--c-text));
+}
+
+.quiz-qtext { margin: 0 0 var(--space); font-size: 17px; font-weight: 700; line-height: 1.65; }
+
+.quiz-options { display: grid; gap: 10px; }
+
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1.6;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+
+.quiz-option:hover { border-color: var(--c-primary); transform: translateY(-1px); }
+
+.quiz-option.is-picked {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  box-shadow: 0 0 0 3px var(--c-focus);
+}
+
+.quiz-option-key {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-option.is-picked .quiz-option-key {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+/* ---------- 结果页 ---------- */
+.quiz-result-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+/* 得分环：conic-gradient 圈 + 内圆遮罩，纯 CSS、零图片 */
+/* --quiz-score 由 JS 写入（0–100），用来控制圆环扫过多少度 */
+.quiz-score {
+  --quiz-score-ink: var(--c-primary);
+
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  width: 108px;
+  height: 108px;
+  padding-top: 38px;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--quiz-score-ink) calc(var(--quiz-score, 0) * 1%),
+                   color-mix(in srgb, var(--c-border) 70%, transparent) 0);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-score::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--c-surface);
+}
+
+.quiz-score-num,
+.quiz-score-unit { position: relative; }
+.quiz-score-num { font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--quiz-score-ink); }
+.quiz-score-unit { font-size: 13px; color: var(--c-text-soft); }
+
+.quiz-score.is-best { --quiz-score-ink: var(--c-success); }
+.quiz-score.is-good { --quiz-score-ink: var(--c-info); }
+.quiz-score.is-pass { --quiz-score-ink: var(--c-warn); }
+.quiz-score.is-low  { --quiz-score-ink: var(--c-danger); }
+
+.quiz-result-msg { flex: 1 1 260px; min-width: 0; }
+.quiz-result-meta { margin: 0 0 6px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-result-meta b { color: var(--c-text); font-size: 16px; }
+.quiz-result-hint { margin: 0; color: var(--c-muted); font-size: 13.5px; }
+
+/* 薄弱章节：暖色提示块 + 章节回看入口 */
+.quiz-weak-box {
+  margin-top: var(--space);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+}
+
+.quiz-weak-box h4 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+}
+
+.quiz-weak-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.quiz-weak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-2);
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--t-control);
+}
+
+.quiz-weak:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+/* ---------- 逐题解析 / 错题本 列表 ---------- */
+.quiz-review,
+.quiz-wrong-list { display: grid; gap: var(--space); margin: 0; padding: 0; list-style: none; }
+
+.quiz-review-item,
+.quiz-wrong-item {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  /* 左侧 4px 竖条常驻、只换颜色 —— 与 .about-item 同一手法，悬浮不会“抖” */
+  border-left: 4px solid var(--c-border-2);
+  box-shadow: var(--shadow-xs);
+}
+
+.quiz-review-item.is-ok  { border-left-color: var(--c-success); }
+.quiz-review-item.is-bad { border-left-color: var(--c-danger); }
+.quiz-wrong-item         { border-left-color: var(--c-danger); }
+
+.quiz-review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.quiz-review-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-review-flag { margin-left: auto; color: var(--c-muted); font-size: 13px; font-weight: 700; }
+.quiz-review-item.is-ok  .quiz-review-flag { color: var(--c-success); }
+.quiz-review-item.is-bad .quiz-review-flag { color: var(--c-danger); }
+
+.quiz-review-q { margin: 0 0 8px; font-size: 15px; font-weight: 700; line-height: 1.6; }
+.quiz-review-line { margin: 0 0 10px; color: var(--c-text-soft); font-size: 13.5px; }
+
+/* 正误同时用「颜色 + ✓/✗ 符号」双重编码，不单靠颜色区分（色觉友好） */
+b.is-ok  { color: var(--c-success); }
+b.is-bad { color: var(--c-danger); }
+
+.quiz-review-explain {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+}
+
+.quiz-review-explain span {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-wrong-count {
+  margin-left: auto;
+  color: var(--c-danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- 历史成绩 ---------- */
+.quiz-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: var(--space);
+}
+
+.quiz-stat {
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  text-align: center;
+}
+
+.quiz-stat-num { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+.quiz-stat-label { display: block; color: var(--c-text-soft); font-size: 12.5px; }
+
+.quiz-history { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.quiz-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  font-size: 13.5px;
+}
+
+.quiz-history-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-history-time { color: var(--c-text-soft); font-family: var(--font-mono); font-size: 12.5px; }
+.quiz-history-score { font-weight: 800; }
+.quiz-history-score.is-best { color: var(--c-success); }
+.quiz-history-score.is-good { color: var(--c-info); }
+.quiz-history-score.is-pass { color: var(--c-warn); }
+.quiz-history-score.is-low  { color: var(--c-danger); }
+.quiz-history-detail { color: var(--c-muted); font-size: 12.5px; }
+
 /* ---------------- 响应式（移动优先的断点收敛在 720px） ---------------- */
 @media (max-width: 720px) {
   .hero { padding: 48px var(--space) 32px; }
@@ -461,6 +930,16 @@ code {
   .topnav a { padding: 6px 10px; font-size: 13px; }
   .brand-text { display: none; }
   .cards { grid-template-columns: 1fr; }
+
+  /* 答题系统：窄屏收紧内边距与得分环，按钮自动换行 */
+  .quiz-card { padding: var(--space); }
+  .quiz-qtext { font-size: 16px; }
+  .quiz-btn { padding: 8px 14px; font-size: 13.5px; }
+  .quiz-result-top { gap: var(--space); }
+  .quiz-score { width: 88px; height: 88px; padding-top: 31px; }
+  .quiz-score-num { font-size: 28px; }
+  .quiz-review-item,
+  .quiz-wrong-item { padding: 16px; }
 }
 
 /* ---------------- 动效降级（尊重系统“减少动态效果”） ---------------- */
@@ -477,6 +956,9 @@ code {
   .card:hover,
   .card:focus-visible,
   .howto-card:hover { transform: none; }
+
+  .quiz-btn:hover,
+  .quiz-option:hover { transform: none; }
 
   .brand:hover .brand-mark { transform: none; }
 
