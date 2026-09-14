@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 7 · CSS Grid · Page Layout Academy</title>
+  <meta name="description" content="Chapter 7: the two-dimensional grid — tracks, the fr unit, auto-fit with minmax, and grid placement for spanning cells." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-07/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="7">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-07/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 7 · CSS Grid</h1>
+      <p class="subtitle">A two-dimensional grid: rows and columns under your control</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-7-1" data-chapter="ch-7-1" class="active">7.1 Grid Basics</a></li>
+        <li><a href="#ch-7-2" data-chapter="ch-7-2">7.2 Auto-Fill</a></li>
+        <li><a href="#ch-7-3" data-chapter="ch-7-3">7.3 Grid Placement</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 7.1 Grid basics ---------- -->
+      <article class="chapter active" id="ch-7-1">
+        <h2>7.1 Grid Basics</h2>
+        <p class="chapter-subtitle">Draw the columns first, then place things in them</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Flexbox is one-dimensional — it can only govern one direction at a time. <strong>Grid is two-dimensional</strong>: rows and columns are defined together, which makes it ideal for page skeletons and card walls.</p>
+
+          <div class="theory-card">
+            <h3>🔲 Three core statements</h3>
+            <p>
+              <code>display: grid</code> turns on a grid container;<br />
+              <code>grid-template-columns</code> defines the <b>columns</b>;<br />
+              <code>grid-template-rows</code> defines the <b>rows</b>.
+            </p>
+          </div>
+
+          <ul>
+            <li><code>fr</code> is Grid's own "<strong>share of the leftover space</strong>" unit — <code>1fr 2fr</code> means the second column is twice as wide as the first.</li>
+            <li><code>repeat(3, 1fr)</code> is shorthand for <code>1fr 1fr 1fr</code>.</li>
+            <li><code>gap</code> controls row and column spacing at once; you can also set them separately with <code>row-gap</code> / <code>column-gap</code>.</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: Flexbox's <code>flex: 1</code> means "<b>share the leftover space</b>" and Grid's <code>1fr</code> means the same —
+            but <code>fr</code> goes one step further: it subtracts the space taken by <code>gap</code> <b>before</b> dividing,
+            so nothing ever overflows because of spacing.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr</span> <span class="num">2fr</span> <span class="num">1fr</span>;  <span class="cmt">/* three columns, ratio 1:2:1 */</span>
+  <span class="prop">gap</span>: <span class="num">16px</span>;
+}
+
+<span class="cmt">/* Equivalent form: repeat 1fr three times */</span>
+<span class="sel">.grid-3</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: using <code>fr</code> instead of percentages (such as <code>33.33%</code>)
+            completely avoids the classic problem where "a percentage plus <code>gap</code> adds up to more than 100%" and causes wrapping or overflow.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the sliders to change the column count and the ratio, and watch how the grid re-divides.</p>
+          <div class="demo-mount" data-demo="d-7-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 7.2 Auto-fill ---------- -->
+      <article class="chapter" id="ch-7-2">
+        <h2>7.2 Auto-Fill</h2>
+        <p class="chapter-subtitle">An adaptive column count without any media query</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>If you hard-code <code>repeat(3, 1fr)</code> every time, the cards get squashed as soon as the screen narrows. Grid offers an "<strong>automatically responsive</strong>" form instead:</p>
+
+          <div class="theory-card">
+            <h3>🔁 repeat(auto-fit, minmax(minimum, 1fr))</h3>
+            <p>It means: <b>each column is at least as wide as the minimum inside <code>minmax</code>; fit in as many columns as will go, then share the remaining space evenly.</b></p>
+          </div>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Form</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>auto-fit</code></td><td>Auto-fills, and <b>surplus empty tracks collapse</b> so the cards stretch to fill</td></tr>
+              <tr><td><code>auto-fill</code></td><td>Auto-fills, but <b>keeps the empty tracks</b>, so the cards do not stretch</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>repeat(auto-fit, minmax(240px, 1fr))</code>
+            is <b>the universal formula for a card wall</b> — without writing a single media query,
+            the cards rearrange themselves from 4 columns → 3 → 2 → 1 as the screen narrows.
+            This site's portal home page uses exactly that line.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.cards</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(240px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: raise the minimum (say to 320px) and the column count drops earlier;
+            lower it and more columns fit on one screen. Using <code>1fr</code> as the second value of <code>minmax</code>
+            also lets the incomplete cards in the last row stretch to the full row width.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag "container width" and "minimum column width" and watch the cards rearrange themselves.</p>
+          <div class="demo-mount" data-demo="d-7-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 7.3 Grid placement ---------- -->
+      <article class="chapter" id="ch-7-3">
+        <h2>7.3 Grid Placement</h2>
+        <p class="chapter-subtitle">Make an item span several columns or rows</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Once the grid is drawn, you can make an item <b>span</b> a number of cells, which is how "a big headline plus small cards" layouts are built.</p>
+
+          <ul>
+            <li><code>grid-column: span 2</code>: spans 2 columns horizontally.</li>
+            <li><code>grid-row: span 2</code>: spans 2 rows vertically.</li>
+            <li><code>grid-column: 1 / 3</code>: from grid line 1 to grid line 3 (i.e. 2 columns).</li>
+            <li><code>grid-area: row-start / column-start / row-end / column-end</code>: sets the position in one go.</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: note that Grid numbers its lines <b>starting from 1</b>,
+            and that there is an "end line", so spanning 2 columns is <code>1 / 3</code> rather than <code>1 / 2</code>.
+            On top of that, <code>grid-area</code> can combine with <code>grid-template-areas</code>
+            to describe an entire page layout by "<b>drawing a map</b>", which is extremely readable.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Make one item span two columns */</span>
+<span class="sel">.hero-card</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+
+<span class="cmt">/* Describe a page skeleton by "drawing a map" */</span>
+<span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header header"</span>
+    <span class="str">"sidebar main"</span>
+    <span class="str">"footer footer"</span>;
+}
+<span class="sel">.header</span>  { <span class="prop">grid-area</span>: <span class="str">header</span>; }
+<span class="sel">.sidebar</span> { <span class="prop">grid-area</span>: <span class="str">sidebar</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>grid-template-areas</code> makes the layout structure
+            <b>visible right inside the CSS</b>. Chapter 4's holy grail layout is built exactly this way —
+            far clearer than the traditional <code>float</code> or <code>flex</code> approaches.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch "columns spanned" and watch the selected card occupy several cells.</p>
+          <div class="demo-mount" data-demo="d-7-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-06/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 6 · Flexbox</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-08/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 8 · Positioning, Stacking &amp; Responsive</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 7: CSS Grid · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 2 · From Requirements to Page Skeleton · Page Layout Academy</title>
+  <meta name="description" content="Chapter 2: turn requirements into a structure — content priority, F/Z/Gutenberg reading patterns, and why you draw a wireframe before touching color." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-02/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="2">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-02/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 2 · From Requirements to Page Skeleton</h1>
+      <p class="subtitle">Information architecture · Reading patterns · Wireframes</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-2-1" data-chapter="ch-2-1" class="active">2.1 Start with Goals and Priority</a></li>
+        <li><a href="#ch-2-2" data-chapter="ch-2-2">2.2 Reading Patterns and Eye Paths</a></li>
+        <li><a href="#ch-2-3" data-chapter="ch-2-3">2.3 Wireframes: Skeleton Before Skin</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 2.1 Goals and priority ---------- -->
+      <article class="chapter active" id="ch-2-1">
+        <h2>2.1 Start with Goals and Priority</h2>
+        <p class="chapter-subtitle">Don't rush to open the editor — answer three questions first</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Layout is fundamentally about <strong>arranging content in space according to how much it matters</strong>. So the first step is not CSS at all — it is <b>working out what is primary and what is secondary</b>.</p>
+
+          <div class="theory-card">
+            <h3>❓ Three questions to answer before you start</h3>
+            <p>
+              <strong>1. What should the user do on this page?</strong> (one single goal, e.g. "enroll in the course")<br />
+              <strong>2. What is the single most important thing?</strong> (it should be the largest and most prominent)<br />
+              <strong>3. What is secondary information?</strong> (it comes later and is visually muted)
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">From content inventory to layout</h3>
+          <ol style="padding-left:22px;">
+            <li><strong>List it</strong>: write down everything the page will hold (headings, images, buttons, notes…)</li>
+            <li><strong>Rank it</strong>: score each item 1–3 stars; more stars means earlier placement and more space</li>
+            <li><strong>Group it</strong>: cluster related items together (this is Chapter 1's proximity)</li>
+            <li><strong>Order it</strong>: decide top-to-bottom order by "where the user's eye will travel"</li>
+          </ol>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>nine times out of ten a layout problem is really a priority problem.</b>
+            If a page looks "messy" it is usually not a CSS bug —
+            it is that <b>every piece of content is fighting for attention</b>. No priority means no order.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Map priority onto visual weight (and pin it with variables) */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--w-primary</span>:   <span class="num">700</span>;   <span class="cmt">/* level 1: large type + bold + accent color */</span>
+  <span class="prop">--w-secondary</span>: <span class="num">500</span>;   <span class="cmt">/* level 2: normal */</span>
+  <span class="prop">--w-tertiary</span>:  <span class="num">400</span>;   <span class="cmt">/* level 3: muted grey */</span>
+}
+
+<span class="sel">.card-title</span> { <span class="prop">font-size</span>: <span class="num">22px</span>; <span class="prop">font-weight</span>: <span class="fn">var</span>(--w-primary); }
+<span class="sel">.card-desc</span>  { <span class="prop">font-size</span>: <span class="num">14px</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: translate "priority" into <b>reusable visual steps</b> (size / weight / color)
+            instead of tuning each element by hand — that way the page keeps its order as you add content.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Use ↑ ↓ to reorder the content and watch the page skeleton rearrange itself according to priority.</p>
+          <div class="demo-mount" data-demo="d-2-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.2 Reading patterns ---------- -->
+      <article class="chapter" id="ch-2-2">
+        <h2>2.2 Reading Patterns and Eye Paths</h2>
+        <p class="chapter-subtitle">How a user's eyes actually "travel" across your page</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>People do not read a web page word by word — they <b>scan</b> it. A large body of eye-tracking research has identified a few typical eye paths; knowing them lets you put the important content right on the route.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Pattern</th><th>Path</th><th>Suits</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>F-pattern</b></td><td>Sweep across the heading → sweep across again → then scan rapidly down the left side</td><td>Text-heavy pages: articles, documentation, lists</td></tr>
+              <tr><td><b>Z-pattern</b></td><td>Top-left → top-right → bottom-left → bottom-right (diagonally)</td><td>Visual landing pages, poster-style pages</td></tr>
+              <tr><td><b>Gutenberg diagram</b></td><td>Top-left (primary optical area) → top-right → bottom-left → bottom-right (terminal area)</td><td>Symmetrical pages, card-based layouts</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>put the most important content on the eye path</b> —
+            <br />· on an F-pattern page, keep key information as far left and as high as possible;
+            <br />· on a Z-pattern page, place the call to action (CTA) at the end of the path (bottom-right);
+            <br />· conversely, if you put the focal point outside the path, users may <b>never see it at all</b>.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* A Z-pattern landing page: use Grid to put the CTA at the end of the path */</span>
+<span class="sel">.landing</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr</span> <span class="num">1fr</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"brand   nav"</span>
+    <span class="str">"hero    hero"</span>
+    <span class="str">"text    cta"</span>;   <span class="cmt">/* ← the CTA lands bottom-right, matching the Z end point */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: this is where Chapter 4's layout patterns meet this chapter —
+            <b>the eye path decides what goes where, and Grid / Flex then builds it.</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the three reading patterns and watch the eye path run across the same skeleton — and where the "focus area" should sit.</p>
+          <div class="demo-mount" data-demo="d-2-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.3 Wireframes ---------- -->
+      <article class="chapter" id="ch-2-3">
+        <h2>2.3 Wireframes: Skeleton Before Skin</h2>
+        <p class="chapter-subtitle">Lock the structure down with grey blocks, then talk about color and copy</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>A <strong>wireframe</strong> is a sketch of the page structure drawn with grey blocks and placeholder text —
+          <b>it only cares about what sits where and how much room it takes, not about looking good</b>.</p>
+
+          <div class="theory-card">
+            <h3>✏️ Why always draw the wireframe first?</h3>
+            <p>
+              <strong>1. Changes are cheap.</strong> Do the visuals before the structure is settled and any rethink means redoing every style.<br />
+              <strong>2. It forces you to think.</strong> If you cannot draw the grey blocks, you have not worked out what that block should contain.<br />
+              <strong>3. It is easier to discuss.</strong> Show the grey blocks to a teacher or teammate and they will comment on structure instead of arguing about color.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: settle the skeleton in this order —
+            <b>① divide into regions (header / body / footer) → ② decide how many columns each takes → ③ fill in the content → ④ style it last</b>.
+            <br /><strong>Common mistake</strong>: starting with colors and shadows, then discovering the structure is wrong and throwing it all away.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Wireframe stage: grey blocks and dashed lines only — occupy the structure first */</span>
+<span class="sel">.wire-block</span> {
+  <span class="prop">background</span>: <span class="num">#e8e6e1</span>;
+  <span class="prop">border</span>: <span class="num">1px</span> <span class="str">dashed</span> <span class="num">#b8b2a8</span>;
+  <span class="prop">border-radius</span>: <span class="num">6px</span>;
+  <span class="prop">min-height</span>: <span class="num">60px</span>;
+}
+
+<span class="cmt">/* Structure settled, now swap in the real styles — the skeleton does not change */</span>
+<span class="sel">.hero</span> { <span class="prop">background</span>: <span class="fn">var</span>(--c-surface); <span class="prop">border-radius</span>: <span class="num">12px</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: going from wireframe to finished page should, <b>ideally, change only the "skin" (color / type size / radius) and never the "skeleton" (columns and order)</b>.
+            If you find yourself having to move the skeleton, the wireframe stage was not thought through far enough.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between "wireframe" and "high-fidelity" and compare two renderings of the same skeleton — note that the skeleton does not change at all.</p>
+          <div class="demo-mount" data-demo="d-2-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-01/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 1 · Core Principles of Layout Design</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-03/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 3 · Grid Systems and Spacing Rhythm</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 2: From Requirements to Page Skeleton · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

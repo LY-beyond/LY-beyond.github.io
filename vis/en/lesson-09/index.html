@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 9 · Capstone: A Portfolio Website · Page Layout Academy</title>
+  <meta name="description" content="Chapter 9: build a complete personal portfolio website in 8 steps — planning, skeleton and grid, nav bar, hero, about, card wall, stats, and a responsive design self-check." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-09/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="9">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-09/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 9 · Capstone: Building a Portfolio Website from Scratch</h1>
+      <p class="subtitle">One complete case study that ties together the theory and technique of the previous 8 chapters</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Case study steps</h3>
+      <ul>
+        <li><a href="#ch-9-1" data-chapter="ch-9-1" class="active">9.1 Planning and the Wireframe</a></li>
+        <li><a href="#ch-9-2" data-chapter="ch-9-2">9.2 Page Skeleton and Grid</a></li>
+        <li><a href="#ch-9-3" data-chapter="ch-9-3">9.3 The Top Navigation Bar</a></li>
+        <li><a href="#ch-9-4" data-chapter="ch-9-4">9.4 The Hero Section</a></li>
+        <li><a href="#ch-9-5" data-chapter="ch-9-5">9.5 About Me (two columns)</a></li>
+        <li><a href="#ch-9-6" data-chapter="ch-9-6">9.6 The Portfolio Card Wall</a></li>
+        <li><a href="#ch-9-7" data-chapter="ch-9-7">9.7 The Statistics Section</a></li>
+        <li><a href="#ch-9-8" data-chapter="ch-9-8">9.8 Responsive Design and Self-Check</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 9.1 Case study planning ---------- -->
+      <article class="chapter active" id="ch-9-1">
+        <h2>9.1 Planning the Case Study and the Wireframe</h2>
+        <p class="chapter-subtitle">Settle the goal and the structure first, then start writing code</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>From this section on we are going to <b>build a complete "personal portfolio website"</b>. The whole process takes 8 steps,
+          and every step uses design principles and techniques from the chapters you have already read.</p>
+
+          <div class="theory-card">
+            <h3>🎯 Case requirements (Ch. 2: ask about the goal first)</h3>
+            <p>
+              <strong>Page goal</strong>: let a visitor understand "who I am and what I can do" within 10 seconds, and want to get in touch.<br />
+              <strong>Target audience</strong>: recruiters and collaborators.<br />
+              <strong>Success criterion</strong>: the visitor clicks "contact me" after browsing the portfolio.
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">Content inventory and priority</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>Section</th><th>Priority</th><th>Rationale (Ch. 1: contrast and hierarchy)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Hero — one-line intro + avatar</td><td>★★★</td><td>The first screen decides whether the visitor stays</td></tr>
+              <tr><td>Portfolio</td><td>★★★</td><td>Proves ability; the core persuasive material</td></tr>
+              <tr><td>About me</td><td>★★</td><td>Background that builds trust</td></tr>
+              <tr><td>Statistics</td><td>★★</td><td>Numbers reinforce credibility</td></tr>
+              <tr><td>Contact</td><td>★★</td><td>The conversion entry point</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: note that we <b>first write down "what the page should make the user do", then work backwards to the sections</b> —
+            the order is "<b>goal → content → structure → visuals → code</b>", rather than opening an editor and starting to type.
+            <br /><b>Visual flow</b> (Ch. 2): the Hero sits top-left (the first glance), the portfolio in the middle (the body),
+            and contact at the bottom (the Z-pattern end point) — which matches how a visitor actually reads.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">&lt;!-- Wireframe stage: sketch the skeleton with semantic sections first --&gt;</span>
+&lt;<span class="sel">body</span>&gt;
+  &lt;<span class="sel">header</span> <span class="prop">class</span>=<span class="str">"site-header"</span>&gt; ... &lt;/<span class="sel">header</span>&gt;   <span class="cmt">/* navigation */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"hero"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;         <span class="cmt">/* first screen */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"about"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* about me */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"works"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* portfolio */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"stats"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* statistics */</span>
+  &lt;<span class="sel">footer</span> <span class="prop">class</span>=<span class="str">"site-footer"</span>&gt; ... &lt;/<span class="sel">footer</span>&gt;   <span class="cmt">/* contact + footer */</span>
+&lt;/<span class="sel">body</span>&gt;</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: at this stage you <b>write only the structure and class names, and no styles at all</b>.
+            Using semantic tags such as <code>&lt;header&gt;</code> / <code>&lt;section&gt;</code> / <code>&lt;footer&gt;</code>
+            helps accessibility and makes the "skeleton" obvious at a glance.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the wireframe and the "content filled in" view, and watch the skeleton stay put while content is filled in step by step.</p>
+          <div class="demo-mount" data-demo="d-9-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.2 Page skeleton and grid ---------- -->
+      <article class="chapter" id="ch-9-2">
+        <h2>9.2 Page Skeleton and Grid</h2>
+        <p class="chapter-subtitle">Give the whole site one shared ruler</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The skeleton is in place; next we <b>give the page a ruler</b> — and this step decides whether every section that follows can line up.</p>
+
+          <div class="theory-card">
+            <h3>📐 Three things (Ch. 3: grid systems)</h3>
+            <p>
+              <strong>1. Container</strong>: maximum content width 1180px, whitespace on both sides, horizontally centered.<br />
+              <strong>2. Grid</strong>: 12 columns, 24px gutters.<br />
+              <strong>3. Spacing scale</strong>: 8pt steps (8 / 16 / 24 / 40).
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>define the container and the grid once, then reuse them site-wide</b> —
+            the 6 sections that follow all use <code>.container</code> and <code>.grid</code> directly,
+            so their left and right edges line up by construction (Ch. 1: alignment).
+            <br /><b>Why 1180px?</b> It is a common rule of thumb: on screens of 1366px and above it leaves roughly 90px of breathing room
+            on each side, and a single line of text stays inside the comfortable reading range (about 75 characters).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 1. Container: cap the content width and center it */</span>
+<span class="sel">.container</span> {
+  <span class="prop">width</span>: <span class="fn">min</span>(<span class="num">100%</span> - <span class="num">48px</span>, <span class="num">1180px</span>);
+  <span class="prop">margin-inline</span>: <span class="str">auto</span>;
+}
+
+<span class="cmt">/* 2. 12-column grid: shared site-wide */</span>
+<span class="sel">.grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="cmt">/* 3. Spacing steps (kept in tokens.css) */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--space-sm</span>: <span class="num">8px</span>;
+  <span class="prop">--space</span>:    <span class="num">16px</span>;
+  <span class="prop">--space-lg</span>: <span class="num">24px</span>;
+  <span class="prop">--space-xl</span>: <span class="num">40px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>width: min(100% - 48px, 1180px)</code> is a one-line way of saying
+            <b>"24px margin on small screens, at most 1180px on large ones"</b> —
+            tidier than writing <code>max-width</code> plus a media query.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust the container width and the gutter and watch whether the 6 sections stay aligned to the same set of column lines.</p>
+          <div class="demo-mount" data-demo="d-9-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.3 Top navigation bar ---------- -->
+      <article class="chapter" id="ch-9-3">
+        <h2>9.3 The Top Navigation Bar</h2>
+        <p class="chapter-subtitle">The site's first "alignment demonstration"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The nav bar is the simplest section, yet it concentrates three principles.</p>
+
+          <div class="theory-card">
+            <h3>🧭 Design decisions for the nav bar</h3>
+            <p>
+              <strong>Layout</strong>: Flex + <code>justify-content: space-between</code>
+              (Ch. 6) — it pushes the logo and the menu to opposite ends.<br />
+              <strong>Alignment</strong>: <code>align-items: center</code> keeps the text vertically centered (Ch. 1).<br />
+              <strong>Proximity</strong>: <code>gap</code> pulls the menu items tight together while a large distance separates them from the logo,
+              so "logo" and "menu" read as two clear groups (Ch. 1).
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: when the nav bar needs to <b>stick to the top</b>, use <code>position: sticky</code> (Ch. 8)
+            rather than <code>fixed</code> — <code>sticky</code> keeps its original slot, so the content below does not jump up.
+            <br /><b>Common pitfall</b>: a sticky element's parent must not have <code>overflow: hidden</code>,
+            or it stops working (because the scrolling container has changed).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.site-header</span> {
+  <span class="prop">position</span>: <span class="str">sticky</span>;      <span class="cmt">/* sticks to the top, and keeps its slot */</span>
+  <span class="prop">top</span>: <span class="num">0</span>;
+  <span class="prop">z-index</span>: <span class="num">50</span>;
+  <span class="prop">backdrop-filter</span>: <span class="fn">blur</span>(<span class="num">10px</span>);   <span class="cmt">/* frosted glass */</span>
+  <span class="prop">border-bottom</span>: <span class="num">1px</span> <span class="str">solid</span> <span class="fn">var</span>(--c-border);
+}
+
+<span class="sel">.site-header .inner</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;                  <span class="cmt">/* Ch. 6 */</span>
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+  <span class="prop">justify-content</span>: <span class="str">space-between</span>;  <span class="cmt">/* logo ↔ menu at opposite ends */</span>
+  <span class="prop">height</span>: <span class="num">60px</span>;
+}
+
+<span class="sel">.site-header nav</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">gap</span>: <span class="num">6px</span>;                  <span class="cmt">/* between menu items: tight */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: with <b>two</b> children, <code>justify-content: space-between</code>
+            reads as "one to the left, one to the right"; with more than two it pushes the
+            <b>first and last to the edges and distributes the rest evenly in between</b> —
+            understand that and you will not misuse it.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Change the number of menu items and the alignment, and watch how the nav bar distributes and groups them.</p>
+          <div class="demo-mount" data-demo="d-9-3"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.4 Hero section ---------- -->
+      <article class="chapter" id="ch-9-4">
+        <h2>9.4 The Hero Section</h2>
+        <p class="chapter-subtitle">The one screen that decides whether the visitor stays</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The hero is the section with the <b>greatest visual weight</b> on the page, and the place where the design principles are densest.</p>
+
+          <div class="theory-card">
+            <h3>🎨 Four principles at work in the hero</h3>
+            <p>
+              <strong>Hierarchy</strong>: main heading 40px+, subheading 16px, body text 14px — the steps are pulled apart (§1.3).<br />
+              <strong>Whitespace</strong>: use the largest step, <code>--space-xl</code>, for the vertical padding so the core content "floats" out.<br />
+              <strong>Balance</strong>: text on the left and the avatar on the right, balanced asymmetrically with <code>7fr 5fr</code> (§1.6).<br />
+              <strong>Flow</strong>: heading → subheading → button, top to bottom, which matches the Z-pattern starting point (Ch. 2).
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>a hero may only have one "protagonist".</b>
+            <br />· if the heading, the avatar and the button all compete for attention, the visitor does not know where to look;
+            <br />· the right approach: <b>make the heading the largest</b>, weaken the other elements in turn, and finish with <b>one</b> high-contrast button.
+            <br /><b>The power of contrast comes from the "drop"</b> — actively muting the secondary elements
+            (desaturating them, turning them grey) works better than enlarging the protagonist.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.hero</span> {
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space-xl) <span class="num">0</span>;     <span class="cmt">/* loose: the core area gets the most whitespace */</span>
+}
+
+<span class="sel">.hero .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>;  <span class="cmt">/* asymmetric balance */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-xl);
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+}
+
+<span class="sel">.hero h1</span> {
+  <span class="prop">font-size</span>: <span class="fn">clamp</span>(<span class="num">30px</span>, <span class="num">4vw</span>, <span class="num">46px</span>);  <span class="cmt">/* hierarchy + responsive type */</span>
+  <span class="prop">line-height</span>: <span class="num">1.2</span>;
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space);      <span class="cmt">/* heading and subheading: tight */</span>
+}
+
+<span class="sel">.hero .lead</span> {
+  <span class="prop">font-size</span>: <span class="num">17px</span>;
+  <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft);       <span class="cmt">/* muted, to set off the heading */</span>
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="sel">.hero .cta</span> {
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-primary);        <span class="cmt">/* the only high-contrast element */</span>
+  <span class="prop">color</span>: <span class="num">#fff</span>;
+  <span class="prop">padding</span>: <span class="num">12px</span> <span class="num">24px</span>;
+  <span class="prop">border-radius</span>: <span class="num">999px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>align-items: center</code> centers the two columns vertically;
+            but mind this — when <b>the two columns have different content heights</b>, centering usually looks better than top alignment,
+            because the visual weight is easier to balance.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust the heading size, the whitespace and the left/right ratio, and feel how "hierarchy" and "balance" change.</p>
+          <div class="demo-mount" data-demo="d-9-4"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.5 About me ---------- -->
+      <article class="chapter" id="ch-9-5">
+        <h2>9.5 About Me (two columns)</h2>
+        <p class="chapter-subtitle">Image and text side by side: the ratio matters more than an even split</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>"About me" is the classic <b>image-plus-text two-column</b> block: an avatar or name card on one side, a written introduction on the other.</p>
+
+          <div class="theory-card">
+            <h3>📊 Why is it usually not 1:1?</h3>
+            <p>
+              A portrait or a photo is <b>visual information</b>, whereas text is <b>reading information</b>.
+              In practice the usual split is <b>4:8 or 5:7</b> —
+              give the text column more width, because too many characters on a single line significantly slows reading down.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>do not use <code>1fr 1fr</code> for an image-and-text two-column layout.</b>
+            An even split looks "fair", but it makes the lines too long or the image too large, and both sides end up uncomfortable.
+            <br /><b>Another trap</b>: if the image comes first in the DOM but you want the text to be read first
+            (friendlier to screen readers and SEO), you should <b>reorder the DOM or use <code>order</code></b> —
+            "it looks right to the eye" is not enough.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.about .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">4fr</span> <span class="num">8fr</span>;   <span class="cmt">/* image 4 : text 8 */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-xl);
+  <span class="prop">align-items</span>: <span class="str">start</span>;          <span class="cmt">/* top aligned: a long text block is not dragged around by "centering" */</span>
+}
+
+<span class="cmt">/* Small screens stack automatically (Ch. 8: responsive) */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">760px</span>) {
+  <span class="sel">.about .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }
+}
+
+<span class="cmt">/* Keep "proximity" between paragraphs: tight inside a paragraph, loose between them */</span>
+<span class="sel">.about p</span> { <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space); <span class="prop">line-height</span>: <span class="num">1.9</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: this uses <code>align-items: start</code> (top aligned) rather than the <code>center</code> used in the hero.
+            <b>The deciding factor is content length</b>: short content next to an image balances better when centered;
+            a long paragraph next to an image wants top alignment, otherwise the text drifts away from where the reader's eye starts.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch the image/text ratio and the alignment, and watch reading comfort and visual balance change.</p>
+          <div class="demo-mount" data-demo="d-9-5"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.6 Portfolio card wall ---------- -->
+      <article class="chapter" id="ch-9-6">
+        <h2>9.6 The Portfolio Card Wall</h2>
+        <p class="chapter-subtitle">The core section of the case study: several works on one screen</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The portfolio is the <b>persuasive core</b> of the whole page. A card wall carries it: it shows several works at once and stays tidy by construction.</p>
+
+          <div class="theory-card">
+            <h3>🧱 Principles at work in the card wall</h3>
+            <p>
+              <strong>Repetition</strong>: every card has exactly the same radius, padding and shadow (§1.4) — that is where the "matching set" feeling comes from.<br />
+              <strong>Common region</strong>: the card background frames the content into one group (§1.5).<br />
+              <strong>Alignment</strong>: <code>auto-fit + minmax</code> makes the cards the same width and height automatically (Ch. 3).<br />
+              <strong>Proximity</strong>: inside a card (image / title / tags) the spacing is 8px (tight); between cards it is 24px (loose).
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the classic structure inside a card is
+            <b>a vertical Flex plus <code>margin-top: auto</code></b> —
+            it pushes the "view details" link to the bottom of the card, so the buttons stay aligned even when the cards have <b>different heights</b>.
+            <br /><b>Why are the cards the same height?</b> Because Grid's default <code>align-items: stretch</code>
+            stretches every card in a row to the height of the tallest one. That is not a coincidence; it is a Grid feature.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 1. The wall: an adaptive column count, no media query needed */</span>
+<span class="sel">.works .wall</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(260px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);         <span class="cmt">/* between cards: loose */</span>
+}
+
+<span class="cmt">/* 2. The card: a vertical Flex so the bottom link sits flush with the base */</span>
+<span class="sel">.work-card</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border</span>: <span class="num">1px</span> <span class="str">solid</span> <span class="fn">var</span>(--c-border);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+}
+
+<span class="sel">.work-card .thumb</span> {
+  <span class="prop">aspect-ratio</span>: <span class="num">16 / 10</span>;        <span class="cmt">/* a uniform ratio, so the heights never vary */</span>
+  <span class="prop">border-radius</span>: <span class="num">8px</span>;
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-sm);
+}
+
+<span class="sel">.work-card .more</span> { <span class="prop">margin-top</span>: <span class="str">auto</span>; }   <span class="cmt">/* ★ pushed to the very bottom */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>aspect-ratio: 16 / 10</code>
+            is what keeps the thumbnails at a <b>uniform ratio</b>. Without it,
+            image heights follow the original dimensions and the whole wall ends up "up and down".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust the minimum card width and the gap, then switch the card count, and watch the alignment and breathing room of the whole wall.</p>
+          <div class="demo-mount" data-demo="d-9-6"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.7 Statistics section ---------- -->
+      <article class="chapter" id="ch-9-7">
+        <h2>9.7 The Statistics Section</h2>
+        <p class="chapter-subtitle">Numbers reinforce credibility, and they also test your "information hierarchy"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>This section has to hold <b>several small metrics</b> and <b>one large chart</b> at the same time — exactly the "dashboard grid" scenario from Chapter 4.</p>
+
+          <div class="theory-card">
+            <h3>📈 How is the information hierarchy built?</h3>
+            <p>
+              <strong>The number</strong>: 24–32px bold, in the primary color — it is the most important part.<br />
+              <strong>The unit / suffix</strong>: 14px regular — secondary.<br />
+              <strong>The caption</strong>: 12px grey — supporting.<br />
+              Together the three form a 3-step drop, so you can read "what this number is" at a glance.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>a number and its caption must "stay together" (proximity)</b> —
+            use 4–6px of vertical spacing, never the same distance as to the next metric,
+            otherwise readers cannot tell which caption belongs to which number.
+            <br /><b>The spanning idea</b>: set the container to 4 columns, give each small metric 1 column,
+            and let the large chart take a whole row with <code>grid-column: span 4</code> (Ch. 4).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.stats .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(4, 1fr)</span>;   <span class="cmt">/* baseline: 4 columns */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="sel">.stat</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">gap</span>: <span class="num">4px</span>;                    <span class="cmt">/* number and caption: tight */</span>
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+}
+
+<span class="sel">.stat .num</span> { <span class="prop">font-size</span>: <span class="num">28px</span>; <span class="prop">font-weight</span>: <span class="num">700</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }
+<span class="sel">.stat .lbl</span> { <span class="prop">font-size</span>: <span class="num">12px</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-muted); }
+
+<span class="cmt">/* The large chart takes the whole row */</span>
+<span class="sel">.stats .chart</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; <span class="prop">min-height</span>: <span class="num">180px</span>; }
+
+<span class="cmt">/* On small screens drop to 2 columns; the span shrinks automatically */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">760px</span>) {
+  <span class="sel">.stats .grid</span>  { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+  <span class="sel">.stats .chart</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: on small screens, changing <code>span 4</code> to <code>span 2</code>
+            is <b>a single override</b> and no other metric has to change at all —
+            that is exactly the benefit of "using <code>span</code> instead of hard-coding <code>1 / 5</code>" (Ch. 4).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the spanning schemes and watch the relationship between the information hierarchy and the large chart.</p>
+          <div class="demo-mount" data-demo="d-9-7"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.8 Responsive and self-check ---------- -->
+      <article class="chapter" id="ch-9-8">
+        <h2>9.8 Responsive Design and Self-Check</h2>
+        <p class="chapter-subtitle">Make the case study work on every screen, and give your work a health check</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The last step: make the whole case study display properly on a phone too, and run a systematic self-check.</p>
+
+          <div class="theory-card">
+            <h3>📱 How do you decide the breakpoints? (Ch. 8)</h3>
+            <p>
+              <b>Not "by device" but "by content"</b> — drag the browser narrower until the moment the layout starts to feel
+              uncomfortable; that is your breakpoint.
+              <br />This case study uses only two breakpoints: <code>760px</code> (the two columns stack) and <code>1040px</code> (the column count drops).
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">✅ Layout design self-check list</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>Check</th><th>Related theory</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Is every element aligned to the same line?</td><td>Alignment (1.1)</td></tr>
+              <tr><td>Is related content closer together? (within &lt; between)</td><td>Proximity (1.2)</td></tr>
+              <tr><td>Is the most important content the most prominent? Is the type-size jump big enough?</td><td>Contrast (1.3)</td></tr>
+              <tr><td>Do similar elements share the same radius / shadow / color?</td><td>Repetition (1.4)</td></tr>
+              <tr><td>Is the grouping clear enough that it needs no text explanation?</td><td>Gestalt (1.5)</td></tr>
+              <tr><td>Is the left/right visual weight balanced? Does the whitespace have rhythm?</td><td>Balance and rhythm (1.6)</td></tr>
+              <tr><td>Does every spacing value come from the same scale?</td><td>Spacing scale (3.2)</td></tr>
+              <tr><td>Can the content still be read comfortably at phone width?</td><td>Responsive (Ch. 8)</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: once the layout is finished, <b>walk through this list item by item</b> —
+            far more effective than "adjusting it a bit by feel".
+            <br />The list itself is a condensed version of the first half of this course (the Design track) —
+            <b>you do not need to memorise every CSS property, but you should memorise this list.</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Mobile first: single column by default, then progressively enhanced (Ch. 8) */</span>
+<span class="sel">.about .grid</span>,
+<span class="sel">.hero .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }        <span class="cmt">/* default: phone */</span>
+
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">760px</span>) {                      <span class="cmt">/* from tablet: two columns */</span>
+  <span class="sel">.hero .grid</span>  { <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>; }
+  <span class="sel">.about .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">4fr</span> <span class="num">8fr</span>; }
+}
+
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">1040px</span>) {                     <span class="cmt">/* from desktop: more whitespace */</span>
+  <span class="sel">.hero</span> { <span class="prop">padding</span>: <span class="fn">calc</span>(<span class="fn">var</span>(--space-xl) * <span class="num">1.6</span>) <span class="num">0</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: note that the media queries here use <code>min-width</code>,
+            and the default styles serve the phone only — this is the <b>mobile first</b> approach from Chapter 8.
+            Across the whole case study the small-screen styles are <b>never overridden even once</b>; they are only ever "enhanced".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the "screen width" slider to watch the whole case study reflow, and check it against the list on the right.</p>
+          <div class="demo-mount" data-demo="d-9-8"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-08/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 8 · Positioning, Stacking &amp; Responsive</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <span class="pager-next empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 9: Capstone — A Portfolio Website · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

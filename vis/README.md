@@ -1,6 +1,7 @@
-# 页面布局入门 · 教学站
+# 页面布局教学平台
 
 一个**零依赖、零构建**的教学网站：纯 HTML + CSS + JavaScript（原生 ES Modules）。
+**中英双语**，两种语言内容一一对应。
 
 主题：**如何设计一个 web 页面的布局**。课程分三部分共 9 章：
 **设计篇**回答"怎么设计"，**实现篇**回答"怎么写代码"，**实战篇**用一个完整案例把两者串起来。
@@ -44,18 +45,26 @@
 ## 📂 目录结构
 
 ```
-layout-course/
-├── index.html              # 门户首页：9 张章节卡片墙
+Visualization/
+├── index.html              # 门户首页（中文）：9 张章节卡片墙
 ├── tokens.css              # ★ 设计令牌（配色/间距/圆角/字体，全站唯一来源）
 ├── styles.css              # 门户样式
 ├── lesson.css              # ★ 章节页共享样式（9 章共用一份）
 ├── lesson-core.js          # ★ 章节页交互引擎（Tab / 导航 / Demo 注入）
+├── i18n.css / i18n.js      # ★ 中英语言切换器（组件样式 + 切换逻辑，中英两版共用）
+├── parity-check.mjs        # 开发自检：逐页比对中英两版结构是否一致
 │
-├── lesson-01/ … lesson-09/ # 每章只有 index.html + lesson.js 两个文件
+├── lesson-01/ … lesson-09/ # 中文章节页：每章 index.html + lesson.js
+└── en/                     # 英文章节页（镜像目录）
+    ├── index.html          #   英文门户
+    └── lesson-01/ … lesson-09/   #   英文章节页：index.html + lesson.js
 ```
 
 > 样式复用 `lesson.css`、逻辑复用 `lesson-core.js`，
 > **9 个章节没有任何重复代码**。
+>
+> 英文版放在 `en/` 下，与中文版**同构**（同样的结构、同样的 demo 数量）；
+> 改完中文记得同步改英文，然后跑 `node parity-check.mjs` 复核两版是否一致。
 
 ---
 
@@ -64,7 +73,7 @@ layout-course/
 因为使用了 ES Modules（`import`），**不能直接双击 `index.html`**，需要起一个静态服务器：
 
 ```bash
-cd layout-course
+cd Visualization
 python -m http.server 8080
 ```
 
@@ -85,7 +94,8 @@ python -m http.server 8080
 | **Demo 注入系统** | `.demo-mount[data-demo]` 占位，JS 按需渲染（懒加载、只渲染一次） |
 | **上下章翻页** | 每章底部 pager |
 | **代码高亮 + ⭐ 关键点解释** | 每个知识点都配「为什么这么写 / 有什么坑」 |
-| **40 个交互演示** | 可拖滑块 / 切下拉，实时看效果 |
+| **38 个交互演示** | 可拖滑块 / 切下拉，实时看效果（中英各一套，数量完全一致） |
+| **中英双语** | 全站中文 / English 两版；顶栏 `中 / EN` 一键切换，记住选择、保留当前小节锚点，支持 `?lang=en` |
 | **深色模式** | 跟随系统 `prefers-color-scheme` 自动切换 |
 | **响应式** | 桌面 / 平板 / 手机三档自适应 |
 
@@ -124,8 +134,12 @@ window.DEMOS['d-X-Y'] = function (mount) {
 ```
 
 4. 页面里放占位符：`<div class="demo-mount" data-demo="d-X-Y"></div>`
+5. **同步英文版**：在 `en/lesson-0X/index.html` 加同样的结构与占位符，
+   并在 `en/lesson-0X/lesson.js` 里注册同名 demo（保证两版结构与 demo 数量一致）。
 
 > ⚠️ 演示必须注册在 `initLesson()` **之前**。
+>
+> ⚠️ 改完中文**务必同步英文**，然后跑 `node parity-check.mjs` 复核。
 
 ### 加一整章
 
@@ -133,6 +147,8 @@ window.DEMOS['d-X-Y'] = function (mount) {
 2. 改 `index.html` 里的标题、`data-current`、`.tabs` 链接、pager。
 3. 改 `lesson.js` 里的 demo 名称与 `initLesson('lesson-10')`。
 4. 在门户 `index.html` 加一张卡片，并更新其余各章顶栏 tabs。
+5. **英文版同样复制一份到 `en/lesson-10/`**，改英文标题与文案；
+   并更新 `en/index.html` 与 `en/lesson-01…09/index.html` 里的顶栏 tabs。
 
 ---
 
@@ -143,6 +159,8 @@ window.DEMOS['d-X-Y'] = function (mount) {
 - **样式复用**：`lesson.css` 一份服务 9 章。
 - **逻辑复用**：`lesson-core.js` 统一 Tab / 导航 / Demo 注入。
 - **ES Modules**：各章 `lesson.js` 通过 `import` 引入公共引擎。
+- **中英双语**：英文版在 `en/`，与中文版**同构**；`node parity-check.mjs` 逐页校验两版结构一致。
+- **切换器刻意用普通 script**：`i18n.js` 不用 ES Module —— 这样即使用 `file://` 直接打开（module 会被浏览器 CORS 拦截），**语言切换仍然可用**。
 - **相对路径**：全站使用相对路径，可直接部署到 GitHub Pages 子路径。
 
 ---
@@ -164,9 +182,14 @@ window.DEMOS['d-X-Y'] = function (mount) {
 
 ## 🚀 部署到 GitHub Pages
 
-1. 推到 GitHub 仓库（如 `layout-course`）。
+1. 推到一个 GitHub 仓库（如 `Visualization`）。
 2. 仓库 **Settings → Pages → Source** 选 `Deploy from a branch`。
 3. 分支选 `main`，目录选 `/(root)`，保存。
 4. 稍等片刻访问 `https://<用户名>.github.io/<仓库名>/`。
 
 > 因为路径全是相对的，**无需任何额外配置**。
+
+上线后有两个入口：
+
+- 中文：`https://<用户名>.github.io/<仓库名>/`
+- 英文：`https://<用户名>.github.io/<仓库名>/en/`

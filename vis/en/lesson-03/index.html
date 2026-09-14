@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 3 · Grid Systems and Spacing Rhythm · Page Layout Academy</title>
+  <meta name="description" content="Chapter 3: why professional pages line up — the 12-column grid, the 8pt spacing scale, and how to overlay a grid to catch misalignment." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-03/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="3">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-03/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 3 · Grid Systems and Spacing Rhythm</h1>
+      <p class="subtitle">12-column grid · 8pt spacing scale</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-3-1" data-chapter="ch-3-1" class="active">3.1 The 12-Column Grid</a></li>
+        <li><a href="#ch-3-2" data-chapter="ch-3-2">3.2 The 8pt Spacing Rhythm</a></li>
+        <li><a href="#ch-3-3" data-chapter="ch-3-3">3.3 Snapping to the Grid</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 3.1 The 12-column grid ---------- -->
+      <article class="chapter active" id="ch-3-1">
+        <h2>3.1 The 12-Column Grid</h2>
+        <p class="chapter-subtitle">Give every element on the page one shared ruler</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Chapter 1 said "align things" — but <b>align them to what?</b> The answer is a <b>grid system</b>: slice the page horizontally into equal-width columns and place every element by "how many columns it spans".</p>
+
+          <div class="theory-card">
+            <h3>📐 The four parts of a grid</h3>
+            <p>
+              <strong>Container</strong>: the maximum content width, centered.<br />
+              <strong>Columns</strong>: usually 12.<br />
+              <strong>Gutters</strong>: the spacing between columns.<br />
+              <strong>Margins</strong>: the whitespace between the container and the screen edge.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: why <b>12 columns</b> in particular?
+            Because 12 divides evenly by <b>1, 2, 3, 4, 6 and 12</b> —
+            so you can build "a half (6+6)", "a third (4+4+4)", "a quarter (3×4)" or "two thirds (8+4)" without ever changing the grid.
+            That is the engineering advantage of the number 12, not aesthetic mysticism.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* The most basic 12-column grid */</span>
+<span class="sel">.grid-12</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;               <span class="cmt">/* this is the gutter */</span>
+  <span class="prop">max-width</span>: <span class="num">1180px</span>;
+  <span class="prop">margin</span>: <span class="num">0</span> <span class="str">auto</span>;            <span class="cmt">/* center the container */</span>
+}
+
+<span class="cmt">/* Place elements by "how many columns they span" */</span>
+<span class="sel">.col-8</span> { <span class="prop">grid-column</span>: <span class="str">span 8</span>; }   <span class="cmt">/* two thirds wide */</span>
+<span class="sel">.col-4</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; }   <span class="cmt">/* one third wide */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: using <code>span N</code> instead of hard-coded pixel widths means
+            <b>every element rescales automatically when the container width changes</b> and alignment is never lost —
+            and it is naturally compatible with small screens (Chapter 8 covers collapsing columns).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Change how many columns each block spans and watch them stay on the same set of column lines.</p>
+          <div class="demo-mount" data-demo="d-3-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.2 The 8pt spacing rhythm ---------- -->
+      <article class="chapter" id="ch-3-2">
+        <h2>3.2 The 8pt Spacing Rhythm</h2>
+        <p class="chapter-subtitle">Stop using "made-up" numbers like 13px, 17px and 23px</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Besides horizontal columns, the vertical axis needs a ruler too — that is the <strong>spacing scale</strong>. The industry standard is the <b>8pt grid</b>: every spacing value is a multiple of 8.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Step</th><th>Value</th><th>Typical use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--space-xs</code></td><td>4px</td><td>Between an icon and its label</td></tr>
+              <tr><td><code>--space-sm</code></td><td>8px</td><td>Items inside a group, tag spacing</td></tr>
+              <tr><td><code>--space</code></td><td>16px</td><td>Card padding, regular spacing</td></tr>
+              <tr><td><code>--space-lg</code></td><td>24px</td><td>Between cards</td></tr>
+              <tr><td><code>--space-xl</code></td><td>40px</td><td>Between page sections</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the value of a spacing scale is not that "the numbers look nice" — it is that
+            <b>every whitespace decision becomes "pick one of five steps"</b>
+            instead of "make up 17px on the spot".
+            <br />The direct payoff: <b>a consistent rhythm, batch adjustments at redesign time, and no arguments in a team.</b>
+            <br />This site's <code>tokens.css</code> is defined exactly that way — you have already seen it.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">:root</span> {
+  <span class="prop">--space-xs</span>: <span class="num">4px</span>;
+  <span class="prop">--space-sm</span>: <span class="num">8px</span>;
+  <span class="prop">--space</span>:    <span class="num">16px</span>;
+  <span class="prop">--space-lg</span>: <span class="num">24px</span>;
+  <span class="prop">--space-xl</span>: <span class="num">40px</span>;
+}
+
+<span class="cmt">/* Use the steps, not made-up values */</span>
+<span class="sel">.card</span>    { <span class="prop">padding</span>: <span class="fn">var</span>(--space); }
+<span class="sel">.section</span> { <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-xl); }
+<span class="sel">.tag</span>     { <span class="prop">margin-right</span>: <span class="fn">var</span>(--space-xs); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: there is a reason <b>4px is the smallest step</b> —
+            it is small enough for fine detail and it is half of 8, so "half a standard gap" still belongs to the system,
+            and values like 6px or 10px that break the rhythm never appear.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between "made-up values" and the "8pt scale" and compare how tidy the same content looks.</p>
+          <div class="demo-mount" data-demo="d-3-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.3 Snapping to the grid ---------- -->
+      <article class="chapter" id="ch-3-3">
+        <h2>3.3 Snapping to the Grid</h2>
+        <p class="chapter-subtitle">Keep a magnifying glass handy and check alignment as you go</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Once the grid is drawn you still need a way to <b>check it</b>: overlay the column lines semi-transparently on the page and any element that has "drifted" becomes visible at a glance.</p>
+
+          <div class="theory-card">
+            <h3>🔍 Three common ways elements drift</h3>
+            <p>
+              <strong>1. Uneven side edges</strong>: the container padding and the content padding stack up, so left and right no longer match.<br />
+              <strong>2. Inconsistent card widths</strong>: widths hard-coded in pixels instead of using <code>span</code>.<br />
+              <strong>3. Spacing out of proportion</strong>: 14px in one place and 22px in another — the rhythm is interrupted.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: when debugging a layout, <b>turn the grid overlay on before discussing details</b>.
+            Plenty of pages where "something looks off but I can't say what" turn out to be full of problems once the grid is visible.
+            <br /><b>Practical tip</b>: bind the overlay to a shortcut key (say <kbd>G</kbd> to toggle) and check as you build —
+            far cheaper than fixing it afterwards.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Grid overlay: absolute positioning + translucent columns */</span>
+<span class="sel">.overlay</span> {
+  <span class="prop">position</span>: <span class="str">absolute</span>;
+  <span class="prop">inset</span>: <span class="num">0</span>;
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;
+  <span class="prop">pointer-events</span>: <span class="str">none</span>;   <span class="cmt">/* so it never blocks clicks */</span>
+}
+<span class="sel">.overlay span</span> {
+  <span class="prop">background</span>: <span class="fn">rgba</span>(<span class="num">15</span>,<span class="num">118</span>,<span class="num">110</span>,.<span class="num">10</span>);
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>pointer-events: none</code> is essential —
+            without it the overlay swallows every click on the page. A debugging tool must have zero side effects.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Turn the grid overlay on, then switch between "aligned" and "off-grid" and see how obvious the difference becomes.</p>
+          <div class="demo-mount" data-demo="d-3-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-02/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 2 · From Requirements to Page Skeleton</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-04/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 4 · Choosing a Layout Pattern</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 3: Grid Systems and Spacing Rhythm · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 4 · Choosing a Layout Pattern · Page Layout Academy</title>
+  <meta name="description" content="Chapter 4: pick the right pattern for the job — the holy grail layout, the auto-fitting card wall, and the dashboard grid with spanning modules." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-04/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="4">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-04/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 4 · Choosing a Layout Pattern</h1>
+      <p class="subtitle">Single column / multi-column / card wall / dashboard — which pattern for which job</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-4-1" data-chapter="ch-4-1" class="active">4.1 The Holy Grail Layout</a></li>
+        <li><a href="#ch-4-2" data-chapter="ch-4-2">4.2 The Card Wall</a></li>
+        <li><a href="#ch-4-3" data-chapter="ch-4-3">4.3 The Dashboard Grid</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 4.1 The holy grail layout ---------- -->
+      <article class="chapter active" id="ch-4-1">
+        <h2>4.1 The Holy Grail Layout</h2>
+        <p class="chapter-subtitle">Header + two sidebars + main content + footer</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>"Holy grail layout" is a classic exercise: <strong>a header, a footer, a sidebar on each side, and the main content in between</strong> —
+          the main content region takes priority, the sidebars have fixed widths, and the whole thing stays fluid.</p>
+
+          <div class="theory-card">
+            <h3>🏆 The modern implementation: grid-template-areas</h3>
+            <p>
+              Using Grid's "draw a map" syntax, four lines of CSS describe the entire page skeleton —
+              far clearer than the traditional <code>float</code> / negative-margin approach.
+            </p>
+          </div>
+
+          <pre class="code-block"><code><span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span> <span class="num">180px</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header  header  header"</span>
+    <span class="str">"left    main    right"</span>
+    <span class="str">"footer  footer  footer"</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: readability is the biggest advantage of <code>grid-template-areas</code> —
+            you can "see" what the page looks like straight from the CSS.
+            <br /><strong>Small-screen adaptation</strong>: just redraw the areas as a single column in a media query
+            (every row uses the same name) and the whole page stacks vertically, without touching the HTML at all.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span> <span class="num">180px</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header header header"</span>
+    <span class="str">"left   main   right"</span>
+    <span class="str">"footer footer footer"</span>;
+  <span class="prop">gap</span>: <span class="num">12px</span>;
+}
+<span class="sel">.header</span> { <span class="prop">grid-area</span>: <span class="str">header</span>; }
+<span class="sel">.left</span>   { <span class="prop">grid-area</span>: <span class="str">left</span>; }
+<span class="sel">.main</span>   { <span class="prop">grid-area</span>: <span class="str">main</span>; }
+<span class="sel">.right</span>  { <span class="prop">grid-area</span>: <span class="str">right</span>; }
+<span class="sel">.footer</span> { <span class="prop">grid-area</span>: <span class="str">footer</span>; }
+
+<span class="cmt">/* Small screens: stack everything into one column */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">700px</span>) {
+  <span class="sel">.layout</span> {
+    <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>;
+    <span class="prop">grid-template-areas</span>:
+      <span class="str">"header"</span> <span class="str">"left"</span> <span class="str">"main"</span> <span class="str">"right"</span> <span class="str">"footer"</span>;
+  }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: each string in <code>areas</code> represents "one grid row", and a name that spans several columns
+            is written that many times. Getting the cell count wrong invalidates the entire rule, so keep the columns lined up.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the layout variants and watch the same HTML respond to different grid-template-areas.</p>
+          <div class="demo-mount" data-demo="d-4-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 4.2 The card wall ---------- -->
+      <article class="chapter" id="ch-4-2">
+        <h2>4.2 The Card Wall</h2>
+        <p class="chapter-subtitle">The most common layout on listing pages</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The card wall (card grid) appears on almost every website: a set of equal-width blocks
+          whose column count changes with the screen width.</p>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>one line of CSS does it</b> —
+            <code>grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))</code>.
+            It solves three problems at once: <b>an adaptive column count</b>, <b>a minimum column width</b> and
+            <b>evenly shared leftover space</b>, with no media query at all.
+            <br />This site's <a href="../">portal home page</a> uses exactly that line.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.wall</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(240px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="num">20px</span>;
+}
+
+<span class="cmt">/* The card itself: flex keeps the "bottom button" pinned to the base */</span>
+<span class="sel">.card</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">padding</span>: <span class="num">20px</span>;
+}
+<span class="sel">.card .cta</span> { <span class="prop">margin-top</span>: <span class="str">auto</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>margin-top: auto</code> is the usual trick for pushing an element inside a card
+            "all the way to the bottom" — in a flex column layout, an auto margin swallows every bit of leftover space.
+            Also, the <code>1fr</code> in <code>minmax(240px, 1fr)</code> cannot be dropped,
+            or the cards will not stretch and whitespace will show up on the right.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust "minimum column width" and "gap" and watch how the number of cards and the sense of breathing room change.</p>
+          <div class="demo-mount" data-demo="d-4-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 4.3 The dashboard grid ---------- -->
+      <article class="chapter" id="ch-4-3">
+        <h2>4.3 The Dashboard Grid</h2>
+        <p class="chapter-subtitle">How modules of different sizes coexist</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The hard part of a dashboard is that its modules come in different sizes: a large chart needs to span columns, while a small metric occupies a single cell.</p>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: still Grid, but with the idea of
+            <b>a fixed column count plus local spanning</b> —
+            first divide the container into a fixed N columns (say 4),
+            then let large modules use <code>grid-column: span 2</code> and full-width modules <code>span 4</code>.
+            <br />That is far more flexible than hard-coding a width per module, and it stays aligned by construction.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.dashboard</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(4, 1fr)</span>;   <span class="cmt">/* baseline: 4 columns */</span>
+  <span class="prop">gap</span>: <span class="num">14px</span>;
+}
+
+<span class="sel">.w2</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }   <span class="cmt">/* spans two cells */</span>
+<span class="sel">.w4</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; }   <span class="cmt">/* full row */</span>
+
+<span class="cmt">/* On small screens drop to 2 columns; the spans shrink automatically */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">720px</span>) {
+  <span class="sel">.dashboard</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+  <span class="sel">.w4</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: using <code>span</code> rather than a hard-coded <code>1 / 3</code>
+            means the same classes still hold once the small screen drops to 2 columns (span 2 is now a full row),
+            so you only have to override a handful of "extra-wide" modules.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the layout presets and watch how the modules rearrange under different spanning schemes.</p>
+          <div class="demo-mount" data-demo="d-4-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-03/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 3 · Grid Systems and Spacing Rhythm</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-05/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 5 · Box Model and Document Flow</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 4: Choosing a Layout Pattern · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

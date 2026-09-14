@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 6 · Flexbox · Page Layout Academy</title>
+  <meta name="description" content="Chapter 6: one-dimensional flexible layout — the main and cross axes, justify-content and align-items, and how flex-grow shares leftover space." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-06/index.html" />
+</head>
+<body>
+
+  <!-- ============ Top bar ============ -->
+  <nav class="course-topbar" data-current="6">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-06/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <!-- ============ Lesson header ============ -->
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 6 · Flexbox</h1>
+      <p class="subtitle">One-dimensional flexible boxes: alignment, distribution and adaptive widths</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-6-1" data-chapter="ch-6-1" class="active">6.1 The Main Axis and the Cross Axis</a></li>
+        <li><a href="#ch-6-2" data-chapter="ch-6-2">6.2 Alignment and Distribution</a></li>
+        <li><a href="#ch-6-3" data-chapter="ch-6-3">6.3 Flexing</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 6.1 Main and cross axis ---------- -->
+      <article class="chapter active" id="ch-6-1">
+        <h2>6.1 The Main Axis and the Cross Axis</h2>
+        <p class="chapter-subtitle">To understand Flexbox, remember "the two axes" first</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Put <code>display: flex</code> on a parent and it becomes a <strong>flex container</strong>; its children become <strong>flex items</strong> and arrange themselves along an "axis" automatically.</p>
+
+          <div class="theory-card">
+            <h3>🧭 The two axes</h3>
+            <p>
+              <strong>Main axis</strong>: the direction the items are laid out in, decided by <code>flex-direction</code>.<br />
+              <strong>Cross axis</strong>: the direction perpendicular to the main axis.
+            </p>
+          </div>
+
+          <ul>
+            <li><code>flex-direction: row</code> (the default): the main axis runs horizontally to the right, the cross axis vertically downwards.</li>
+            <li><code>flex-direction: column</code>: the main axis runs vertically downwards, the cross axis horizontally to the right.</li>
+            <li>Adding a <code>-reverse</code> suffix (such as <code>row-reverse</code>) flips the direction.</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: every Flexbox alignment property is <b>measured against the axes</b> —
+            <code>justify-content</code> controls the <b>main axis</b> and <code>align-items</code> controls the <b>cross axis</b>.
+            Once <code>flex-direction</code> changes from row to column, the effect of both properties "rotates 90°".
+            Remember that and you never have to memorise a property table.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Turn on flex layout */</span>
+<span class="sel">.container</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">row</span>;  <span class="cmt">/* row | column | row-reverse | column-reverse */</span>
+  <span class="prop">gap</span>: <span class="num">12px</span>;              <span class="cmt">/* spacing between items (preferred over margin tricks) */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>display: flex</code> goes on the <b>parent</b> and affects how the <b>direct children</b> are laid out.
+            <br /><strong>Note</strong>: flex items automatically become "flexible" — the default is <code>flex-shrink: 1</code>,
+            so items get squeezed when the container narrows. That is why boxes sometimes seem to "deform".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch flex-direction and watch how the main axis changes the way items are arranged.</p>
+          <div class="demo-mount" data-demo="d-6-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 6.2 Alignment and distribution ---------- -->
+      <article class="chapter" id="ch-6-2">
+        <h2>6.2 Alignment and Distribution</h2>
+        <p class="chapter-subtitle">justify-content controls the main axis, align-items the cross axis</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The most common Flexbox scenario is "center one thing" or "distribute several things evenly", and that is handled by two groups of properties.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Property</th><th>Axis affected</th><th>Common values</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>justify-content</code></td><td>Main axis</td><td>flex-start / center / space-between / space-around / space-evenly</td></tr>
+              <tr><td><code>align-items</code></td><td>Cross axis</td><td>stretch / flex-start / center / flex-end</td></tr>
+              <tr><td><code>gap</code></td><td>Spacing between items</td><td>any length, e.g. <code>12px</code></td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>the classic three lines for centering both ways</b> —
+            <code>display: flex; justify-content: center; align-items: center;</code>
+            These three lines cover roughly 80% of a beginner's centering needs, and they are Flexbox's most popular use.
+            <br /><strong>Note</strong>: <code>align-items: stretch</code> (the default) stretches item heights;
+            to keep items at their own height, set <code>flex-start</code> explicitly.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Center both horizontally and vertically — the most classic use */</span>
+<span class="sel">.center</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">justify-content</span>: <span class="str">center</span>;  <span class="cmt">/* main axis centered */</span>
+  <span class="prop">align-items</span>: <span class="str">center</span>;      <span class="cmt">/* cross axis centered */</span>
+}
+
+<span class="cmt">/* A nav bar with items pushed to both ends */</span>
+<span class="sel">.navbar</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">justify-content</span>: <span class="str">space-between</span>;
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+  <span class="prop">gap</span>: <span class="num">16px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>space-between</code> pushes <b>all</b> the leftover space <b>between the items</b>
+            (so the two ends sit flush) — the standard way to build "logo on the left, menu on the right" in a nav bar.
+            <code>space-around</code>, by contrast, also leaves space at the two ends, which reads as looser.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Pick a justify-content and an align-items value and watch the row of boxes move in real time.</p>
+          <div class="demo-mount" data-demo="d-6-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 6.3 Flexing ---------- -->
+      <article class="chapter" id="ch-6-3">
+        <h2>6.3 Flexing</h2>
+        <p class="chapter-subtitle">Let items share the leftover space in proportion</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Flexbox is called "flexible" because items can <b>share the container's leftover space in proportion</b>. Three properties control that:</p>
+
+          <ul>
+            <li><code>flex-grow</code>: the "share" of the <b>leftover space</b> handed to this item; defaults to 0 (it does not take part).</li>
+            <li><code>flex-shrink</code>: the rate at which it shrinks <b>when space runs short</b>; defaults to 1.</li>
+            <li><code>flex-basis</code>: the <b>initial size</b> before any distribution; defaults to <code>auto</code> (decided by content).</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>flex: 1</code> is shorthand for those three properties
+            (equivalent to <code>1 1 0%</code>) and means "<b>split the leftover space evenly</b>".
+            Give three boxes <code>flex: 1 2 3</code> and they divide the width in a 1:2:3 ratio —
+            the most common technique for building adaptive columns.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.item</span> { <span class="prop">flex</span>: <span class="num">1</span>; }        <span class="cmt">/* equal split */</span>
+
+<span class="sel">.sidebar</span> { <span class="prop">flex</span>: <span class="num">1</span>; }      <span class="cmt">/* sidebar takes 1 share */</span>
+<span class="sel">.main</span>    { <span class="prop">flex</span>: <span class="num">3</span>; }      <span class="cmt">/* main area takes 3 shares */</span>
+
+<span class="cmt">/* A fixed-width item that must not be squeezed */</span>
+<span class="sel">.avatar</span> { <span class="prop">flex</span>: <span class="num">0 0 48px</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>flex: 0 0 48px</code> means
+            "don't grow, don't shrink, fixed at 48px", which is what you use for avatars and icons that must not distort.
+            <br /><strong>Common trap</strong>: don't write a single number in the shorthand and expect a fixed width —
+            the <code>basis</code> of <code>flex: 1</code> is <code>0%</code>, which makes the item ignore its own width.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the three flex-grow sliders and watch how the leftover space is shared out in proportion.</p>
+          <div class="demo-mount" data-demo="d-6-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- ============ Pager ============ -->
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-05/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 5 · Box Model and Document Flow</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-07/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 7 · CSS Grid</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 6: Flexbox · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

@@ -1,21 +1,21 @@
 // =========================================================
-// lesson-02/lesson.js —— 第 2 章 从需求到页面骨架
-//   演示：d-2-1 内容优先级 / d-2-2 阅读模式 / d-2-3 线框图
+// lesson-02/lesson.js —— Chapter 2: From Requirements to Page Skeleton
+//   Demos: d-2-1 content priority / d-2-2 reading patterns / d-2-3 wireframes
 // =========================================================
 
-import { initLesson } from '../lesson-core.js';
+import { initLesson } from '../../lesson-core.js';
 
 window.DEMOS = window.DEMOS || {};
 
 /* ---------------------------------------------------------
- * 演示 2.1 —— 内容优先级排序
+ * Demo 2.1 — ranking content by priority
  * ------------------------------------------------------- */
 window.DEMOS['d-2-1'] = function (mount) {
   const BLOCKS = {
-    hero:     { name: '主标题 / 主视觉', h: 96 },
-    cta:      { name: '行动按钮',        h: 44 },
-    features: { name: '功能卡片 × 3',    h: 72 },
-    footer:   { name: '页脚信息',        h: 36 },
+    hero:     { name: 'Headline / hero', h: 96 },
+    cta:      { name: 'Call to action',        h: 44 },
+    features: { name: 'Feature cards × 3',    h: 72 },
+    footer:   { name: 'Footer info',        h: 36 },
   };
 
   let order = ['hero', 'features', 'cta', 'footer'];
@@ -24,11 +24,11 @@ window.DEMOS['d-2-1'] = function (mount) {
     <div class="demo-card">
       <div style="display:grid;grid-template-columns:minmax(200px, 260px) 1fr;gap:20px;align-items:start;">
         <div>
-          <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:var(--c-muted);letter-spacing:.08em;">内容清单（调整顺序）</p>
+          <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:var(--c-muted);letter-spacing:.08em;">Content inventory (reorder)</p>
           <div class="js-list" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
         <div>
-          <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:var(--c-muted);letter-spacing:.08em;">页面骨架预览</p>
+          <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:var(--c-muted);letter-spacing:.08em;">Page skeleton preview</p>
           <div class="demo-stage js-preview" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
       </div>
@@ -56,7 +56,7 @@ window.DEMOS['d-2-1'] = function (mount) {
         ${BLOCKS[k].name}
       </div>`).join('');
 
-    note.textContent = `→ 排第一的「${BLOCKS[order[0]].name}」拿到了最大的版面和高亮色——这就是优先级在布局上的体现。`;
+    note.textContent = `→ The item ranked first, "${BLOCKS[order[0]].name}", takes the largest area and the highlight color — that is priority expressed as layout.`;
 
     list.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => {
       const i = +b.dataset.up;
@@ -72,12 +72,12 @@ window.DEMOS['d-2-1'] = function (mount) {
 };
 
 /* ---------------------------------------------------------
- * 演示 2.2 —— 阅读模式与视线路径
+ * Demo 2.2 — reading patterns and eye paths
  * ------------------------------------------------------- */
 window.DEMOS['d-2-2'] = function (mount) {
   const MODES = {
-    'F 型': {
-      desc: '适合文字为主的页面：先横向扫两遍，再沿左边界纵向快速下拉。',
+    'F-pattern': {
+      desc: 'For text-heavy pages: two horizontal sweeps, then a fast vertical scan down the left edge.',
       lines: [[8, 16, 92, 16], [8, 46, 60, 46], [8, 16, 8, 86]],
       zones: [
         { l: 8,  t: 8,  w: 84, h: 16, n: '①' },
@@ -85,8 +85,8 @@ window.DEMOS['d-2-2'] = function (mount) {
         { l: 8,  t: 58, w: 34, h: 34, n: '③' },
       ],
     },
-    'Z 型': {
-      desc: '适合单屏落地页：视线沿对角线走，行动按钮应落在右下终点。',
+    'Z-pattern': {
+      desc: 'For single-screen landing pages: the eye travels diagonally, so the CTA belongs at the bottom-right end point.',
       lines: [[8, 16, 92, 16], [92, 16, 8, 86], [8, 86, 92, 86]],
       zones: [
         { l: 8,  t: 6,  w: 40, h: 20, n: '①' },
@@ -95,19 +95,19 @@ window.DEMOS['d-2-2'] = function (mount) {
         { l: 52, t: 72, w: 40, h: 20, n: '④' },
       ],
     },
-    '古腾堡图': {
-      desc: '四象限模型：左上为主视觉区，右下为行动区，中段是容易被忽略的"弱视区"。',
+    'Gutenberg diagram': {
+      desc: 'A four-quadrant model: top-left is the primary optical area, bottom-right the terminal area, and the middle is the easily-ignored "dead zone".',
       lines: [[8, 16, 92, 16], [92, 16, 92, 86], [92, 86, 8, 86], [8, 86, 8, 16]],
       zones: [
-        { l: 8,  t: 6,  w: 40, h: 20, n: '主视觉' },
+        { l: 8,  t: 6,  w: 40, h: 20, n: 'Hero' },
         { l: 52, t: 6,  w: 40, h: 20, n: '②' },
         { l: 8,  t: 72, w: 40, h: 20, n: '③' },
-        { l: 52, t: 72, w: 40, h: 20, n: '行动区' },
+        { l: 52, t: 72, w: 40, h: 20, n: 'CTA area' },
       ],
     },
   };
 
-  // 背景里的"页面骨架"（灰块）
+  // The page skeleton in the background (grey blocks)
   const MOCK = [
     { l: 8,  t: 4,  w: 84, h: 8 },
     { l: 8,  t: 30, w: 84, h: 6 },
@@ -120,7 +120,7 @@ window.DEMOS['d-2-2'] = function (mount) {
   mount.innerHTML = `
     <div class="demo-card">
       <div class="demo-controls">
-        <label class="demo-control">阅读模式
+        <label class="demo-control">Reading pattern
           <select class="js-m">
             ${Object.keys(MODES).map(k => `<option>${k}</option>`).join('')}
           </select>
@@ -143,7 +143,7 @@ window.DEMOS['d-2-2'] = function (mount) {
   function update() {
     const m = MODES[sel.value];
 
-    // 1) 背景骨架
+    // 1) Background skeleton
     stage.querySelectorAll('.mock').forEach(e => e.remove());
     MOCK.forEach(b => {
       const d = document.createElement('div');
@@ -154,7 +154,7 @@ window.DEMOS['d-2-2'] = function (mount) {
       stage.appendChild(d);
     });
 
-    // 2) 重点区
+    // 2) Focus area
     stage.querySelectorAll('.zone').forEach(e => e.remove());
     m.zones.forEach(z => {
       const d = document.createElement('div');
@@ -167,7 +167,7 @@ window.DEMOS['d-2-2'] = function (mount) {
       stage.appendChild(d);
     });
 
-    // 3) 视线路径
+    // 3) Eye path
     svg.innerHTML = m.lines.map(([x1, y1, x2, y2]) => `
       <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
             stroke="var(--d4)" stroke-width="2.5" stroke-dasharray="7 5"
@@ -181,16 +181,16 @@ window.DEMOS['d-2-2'] = function (mount) {
 };
 
 /* ---------------------------------------------------------
- * 演示 2.3 —— 线框图 vs 高保真
+ * Demo 2.3 — wireframe vs high-fidelity
  * ------------------------------------------------------- */
 window.DEMOS['d-2-3'] = function (mount) {
   mount.innerHTML = `
     <div class="demo-card">
       <div class="demo-controls">
-        <label class="demo-control">呈现方式
+        <label class="demo-control">Rendering
           <select class="js-mode">
-            <option value="wire">线框图（先定骨架）</option>
-            <option value="hi">高保真（后上皮肤）</option>
+            <option value="wire">Wireframe (settle the skeleton first)</option>
+            <option value="hi">High-fidelity (apply the skin afterwards)</option>
           </select>
         </label>
       </div>
@@ -203,13 +203,13 @@ window.DEMOS['d-2-3'] = function (mount) {
   const sel   = mount.querySelector('.js-mode');
   const note  = mount.querySelector('.js-note');
 
-  // 骨架构架：两种皮肤共用同一套区块与顺序
+  // Skeleton: both skins share the same blocks and the same order
   const LAYOUT = ['header', 'hero', 'cards', 'footer'];
   const META = {
-    header: { wire: '页头导航', hi: '页面布局教学平台' },
-    hero:   { wire: '主标题 / 主视觉', hi: '如何进行页面布局' },
-    cards:  { wire: '功能卡片 ×3', hi: '三大原则 · 阅读模式 · 线框图' },
-    footer: { wire: '页脚信息', hi: '© 2026 页面布局教学平台' },
+    header: { wire: 'Header nav', hi: 'Page Layout Academy' },
+    hero:   { wire: 'Headline / hero', hi: 'How to Lay Out a Web Page' },
+    cards:  { wire: 'Feature cards ×3', hi: 'Three principles · Reading patterns · Wireframes' },
+    footer: { wire: 'Footer info', hi: '© 2026 Page Layout Academy' },
   };
 
   function styleFor(kind, key) {
@@ -242,8 +242,8 @@ window.DEMOS['d-2-3'] = function (mount) {
       </div>`).join('');
 
     note.textContent = kind === 'wire'
-      ? '→ 只有灰块和占位文字：结构一眼看清，改起来几乎零成本。'
-      : '→ 换成真实颜色与文案：区块位置、顺序、比例完全没变——骨架没动，只换了皮肤。';
+      ? '→ Grey blocks and placeholder text only: the structure reads at a glance, and changes cost almost nothing.'
+      : '→ Swap in real colors and copy: block positions, order and proportions are unchanged — the skeleton never moved, only the skin changed.';
   }
 
   sel.addEventListener('change', update);
@@ -251,6 +251,6 @@ window.DEMOS['d-2-3'] = function (mount) {
 };
 
 /* ---------------------------------------------------------
- * 启动
+ * Bootstrap
  * ------------------------------------------------------- */
 initLesson('lesson-02');

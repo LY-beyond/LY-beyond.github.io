@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 5 · Box Model and Document Flow · Page Layout Academy</title>
+  <meta name="description" content="Chapter 5: the foundation of every layout — the four layers of the box model, box-sizing, normal flow, and what display really controls." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-05/index.html" />
+</head>
+<body>
+
+  <!-- ============ Top bar ============ -->
+  <nav class="course-topbar" data-current="5">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-05/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <!-- ============ Lesson header ============ -->
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 5 · Box Model and Document Flow</h1>
+      <p class="subtitle">The foundation of every layout</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <!-- ============ Left outline ============ -->
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-5-1" data-chapter="ch-5-1" class="active">5.1 The Box Model</a></li>
+        <li><a href="#ch-5-2" data-chapter="ch-5-2">5.2 Document Flow</a></li>
+        <li><a href="#ch-5-3" data-chapter="ch-5-3">5.3 The display Property</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <!-- ============ Chapter content ============ -->
+    <section class="chapter-content">
+
+      <!-- ---------- 5.1 The box model ---------- -->
+      <article class="chapter active" id="ch-5-1">
+        <h2>5.1 The Box Model</h2>
+        <p class="chapter-subtitle">Every element is a box — understand it and you can read any layout</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <!-- Explanation -->
+        <div class="tab-panel active" data-panel="explain">
+          <p>To CSS, <strong>every element on a page is a rectangular box</strong>. Understanding which layers make up that box and how much space each one takes is the first step towards understanding layout.</p>
+
+          <div class="theory-card">
+            <h3>📦 The four layers of the box model</h3>
+            <p>From the inside out: <code>content</code> → <code>padding</code> → <code>border</code> → <code>margin</code>.</p>
+          </div>
+
+          <ul>
+            <li><strong>content</strong>: the area text and images actually occupy, sized by <code>width</code> / <code>height</code>.</li>
+            <li><strong>padding</strong>: the space between the content and the border — <em>the background color paints over it</em>.</li>
+            <li><strong>border</strong>: the border itself, which also takes up real space.</li>
+            <li><strong>margin</strong>: the distance from one box to the next — <em>the background does not paint over it</em>, and adjacent vertical margins may collapse.</li>
+          </ul>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">The two box-sizing values</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>Value</th><th>What width means</th><th>Actual width taken</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>content-box</code> (default)</td><td>The content area only</td><td>width + padding + border</td></tr>
+              <tr><td><code>border-box</code> (recommended)</td><td>Includes padding and border</td><td>exactly width</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: by default <code>width: 200px</code> counts the content area only.
+            Add <code>padding: 20px</code> and <code>border: 2px</code> and the box is actually 244px wide —
+            which is exactly the usual cause of "I set a width and it still overflows".
+            That is why almost every project starts with <code>box-sizing: border-box</code>.
+          </p>
+        </div>
+
+        <!-- Key code -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Recommended: let width/height include padding and border */</span>
+* { <span class="prop">box-sizing</span>: <span class="str">border-box</span>; }
+
+.card {
+  <span class="prop">width</span>: <span class="num">240px</span>;
+  <span class="prop">padding</span>: <span class="num">16px</span>;        <span class="cmt">/* padding */</span>
+  <span class="prop">border</span>: <span class="num">2px</span> <span class="str">solid</span> <span class="str">#ccc</span>; <span class="cmt">/* border */</span>
+  <span class="prop">margin</span>: <span class="num">10px</span>;          <span class="cmt">/* margin */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>:
+            <code>box-sizing: border-box</code> makes <code>width</code> stand for the final width the box occupies —
+            padding and border squeeze the content <b>inwards</b> rather than pushing the box <b>outwards</b>.
+            That way, when several elements sit side by side, their widths simply add up to the total, which is easy to reason about and cannot overflow.
+            <br /><strong>Common trap</strong>: vertical <code>margin</code>s between elements undergo "margin collapsing" —
+            two adjacent 20px margins yield 20px, not 40px.
+          </p>
+        </div>
+
+        <!-- Demo -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the sliders and watch the purple content, yellow padding, solid border and dashed margin change.</p>
+          <div class="demo-mount" data-demo="d-5-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 5.2 Document flow ---------- -->
+      <article class="chapter" id="ch-5-2">
+        <h2>5.2 Document Flow</h2>
+        <p class="chapter-subtitle">How do elements arrange themselves by default?</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <!-- Explanation -->
+        <div class="tab-panel active" data-panel="explain">
+          <p><strong>Normal flow</strong> is the browser's default typesetting behaviour. Write no layout code at all and elements arrange themselves in normal flow — it is the "baseline state" that every other layout is measured against.</p>
+
+          <div class="theory-card">
+            <h3>🌊 The two rules of normal flow</h3>
+            <p>
+              <strong>Block-level</strong> elements stack top to bottom, each taking a full row, and their width fills the parent container by default.<br />
+              <strong>Inline</strong> elements sit side by side from left to right, wrapping only when the row runs out of room, with width and height determined by their content.
+            </p>
+          </div>
+
+          <ul>
+            <li>Common block-level elements: <code>div</code>, <code>p</code>, <code>h1</code>, <code>section</code>, <code>li</code></li>
+            <li>Common inline elements: <code>span</code>, <code>a</code>, <code>strong</code>, <code>em</code>, <code>code</code></li>
+            <li>Inline-block <code>inline-block</code>: sits side by side like an inline element but accepts width and height — the best of both.</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <strong>leaving the document flow</strong> means an element no longer occupies its original position.
+            <code>position: absolute</code> / <code>fixed</code> and <code>float</code> all take an element out of normal flow,
+            and the elements after it "move up" to fill the gap — which is a very common source of a broken layout.
+            Chapter 8 covers positioning properly.
+          </p>
+        </div>
+
+        <!-- Key code -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Block-level: takes a full row on its own */</span>
+<span class="sel">div</span> { <span class="prop">display</span>: <span class="str">block</span>; }
+
+<span class="cmt">/* Inline: sits side by side, sized by content — setting width has no effect */</span>
+<span class="sel">span</span> { <span class="prop">display</span>: <span class="str">inline</span>; }
+
+<span class="cmt">/* Inline-block: sits side by side AND accepts width and height */</span>
+<span class="sel">.tag</span> {
+  <span class="prop">display</span>: <span class="str">inline-block</span>;
+  <span class="prop">width</span>: <span class="num">80px</span>;
+  <span class="prop">height</span>: <span class="num">32px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: setting <code>width</code> / <code>height</code> on an inline element <strong>has no effect</strong>,
+            because its size is determined by its content — one of the most common traps for beginners.
+            When you need "side by side and sized", switch to <code>inline-block</code>.
+            <br /><strong>Note</strong>: the newline between <code>inline-block</code> elements renders as a whitespace gap.
+            To remove it, set the parent to <code>font-size: 0</code>, or use modern Flex layout instead.
+          </p>
+        </div>
+
+        <!-- Demo -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Click through the display values and watch whether the boxes stack onto new lines or flow along side by side.</p>
+          <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 5.3 The display property ---------- -->
+      <article class="chapter" id="ch-5-3">
+        <h2>5.3 The display Property</h2>
+        <p class="chapter-subtitle">Decides the "identity" an element joins the layout with</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <!-- Explanation -->
+        <div class="tab-panel active" data-panel="explain">
+          <p><code>display</code> is one of the most important properties in layout: it decides whether an element <b>is block-level</b>, <b>can take a width and height</b>, and <b>how its children are arranged</b>.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Value</th><th>Layout behaviour</th><th>Width/height?</th><th>Typical use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>block</code></td><td>Own row</td><td>Yes</td><td>Containers, paragraphs, headings</td></tr>
+              <tr><td><code>inline</code></td><td>Side by side</td><td>No</td><td>Text fragments, links</td></tr>
+              <tr><td><code>inline-block</code></td><td>Side by side</td><td>Yes</td><td>Tags, buttons</td></tr>
+              <tr><td><code>flex</code></td><td>One-dimensional flex inside</td><td>Yes</td><td>Nav bars, toolbars (Ch. 6)</td></tr>
+              <tr><td><code>grid</code></td><td>Two-dimensional grid inside</td><td>Yes</td><td>Page skeletons, card walls (Ch. 7)</td></tr>
+              <tr><td><code>none</code></td><td>Not rendered</td><td>—</td><td>Hiding an element (removed from the layout tree)</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>display</code> governs not only the element itself but also <b>how its immediate children are arranged</b> —
+            only once you set <code>display: flex</code> or <code>grid</code> on a parent do the <b>children</b> follow flex or grid rules.
+            That is the heart of Chapters 6 and 7.
+            <br /><strong>Note</strong>: <code>display: none</code> differs from <code>visibility: hidden</code> —
+            the former leaves the layout entirely, while the latter still occupies its original space.
+          </p>
+        </div>
+
+        <!-- Key code -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Make three side-by-side boxes lay out with flex / grid */</span>
+<span class="sel">.toolbar</span> { <span class="prop">display</span>: <span class="str">flex</span>; <span class="prop">gap</span>: <span class="num">10px</span>; }
+<span class="sel">.wall</span>    { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+
+<span class="cmt">/* Hiding an element: the two ways behave differently */</span>
+<span class="sel">.gone</span>    { <span class="prop">display</span>: <span class="str">none</span>; }        <span class="cmt">/* takes no space */</span>
+<span class="sel">.invisible</span> { <span class="prop">visibility</span>: <span class="str">hidden</span>; } <span class="cmt">/* still takes space */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: switching <code>display</code> makes the browser <b>recalculate the layout</b> (reflow),
+            which costs far more than changing only a color. So never animate <code>display</code> —
+            animate <code>opacity</code> / <code>transform</code> instead.
+          </p>
+        </div>
+
+        <!-- Demo -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Click different values and observe how the same set of boxes lays out under block / inline / inline-block.</p>
+          <div class="demo-mount" data-demo="d-5-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- ============ Pager ============ -->
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-04/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 4 · Choosing a Layout Pattern</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-06/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 6 · Flexbox</span>
+    </a>
+  </nav>
+
+  <!-- ============ Footer ============ -->
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 5: Box Model and Document Flow · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

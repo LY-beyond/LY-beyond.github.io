@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 8 · Positioning, Stacking and Responsive Design · Page Layout Academy</title>
+  <meta name="description" content="Chapter 8: leave the document flow, control stacking order, and make one codebase fit every screen — position, z-index, media queries and relative units." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-08/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="8">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-08/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 8 · Positioning, Stacking and Responsive Design</h1>
+      <p class="subtitle">Leave the document flow, and make one codebase fit every screen</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-8-1" data-chapter="ch-8-1" class="active">8.1 The Five position Values</a></li>
+        <li><a href="#ch-8-2" data-chapter="ch-8-2">8.2 Offsets</a></li>
+        <li><a href="#ch-8-3" data-chapter="ch-8-3">8.3 z-index and Stacking</a></li>
+        <li><a href="#ch-8-4" data-chapter="ch-8-4">8.4 Viewport and Media Queries</a></li>
+        <li><a href="#ch-8-5" data-chapter="ch-8-5">8.5 Mobile First</a></li>
+        <li><a href="#ch-8-6" data-chapter="ch-8-6">8.6 Relative Units</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 8.1 position ---------- -->
+      <article class="chapter active" id="ch-8-1">
+        <h2>8.1 The Five position Values</h2>
+        <p class="chapter-subtitle">Whether an element leaves the document flow is up to this</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The Flex and Grid we met earlier all work inside "normal flow". <code>position</code> offers a different ability: <strong>lifting an element out of normal flow and putting it wherever you like</strong>.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Value</th><th>Reference point</th><th>Leaves the flow?</th><th>Typical use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>static</code></td><td>none (default)</td><td>No</td><td>Ordinary elements</td></tr>
+              <tr><td><code>relative</code></td><td>its own original position</td><td>No (the original position is kept)</td><td>Nudging a position / acting as the parent for absolute</td></tr>
+              <tr><td><code>absolute</code></td><td>the nearest positioned ancestor</td><td><b>Yes</b></td><td>Badges, dropdowns, overlays</td></tr>
+              <tr><td><code>fixed</code></td><td>the browser viewport</td><td><b>Yes</b></td><td>Back-to-top buttons, floating bars</td></tr>
+              <tr><td><code>sticky</code></td><td>the nearest scrolling container</td><td>No (it sticks once it crosses the threshold)</td><td>Sticky nav, sticky table headers</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>"absolute child, relative parent"</b> is the most useful mnemonic in positioning —
+            set <code>position: relative</code> on the parent and <code>position: absolute</code> on the child,
+            and the child positions itself relative to the parent instead of flying off across the page.
+            Forgetting to position the parent is the trap beginners fall into most often.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Absolute child, relative parent: the classic pairing */</span>
+<span class="sel">.card</span> {
+  <span class="prop">position</span>: <span class="str">relative</span>;   <span class="cmt">/* parent: provides the positioning reference */</span>
+}
+<span class="sel">.badge</span> {
+  <span class="prop">position</span>: <span class="str">absolute</span>;   <span class="cmt">/* child: leaves the document flow */</span>
+  <span class="prop">top</span>: <span class="num">8px</span>;
+  <span class="prop">right</span>: <span class="num">8px</span>;
+}
+
+<span class="cmt">/* Sticky navigation */</span>
+<span class="sel">.navbar</span> { <span class="prop">position</span>: <span class="str">sticky</span>; <span class="prop">top</span>: <span class="num">0</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the reference point for <code>absolute</code> is
+            "<b>the nearest ancestor whose position is not static</b>";
+            if it finds none all the way up, it positions against the <b>initial containing block</b> (roughly the top-left corner of the page).
+            <br /><strong>Note</strong>: <code>fixed</code> is unaffected by ancestors — it is always relative to the viewport.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch the position value and watch the relationship between the red dashed box (the original position) and where the element actually ends up.</p>
+          <div class="demo-mount" data-demo="d-8-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 8.2 Offsets ---------- -->
+      <article class="chapter" id="ch-8-2">
+        <h2>8.2 Offsets</h2>
+        <p class="chapter-subtitle">How top / right / bottom / left are actually resolved</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Once an element has a position other than <code>static</code>, you can "push" it around with the four properties <code>top</code> / <code>right</code> / <code>bottom</code> / <code>left</code>.</p>
+
+          <div class="theory-card">
+            <h3>📐 Two rules</h3>
+            <p>
+              <strong>1. The reference point decides the meaning</strong>: the very same <code>top: 20px</code>
+              means "move 20px down from its own original position" under <code>relative</code>,
+              but "20px from the top of the parent container" under <code>absolute</code>.<br />
+              <strong>2. Giving both left and right (or top and bottom) stretches it</strong>:
+              if both <code>left</code> and <code>right</code> are set and there is no fixed width, the element is <b>stretched</b> to fill.
+            </p>
+          </div>
+
+          <ul>
+            <li>Values can be lengths (<code>20px</code>) or percentages (relative to the parent's size).</li>
+            <li>Negative values work too, e.g. <code>top: -10px</code> pushes the element in the opposite direction.</li>
+            <li>Setting these four properties on a <code>static</code> element has <b>no effect at all</b>.</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: when <code>top</code> and <code>bottom</code> are both present they "tug" against each other,
+            and the stretching effect only shows up when the element's height is <code>auto</code>;
+            if the element already has a fixed height, <code>top</code> wins.
+            <b>When debugging a positioning problem, first confirm "what is the reference point".</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* relative: offsets from its own original position */</span>
+<span class="sel">.shift</span> { <span class="prop">position</span>: <span class="str">relative</span>; <span class="prop">top</span>: <span class="num">12px</span>; <span class="prop">left</span>: <span class="num">24px</span>; }
+
+<span class="cmt">/* absolute: relative to the positioned parent container */</span>
+<span class="sel">.tip</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">bottom</span>: <span class="num">100%</span>; <span class="prop">left</span>: <span class="num">0</span>; }
+
+<span class="cmt">/* writing both left and right -> stretches to fill (when there is no fixed width) */</span>
+<span class="sel">.full</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">left</span>: <span class="num">0</span>; <span class="prop">right</span>: <span class="num">0</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>bottom: 100%</code> is often used for "tooltip bubbles" —
+            it means "move to above the top of the parent", i.e. sitting entirely outside the parent's top edge,
+            so you never have to work out the bubble's height by hand.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the top / left sliders and observe how the positioning reference point differs between relative and absolute.</p>
+          <div class="demo-mount" data-demo="d-8-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 8.3 z-index ---------- -->
+      <article class="chapter" id="ch-8-3">
+        <h2>8.3 z-index and Stacking</h2>
+        <p class="chapter-subtitle">Who is on top, and who is underneath</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>When elements overlap, the browser needs a rule to decide which one is painted on top — that is <code>z-index</code> (the z-axis coordinate).</p>
+
+          <div class="theory-card">
+            <h3>🧱 Three preconditions</h3>
+            <p>
+              1. <code>z-index</code> <b>only applies to positioned elements</b> (position not static) or to flex / grid children;<br />
+              2. the value may be negative, and <b>a larger number covers a smaller one</b>;<br />
+              3. it creates a <b>stacking context</b>, and a child's z-index is only compared inside its own parent.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the usual reason "<b>z-index doesn't work</b>" is that you
+            <b>forgot to give the element a position</b> — writing <code>z-index: 9999</code> on a
+            <code>position: static</code> element does absolutely nothing.
+            <br />Another frequent cause is that the <b>stacking context is locked by the parent</b>:
+            once the parent has <code>transform</code> / <code>opacity &lt; 1</code> and similar properties,
+            no child z-index can escape the parent's level.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.box-a</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">1</span>; }
+<span class="sel">.box-b</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">2</span>; }  <span class="cmt">/* b covers a */</span>
+<span class="sel">.box-c</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">3</span>; }  <span class="cmt">/* c is on top */</span>
+
+<span class="cmt">/* To let a child escape the parent's stacking, first make sure the parent creates no stacking context */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the least painful habit in practice is not to scatter z-index values everywhere,
+            but to <b>set a small number of explicit levels only for the elements that need to float up</b>
+            (say 1 / 10 / 100 / 1000) and keep them in one place in the project,
+            so you never end up with "9999 everywhere".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the three z-index sliders and watch how the stacking order of the overlapping boxes changes.</p>
+          <div class="demo-mount" data-demo="d-8-3"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 8.4 Viewport and media queries ---------- -->
+      <article class="chapter" id="ch-8-4">
+        <h2>8.4 Viewport and Media Queries</h2>
+        <p class="chapter-subtitle">Let CSS make the decisions based on screen width</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The first step of responsive design is telling the browser "<strong>render at the device's real width</strong>" — and that takes one <code>meta</code> tag:</p>
+
+          <pre class="code-block"><code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</code></pre>
+
+          <p>With that in place you can use a <strong>media query</strong> to apply different styles at specific widths:</p>
+
+          <div class="theory-card">
+            <h3>📱 Common breakpoints</h3>
+            <p>
+              <code>&lt; 640px</code> phone　·　<code>640–1024px</code> tablet　·　<code>&gt; 1024px</code> desktop
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: forgetting the viewport <code>meta</code> tag is the number one cause of
+            "<b>mobile looking like a shrunken desktop page</b>" — iOS / Android render at 980px wide by default and then scale the whole thing down.
+            Add this one line and media queries start using the real logical width.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Desktop styles (default) */</span>
+<span class="sel">.cards</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+
+<span class="cmt">/* Switch to a single column when the screen is <= 700px */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">700px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>max-width</code> means "applies when the width is <b>no more than</b> this",
+            and <code>min-width</code> means "applies when the width is <b>at least</b> this".
+            You can mix the two, but it is recommended to standardise on <code>min-width</code> (mobile first) because the logic is clearer.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the "screen width" slider and watch the layout inside the simulated viewport switch at the breakpoints.</p>
+          <div class="demo-mount" data-demo="d-8-4"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 8.5 Mobile first ---------- -->
+      <article class="chapter" id="ch-8-5">
+        <h2>8.5 Mobile First</h2>
+        <p class="chapter-subtitle">Write from small to large, not the other way around</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>There are two routes for writing responsive CSS. The result is identical, but the maintenance cost differs enormously:</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Route</th><th>Default styles</th><th>Media queries use</th><th>Maintenance feel</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Mobile first</b> (recommended)</td><td>Phone: single column</td><td><code>min-width</code>, progressively enhanced</td><td>Keeps "adding" as you go — clear</td></tr>
+              <tr><td>Desktop first</td><td>Desktop: multi-column</td><td><code>max-width</code>, progressively overridden</td><td>Turns into "patching" — conflict-prone</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the essence of mobile first is "<b>make the small screen work first, then add for the bigger ones</b>".
+            Because phones have the worst performance and bandwidth, writing the small-screen styles first means they only load the rules they need,
+            and it avoids the chore of "desktop styles are too full, so override them one by one on small screens".
+            <br /><strong>Practical advice</strong>: order the <code>min-width</code> media queries from small to large,
+            and in each breakpoint write only "what is newly added compared to the step before".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 1. Default = mobile: a single column */</span>
+<span class="sel">.cards</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">gap</span>: <span class="num">16px</span>; }
+
+<span class="cmt">/* 2. Tablet and up: two columns */</span>
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">640px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+}
+
+<span class="cmt">/* 3. Desktop and up: three columns */</span>
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">1024px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: note that each media query <b>only changes the column count</b> and does not repeat
+            <code>display: grid</code> and <code>gap</code> — those are inherited from the mobile default.
+            That is exactly what "progressive enhancement" means.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between the two approaches and compare how the CSS is organised for the same visual result.</p>
+          <div class="demo-mount" data-demo="d-8-5"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 8.6 Relative units ---------- -->
+      <article class="chapter" id="ch-8-6">
+        <h2>8.6 Relative Units</h2>
+        <p class="chapter-subtitle">Beyond px there are "smarter" lengths</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Responsiveness is not only about media queries — <strong>relative units</strong> let sizes "follow the environment" automatically, and often let you skip breakpoints entirely.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Unit</th><th>Relative to</th><th>Typical use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>px</code></td><td>absolute pixels</td><td>Fixed details such as borders and shadows</td></tr>
+              <tr><td><code>rem</code></td><td>the root (<code>html</code>) font size</td><td>Font sizes and spacing — <b>most recommended</b></td></tr>
+              <tr><td><code>em</code></td><td>the current element's font size</td><td>Proportional scaling inside a component</td></tr>
+              <tr><td><code>%</code></td><td>the corresponding size of the parent</td><td>Width and height proportions</td></tr>
+              <tr><td><code>vw / vh</code></td><td>1% of the viewport width / height</td><td>Full-screen blocks, oversized headings</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>rem</code> only works because the root font size can be adjusted by the user —
+            the browser default for <code>html</code> is <b>16px</b>, so <code>1rem = 16px</code>.
+            The advantage of sizing type in <code>rem</code> is that <b>when a user changes their browser's font size setting,
+            the whole page scales up proportionally</b>, whereas <code>px</code> does not — an important part of accessibility (a11y).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 1rem = the root font size (16px by default) */</span>
+<span class="sel">.title</span> { <span class="prop">font-size</span>: <span class="num">2rem</span>; }      <span class="cmt">/* = 32px */</span>
+<span class="sel">.gap-lg</span> { <span class="prop">margin</span>: <span class="num">1.5rem</span> <span class="num">0</span>; }  <span class="cmt">/* = 24px */</span>
+
+<span class="cmt">/* Type scales smoothly with the viewport — no breakpoint needed */</span>
+<span class="sel">h1</span> { <span class="prop">font-size</span>: <span class="fn">clamp</span>(<span class="num">28px</span>, <span class="num">5vw</span>, <span class="num">48px</span>); }
+
+<span class="cmt">/* A block that is at least one screen tall */</span>
+<span class="sel">.hero</span> { <span class="prop">min-height</span>: <span class="num">100vh</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>clamp(minimum, ideal, maximum)</code>
+            is the "magic tool" for responsive type — it lets the font size grow smoothly as the viewport widens,
+            without becoming unreadably small or absurdly large. This site's headings use exactly that.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust "root font size" and "viewport width" and observe how differently rem / em / % / vw resolve from the same number.</p>
+          <div class="demo-mount" data-demo="d-8-6"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-07/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 7 · CSS Grid</span>
+    </a>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-09/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 9 · Capstone Project</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 8: Positioning, Stacking and Responsive Design · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>
