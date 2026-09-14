@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 7 章 Grid 网格布局 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="7">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 7 章 Grid 网格布局</h1>
+      <p class="subtitle">二维网格：行与列同时掌控</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-7-1" data-chapter="ch-7-1" class="active">7.1 网格基础</a></li>
+        <li><a href="#ch-7-2" data-chapter="ch-7-2">7.2 自动填充</a></li>
+        <li><a href="#ch-7-3" data-chapter="ch-7-3">7.3 网格定位</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 3.1 网格基础 ---------- -->
+      <article class="chapter active" id="ch-7-1">
+        <h2>7.1 网格基础</h2>
+        <p class="chapter-subtitle">先划列，再放东西</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Flexbox 是一维的（只能管一个方向），而 <strong>Grid 是二维的</strong>——行和列可以同时定义，特别适合页面骨架和卡片墙。</p>
+
+          <div class="theory-card">
+            <h3>🔲 三条核心语句</h3>
+            <p>
+              <code>display: grid</code> 开启网格容器；<br />
+              <code>grid-template-columns</code> 定义<b>列</b>；<br />
+              <code>grid-template-rows</code> 定义<b>行</b>。
+            </p>
+          </div>
+
+          <ul>
+            <li><code>fr</code> 是 Grid 专用的"<strong>剩余空间份额</strong>"单位，<code>1fr 2fr</code> 表示后一列是前一列的 2 倍宽。</li>
+            <li><code>repeat(3, 1fr)</code> 是 <code>1fr 1fr 1fr</code> 的简写。</li>
+            <li><code>gap</code> 同时控制行间距与列间距，也可以用 <code>row-gap</code> / <code>column-gap</code> 单独设置。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：Flexbox 的 <code>flex: 1</code> 是"<b>分剩余空间</b>"，
+            Grid 的 <code>1fr</code> 也是"<b>分剩余空间</b>"，但 <code>fr</code> 更彻底——
+            它连 <code>gap</code> 占掉的空间都会先扣掉再分，所以不会因为间距而溢出。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr</span> <span class="num">2fr</span> <span class="num">1fr</span>;  <span class="cmt">/* 三列，比例 1:2:1 */</span>
+  <span class="prop">gap</span>: <span class="num">16px</span>;
+}
+
+<span class="cmt">/* 等价写法：重复 3 次 1fr */</span>
+<span class="sel">.grid-3</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：用 <code>fr</code> 而不是百分比（如 <code>33.33%</code>），
+            可以彻底避免"百分比 + gap 超过 100% 导致换行/溢出"的经典问题。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动滑块改变列数与比例系数，观察网格如何重新划分。</p>
+          <div class="demo-mount" data-demo="d-7-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.2 自动填充 ---------- -->
+      <article class="chapter" id="ch-7-2">
+        <h2>7.2 自动填充</h2>
+        <p class="chapter-subtitle">不用媒体查询也能自适应列数</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>如果每次都写死 <code>repeat(3, 1fr)</code>，屏幕一窄卡片就会被挤扁。Grid 提供了一个"<strong>自动响应</strong>"的写法：</p>
+
+          <div class="theory-card">
+            <h3>🔁 repeat(auto-fit, minmax(最小值, 1fr))</h3>
+            <p>含义是：<b>每列至少 minmax 里的最小值那么宽，能塞几列就塞几列，剩下的空间平均分。</b></p>
+          </div>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>写法</th><th>行为</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>auto-fit</code></td><td>自动填充，<b>多余的空列会塌缩</b>，卡片拉伸铺满</td></tr>
+              <tr><td><code>auto-fill</code></td><td>自动填充，但<b>保留空列</b>，卡片不拉伸</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>repeat(auto-fit, minmax(240px, 1fr))</code>
+            是<b>做卡片墙的万能公式</b>——不用写任何媒体查询，
+            卡片就会自动从 4 列 → 3 列 → 2 列 → 1 列随屏幕收窄而重排。
+            本站门户首页的卡片墙用的正是这一行。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.cards</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(240px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：把最小值调大（如 320px），列数就会更早减少；
+            调小则一屏能塞更多列。<code>minmax</code> 的第二项用 <code>1fr</code>
+            能让最后一行"凑不满"的卡片也拉伸到与整行等宽。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动"容器宽度"和"最小列宽"，观察卡片自动重排的过程。</p>
+          <div class="demo-mount" data-demo="d-7-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.3 网格定位 ---------- -->
+      <article class="chapter" id="ch-7-3">
+        <h2>7.3 网格定位</h2>
+        <p class="chapter-subtitle">让某个项目横跨多列 / 多行</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>网格划好之后，可以让某个项目<b>跨越</b>若干单元格，从而做出"大标题 + 小卡片"的版式。</p>
+
+          <ul>
+            <li><code>grid-column: span 2</code>：横向跨 2 列。</li>
+            <li><code>grid-row: span 2</code>：纵向跨 2 行。</li>
+            <li><code>grid-column: 1 / 3</code>：从第 1 条网格线到第 3 条线（即占 2 列）。</li>
+            <li><code>grid-area: 行起 / 列起 / 行止 / 列止</code>：一次性指定位置。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：注意 Grid 的线编号是<b>从 1 开始</b>，
+            并且有"结束线"，所以占 2 列是 <code>1 / 3</code> 而不是 <code>1 / 2</code>。
+            另外 <code>grid-area</code> 还能配合 <code>grid-template-areas</code>
+            用"<b>画地图</b>"的方式描述整个页面布局，可读性极高。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 让某一项横跨两列 */</span>
+<span class="sel">.hero-card</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+
+<span class="cmt">/* 用"画地图"描述页面骨架 */</span>
+<span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header header"</span>
+    <span class="str">"sidebar main"</span>
+    <span class="str">"footer footer"</span>;
+}
+<span class="sel">.header</span>  { <span class="prop">grid-area</span>: <span class="str">header</span>; }
+<span class="sel">.sidebar</span> { <span class="prop">grid-area</span>: <span class="str">sidebar</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>grid-template-areas</code> 让布局结构
+            在 CSS 里"看得见"。第 4 章的圣杯布局就是用它实现的——
+            这比传统的 <code>float</code> 或 <code>flex</code> 方案清晰得多。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换"跨列数"，观察被选中卡片如何占据多个格子。</p>
+          <div class="demo-mount" data-demo="d-7-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-06/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 6 章 Flexbox 弹性布局</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-08/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 8 章 定位、层叠与响应式</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 7 章 Grid 网格布局 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

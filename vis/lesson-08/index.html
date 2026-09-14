@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 8 章 定位、层叠与响应式 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="8">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 8 章 定位、层叠与响应式</h1>
+      <p class="subtitle">脱离文档流，并让一份代码适配所有屏幕</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-8-1" data-chapter="ch-8-1" class="active">8.1 position 五种取值</a></li>
+        <li><a href="#ch-8-2" data-chapter="ch-8-2">8.2 偏移量</a></li>
+        <li><a href="#ch-8-3" data-chapter="ch-8-3">8.3 z-index 与层叠</a></li>
+        <li><a href="#ch-8-4" data-chapter="ch-8-4">8.4 视口与媒体查询</a></li>
+        <li><a href="#ch-8-5" data-chapter="ch-8-5">8.5 移动优先</a></li>
+        <li><a href="#ch-8-6" data-chapter="ch-8-6">8.6 相对单位</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 4.1 position ---------- -->
+      <article class="chapter active" id="ch-8-1">
+        <h2>8.1 position 五种取值</h2>
+        <p class="chapter-subtitle">要不要脱离文档流，由它决定</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>前面学的 Flex 和 Grid 都是在"正常流"里做文章。<code>position</code> 则提供了另一种能力：<strong>把元素从正常流里"拎出来"，放到任意位置</strong>。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>取值</th><th>参照物</th><th>是否脱离文档流</th><th>典型用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>static</code></td><td>无（默认）</td><td>否</td><td>普通元素</td></tr>
+              <tr><td><code>relative</code></td><td>自身原位置</td><td>否（原位置仍保留）</td><td>微调位置 / 给 absolute 当爹</td></tr>
+              <tr><td><code>absolute</code></td><td>最近的已定位祖先</td><td><b>是</b></td><td>角标、下拉菜单、覆盖层</td></tr>
+              <tr><td><code>fixed</code></td><td>浏览器视口</td><td><b>是</b></td><td>返回顶部按钮、悬浮条</td></tr>
+              <tr><td><code>sticky</code></td><td>最近的滚动容器</td><td>否（滚动到阈值才吸附）</td><td>吸顶导航、表头</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>"子绝父相"</b>是定位最实用的口诀——
+            给父元素设 <code>position: relative</code>，子元素设 <code>position: absolute</code>，
+            子元素就会相对于父元素定位，而不会满屏乱跑。
+            忘了给父元素定位，是初学者最常踩的坑。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 子绝父相：经典组合 */</span>
+<span class="sel">.card</span> {
+  <span class="prop">position</span>: <span class="str">relative</span>;   <span class="cmt">/* 父：提供定位参照 */</span>
+}
+<span class="sel">.badge</span> {
+  <span class="prop">position</span>: <span class="str">absolute</span>;   <span class="cmt">/* 子：脱离文档流 */</span>
+  <span class="prop">top</span>: <span class="num">8px</span>;
+  <span class="prop">right</span>: <span class="num">8px</span>;
+}
+
+<span class="cmt">/* 吸顶导航 */</span>
+<span class="sel">.navbar</span> { <span class="prop">position</span>: <span class="str">sticky</span>; <span class="prop">top</span>: <span class="num">0</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>absolute</code> 的参照物是
+            "<b>最近的、position 不为 static 的祖先</b>"；
+            如果一路上都找不到，就相对于<b>初始包含块</b>（约等于页面左上角）定位。
+            <br /><strong>注意</strong>：<code>fixed</code> 不受祖先影响，永远相对视口。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换 position 取值，注意红色虚线框（原位置）与元素实际位置的关系。</p>
+          <div class="demo-mount" data-demo="d-8-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 4.2 偏移量 ---------- -->
+      <article class="chapter" id="ch-8-2">
+        <h2>8.2 偏移量</h2>
+        <p class="chapter-subtitle">top / right / bottom / left 怎么算</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>元素一旦有了非 <code>static</code> 的定位，就可以用 <code>top</code> / <code>right</code> / <code>bottom</code> / <code>left</code> 四个属性来"推"它。</p>
+
+          <div class="theory-card">
+            <h3>📐 两条规则</h3>
+            <p>
+              <strong>1. 参照物决定含义</strong>：同一个 <code>top: 20px</code>，
+              在 <code>relative</code> 下表示"相对自己原位置下移 20px"，
+              在 <code>absolute</code> 下表示"距父容器顶部 20px"。<br />
+              <strong>2. 同时给左右（或上下）会拉伸</strong>：
+              若 <code>left</code> 与 <code>right</code> 都写了且没有固定宽度，元素会被<b>拉宽</b>填满。
+            </p>
+          </div>
+
+          <ul>
+            <li>取值可以是长度（<code>20px</code>）或百分比（相对父容器尺寸）。</li>
+            <li>也可以用负值，如 <code>top: -10px</code>，把元素往反方向推。</li>
+            <li>对 <code>static</code> 元素设置这四个属性<b>完全无效</b>。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>top</code> 和 <code>bottom</code> 同时存在时会互相"拉扯"，
+            只有在元素高度为 <code>auto</code> 时才表现出拉伸效果；
+            若元素已有固定高度，则以 <code>top</code> 为准。
+            <b>调试定位问题时，先确认"参照物是谁"。</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* relative：相对自己的原位偏移 */</span>
+<span class="sel">.shift</span> { <span class="prop">position</span>: <span class="str">relative</span>; <span class="prop">top</span>: <span class="num">12px</span>; <span class="prop">left</span>: <span class="num">24px</span>; }
+
+<span class="cmt">/* absolute：相对已定位父容器 */</span>
+<span class="sel">.tip</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">bottom</span>: <span class="num">100%</span>; <span class="prop">left</span>: <span class="num">0</span>; }
+
+<span class="cmt">/* 左右都写 -> 拉伸填满（无固定宽度时） */</span>
+<span class="sel">.full</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">left</span>: <span class="num">0</span>; <span class="prop">right</span>: <span class="num">0</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>bottom: 100%</code> 常用于"小提示泡"——
+            它表示"移到父元素顶部的上方"，也就是完全贴在父元素上边缘外面，
+            这样气泡和触发元素之间不用手动算高度。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动 top / left 滑块，观察 relative 与 absolute 下偏移参照物的差异。</p>
+          <div class="demo-mount" data-demo="d-8-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 4.3 z-index ---------- -->
+      <article class="chapter" id="ch-8-3">
+        <h2>8.3 z-index 与层叠</h2>
+        <p class="chapter-subtitle">谁在上面，谁在下面</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>当元素互相重叠时，浏览器需要一个规则来决定谁显示在上面，这就是 <code>z-index</code>（z 轴坐标）。</p>
+
+          <div class="theory-card">
+            <h3>🧱 三条前提</h3>
+            <p>
+              1. <code>z-index</code> <b>只对已定位元素</b>（position 非 static）或 flex/grid 子项生效；<br />
+              2. 值可以是负数，<b>数值大的盖住数值小的</b>；<br />
+              3. 它会创建<b>层叠上下文</b>，子元素的 z-index 只能在父级内部比较。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：最常见的"<b>z-index 不管用</b>"，
+            原因通常是<b>忘了给元素加 position</b>——对一个 <code>position: static</code>
+            的元素写 <code>z-index: 9999</code> 是完全无效的。
+            <br />另一个常见原因是<b>层叠上下文被父元素"锁"住了</b>：
+            父元素有了 <code>transform</code> / <code>opacity &lt; 1</code> 等属性后，
+            子元素再大的 z-index 也跳不出父元素的层级。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.box-a</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">1</span>; }
+<span class="sel">.box-b</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">2</span>; }  <span class="cmt">/* b 盖住 a */</span>
+<span class="sel">.box-c</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">3</span>; }  <span class="cmt">/* c 在最上面 */</span>
+
+<span class="cmt">/* 想让子元素突破父级层叠，先确保父元素没有创建层叠上下文 */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：实践中最省事的做法，
+            不是给所有元素乱设 z-index，而是<b>只给需要浮起的元素</b>
+            设定少量明确的层级（例如 1 / 10 / 100 / 1000），
+            并统一记在项目里，避免出现"9999 满天飞"的失控局面。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动三个 z-index 滑块，观察重叠盒子的上下关系如何改变。</p>
+          <div class="demo-mount" data-demo="d-8-3"></div>
+        </div>
+      </article>
+<article class="chapter active" id="ch-8-4">
+        <h2>8.4 视口与媒体查询</h2>
+        <p class="chapter-subtitle">让 CSS 根据屏幕宽度做决定</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>响应式的第一步，是告诉浏览器"<strong>按设备的真实宽度来渲染</strong>"——这需要一行 <code>meta</code> 标签：</p>
+
+          <pre class="code-block"><code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</code></pre>
+
+          <p>有了它，再用 <strong>媒体查询（media query）</strong>，就能在特定宽度下应用不同的样式：</p>
+
+          <div class="theory-card">
+            <h3>📱 常用断点</h3>
+            <p>
+              <code>&lt; 640px</code> 手机　·　<code>640–1024px</code> 平板　·　<code>&gt; 1024px</code> 桌面
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：漏写 viewport 的 meta 标签，是"<b>移动端看起来像缩小版桌面页</b>"
+            的头号原因——iOS/Android 会默认按 980px 宽渲染再整体缩小。
+            写完这行，媒体查询才会按真实逻辑宽度生效。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 桌面样式（默认） */</span>
+<span class="sel">.cards</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+
+<span class="cmt">/* 屏幕 <= 700px 时改为单列 */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">700px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>max-width</code> 表示"<b>不超过</b>该宽度时生效"，
+            <code>min-width</code> 表示"<b>至少</b>该宽度时生效"。
+            两者可以混用，但推荐统一用 <code>min-width</code>（移动优先），逻辑更清晰。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动"屏幕宽度"滑块，观察下方模拟视口里的布局在断点处自动切换。</p>
+          <div class="demo-mount" data-demo="d-8-4"></div>
+        </div>
+      </article>
+
+<article class="chapter" id="ch-8-5">
+        <h2>8.5 移动优先</h2>
+        <p class="chapter-subtitle">从小到大写，而不是从大到小</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>写响应式有两条路线，结果一样但维护成本差别很大：</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>路线</th><th>默认样式</th><th>媒体查询用</th><th>维护感受</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>移动优先</b>（推荐）</td><td>手机单列</td><td><code>min-width</code> 逐级增强</td><td>越写越"加料"，清晰</td></tr>
+              <tr><td>桌面优先</td><td>桌面多列</td><td><code>max-width</code> 逐级覆盖</td><td>越写越"打补丁"，易冲突</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：移动优先的本质是"<b>先保证小屏可用，再给大屏加料</b>"。
+            因为手机性能与带宽最差，先写小屏样式可以让它只加载最必要的规则，
+            同时避免"桌面样式写太满，小屏再一条条覆盖"的麻烦。
+            <br /><strong>实践建议</strong>：媒体查询里的 <code>min-width</code> 从小到大排列，
+            且每个断点只写"相比上一档新增了什么"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* ① 默认 = 移动端：单列 */</span>
+<span class="sel">.cards</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">gap</span>: <span class="num">16px</span>; }
+
+<span class="cmt">/* ② 平板及以上：两列 */</span>
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">640px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+}
+
+<span class="cmt">/* ③ 桌面及以上：三列 */</span>
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">1024px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：注意每个媒体查询里<b>只改了列数</b>，
+            没有重复写 <code>display: grid</code> 和 <code>gap</code>——
+            它们继承自移动端的默认样式。这就是"逐级增强"的含义。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换两种写法，对比同一效果下 CSS 的组织方式差异。</p>
+          <div class="demo-mount" data-demo="d-8-5"></div>
+        </div>
+      </article>
+
+<article class="chapter" id="ch-8-6">
+        <h2>8.6 相对单位</h2>
+        <p class="chapter-subtitle">px 之外，还有更"聪明"的长度</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>响应式不只靠媒体查询，<strong>相对单位</strong>能让尺寸自动"跟着环境走"，很多时候可以省掉断点。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>单位</th><th>相对于</th><th>典型用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>px</code></td><td>绝对像素</td><td>边框、阴影等固定细节</td></tr>
+              <tr><td><code>rem</code></td><td>根元素（html）字号</td><td>字号、间距——<b>最推荐</b></td></tr>
+              <tr><td><code>em</code></td><td>当前元素字号</td><td>组件内部按比例缩放</td></tr>
+              <tr><td><code>%</code></td><td>父元素对应尺寸</td><td>宽度、高度占比</td></tr>
+              <tr><td><code>vw / vh</code></td><td>视口宽 / 高的 1%</td><td>满屏区块、超大标题</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>rem</code> 生效的前提是根字号可被用户调整——
+            浏览器默认 <code>html</code> 字号为 <b>16px</b>，所以 <code>1rem = 16px</code>。
+            用 <code>rem</code> 写字号的好处是：<b>用户改浏览器字号设置时，整个页面会跟着等比放大</b>，
+            而 <code>px</code> 不会——这是无障碍（a11y）的重要一环。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 1rem = 根元素字号（默认 16px） */</span>
+<span class="sel">.title</span> { <span class="prop">font-size</span>: <span class="num">2rem</span>; }      <span class="cmt">/* = 32px */</span>
+<span class="sel">.gap-lg</span> { <span class="prop">margin</span>: <span class="num">1.5rem</span> <span class="num">0</span>; }  <span class="cmt">/* = 24px */</span>
+
+<span class="cmt">/* 字号随视口平滑变化，连断点都省了 */</span>
+<span class="sel">h1</span> { <span class="prop">font-size</span>: <span class="fn">clamp</span>(<span class="num">28px</span>, <span class="num">5vw</span>, <span class="num">48px</span>); }
+
+<span class="cmt">/* 区块最小占满一屏 */</span>
+<span class="sel">.hero</span> { <span class="prop">min-height</span>: <span class="num">100vh</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>clamp(最小值, 理想值, 最大值)</code>
+            是响应式字号的"神器"——它让字号在视口变宽时平滑增大，
+            但不会小到看不清、也不会大到失真，本站标题就用了这个写法。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整"根字号"与"视口宽度"，观察相同数值下 rem / em / % / vw 的实际尺寸差异。</p>
+          <div class="demo-mount" data-demo="d-8-6"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-07/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 7 章 Grid 网格布局</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-09/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 9 章 综合案例</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 8 章 定位、层叠与响应式 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

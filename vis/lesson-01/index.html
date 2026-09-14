@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 1 章 布局设计的基本原则 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+  <link rel="stylesheet" href="../i18n.css" />
+  <link rel="alternate" hreflang="en" href="../en/lesson-01/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="1">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" data-lang-link="en" href="../en/lesson-01/" hreflang="en" lang="en">EN</a>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 1 章 布局设计的基本原则</h1>
+      <p class="subtitle">对齐 · 亲密性 · 重复 · 对比</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-1-1" data-chapter="ch-1-1" class="active">1.1 对齐：建立秩序</a></li>
+        <li><a href="#ch-1-2" data-chapter="ch-1-2">1.2 亲密性与留白</a></li>
+        <li><a href="#ch-1-3" data-chapter="ch-1-3">1.3 对比与视觉层次</a></li>
+        <li><a href="#ch-1-4" data-chapter="ch-1-4">1.4 重复与统一</a></li>
+        <li><a href="#ch-1-5" data-chapter="ch-1-5">1.5 格式塔原理</a></li>
+        <li><a href="#ch-1-6" data-chapter="ch-1-6">1.6 视觉平衡与节奏</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 1.1 对齐 ---------- -->
+      <article class="chapter active" id="ch-1-1">
+        <h2>1.1 对齐：建立秩序</h2>
+        <p class="chapter-subtitle">为什么有些页面"一看就很专业"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>在写任何布局代码之前，先要回答一个设计问题：<strong>这个页面的元素，靠哪条线站队？</strong></p>
+
+          <p>优秀的页面有一个共同点——<strong>你在页面上画不出几条"游离"的线</strong>。所有元素的边缘都落在少数几条看不见的参考线上，这就是<b>对齐</b>。</p>
+
+          <div class="theory-card">
+            <h3>📏 对齐的三条实践规则</h3>
+            <p>
+              <strong>1. 一条边原则</strong>：一组内容至少共用一条对齐线（通常左对齐）。<br />
+              <strong>2. 不要混用</strong>：同一组元素不要有的居中、有的左对齐。<br />
+              <strong>3. 内外一致</strong>：容器内边距对齐、标题与正文左右边界对齐。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：初学者最容易犯的错是"<b>凭感觉摆放</b>"——
+            这个盒子 12px、那个 18px，看起来都在左边，实际没有一条线是齐的。
+            <br /><b>正确做法</b>：先在心里（或纸上）画出<b>列线</b>，再让所有元素对齐到这些线上。
+            这就是第 3 章要讲的"栅格系统"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 用 Flex 建立一条统一的对齐线 */</span>
+<span class="sel">.row</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">align-items</span>: <span class="str">center</span>;   <span class="cmt">/* 垂直方向也对齐 */</span>
+  <span class="prop">gap</span>: <span class="num">12px</span>;
+}
+
+<span class="cmt">/* 多个区块共用同一条左边线 */</span>
+<span class="sel">.container</span> { <span class="prop">padding</span>: <span class="num">0</span> <span class="num">24px</span>; }   <span class="cmt">/* 统一内边距，边界自然对齐 */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>gap</code> 比给每个元素写 <code>margin</code> 更容易保持对齐，
+            因为它不会在首尾多出一份间距，边界位置永远可预测。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">点击按钮切换「未对齐 / 已对齐」，直观感受对齐线带来的秩序感。</p>
+          <div class="demo-mount" data-demo="d-1-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.2 亲密性与留白 ---------- -->
+      <article class="chapter" id="ch-1-2">
+        <h2>1.2 亲密性与留白</h2>
+        <p class="chapter-subtitle">让"相关的"靠得近，让"不相关的"离得远</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p><strong>亲密性原则</strong>：逻辑上相关的内容，在视觉上就应该靠得更近；不相关的，就要拉开距离。</p>
+
+          <p>这条原则的力量在于——<b>它不需要任何边框或分割线，就能让人"自动看出分组"</b>。</p>
+
+          <div class="theory-card">
+            <h3>🫧 留白不是浪费</h3>
+            <p>
+              留白（whitespace）指的是元素之间"空"出来的区域。
+              它<b>不是"没用的地方"</b>，而是：
+              <br />· 用来<b>分组</b>（组内紧、组间松）
+              <br />· 用来<b>聚焦</b>（周围越空，中间越显眼）
+              <br />· 用来<b>控制节奏</b>（疏密有致，读起来不累）
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：判断分组是否成功有一个简单标准——
+            <b>组内间距 &lt; 组间间距</b>，而且差距要明显（比如 8px vs 32px，而不是 16px vs 20px）。
+            <br /><b>常见错误</b>：所有元素间距都一样，导致"看不出哪几个是一伙的"，
+            读者只能靠文字去理解结构。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 组内紧：用 gap 控制；组间松：用 margin 拉开 */</span>
+<span class="sel">.group</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">gap</span>: <span class="num">8px</span>;              <span class="cmt">/* 组内：紧 */</span>
+  <span class="prop">margin-bottom</span>: <span class="num">32px</span>;      <span class="cmt">/* 组间：松 */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：用"<b>组内 gap + 组间 margin</b>"这个两层间距结构，
+            比给每个元素写死 margin 更容易维护——
+            调整组内密度只动 gap，调整分组间隔只动 margin-bottom。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动「组内间距」与「组间间距」，观察分组感什么时候才真正出现。</p>
+          <div class="demo-mount" data-demo="d-1-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.3 对比与视觉层次 ---------- -->
+      <article class="chapter" id="ch-1-3">
+        <h2>1.3 对比与视觉层次</h2>
+        <p class="chapter-subtitle">让读者第一眼看到最重要的东西</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>一个页面不可能所有内容都同等重要。<strong>视觉层次</strong>就是"用视觉手段告诉读者先看什么、后看什么"。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>手段</th><th>怎么做</th><th>效果</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>大小</b></td><td>标题字号远大于正文</td><td>最强，最容易被感知</td></tr>
+              <tr><td><b>粗细</b></td><td>关键信息加粗</td><td>强，且不占空间</td></tr>
+              <tr><td><b>颜色</b></td><td>主色 / 深色突出，弱化用灰</td><td>中，需注意对比度</td></tr>
+              <tr><td><b>间距</b></td><td>重要内容周围留更多空</td><td>弱但很高级</td></tr>
+              <tr><td><b>位置</b></td><td>放左上 / 居中 / 首屏</td><td>取决于阅读模式</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：层次<b>要有"跨度"才有意义</b>。
+            18px 和 20px 的差别几乎看不出来，等于没做层次；
+            16px 配 32px 配 48px 这样拉开档位，层次才清晰。
+            <br /><b>建议</b>：全站字号只保留 4～5 档（如 48 / 32 / 20 / 16 / 13），
+            并写进第 3 章的"间距与字号节奏"里统一管理。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 用 CSS 变量固定"字号档位"，保证全站层次一致 */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--fs-hero</span>: <span class="num">48px</span>;
+  <span class="prop">--fs-h2</span>:   <span class="num">32px</span>;
+  <span class="prop">--fs-h3</span>:   <span class="num">20px</span>;
+  <span class="prop">--fs-body</span>: <span class="num">16px</span>;
+  <span class="prop">--fs-meta</span>: <span class="num">13px</span>;
+}
+
+<span class="sel">.title</span>    { <span class="prop">font-size</span>: <span class="fn">var</span>(--fs-h2);  <span class="prop">font-weight</span>: <span class="num">700</span>; }
+<span class="sel">.subtitle</span> { <span class="prop">font-size</span>: <span class="fn">var</span>(--fs-body); <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft); }
+<span class="sel">.highlight</span>{ <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：站点本身已经这么做了——
+            所有字号、颜色都来自 <code>tokens.css</code>。
+            把"层次"变成<b>少数几个可复用的档位</b>，是保持全站统一的关键。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整标题/正文的字号与颜色，观察"层次跨度"多大时主次才一目了然。</p>
+          <div class="demo-mount" data-demo="d-1-3"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.4 重复与统一 ---------- -->
+      <article class="chapter" id="ch-1-4">
+        <h2>1.4 重复与统一</h2>
+        <p class="chapter-subtitle">第四个原则：让页面"看起来是一个整体"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>到这里，四个基础原则已经讲完三个。补上最后一个——<strong>重复（Repetition）</strong>：
+          <b>相同的元素，用相同的方式呈现</b>。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>原则</th><th>一句话理解</th><th>缺少它会怎样</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>对齐</b> Alignment</td><td>元素边缘落在共同的线上</td><td>页面凌乱、不专业</td></tr>
+              <tr><td><b>亲密性</b> Proximity</td><td>相关的靠近，无关的拉开</td><td>看不出分组、阅读费力</td></tr>
+              <tr><td><b>对比</b> Contrast</td><td>重要的大而重，次要的弱下去</td><td>没有重点、读者迷茫</td></tr>
+              <tr><td><b>重复</b> Repetition</td><td>同类元素长相一致</td><td>像拼凑的、不成体系</td></tr>
+            </tbody>
+          </table>
+
+          <p>这四条合称 <strong>CRAP 原则</strong>（Contrast / Repetition / Alignment / Proximity），
+          是排版与布局设计里最经典、最实用的四把尺子。</p>
+
+          <div class="theory-card">
+            <h3>🔁 "重复"具体重复什么？</h3>
+            <p>
+              颜色（主色只用一个）· 字体（全站 1～2 款）· 圆角（统一半径）·
+              间距（走同一套档位）· 按钮与标签样式 · 图标风格 · 阴影强度。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>设计令牌（design tokens）就是"重复原则"的工程实现。</b>
+            把颜色、间距、圆角抽成变量，本质上就是强制全站"重复使用同一批值"。
+            <br />反过来，如果每个卡片都单独调一次圆角和阴影，页面迟早会变得"四不像"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 重复 = 全站共用同一批值（不重复 = 每个元素各写一套） */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--radius</span>: <span class="num">12px</span>;       <span class="cmt">/* 圆角只定义一次 */</span>
+  <span class="prop">--space</span>:  <span class="num">16px</span>;
+  <span class="prop">--shadow</span>: <span class="num">0</span> <span class="num">4px</span> <span class="num">16px</span> <span class="fn">rgba</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,.<span class="num">08</span>);
+}
+
+<span class="sel">.card</span>, <span class="sel">.panel</span>, <span class="sel">.dialog</span> {
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+  <span class="prop">box-shadow</span>: <span class="fn">var</span>(--shadow);
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：选择器可以一次写多个（<code>.card, .panel, .dialog</code>），
+            这也是"重复"在 CSS 里的直接体现——
+            <b>凡是长得一样的元素，就不应该有两份样式定义。</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换「各自为政 / 统一规范」，观察三张卡片的一致性差异。</p>
+          <div class="demo-mount" data-demo="d-1-4"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.5 格式塔原理 ---------- -->
+      <article class="chapter" id="ch-1-5">
+        <h2>1.5 格式塔原理</h2>
+        <p class="chapter-subtitle">人眼是怎么"自动分组"的</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>前面讲的原则都很"实操"，但它们背后有一套心理学依据——<strong>格式塔原理（Gestalt）</strong>。
+          它解释了<b>人的眼睛为什么会自动把某些元素看成一伙的</b>。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>原理</th><th>含义</th><th>在布局中怎么用</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>靠近</b> Proximity</td><td>距离近的自动成组</td><td>用间距分组（＝ 1.2 亲密性）</td></tr>
+              <tr><td><b>相似</b> Similarity</td><td>长得像的自动成组</td><td>同样式＝同类内容；不同色＝不同类</td></tr>
+              <tr><td><b>共同区域</b> Common Region</td><td>同一容器内自动成组</td><td><b>卡片、边框、浅色底</b>的理论依据</td></tr>
+              <tr><td><b>闭合</b> Closure</td><td>残缺的形状会被脑补完整</td><td>不必把所有边框都画出来</td></tr>
+              <tr><td><b>连续</b> Continuity</td><td>沿一条线排列的被视为一组</td><td>对齐到同一列＝天然的一组</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>"卡片"这种设计形式，本质上是"共同区域"原理的应用</b>——
+            给一块内容加个背景和边框，人眼立刻知道"这些内容是一家的"，
+            <b>不需要任何文字说明</b>。
+            <br />但要注意：<b>共同区域一旦滥用，页面会变成"一堆框"</b>。
+            能用间距分组时就别画框（靠近原理更轻量）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 用"共同区域"分组：加背景 + 圆角，人眼自动归组 */</span>
+<span class="sel">.card</span> {
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+}
+
+<span class="cmt">/* 用"相似"区分类型：同一类内容用同一种样式 */</span>
+<span class="sel">.tag--new</span>  { <span class="prop">background</span>: <span class="fn">var</span>(--c-primary-weak); <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }
+<span class="sel">.tag--hot</span>  { <span class="prop">background</span>: <span class="fn">var</span>(--c-accent-weak);  <span class="prop">color</span>: <span class="fn">var</span>(--c-accent); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<b>相似 ≠ 一样</b>。
+            "相似"是"看起来属于同一类"，允许有区分（如上例的 NEW / HOT），
+            关键是<b>区分要成体系</b>，而不是每个标签一种颜色。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换「纯间距 / 加共同区域 / 再加相似区分」，观察分组感知如何一步步变清晰。</p>
+          <div class="demo-mount" data-demo="d-1-5"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.6 视觉平衡与节奏 ---------- -->
+      <article class="chapter" id="ch-1-6">
+        <h2>1.6 视觉平衡与节奏</h2>
+        <p class="chapter-subtitle">页面"站不站得稳"，说的是视觉重量</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>最后一个理论视角：把页面想象成一个<b>天平</b>。每个元素都自带"重量"，
+          布局就是把这些重量摆稳。</p>
+
+          <div class="theory-card">
+            <h3>⚖️ 什么让元素"更重"？</h3>
+            <p>
+              面积<b>更大</b> · 颜色<b>更深 / 更饱和</b> · 对比度<b>更高</b> ·
+              形状<b>更复杂</b> · 周围留白<b>更多</b>（被孤立的东西更显眼）。
+            </p>
+          </div>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>平衡方式</th><th>特点</th><th>适用场景</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>对称平衡</b></td><td>左右镜像，稳重、正式</td><td>官方页面、正式场合</td></tr>
+              <tr><td><b>非对称平衡</b></td><td>用"大 vs 多小"或"深 vs 浅"配平</td><td>现代感、活泼（更常见）</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">节奏：疏密要交替</h3>
+          <p>如果每个区块的间距都一样，页面会像"一条直线"一样平淡。
+          <strong>节奏</strong>指的是：<b>紧一段、松一段，形成呼吸与韵律</b>。</p>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>留白不是"剩下来的空间"，而是"主动分配的空间"。</b>
+            新手常常把页面塞满，怕"浪费"；而专业做法是——
+            <b>先决定哪块内容最重要，再给它最多的留白</b>。
+            <br />经验法则：<b>重要内容周围的留白，应不少于次要内容的 2 倍</b>。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 用不同档位的间距制造节奏（而不是全部一样） */</span>
+<span class="sel">.hero</span>      { <span class="prop">padding</span>: <span class="fn">var</span>(--space-xl) <span class="num">0</span>; }  <span class="cmt">/* 松：核心区 */</span>
+<span class="sel">.features</span>  { <span class="prop">padding</span>: <span class="fn">var</span>(--space-lg) <span class="num">0</span>; }  <span class="cmt">/* 中 */</span>
+<span class="sel">.meta</span>      { <span class="prop">padding</span>: <span class="fn">var</span>(--space-sm) <span class="num">0</span>; }  <span class="cmt">/* 紧：附属信息 */</span>
+
+<span class="cmt">/* 非对称平衡：左边大图，右边用「多个小块 + 文字」配平 */</span>
+<span class="sel">.split</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：非对称平衡常用 <code>7fr 5fr</code>、<code>8fr 4fr</code>
+            这类<b>非均分</b>比例，而不是死板的 <code>1fr 1fr</code>——
+            因为左右两边的"视觉重量"本来就不一样，用比例去补偿才平衡。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动参数改变左右两侧的视觉重量，观察"天平"什么时候会失衡。</p>
+          <div class="demo-mount" data-demo="d-1-6"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <span class="pager-prev empty"></span>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-02/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 2 章 从需求到页面骨架</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 1 章 布局设计的基本原则 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

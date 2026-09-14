@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 4 章 布局模式选型 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="4">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 4 章 布局模式选型</h1>
+      <p class="subtitle">单栏 / 多栏 / 卡片墙 / 仪表盘，什么场景用什么</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-4-1" data-chapter="ch-4-1" class="active">4.1 圣杯布局</a></li>
+        <li><a href="#ch-4-2" data-chapter="ch-4-2">4.2 卡片墙</a></li>
+        <li><a href="#ch-4-3" data-chapter="ch-4-3">4.3 仪表盘栅格</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 6.1 圣杯布局 ---------- -->
+      <article class="chapter active" id="ch-4-1">
+        <h2>4.1 圣杯布局</h2>
+        <p class="chapter-subtitle">页头 + 双侧栏 + 主内容 + 页脚</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>"圣杯布局"是一个经典考题：<strong>页头、页脚、左右两侧栏、中间主内容区</strong>，
+          要求主内容区优先、两侧栏定宽、整体自适应。</p>
+
+          <div class="theory-card">
+            <h3>🏆 现代实现：grid-template-areas</h3>
+            <p>
+              用 Grid 的"画地图"写法，四行 CSS 就能描述整个页面骨架，
+              比传统 <code>float</code> / 负 margin 方案清晰得多。
+            </p>
+          </div>
+
+          <pre class="code-block"><code><span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span> <span class="num">180px</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header  header  header"</span>
+    <span class="str">"left    main    right"</span>
+    <span class="str">"footer  footer  footer"</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>grid-template-areas</code> 的可读性是最大优势——
+            你一眼就能从 CSS 里"看出"页面长什么样。
+            <br /><strong>小屏适配</strong>：只要在媒体查询里把 areas 重画成单列
+            （每行都写同一个名字），整个页面就变成上下堆叠，不用改任何 HTML。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.layout</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">200px</span> <span class="num">1fr</span> <span class="num">180px</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"header header header"</span>
+    <span class="str">"left   main   right"</span>
+    <span class="str">"footer footer footer"</span>;
+  <span class="prop">gap</span>: <span class="num">12px</span>;
+}
+<span class="sel">.header</span> { <span class="prop">grid-area</span>: <span class="str">header</span>; }
+<span class="sel">.left</span>   { <span class="prop">grid-area</span>: <span class="str">left</span>; }
+<span class="sel">.main</span>   { <span class="prop">grid-area</span>: <span class="str">main</span>; }
+<span class="sel">.right</span>  { <span class="prop">grid-area</span>: <span class="str">right</span>; }
+<span class="sel">.footer</span> { <span class="prop">grid-area</span>: <span class="str">footer</span>; }
+
+<span class="cmt">/* 小屏：全部堆成一列 */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">700px</span>) {
+  <span class="sel">.layout</span> {
+    <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>;
+    <span class="prop">grid-template-areas</span>:
+      <span class="str">"header"</span> <span class="str">"left"</span> <span class="str">"main"</span> <span class="str">"right"</span> <span class="str">"footer"</span>;
+  }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：areas 的每一行字符串代表"一行网格"，
+            同一个名字横跨几列就写几遍。写错格子数会导致整条规则失效，所以要按列数对齐。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换布局变体，观察同一份 HTML 在不同 grid-template-areas 下的变化。</p>
+          <div class="demo-mount" data-demo="d-4-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 6.2 卡片墙 ---------- -->
+      <article class="chapter" id="ch-4-2">
+        <h2>4.2 卡片墙</h2>
+        <p class="chapter-subtitle">列表页最常见的一种布局</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>卡片墙（card grid）几乎是每个网站都会用到的布局：一堆等宽的方块，
+          随屏幕宽度自动改变列数。</p>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>一行 CSS 搞定</b>——
+            <code>grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))</code>。
+            它同时解决了三个问题：<b>列数自适应</b>、<b>列宽不小于最小值</b>、
+            <b>剩余空间平均分配</b>，完全不需要媒体查询。
+            <br />本站的<a href="../">门户首页</a>用的就是这一行。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.wall</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(240px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="num">20px</span>;
+}
+
+<span class="cmt">/* 卡片本身：用 flex 让"底部按钮"始终贴底 */</span>
+<span class="sel">.card</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">padding</span>: <span class="num">20px</span>;
+}
+<span class="sel">.card .cta</span> { <span class="prop">margin-top</span>: <span class="str">auto</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>margin-top: auto</code> 是让卡片内的元素
+            "推到最底部"的常用技巧——在 flex 列布局里，auto 外边距会吃掉所有剩余空间。
+            另外 <code>minmax(240px, 1fr)</code> 里的 1fr 不能省，
+            否则卡片不会拉伸、右侧会留白。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整"最小列宽"和"间距"，观察卡片数量与呼吸感的变化。</p>
+          <div class="demo-mount" data-demo="d-4-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 6.3 仪表盘栅格 ---------- -->
+      <article class="chapter" id="ch-4-3">
+        <h2>4.3 仪表盘栅格</h2>
+        <p class="chapter-subtitle">不同尺寸的模块如何共存</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>仪表盘（dashboard）的难点在于：模块大小不一，有的大图表要跨列，有的小指标只占一格。</p>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：仍然用 Grid，但采用"
+            <b>固定列数 + 局部跨列</b>"的思路——
+            先把容器划成固定的 N 列（如 4 列），
+            再让大模块 <code>grid-column: span 2</code>、全宽模块 <code>span 4</code>。
+            <br />这比"给每个模块写死宽度"灵活得多，且天然对齐。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.dashboard</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(4, 1fr)</span>;   <span class="cmt">/* 基准 4 列 */</span>
+  <span class="prop">gap</span>: <span class="num">14px</span>;
+}
+
+<span class="sel">.w2</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }   <span class="cmt">/* 占两格 */</span>
+<span class="sel">.w4</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; }   <span class="cmt">/* 整行 */</span>
+
+<span class="cmt">/* 小屏降为 2 列，跨列自动收缩 */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">720px</span>) {
+  <span class="sel">.dashboard</span> { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+  <span class="sel">.w4</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：用 <code>span</code> 而不是写死 <code>1 / 3</code>，
+            好处是同一套类在小屏改成 2 列后仍然成立（span 2 就是整行了），
+            只需要覆盖少数几个"超宽"模块即可。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换预设布局，观察模块在不同跨列方案下的排布。</p>
+          <div class="demo-mount" data-demo="d-4-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-03/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 3 章 栅格系统与间距节奏</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-05/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 5 章 盒模型与文档流</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 4 章 布局模式选型 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

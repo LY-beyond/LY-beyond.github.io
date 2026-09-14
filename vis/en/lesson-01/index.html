@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter 1 · Core Principles of Layout Design · Page Layout Academy</title>
+  <meta name="description" content="Chapter 1: alignment, proximity, contrast and repetition — plus the Gestalt principles and visual balance that underpin every layout decision." />
+  <link rel="stylesheet" href="../../tokens.css" />
+  <link rel="stylesheet" href="../../lesson.css" />
+  <link rel="stylesheet" href="../../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../../lesson-01/index.html" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="1">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>Course portal</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">Ch. 1 · Core Principles of Layout Design</a></li>
+      <li><a href="../lesson-02/">Ch. 2 · From Requirements to Page Skeleton</a></li>
+      <li><a href="../lesson-03/">Ch. 3 · Grid Systems and Spacing Rhythm</a></li>
+      <li><a href="../lesson-04/">Ch. 4 · Choosing a Layout Pattern</a></li>
+      <li><a href="../lesson-05/">Ch. 5 · Box Model and Document Flow</a></li>
+      <li><a href="../lesson-06/">Ch. 6 · Flexbox</a></li>
+      <li><a href="../lesson-07/">Ch. 7 · CSS Grid</a></li>
+      <li><a href="../lesson-08/">Ch. 8 · Positioning, Stacking &amp; Responsive</a></li>
+      <li><a href="../lesson-09/">Ch. 9 · Capstone Project</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <a class="lang-switch-item" data-lang-link="zh" href="../../lesson-01/" hreflang="zh-CN" lang="zh-CN">中</a>
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+    </div>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>Chapter 1 · Core Principles of Layout Design</h1>
+      <p class="subtitle">Alignment · Proximity · Repetition · Contrast</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> to switch Explanation / Code / Demo
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>Chapter outline</h3>
+      <ul>
+        <li><a href="#ch-1-1" data-chapter="ch-1-1" class="active">1.1 Alignment: Creating Order</a></li>
+        <li><a href="#ch-1-2" data-chapter="ch-1-2">1.2 Proximity and Whitespace</a></li>
+        <li><a href="#ch-1-3" data-chapter="ch-1-3">1.3 Contrast and Visual Hierarchy</a></li>
+        <li><a href="#ch-1-4" data-chapter="ch-1-4">1.4 Repetition and Unity</a></li>
+        <li><a href="#ch-1-5" data-chapter="ch-1-5">1.5 Gestalt Principles</a></li>
+        <li><a href="#ch-1-6" data-chapter="ch-1-6">1.6 Visual Balance and Rhythm</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ Back to the course portal</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 1.1 Alignment ---------- -->
+      <article class="chapter active" id="ch-1-1">
+        <h2>1.1 Alignment: Creating Order</h2>
+        <p class="chapter-subtitle">Why some pages "just look professional"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Before writing a single line of layout code, answer one design question: <strong>which line do the elements on this page line up on?</strong></p>
+
+          <p>Good pages share one trait — <strong>you cannot draw many "stray" lines on them</strong>. Every element's edges land on a small number of invisible reference lines, and that is <b>alignment</b>.</p>
+
+          <div class="theory-card">
+            <h3>📏 Three practical rules of alignment</h3>
+            <p>
+              <strong>1. The one-edge rule</strong>: a group of content shares at least one alignment line (usually the left one).<br />
+              <strong>2. Don't mix</strong>: within one group, don't center some elements and left-align others.<br />
+              <strong>3. Consistent inside and out</strong>: the container's padding lines up, and headings share the same left and right edges as the body text.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: the mistake beginners make most often is <b>placing things by feel</b> —
+            this box at 12px, that one at 18px. They look left-aligned, but no two edges actually match.
+            <br /><b>The right approach</b>: first draw the <b>column lines</b> in your head (or on paper), then align everything to them.
+            That is what Chapter 3 calls a "grid system".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Establish one shared alignment line with Flexbox */</span>
+<span class="sel">.row</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">align-items</span>: <span class="str">center</span>;   <span class="cmt">/* aligns vertically too */</span>
+  <span class="prop">gap</span>: <span class="num">12px</span>;
+}
+
+<span class="cmt">/* Several blocks share the same left edge */</span>
+<span class="sel">.container</span> { <span class="prop">padding</span>: <span class="num">0</span> <span class="num">24px</span>; }   <span class="cmt">/* one padding, so edges line up on their own */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <code>gap</code> keeps alignment far better than writing a <code>margin</code> on every element,
+            because it never adds an extra slot of space at the first or last item — the edges stay predictable.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Click the button to switch between "misaligned" and "aligned", and feel the sense of order that alignment lines create.</p>
+          <div class="demo-mount" data-demo="d-1-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.2 Proximity ---------- -->
+      <article class="chapter" id="ch-1-2">
+        <h2>1.2 Proximity and Whitespace</h2>
+        <p class="chapter-subtitle">Keep related things close, push unrelated things apart</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p><strong>Proximity</strong>: content that is logically related should sit closer together visually, and unrelated content should be pushed apart.</p>
+
+          <p>The strength of this principle is that <b>it needs no border and no divider to make people "see the groups" automatically</b>.</p>
+
+          <div class="theory-card">
+            <h3>🫧 Whitespace is not wasted space</h3>
+            <p>
+              Whitespace is the empty area between elements.
+              It is <b>not "space doing nothing"</b>; it is there to:
+              <br />· <b>group</b> things (tight inside a group, loose between groups)
+              <br />· <b>focus</b> attention (the emptier the surroundings, the more the center stands out)
+              <br />· <b>control rhythm</b> (varying density keeps reading effortless)
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: there is a simple test for whether grouping works —
+            <b>spacing inside a group &lt; spacing between groups</b>, and the difference has to be obvious (8px vs 32px, not 16px vs 20px).
+            <br /><b>Common mistake</b>: giving every element the same spacing, so "you can't tell which items belong together"
+            and readers must rely on the words to understand the structure.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Tight inside: use gap. Loose between: use margin */</span>
+<span class="sel">.group</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">gap</span>: <span class="num">8px</span>;              <span class="cmt">/* inside a group: tight */</span>
+  <span class="prop">margin-bottom</span>: <span class="num">32px</span>;      <span class="cmt">/* between groups: loose */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: this two-layer spacing structure — <b>gap inside, margin between</b> —
+            is easier to maintain than hard-coding a margin on every element:
+            to change the density inside a group you touch only <code>gap</code>, and to change the gap between groups you touch only <code>margin-bottom</code>.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag "intra-group spacing" and "inter-group spacing" and watch when a real sense of grouping appears.</p>
+          <div class="demo-mount" data-demo="d-1-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.3 Contrast ---------- -->
+      <article class="chapter" id="ch-1-3">
+        <h2>1.3 Contrast and Visual Hierarchy</h2>
+        <p class="chapter-subtitle">Make readers see the most important thing first</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Not everything on a page can matter equally. <strong>Visual hierarchy</strong> means "using visual means to tell readers what to look at first, and what comes after".</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Signal</th><th>How to do it</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Size</b></td><td>Headings far larger than body text</td><td>Strongest, most easily perceived</td></tr>
+              <tr><td><b>Weight</b></td><td>Bold the key information</td><td>Strong, and costs no space</td></tr>
+              <tr><td><b>Color</b></td><td>Emphasize with the primary / deep color; mute with grey</td><td>Medium; mind the contrast ratio</td></tr>
+              <tr><td><b>Spacing</b></td><td>Leave more room around important content</td><td>Weak, but very refined</td></tr>
+              <tr><td><b>Position</b></td><td>Top-left / centered / above the fold</td><td>Depends on the reading pattern</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: hierarchy <b>only means something if there is a real jump in scale</b>.
+            18px versus 20px is barely perceptible — that is no hierarchy at all;
+            16px, 32px and 48px make the levels unmistakable.
+            <br /><b>Suggestion</b>: keep only 4–5 type sizes across the whole site (say 48 / 32 / 20 / 16 / 13)
+            and manage them together under Chapter 3's "spacing and type scale".
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Pin the "type scale" with CSS variables so hierarchy stays consistent site-wide */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--fs-hero</span>: <span class="num">48px</span>;
+  <span class="prop">--fs-h2</span>:   <span class="num">32px</span>;
+  <span class="prop">--fs-h3</span>:   <span class="num">20px</span>;
+  <span class="prop">--fs-body</span>: <span class="num">16px</span>;
+  <span class="prop">--fs-meta</span>: <span class="num">13px</span>;
+}
+
+<span class="sel">.title</span>    { <span class="prop">font-size</span>: <span class="fn">var</span>(--fs-h2);  <span class="prop">font-weight</span>: <span class="num">700</span>; }
+<span class="sel">.subtitle</span> { <span class="prop">font-size</span>: <span class="fn">var</span>(--fs-body); <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft); }
+<span class="sel">.highlight</span>{ <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: this very site already works that way —
+            every font size and color comes from <code>tokens.css</code>.
+            Turning "hierarchy" into <b>a handful of reusable steps</b> is the key to staying consistent across a whole site.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Adjust the font size and color of headings and body text, and see how large the "hierarchy jump" must be before primary and secondary become obvious at a glance.</p>
+          <div class="demo-mount" data-demo="d-1-3"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.4 Repetition ---------- -->
+      <article class="chapter" id="ch-1-4">
+        <h2>1.4 Repetition and Unity</h2>
+        <p class="chapter-subtitle">The fourth principle: make the page "read as one whole"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>We have covered three of the four foundational principles. Here is the last one — <strong>Repetition</strong>:
+          <b>present the same kind of element in the same way</b>.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Principle</th><th>In one sentence</th><th>What breaks without it</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Alignment</b></td><td>Element edges land on shared lines</td><td>The page looks messy and unprofessional</td></tr>
+              <tr><td><b>Proximity</b></td><td>Related items close, unrelated items apart</td><td>Groups are invisible; reading takes effort</td></tr>
+              <tr><td><b>Contrast</b></td><td>Important things big and heavy, the rest recede</td><td>No focal point; readers feel lost</td></tr>
+              <tr><td><b>Repetition</b></td><td>Same kind of element looks the same</td><td>It looks pieced together, not systematic</td></tr>
+            </tbody>
+          </table>
+
+          <p>Together these four are known as the <strong>CRAP principles</strong> (Contrast / Repetition / Alignment / Proximity) —
+          the most classic and most practical set of rulers in typography and layout design.</p>
+
+          <div class="theory-card">
+            <h3>🔁 What exactly gets repeated?</h3>
+            <p>
+              Color (one primary only) · Type (1–2 families site-wide) · Corner radius (a single radius) ·
+              Spacing (one shared scale) · Button and tag styles · Icon style · Shadow strength.
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>design tokens are the engineering implementation of the repetition principle.</b>
+            Pulling colors, spacing and radii out into variables is, in essence, forcing the whole site to "reuse the same set of values".
+            <br />Conversely, if every card gets its own hand-tuned radius and shadow, the page will drift out of shape sooner or later.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Repetition = the site shares one set of values (no repetition = everyone rolls their own) */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--radius</span>: <span class="num">12px</span>;       <span class="cmt">/* the radius is defined exactly once */</span>
+  <span class="prop">--space</span>:  <span class="num">16px</span>;
+  <span class="prop">--shadow</span>: <span class="num">0</span> <span class="num">4px</span> <span class="num">16px</span> <span class="fn">rgba</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,.<span class="num">08</span>);
+}
+
+<span class="sel">.card</span>, <span class="sel">.panel</span>, <span class="sel">.dialog</span> {
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+  <span class="prop">box-shadow</span>: <span class="fn">var</span>(--shadow);
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: a selector can list several targets at once (<code>.card, .panel, .dialog</code>),
+            and that is repetition showing up directly in CSS —
+            <b>elements that look the same should never have two separate style definitions.</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between "everyone does their own thing" and "one shared spec" and compare how consistent the three cards look.</p>
+          <div class="demo-mount" data-demo="d-1-4"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.5 Gestalt ---------- -->
+      <article class="chapter" id="ch-1-5">
+        <h2>1.5 Gestalt Principles</h2>
+        <p class="chapter-subtitle">How the eye "groups things automatically"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>The principles so far are very hands-on, but there is a body of psychology behind them —
+          the <strong>Gestalt principles</strong>. They explain <b>why the eye automatically treats certain elements as belonging together</b>.</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Principle</th><th>What it means</th><th>How to use it in layout</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Proximity</b></td><td>Things that sit close group automatically</td><td>Group with spacing (= §1.2)</td></tr>
+              <tr><td><b>Similarity</b></td><td>Things that look alike group automatically</td><td>Same style = same kind of content; different color = different kind</td></tr>
+              <tr><td><b>Common Region</b></td><td>Things inside one container group automatically</td><td>The theory behind <b>cards, borders and tinted backgrounds</b></td></tr>
+              <tr><td><b>Closure</b></td><td>An incomplete shape gets completed by the brain</td><td>You do not have to draw every border</td></tr>
+              <tr><td><b>Continuity</b></td><td>Items along one line read as a group</td><td>Aligning to one column = a natural group</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>the "card" pattern is essentially the common-region principle at work</b> —
+            give a block of content a background and a border and the eye knows at once that "these belong together",
+            <b>with no text needed</b>.
+            <br />But mind this: <b>overuse common region and the page turns into "a pile of boxes"</b>.
+            When spacing can do the job, do not draw a box (proximity is the lighter tool).
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Group with a "common region": add a background + radius and the eye groups it for you */</span>
+<span class="sel">.card</span> {
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+}
+
+<span class="cmt">/* Tell types apart with "similarity": one kind of content, one kind of style */</span>
+<span class="sel">.tag--new</span>  { <span class="prop">background</span>: <span class="fn">var</span>(--c-primary-weak); <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }
+<span class="sel">.tag--hot</span>  { <span class="prop">background</span>: <span class="fn">var</span>(--c-accent-weak);  <span class="prop">color</span>: <span class="fn">var</span>(--c-accent); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>similar is not the same</b>.
+            "Similar" means "looks like it belongs to the same family" and still allows distinctions (NEW / HOT above).
+            What matters is that <b>the distinctions form a system</b>, instead of every tag getting its own color.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Switch between "spacing only", "add a common region" and "add similarity distinctions", and watch how the perception of grouping sharpens step by step.</p>
+          <div class="demo-mount" data-demo="d-1-5"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.6 Balance & rhythm ---------- -->
+      <article class="chapter" id="ch-1-6">
+        <h2>1.6 Visual Balance and Rhythm</h2>
+        <p class="chapter-subtitle">Whether a page "stands firm" comes down to visual weight</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 Explanation</button>
+          <button class="tab-btn" data-tab="code">⌨️ Key code</button>
+          <button class="tab-btn" data-tab="demo">▶️ Demo</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>One last theoretical lens: picture the page as a <b>balance scale</b>. Every element carries its own "weight",
+          and laying out a page is the job of positioning those weights so the whole thing stands steady.</p>
+
+          <div class="theory-card">
+            <h3>⚖️ What makes an element "heavier"?</h3>
+            <p>
+              a <b>larger</b> area · a <b>darker / more saturated</b> color · <b>higher</b> contrast ·
+              a <b>more complex</b> shape · <b>more</b> whitespace around it (isolated things catch the eye more).
+            </p>
+          </div>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>Balance style</th><th>Characteristic</th><th>Where it fits</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>Symmetrical balance</b></td><td>Mirrored left and right; steady and formal</td><td>Official pages, formal occasions</td></tr>
+              <tr><td><b>Asymmetrical balance</b></td><td>Balanced by "one big vs several small" or "dark vs light"</td><td>Modern and lively (more common)</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">Rhythm: alternate tight and loose</h3>
+          <p>If every block has identical spacing, the page reads flat, like "one long straight line".
+          <strong>Rhythm</strong> means <b>tight for a stretch, loose for a stretch, creating breathing and cadence</b>.</p>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: <b>whitespace is not "the space that is left over" — it is "space you allocate on purpose".</b>
+            Beginners cram the page because they are afraid of "wasting" room; the professional move is to
+            <b>decide which block matters most, then give it the most whitespace</b>.
+            <br />Rule of thumb: <b>the whitespace around important content should be at least twice that around secondary content</b>.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Create rhythm with different spacing steps (instead of making everything identical) */</span>
+<span class="sel">.hero</span>      { <span class="prop">padding</span>: <span class="fn">var</span>(--space-xl) <span class="num">0</span>; }  <span class="cmt">/* loose: the core area */</span>
+<span class="sel">.features</span>  { <span class="prop">padding</span>: <span class="fn">var</span>(--space-lg) <span class="num">0</span>; }  <span class="cmt">/* medium */</span>
+<span class="sel">.meta</span>      { <span class="prop">padding</span>: <span class="fn">var</span>(--space-sm) <span class="num">0</span>; }  <span class="cmt">/* tight: supporting info */</span>
+
+<span class="cmt">/* Asymmetrical balance: a large image on the left, several small blocks + text on the right */</span>
+<span class="sel">.split</span> { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ Key point</strong>: asymmetrical balance normally uses a <b>non-uniform</b> ratio such as
+            <code>7fr 5fr</code> or <code>8fr 4fr</code> rather than the rigid <code>1fr 1fr</code> —
+            because the two sides naturally carry different visual weight, and the ratio is what compensates for it.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">Drag the parameters to change the visual weight on each side and watch when the "balance scale" tips.</p>
+          <div class="demo-mount" data-demo="d-1-6"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <span class="pager-prev empty"></span>
+    <a class="pager-portal" href="../">Course portal</a>
+    <a class="pager-next" href="../lesson-02/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 2 · From Requirements to Page Skeleton</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>Page Layout Academy · Chapter 1: Core Principles of Layout Design · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script src="../../i18n.js"></script>
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

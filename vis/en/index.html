@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Layout Academy · Learn Web Layout Design</title>
+  <meta name="description" content="Page Layout Academy: a hands-on course on web page layout — alignment and grids, box model, Flexbox, CSS Grid, positioning, responsive design, and a full portfolio-website capstone." />
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../i18n.css" />
+  <link rel="alternate" hreflang="zh-CN" href="../index.html" />
+</head>
+<body>
+
+  <!-- ============ Top bar ============ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">Page Layout Academy</span>
+      </a>
+      <nav class="topnav" aria-label="Site navigation">
+        <a href="#chapters">📚 Chapters</a>
+        <a href="#howto">▶️ How to use</a>
+        <a href="#about">ℹ️ About</a>
+      </nav>
+      <div class="lang-switch" role="group" aria-label="Language / 语言">
+        <a class="lang-switch-item" data-lang-link="zh" href="../" hreflang="zh-CN" lang="zh-CN">中</a>
+        <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ Hero ============ -->
+  <section class="hero">
+    <p class="hero-tag">LAYOUT DESIGN · FROM PRINCIPLES TO CODE</p>
+    <h1 class="hero-title">Page Layout Academy</h1>
+    <p class="hero-sub">9 chapters · Explanation ⇄ Key code ⇄ Interactive demo</p>
+    <p class="hero-meta">The Design track (1–4) teaches you how to design, the Implementation track (5–8) shows you how to write the code, and the Capstone (9) ties both together in one complete project.</p>
+  </section>
+
+  <main>
+    <!-- ============ Chapter card wall ============ -->
+    <section id="chapters" class="section">
+      <h2 class="section-title">📚 Course chapters</h2>
+      <p class="section-lead">
+        The course comes in three parts: the <strong>Design track (Ch. 1–4)</strong> answers “<b>how do I design</b> a page layout?”,
+        the <strong>Implementation track (Ch. 5–8)</strong> answers “<b>how do I write the code</b> to build it?”,
+        and the <strong>Capstone (Ch. 9)</strong> walks through a complete portfolio website that <b>puts both parts together from the start</b>.
+        Every chapter has 3 tabs: <strong>📖 Explanation</strong> / <strong>⌨️ Key code</strong> / <strong>▶️ Demo</strong>.
+      </p>
+
+      <div class="cards">
+
+        <!-- Ch. 1 -->
+        <a class="card card--design" href="lesson-01/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 1 · Design</div>
+          <h3 class="card-title">Core Principles of Layout Design</h3>
+          <p class="card-desc">Alignment, proximity, repetition, contrast, Gestalt and visual balance — first pin down what “a good layout” actually means.</p>
+          <ul class="card-tags">
+            <li>Alignment</li>
+            <li>Proximity &amp; whitespace</li>
+            <li>Repetition &amp; unity</li>
+            <li>Visual balance</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 2 -->
+        <a class="card card--design" href="lesson-02/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 2 · Design</div>
+          <h3 class="card-title">From Requirements to Page Skeleton</h3>
+          <p class="card-desc">Think it through before you draw: content priority, reading patterns, and nailing the structure down with a wireframe.</p>
+          <ul class="card-tags">
+            <li>Information architecture</li>
+            <li>F / Z reading patterns</li>
+            <li>Wireframes</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 3 -->
+        <a class="card card--design" href="lesson-03/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 3 · Design</div>
+          <h3 class="card-title">Grid Systems and Spacing Rhythm</h3>
+          <p class="card-desc">Why do professional pages line up so perfectly? A 12-column grid plus an 8pt spacing scale supplies the answer.</p>
+          <ul class="card-tags">
+            <li>12-column grid</li>
+            <li>8pt spacing</li>
+            <li>Alignment check</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 4 -->
+        <a class="card card--design" href="lesson-04/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 4 · Design</div>
+          <h3 class="card-title">Choosing a Layout Pattern</h3>
+          <p class="card-desc">Single column, multi-column, card wall, dashboard — which pattern suits which scenario, explained once and for all.</p>
+          <ul class="card-tags">
+            <li>Holy grail layout</li>
+            <li>Card wall</li>
+            <li>Dashboard</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 5 -->
+        <a class="card card--impl" href="lesson-05/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 5 · Implementation</div>
+          <h3 class="card-title">Box Model and Document Flow</h3>
+          <p class="card-desc">The foundation of the Implementation track: how much space an element takes up, how it flows by default, and how <code>display</code> decides its role.</p>
+          <ul class="card-tags">
+            <li>Box model</li>
+            <li>Document flow</li>
+            <li>display</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 6 -->
+        <a class="card card--impl" href="lesson-06/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 6 · Implementation</div>
+          <h3 class="card-title">Flexbox</h3>
+          <p class="card-desc">One-dimensional flexible boxes: aligning, distributing, and sharing the leftover space in proportion.</p>
+          <ul class="card-tags">
+            <li>Main / cross axis</li>
+            <li>Alignment &amp; distribution</li>
+            <li>Flexing</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 7 -->
+        <a class="card card--impl" href="lesson-07/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 7 · Implementation</div>
+          <h3 class="card-title">CSS Grid</h3>
+          <p class="card-desc">A two-dimensional grid system with rows and columns under your control — the go-to tool for page skeletons and card walls.</p>
+          <ul class="card-tags">
+            <li>fr unit</li>
+            <li>auto-fit</li>
+            <li>Grid placement</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 8 -->
+        <a class="card card--impl" href="lesson-08/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 8 · Implementation</div>
+          <h3 class="card-title">Positioning, Stacking &amp; Responsive Design</h3>
+          <p class="card-desc">Take elements out of the document flow, control stacking order, and make one codebase fit everything from phones to large screens.</p>
+          <ul class="card-tags">
+            <li>position</li>
+            <li>z-index</li>
+            <li>Media queries</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+        <!-- Ch. 9 -->
+        <a class="card card--capstone" href="lesson-09/">
+          <div class="card-status">Available</div>
+          <div class="card-num">Ch. 9 · Capstone</div>
+          <h3 class="card-title">Capstone: A Portfolio Website</h3>
+          <p class="card-desc">From requirements to responsive layout, build a personal portfolio site in 8 complete steps — theory and technique applied end to end.</p>
+          <ul class="card-tags">
+            <li>Requirements → skeleton</li>
+            <li>Building block by block</li>
+            <li>Design self-check</li>
+          </ul>
+          <div class="card-cta">Enter chapter</div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ============ How to use ============ -->
+    <section id="howto" class="section">
+      <h2 class="section-title">▶️ How to use this site</h2>
+      <p class="section-lead">This is a zero-dependency static site — there is nothing to install.</p>
+
+      <div class="howto">
+        <div class="howto-card">
+          <h3>📖 Studying on your own</h3>
+          <p>Work through the chapters in order. In each one, read the <strong>Explanation</strong> first, then the <strong>Key code</strong>, and finally open the <strong>Demo</strong> to drag the sliders and change values yourself.</p>
+        </div>
+        <div class="howto-card">
+          <h3>💻 Preparing a class</h3>
+          <p>The tabs switch freely, so you can explain the principle and jump straight to the live demo to adjust parameters on the spot — teaching and demonstrating in one go.</p>
+        </div>
+        <div class="howto-card">
+          <h3>📶 Running it locally</h3>
+          <p>Run <code>python -m http.server 8080</code> in the project root, then open <code>http://localhost:8080</code> in your browser.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ About ============ -->
+    <section id="about" class="section">
+      <h2 class="section-title">ℹ️ About this site</h2>
+
+      <div class="about">
+        <div class="about-item">
+          <h4>🛠️ Tech stack</h4>
+          <p>Zero dependencies, zero build: plain <strong>HTML + CSS + JavaScript (ES Modules)</strong>. No framework, and no npm bundling.</p>
+        </div>
+        <div class="about-item">
+          <h4>🎯 Design principle</h4>
+          <p><strong>Hands-on first</strong>: every concept comes with a demo you can adjust in real time — you see it, you change it, you remember it.</p>
+        </div>
+        <div class="about-item">
+          <h4>🎨 Color system</h4>
+          <p>Every color on the site comes from the design tokens in <code>tokens.css</code> — reskin the whole site by editing one file. Dark mode follows your system setting.</p>
+        </div>
+        <div class="about-item">
+          <h4>🧱 Layout approach</h4>
+          <p>The portal uses a responsive <strong>CSS Grid</strong> card wall; chapter pages use a two-column layout — a sticky top bar, a left-hand outline, and the content on the right.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 Page Layout Academy · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+    <p class="footer-meta">Token-driven colors · Responsive · Deployable to GitHub Pages</p>
+  </footer>
+
+  <script src="../i18n.js"></script>
+</body>
+</html>

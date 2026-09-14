@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 2 章 从需求到页面骨架 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="2">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 2 章 从需求到页面骨架</h1>
+      <p class="subtitle">信息架构 · 阅读模式 · 线框图</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-2-1" data-chapter="ch-2-1" class="active">2.1 先问目标与优先级</a></li>
+        <li><a href="#ch-2-2" data-chapter="ch-2-2">2.2 阅读模式与视线路径</a></li>
+        <li><a href="#ch-2-3" data-chapter="ch-2-3">2.3 线框图：先骨架后皮肤</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 2.1 先问目标与优先级 ---------- -->
+      <article class="chapter active" id="ch-2-1">
+        <h2>2.1 先问目标与优先级</h2>
+        <p class="chapter-subtitle">别急着打开编辑器，先回答三个问题</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>布局的本质是<strong>把内容按重要性排布到空间里</strong>。所以设计布局的第一步不是 CSS，而是<b>想清楚内容的主次</b>。</p>
+
+          <div class="theory-card">
+            <h3>❓ 动手前必答的三个问题</h3>
+            <p>
+              <strong>1. 这个页面要让用户做什么？</strong>（唯一目标，例如"报名课程"）<br />
+              <strong>2. 最重要的一件事是什么？</strong>（它应该最大、最显眼）<br />
+              <strong>3. 哪些是次要信息？</strong>（排在后面、视觉弱化）
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">从内容清单到布局</h3>
+          <ol style="padding-left:22px;">
+            <li><strong>列清单</strong>：把页面要放的所有内容写下来（标题、图片、按钮、说明…）</li>
+            <li><strong>排优先级</strong>：每项打 1～3 星，星星多的排前面、给更大空间</li>
+            <li><strong>做分组</strong>：把相关的项归到一起（对应第 1 章的亲密性）</li>
+            <li><strong>定顺序</strong>：按"用户视线会怎么走"决定上下顺序</li>
+          </ol>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>布局问题，十有八九是优先级问题。</b>
+            如果一个页面看起来"乱"，往往不是 CSS 写错了，
+            而是<b>所有内容都在抢注意力</b>——没有主次，就没有秩序。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 优先级 → 视觉权重的映射（用变量固定下来） */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--w-primary</span>:   <span class="num">700</span>;   <span class="cmt">/* 一级：大字号 + 加粗 + 主色 */</span>
+  <span class="prop">--w-secondary</span>: <span class="num">500</span>;   <span class="cmt">/* 二级：正常 */</span>
+  <span class="prop">--w-tertiary</span>:  <span class="num">400</span>;   <span class="cmt">/* 三级：灰色弱化 */</span>
+}
+
+<span class="sel">.card-title</span> { <span class="prop">font-size</span>: <span class="num">22px</span>; <span class="prop">font-weight</span>: <span class="fn">var</span>(--w-primary); }
+<span class="sel">.card-desc</span>  { <span class="prop">font-size</span>: <span class="num">14px</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：把"优先级"翻译成<b>可复用的视觉档位</b>（字号 / 字重 / 颜色），
+            而不是每个元素单独调——这样页面再加内容也不会乱。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">用 ↑ ↓ 调整内容顺序，观察页面骨架如何随优先级重排。</p>
+          <div class="demo-mount" data-demo="d-2-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.2 阅读模式与视线路径 ---------- -->
+      <article class="chapter" id="ch-2-2">
+        <h2>2.2 阅读模式与视线路径</h2>
+        <p class="chapter-subtitle">用户的眼睛会怎么"走"过你的页面</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>人看网页不是"逐字读"，而是<b>扫描</b>。大量眼动实验总结出几种典型的视线路径，了解它们就能把重要内容放在"必经之路"上。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>模式</th><th>路径</th><th>适合的页面</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>F 型</b></td><td>先横向扫一遍标题 → 再横向扫一遍 → 最后沿左侧纵向快速下拉</td><td>以文字为主：文章、文档、列表</td></tr>
+              <tr><td><b>Z 型</b></td><td>左上 → 右上 → 左下 → 右下（对角线）</td><td>视觉化落地页、海报式页面</td></tr>
+              <tr><td><b>古腾堡图</b></td><td>左上（主视觉区）→ 右上 → 左下 → 右下（行动区）</td><td>对称型页面、卡片式版面</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>把最重要的内容放在视线路径上</b>——
+            <br />· F 型页面：关键信息尽量靠左、靠上；
+            <br />· Z 型页面：把"行动按钮（CTA）"放在路径终点（右下）；
+            <br />· 反过来，如果你把重点放在路径之外，用户可能<b>根本不会看到它</b>。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* Z 型落地页：用 Grid 把 CTA 放到路径终点 */</span>
+<span class="sel">.landing</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr</span> <span class="num">1fr</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="str">"brand   nav"</span>
+    <span class="str">"hero    hero"</span>
+    <span class="str">"text    cta"</span>;   <span class="cmt">/* ← 行动按钮落在右下，符合 Z 型终点 */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：这就是第 4 章"布局模式"与本章的结合点——
+            <b>先由视线路径决定"什么放在哪"，再由 Grid / Flex 把它实现出来。</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换三种阅读模式，观察视线路径在同一个骨架上的走向，以及"重点区"应该在哪儿。</p>
+          <div class="demo-mount" data-demo="d-2-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.3 线框图 ---------- -->
+      <article class="chapter" id="ch-2-3">
+        <h2>2.3 线框图：先骨架后皮肤</h2>
+        <p class="chapter-subtitle">用灰块把结构定下来，再谈颜色和文案</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p><strong>线框图（wireframe）</strong>是用灰色方块和占位文字画出的页面结构草图——<b>只关心"哪块放哪、占多大"，不关心长得好不好看</b>。</p>
+
+          <div class="theory-card">
+            <h3>✏️ 为什么一定要先画线框？</h3>
+            <p>
+              <strong>1. 改起来便宜</strong>：结构没定就做视觉，一旦推翻要重做全部样式。<br />
+              <strong>2. 逼你想清楚</strong>：画不出灰块，说明你还没想明白这块内容要放什么。<br />
+              <strong>3. 沟通成本低</strong>：给老师/队友看灰块，对方更容易提结构意见，而不是纠结颜色。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：定骨架的顺序建议是
+            <b>① 分区块（页头/主体/页脚）→ ② 定每块占几栏 → ③ 再填内容 → ④ 最后上色</b>。
+            <br /><strong>常见错误</strong>：一上来就调颜色和阴影，结果发现结构不对，全部推翻重来。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 线框阶段：只用灰块和虚线，把结构占位先搭出来 */</span>
+<span class="sel">.wire-block</span> {
+  <span class="prop">background</span>: <span class="num">#e8e6e1</span>;
+  <span class="prop">border</span>: <span class="num">1px</span> <span class="str">dashed</span> <span class="num">#b8b2a8</span>;
+  <span class="prop">border-radius</span>: <span class="num">6px</span>;
+  <span class="prop">min-height</span>: <span class="num">60px</span>;
+}
+
+<span class="cmt">/* 结构定了，再替换成真实样式 —— 骨架不用改 */</span>
+<span class="sel">.hero</span> { <span class="prop">background</span>: <span class="fn">var</span>(--c-surface); <span class="prop">border-radius</span>: <span class="num">12px</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：线框图到成品的转换，<b>理想情况下只改"皮肤"（颜色/字号/圆角），不改"骨架"（分栏与顺序）</b>。
+            如果你发现必须动骨架，说明线框阶段想得还不够清楚。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换「线框图 / 高保真」，观察同一套骨架的两种呈现——注意骨架完全没变。</p>
+          <div class="demo-mount" data-demo="d-2-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-01/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 1 章 布局设计的基本原则</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-03/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 3 章 栅格系统与间距节奏</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 2 章 从需求到页面骨架 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

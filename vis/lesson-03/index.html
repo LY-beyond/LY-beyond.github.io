@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 3 章 栅格系统与间距节奏 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="3">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 3 章 栅格系统与间距节奏</h1>
+      <p class="subtitle">12 列栅格 · 8pt 间距体系</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-3-1" data-chapter="ch-3-1" class="active">3.1 12 列栅格</a></li>
+        <li><a href="#ch-3-2" data-chapter="ch-3-2">3.2 8pt 间距节奏</a></li>
+        <li><a href="#ch-3-3" data-chapter="ch-3-3">3.3 对齐到栅格</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 3.1 12 列栅格 ---------- -->
+      <article class="chapter active" id="ch-3-1">
+        <h2>3.1 12 列栅格</h2>
+        <p class="chapter-subtitle">给页面上所有元素一套共同的"刻度"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>第 1 章讲了"要对齐"，但<b>对齐到哪儿</b>？答案是<b>栅格（grid system）</b>——把页面横向切成若干等宽的列，所有元素都按"跨几列"来摆放。</p>
+
+          <div class="theory-card">
+            <h3>📐 栅格的四个组成部分</h3>
+            <p>
+              <strong>容器（container）</strong>：内容的最大宽度，居中显示。<br />
+              <strong>列（column）</strong>：通常 12 列。<br />
+              <strong>槽（gutter）</strong>：列与列之间的间距。<br />
+              <strong>外边距（margin）</strong>：容器与屏幕边缘的留白。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：为什么偏偏是 <b>12 列</b>？
+            因为 12 能被 <b>1、2、3、4、6、12</b> 整除——
+            意味着你可以轻松做"一半(6+6)""三分之一(4+4+4)""四分之一(3×4)""三分之二(8+4)"，
+            不用改栅格就能适配大多数版式。这是 12 这个数字的工程优势，不是审美玄学。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 最基本的 12 列栅格 */</span>
+<span class="sel">.grid-12</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;               <span class="cmt">/* 也就是 gutter */</span>
+  <span class="prop">max-width</span>: <span class="num">1180px</span>;
+  <span class="prop">margin</span>: <span class="num">0</span> <span class="str">auto</span>;            <span class="cmt">/* 容器居中 */</span>
+}
+
+<span class="cmt">/* 元素按"跨几列"摆放 */</span>
+<span class="sel">.col-8</span> { <span class="prop">grid-column</span>: <span class="str">span 8</span>; }   <span class="cmt">/* 2/3 宽 */</span>
+<span class="sel">.col-4</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; }   <span class="cmt">/* 1/3 宽 */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：用 <code>span N</code> 而不是写死像素宽度，
+            好处是<b>改容器宽度时所有元素自动等比调整</b>，永远保持对齐；
+            而且和小屏适配天然兼容（第 8 章会讲怎么降列）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整每个内容块跨越的列数，观察它们始终落在同一套列线上。</p>
+          <div class="demo-mount" data-demo="d-3-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.2 8pt 间距节奏 ---------- -->
+      <article class="chapter" id="ch-3-2">
+        <h2>3.2 8pt 间距节奏</h2>
+        <p class="chapter-subtitle">别再用 13px、17px、23px 这种"随手值"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>除了横向的列，纵向也需要一套"刻度"——这就是<strong>间距体系</strong>。业界最常用的是 <b>8pt 栅格</b>：所有间距都是 8 的倍数。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>档位</th><th>数值</th><th>典型用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--space-xs</code></td><td>4px</td><td>图标与文字之间</td></tr>
+              <tr><td><code>--space-sm</code></td><td>8px</td><td>组内元素、标签间距</td></tr>
+              <tr><td><code>--space</code></td><td>16px</td><td>卡片内边距、常规间距</td></tr>
+              <tr><td><code>--space-lg</code></td><td>24px</td><td>卡片之间</td></tr>
+              <tr><td><code>--space-xl</code></td><td>40px</td><td>区块之间</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：间距体系的价值不在于"数值好看"，而在于
+            <b>让每一次留白决策都变成"从 5 个档位里选一个"</b>，
+            而不是"临时拍一个 17px"。
+            <br />这样做的直接好处：<b>页面节奏统一、改版时成批调整、团队协作不打架。</b>
+            <br />本站的 <code>tokens.css</code> 就是这么定义的——你也已经看到了。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">:root</span> {
+  <span class="prop">--space-xs</span>: <span class="num">4px</span>;
+  <span class="prop">--space-sm</span>: <span class="num">8px</span>;
+  <span class="prop">--space</span>:    <span class="num">16px</span>;
+  <span class="prop">--space-lg</span>: <span class="num">24px</span>;
+  <span class="prop">--space-xl</span>: <span class="num">40px</span>;
+}
+
+<span class="cmt">/* 用档位，而不是随手数值 */</span>
+<span class="sel">.card</span>    { <span class="prop">padding</span>: <span class="fn">var</span>(--space); }
+<span class="sel">.section</span> { <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-xl); }
+<span class="sel">.tag</span>     { <span class="prop">margin-right</span>: <span class="fn">var</span>(--space-xs); }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<b>4px 作为最小档</b>是有原因的——
+            它足够小能处理细节，又是 8 的一半，所以"半个标准间距"也能落在体系里，
+            不会出现 6px、10px 这类破坏节奏的数值。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换「随手值 / 8pt 节奏」，对比同一份内容的视觉整齐度。</p>
+          <div class="demo-mount" data-demo="d-3-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 3.3 对齐到栅格 ---------- -->
+      <article class="chapter" id="ch-3-3">
+        <h2>3.3 对齐到栅格</h2>
+        <p class="chapter-subtitle">保留一个"放大镜"，随时检查是否对齐</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>栅格画出来之后，还需要一个<b>检查手段</b>：把列线半透明地叠加在页面上，一眼就能看出哪些元素"跑偏了"。</p>
+
+          <div class="theory-card">
+            <h3>🔍 常见的三种"跑偏"</h3>
+            <p>
+              <strong>1. 左右边界不齐</strong>：容器 padding 与内容 padding 叠加，导致左右不等。<br />
+              <strong>2. 卡片宽度不一</strong>：用像素写死宽度，而不是 <code>span</code>。<br />
+              <strong>3. 间距不成比例</strong>：某处 14px、另一处 22px，节奏被打断。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：调试布局时，<b>先开栅格叠加层，再谈细节</b>。
+            很多"说不清楚哪里怪"的页面，打开栅格一看全是问题。
+            <br /><b>实用技巧</b>：给栅格叠加层加一个快捷键（例如按 <kbd>G</kbd> 切换），
+            做布局时随手检查，比事后返工便宜得多。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 栅格叠加层：绝对定位 + 半透明列 */</span>
+<span class="sel">.overlay</span> {
+  <span class="prop">position</span>: <span class="str">absolute</span>;
+  <span class="prop">inset</span>: <span class="num">0</span>;
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="num">24px</span>;
+  <span class="prop">pointer-events</span>: <span class="str">none</span>;   <span class="cmt">/* 不挡点击 */</span>
+}
+<span class="sel">.overlay span</span> {
+  <span class="prop">background</span>: <span class="fn">rgba</span>(<span class="num">15</span>,<span class="num">118</span>,<span class="num">110</span>,.<span class="num">10</span>);
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>pointer-events: none</code> 是关键——
+            否则叠加层会挡住页面上的所有点击。调试工具一定要"无副作用"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">打开栅格叠加层，再切换「对齐 / 跑偏」，看看差异有多明显。</p>
+          <div class="demo-mount" data-demo="d-3-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-02/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 2 章 从需求到页面骨架</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-04/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 4 章 布局模式选型</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 3 章 栅格系统与间距节奏 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

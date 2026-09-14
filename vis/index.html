@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>页面布局入门 · 教学站</title>
+  <meta name="description" content="《如何进行页面布局》教学站：盒模型、Flexbox、Grid、定位、响应式与综合实战。" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="i18n.css" />
+  <link rel="alternate" hreflang="en" href="en/index.html" />
+</head>
+<body>
+
+  <!-- ============ 顶栏 ============ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">页面布局入门</span>
+      </a>
+      <nav class="topnav" aria-label="站点导航">
+        <a href="#chapters">📚 章节</a>
+        <a href="#howto">▶️ 使用方式</a>
+        <a href="#about">ℹ️ 关于</a>
+      </nav>
+      <div class="lang-switch" role="group" aria-label="语言 / Language">
+        <span class="lang-switch-item is-active" aria-current="true">中</span>
+        <a class="lang-switch-item" data-lang-link="en" href="en/" hreflang="en" lang="en">EN</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ Hero ============ -->
+  <section class="hero">
+    <p class="hero-tag">LAYOUT DESIGN · 从设计原则到代码落地</p>
+    <h1 class="hero-title">页面布局教学平台</h1>
+    <p class="hero-sub">9 个章节 · 讲解 ⇄ 关键代码 ⇄ 可交互演示</p>
+    <p class="hero-meta">设计篇（1–4）教你怎么设计，实现篇（5–8）教你写代码，实战篇（9）用一个完整案例串起来</p>
+  </section>
+
+  <main>
+    <!-- ============ 章节卡片墙 ============ -->
+    <section id="chapters" class="section">
+      <h2 class="section-title">📚 课程章节</h2>
+      <p class="section-lead">
+        课程分三部分：<strong>设计篇（第 1–4 章）</strong>回答"<b>怎么设计</b>一个页面的布局"，
+        <strong>实现篇（第 5–8 章）</strong>回答"<b>怎么写代码</b>把它做出来"，
+        <strong>实战篇（第 9 章）</strong>用一个完整的作品集网站案例，<b>把前两部分从头串一遍</b>。
+        每章含 3 个 tab：<strong>📖 讲解</strong> / <strong>⌨️ 关键代码</strong> / <strong>▶️ 演示</strong>。
+      </p>
+
+      <div class="cards">
+
+        <!-- 第 1 章 -->
+        <a class="card card--design" href="lesson-01/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 1 章 · 设计篇</div>
+          <h3 class="card-title">布局设计的基本原则</h3>
+          <p class="card-desc">对齐、亲密性、重复、对比、格式塔与视觉平衡——先搞清"什么算好的布局"。</p>
+          <ul class="card-tags">
+            <li>对齐</li>
+            <li>亲密性与留白</li>
+            <li>重复与统一</li>
+            <li>视觉平衡</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 2 章 -->
+        <a class="card card--design" href="lesson-02/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 2 章 · 设计篇</div>
+          <h3 class="card-title">从需求到页面骨架</h3>
+          <p class="card-desc">动手画之前先想清楚：内容优先级、阅读模式、以及用线框图定下结构。</p>
+          <ul class="card-tags">
+            <li>信息架构</li>
+            <li>F/Z 型阅读</li>
+            <li>线框图</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 3 章 -->
+        <a class="card card--design" href="lesson-03/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 3 章 · 设计篇</div>
+          <h3 class="card-title">栅格系统与间距节奏</h3>
+          <p class="card-desc">为什么专业页面"对得很齐"？12 列栅格 + 8pt 间距体系给出答案。</p>
+          <ul class="card-tags">
+            <li>12 列栅格</li>
+            <li>8pt 间距</li>
+            <li>对齐检查</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 4 章 -->
+        <a class="card card--design" href="lesson-04/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 4 章 · 设计篇</div>
+          <h3 class="card-title">布局模式选型</h3>
+          <p class="card-desc">单栏、多栏、卡片墙、仪表盘——什么场景该用哪种布局，一次讲清。</p>
+          <ul class="card-tags">
+            <li>圣杯布局</li>
+            <li>卡片墙</li>
+            <li>仪表盘</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 5 章 -->
+        <a class="card card--impl" href="lesson-05/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 5 章 · 实现篇</div>
+          <h3 class="card-title">盒模型与文档流</h3>
+          <p class="card-desc">实现篇的地基：元素占多少空间、默认怎么排列、display 如何决定角色。</p>
+          <ul class="card-tags">
+            <li>盒模型</li>
+            <li>文档流</li>
+            <li>display</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 6 章 -->
+        <a class="card card--impl" href="lesson-06/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 6 章 · 实现篇</div>
+          <h3 class="card-title">Flexbox 弹性布局</h3>
+          <p class="card-desc">一维弹性盒子：对齐、分布与按比例分配剩余空间。</p>
+          <ul class="card-tags">
+            <li>主轴 / 交叉轴</li>
+            <li>对齐分布</li>
+            <li>弹性伸缩</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 7 章 -->
+        <a class="card card--impl" href="lesson-07/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 7 章 · 实现篇</div>
+          <h3 class="card-title">Grid 网格布局</h3>
+          <p class="card-desc">二维网格系统：行列同时掌控，是页面骨架与卡片墙的利器。</p>
+          <ul class="card-tags">
+            <li>fr 单位</li>
+            <li>auto-fit</li>
+            <li>网格定位</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 8 章 -->
+        <a class="card card--impl" href="lesson-08/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 8 章 · 实现篇</div>
+          <h3 class="card-title">定位、层叠与响应式</h3>
+          <p class="card-desc">让元素脱离文档流、控制层叠顺序，并让一份代码适配手机到大屏。</p>
+          <ul class="card-tags">
+            <li>position</li>
+            <li>z-index</li>
+            <li>媒体查询</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+        <!-- 第 9 章 -->
+        <a class="card card--capstone" href="lesson-09/">
+          <div class="card-status">已上线</div>
+          <div class="card-num">第 9 章 · 实战篇</div>
+          <h3 class="card-title">综合案例：作品集网站</h3>
+          <p class="card-desc">从需求到响应式，8 步完整做出一个个人作品集网站，理论与技术全程落地。</p>
+          <ul class="card-tags">
+            <li>需求 → 骨架</li>
+            <li>逐块搭建</li>
+            <li>设计自查</li>
+          </ul>
+          <div class="card-cta">进入章节</div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ============ 使用方式 ============ -->
+    <section id="howto" class="section">
+      <h2 class="section-title">▶️ 使用方式</h2>
+      <p class="section-lead">这是一个零依赖的静态站点，不需要安装任何东西。</p>
+
+      <div class="howto">
+        <div class="howto-card">
+          <h3>📖 学生自学</h3>
+          <p>按章节顺序过一遍，每章先看 <strong>讲解</strong>，再看 <strong>关键代码</strong>，最后到 <strong>演示</strong> 里自己动手拖一拖、改一改。</p>
+        </div>
+        <div class="howto-card">
+          <h3>💻 教师备课时</h3>
+          <p>每章的 tab 可以自由切换，适合一边讲原理、一边切到演示现场调参数，边讲边演。</p>
+        </div>
+        <div class="howto-card">
+          <h3>📶 本地运行</h3>
+          <p>在项目根目录执行 <code>python -m http.server 8080</code>，浏览器打开 <code>http://localhost:8080</code> 即可。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 关于 ============ -->
+    <section id="about" class="section">
+      <h2 class="section-title">ℹ️ 关于本站</h2>
+
+      <div class="about">
+        <div class="about-item">
+          <h4>🛠️ 技术栈</h4>
+          <p>零依赖、零构建：纯 <strong>HTML + CSS + JavaScript（ES Modules）</strong>。不依赖任何框架，也不需要 npm 打包。</p>
+        </div>
+        <div class="about-item">
+          <h4>🎯 设计原则</h4>
+          <p><strong>动手为中心</strong>：每个知识点都配一个可以实时调参的演示，看得见、改得动、记得住。</p>
+        </div>
+        <div class="about-item">
+          <h4>🎨 配色体系</h4>
+          <p>全站配色集中于 <code>tokens.css</code> 的设计令牌，改一处即可整体换肤，支持系统深色模式。</p>
+        </div>
+        <div class="about-item">
+          <h4>🧱 布局方式</h4>
+          <p>门户使用 <strong>CSS Grid</strong> 响应式卡片墙；章节页使用「顶栏 + 左侧目录 + 右侧正文」的两栏布局。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 《如何进行页面布局》教学站 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+    <p class="footer-meta">配色令牌化 · 响应式 · 可部署于 GitHub Pages</p>
+  </footer>
+
+  <script src="i18n.js"></script>
+</body>
+</html>

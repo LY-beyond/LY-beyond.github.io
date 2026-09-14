@@ -1,0 +1,160 @@
+/* =========================================================
+ * tokens.css —— 全站设计令牌
+ * ---------------------------------------------------------
+ * 本文件是全站唯一的“配色 / 间距 / 圆角 / 字体 / 阴影”来源。
+ * 想整体换肤，只需要修改这里的变量，无需改动任何其他文件。
+ * ========================================================= */
+
+:root {
+  color-scheme: light;         /* 表单控件 / 滚动条跟随主题 */
+
+  /* ---------- 品牌色 ---------- */
+  --c-primary:      #0f766e;   /* 主色：青绿 */
+  --c-primary-2:    #0d9488;   /* 主色亮阶 */
+  --c-primary-weak: #d7f2ee;   /* 主色浅底 */
+  --c-accent:       #ea580c;   /* 强调色：橙 */
+  --c-accent-weak:  #ffedd5;
+  --c-on-primary:   #ffffff;   /* 主色块上的前景色 */
+  --c-on-accent:    #ffffff;   /* 强调色块上的前景色 */
+
+  /* ---------- 背景与表面 ---------- */
+  --c-bg:        #faf9f7;      /* 页面底色（暖白纸感） */
+  --c-surface:   #ffffff;      /* 卡片 / 面板 */
+  --c-surface-2: #f4f2ee;      /* 次级面板 */
+
+  /* ---------- 文字 ---------- */
+  --c-text:      #1e2a32;
+  --c-text-soft: #5b6b76;
+  --c-muted:     #8a97a0;
+
+  /* ---------- 边框 / 分隔 ---------- */
+  --c-border:    #e6e2da;
+  --c-border-2:  #d5cfc4;
+
+  /* =======================================================
+   * 派生层：只改下面的比例，全站状态色整体加深 / 变淡
+   * 用法：color-mix(in srgb, <主色> var(--mix-soft), var(--c-surface))
+   * 参考 FRONTEND_GUIDE.md 4.2「用 color-mix() 派生色阶」
+   * ===================================================== */
+  --mix-soft: 9%;    /* 极浅底：标签底 / 徽章底 */
+  --mix-halo: 18%;   /* 柔光圈：描边 / 光晕 */
+  --mix-ink:  72%;   /* 深字：主色压深当文字，保证对比度 */
+  --mix-line: 96%;   /* 边框：半透明比实色更透气 */
+
+  --c-line:   color-mix(in srgb, var(--c-border) var(--mix-line), transparent);
+  --c-line-2: color-mix(in srgb, var(--c-border-2) var(--mix-line), transparent);
+  --c-focus:  color-mix(in srgb, var(--c-primary) 30%, transparent);  /* 键盘焦点环 */
+
+  /* ---------- 纯 CSS 背景纹理（零图片请求） ---------- */
+  --tex-grid: color-mix(in srgb, var(--c-primary) 8%, transparent);
+  --tex-line: color-mix(in srgb, var(--c-primary) 14%, transparent);
+  --tex-glow: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  --tex-warm: color-mix(in srgb, var(--c-accent) 12%, transparent);
+
+  /* ---------- 语义色 ---------- */
+  --c-info:    #0369a1;
+  --c-success: #15803d;
+  --c-warn:    #b45309;
+  --c-danger:  #dc2626;
+
+  /* ---------- 演示专用色（用于彩色盒子） ---------- */
+  --d1: #0ea5e9;
+  --d2: #14b8a6;
+  --d3: #f59e0b;
+  --d4: #ef4444;
+  --d5: #8b5cf6;
+  --d6: #ec4899;
+
+  /* ---------- 圆角 ---------- */
+  --radius-sm:   8px;
+  --radius:      12px;
+  --radius-lg:   20px;
+  --radius-pill: 999px;
+
+  /* ---------- 间距（8pt 节奏） ---------- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space:    16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --gutter:   24px;    /* 内容容器左右留白 */
+
+  /* ---------- 阴影（透明度 ≤ .11；y 位移 ≈ 模糊半径的一半） ---------- */
+  --shadow-xs:    0 1px 2px rgba(15, 23, 42, .05);
+  --shadow-sm:    0 4px 10px rgba(15, 23, 42, .05);
+  --shadow-card:  0 10px 21px rgba(15, 23, 42, .065);
+  --shadow:       0 12px 30px rgba(15, 23, 42, .07);
+  --shadow-lg:    0 18px 46px rgba(15, 23, 42, .08);
+  --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 22%, transparent);
+
+  /* ---------- 动效：时长 + 缓动（统一节奏，禁止 transition: all） ---------- */
+  --dur-fast: .18s;
+  --dur-base: .22s;
+  --ease:     cubic-bezier(.4, 0, .2, 1);
+  --t-control: color var(--dur-fast) var(--ease),
+               background-color var(--dur-fast) var(--ease),
+               border-color var(--dur-fast) var(--ease),
+               box-shadow var(--dur-fast) var(--ease);
+
+  /* ---------- 字体 ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI",
+               "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas,
+               "Courier New", monospace;
+
+  /* ---------- 布局尺寸 ---------- */
+  --maxw:      1180px;   /* 内容最大宽度 */
+  --topbar-h:  60px;     /* 顶栏高度 */
+  --sidebar-w: 250px;    /* 章节页左侧目录宽度 */
+  --z-nav:     50;       /* 吸顶栏层级 */
+}
+
+/* =========================================================
+ * 深色模式（可选加分项）
+ * 系统切换到深色时自动生效，同样只改变量
+ * ========================================================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --c-bg:        #0f1518;
+    --c-surface:   #161f24;
+    --c-surface-2: #1d272d;
+
+    --c-text:      #e6edf1;
+    --c-text-soft: #a9b6bf;
+    --c-muted:     #74838d;
+
+    --c-border:    #263239;
+    --c-border-2:  #33424a;
+
+    --c-primary:      #2dd4bf;
+    --c-primary-2:    #5eead4;
+    --c-primary-weak: #10312e;
+    --c-accent:       #fb923c;
+    --c-accent-weak:  #3a2413;
+
+    /* 语义色在深底上必须提亮，否则对比度掉到 4.5:1 以下（尤其小字徽章） */
+    --c-info:    #38bdf8;
+    --c-success: #4ade80;
+    --c-warn:    #fbbf24;
+    --c-danger:  #f87171;
+
+    /* 深色下主色偏亮，前景必须翻成深色才够对比（白字会糊） */
+    --c-on-primary: #04201d;
+    --c-on-accent:  #2a1405;
+
+    /* 深色下浅底要更“实”才看得见，深字要更“亮”才读得清 */
+    --mix-soft: 24%;
+    --mix-halo: 34%;
+    --mix-ink:  62%;
+    --mix-line: 92%;
+
+    --shadow-xs:    0 1px 2px rgba(0, 0, 0, .40);
+    --shadow-sm:    0 4px 10px rgba(0, 0, 0, .42);
+    --shadow-card:  0 10px 21px rgba(0, 0, 0, .45);
+    --shadow:       0 12px 30px rgba(0, 0, 0, .48);
+    --shadow-lg:    0 18px 46px rgba(0, 0, 0, .55);
+    --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 26%, transparent);
+  }
+}

@@ -1,0 +1,580 @@
+/* =========================================================
+ * lesson.css —— 章节页共享样式（9 个章节共用这一份）
+ * 修改这里，所有章节页同步生效
+ * ---------------------------------------------------------
+ * 章节页只引入 tokens.css + 本文件（不加载 styles.css），
+ * 所以「焦点环 / 动效降级」这类全局规则必须在这里也写一份。
+ * 美化要点（借自 FRONTEND_GUIDE.md）：
+ *   4.2  color-mix() 派生一切状态色
+ *   6.3  激活态用 inset 内描边，避免 border 出现/消失导致布局跳动
+ *   6.4  demo 舞台叠一层栅格纹理，暗示“这里是可操作区域”
+ *   7.4  只过渡具体属性，禁止 transition: all
+ *   10.1 :focus-visible + prefers-reduced-motion
+ * ========================================================= */
+
+/* ---------------- 键盘焦点环（与门户保持一致） ---------------- */
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 3px;
+}
+
+/* ---------------- 顶栏（章节版） ---------------- */
+.course-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+          backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--c-line);
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: 0 var(--gutter);
+  height: var(--topbar-h);
+}
+
+.course-topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.course-topbar .back { color: var(--c-primary); font-weight: 700; }
+
+.course-topbar .tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1 1 auto;
+  min-width: 0;          /* 允许收缩，把右端空间让给语言切换器 */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 语言切换器固定在顶栏最右 */
+.course-topbar .lang-switch { margin-left: auto; }
+
+.course-topbar .tabs a {
+  display: block;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  color: var(--c-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: var(--t-control);
+}
+
+.course-topbar .tabs a:hover {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  color: var(--c-primary);
+}
+
+/* 深色模式下主色偏亮，白字会糊 —— 统一用 --c-on-primary 取前景色 */
+.course-topbar .tabs a.current {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--c-primary) 32%, transparent);
+}
+
+/* ---------------- 章节头 ---------------- */
+.lesson-header {
+  position: relative;
+  isolation: isolate;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 40px var(--gutter) 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space);
+  flex-wrap: wrap;
+}
+
+/* 章节头两侧的柔和光斑：让每一章打开时有“封面感” */
+.lesson-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 130% at 8% 0%, var(--tex-glow), transparent 62%),
+    radial-gradient(60% 120% at 96% 12%, var(--tex-warm), transparent 64%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+}
+
+.lesson-header h1 {
+  font-size: clamp(26px, 4vw, 36px);
+  margin-bottom: 8px;
+}
+
+.lesson-header .subtitle {
+  margin: 0;
+  color: var(--c-text-soft);
+  font-size: 15px;
+}
+
+.header-tip {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-text);
+}
+
+/* ---------------- 主体两栏布局 ---------------- */
+.lesson-main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 72px;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+/* ---------------- 左侧章节目录 ---------------- */
+.chapter-nav {
+  position: sticky;
+  top: calc(var(--topbar-h) + 20px);
+  padding: 20px;
+  background: linear-gradient(170deg,
+    var(--c-surface) 0%, var(--c-surface) 62%,
+    color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 100%);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.chapter-nav h3 {
+  font-size: 13px;
+  letter-spacing: .08em;
+  color: var(--c-muted);
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+}
+
+.chapter-nav ul { margin: 0; padding: 0; list-style: none; }
+
+.chapter-nav a {
+  display: block;
+  padding: 9px 12px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-sm);
+  /* 激活态用 inset 内描边：不动盒模型，切换章节时文字不会左右微跳 */
+  box-shadow: inset 0 0 0 1px transparent;
+  color: var(--c-text-soft);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
+}
+
+.chapter-nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.chapter-nav a.active {
+  background: color-mix(in srgb, var(--c-primary) 13%, var(--c-surface));
+  color: var(--c-primary);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 38%, transparent);
+}
+
+.nav-tip {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--c-line-2);
+  font-size: 13px;
+  line-height: 2;
+}
+
+.nav-tip a { color: var(--c-primary); font-weight: 600; }
+
+/* ---------------- 章节容器（一次只显示一节） ---------------- */
+.chapter { display: none; }
+.chapter.active { display: block; scroll-margin-top: calc(var(--topbar-h) + 20px); }
+
+.chapter > h2 {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.chapter > h2::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 20px;
+  margin-right: 10px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg,
+    var(--c-accent), color-mix(in srgb, var(--c-accent) 55%, var(--c-primary-2)));
+  vertical-align: -2px;
+}
+
+.chapter-subtitle {
+  margin: 0 0 22px;
+  color: var(--c-text-soft);
+  font-size: 15px;
+}
+
+/* ---------------- 三 Tab ---------------- */
+.tabbar {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  margin-bottom: 22px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--t-control);
+}
+
+.tab-btn:hover { color: var(--c-primary); }
+
+.tab-btn.active {
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow-sm),
+              inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 24%, transparent);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fade var(--dur-base) var(--ease); }
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------- 讲解正文 ---------------- */
+.tab-panel p { margin: 0 0 14px; }
+
+.tab-panel ul,
+.tab-panel ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+  list-style: revert;
+}
+
+.tab-panel li { margin-bottom: 6px; }
+
+.tab-panel strong { color: var(--c-text); font-weight: 700; }
+
+/* 嵌入理论卡片 */
+.theory-card {
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  border-left: 4px solid color-mix(in srgb, var(--c-info) 70%, var(--c-border));
+  border-radius: var(--radius);
+}
+
+.theory-card h3 { font-size: 16px; margin-bottom: 10px; }
+.theory-card p:last-child { margin-bottom: 0; }
+
+/* ⭐ 关键点解释 */
+.key-point {
+  margin: 16px 0 0;
+  padding: 16px 18px;
+  background: var(--c-accent-weak);
+  border: 1px solid color-mix(in srgb, var(--c-accent) 30%, transparent);
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.key-point strong { color: var(--c-accent); }
+
+/* ---------------- 代码块 ---------------- */
+.code-block {
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  background: #1b2430;
+  color: #dfe7ee;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.code-block .cmt { color: #7d8fa1; font-style: italic; }
+.code-block .kw  { color: #7dd3fc; }
+.code-block .fn  { color: #fcd34d; }
+.code-block .str { color: #86efac; }
+.code-block .num { color: #f0abfc; }
+.code-block .prop{ color: #f9a8d4; }
+.code-block .sel { color: #fb923c; }
+
+/* 行内 code 在讲解中 */
+.tab-panel p code,
+.tab-panel li code {
+  color: var(--c-primary);
+  background: var(--c-primary-weak);
+  border-color: transparent;
+}
+
+/* 理论表格 */
+.theory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 18px;
+  font-size: 14px;
+}
+
+.theory-table th,
+.theory-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--c-line);
+  text-align: left;
+}
+
+.theory-table thead th {
+  background: var(--c-surface-2);
+  font-weight: 700;
+}
+
+.theory-table tbody tr:nth-child(even) { background: var(--c-bg); }
+
+/* ---------------- 演示区 ---------------- */
+.demo-hint {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border-left: 3px solid color-mix(in srgb, var(--c-primary) 55%, var(--c-border));
+  border-radius: var(--radius-sm);
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.demo-card {
+  padding: 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--c-line-2);
+}
+
+.demo-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-soft);
+}
+
+.demo-control input[type="range"] { width: 110px; accent-color: var(--c-primary); }
+
+.demo-control select {
+  padding: 5px 8px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.demo-control .val {
+  min-width: 42px;
+  font-family: var(--font-mono);
+  color: var(--c-primary);
+}
+
+.demo-stage {
+  padding: 20px;
+  /* 叠一层栅格纹理：一眼看出“这块区域可以拖、可以调” */
+  background:
+    repeating-linear-gradient(0deg, var(--tex-grid) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--tex-grid) 0 1px, transparent 1px 24px),
+    var(--c-surface-2);
+  border: 1px dashed color-mix(in srgb, var(--c-primary) 28%, var(--c-border-2));
+  border-radius: var(--radius);
+  min-height: 90px;
+}
+
+.demo-code {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  background: #1b2430;
+  color: #dfe7ee;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ---------------- 演示通用小部件 ---------------- */
+/* 彩色盒子：<div class="box d1">A</div> */
+.box {
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  min-height: 46px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.box.d1 { background: var(--d1); }
+.box.d2 { background: var(--d2); }
+.box.d3 { background: var(--d3); }
+.box.d4 { background: var(--d4); }
+.box.d5 { background: var(--d5); }
+.box.d6 { background: var(--d6); }
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.stack { display: block; }
+.stack .box { width: 100%; margin-bottom: 10px; }
+.stack .box:last-child { margin-bottom: 0; }
+
+/* ---------------- 章节翻页 ---------------- */
+.chapter-pager {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--space-lg) 64px;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.chapter-pager a,
+.chapter-pager span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 12px 18px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  transition: transform var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              background-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
+}
+
+.chapter-pager a:hover {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.chapter-pager .pager-prev { text-align: left; }
+.chapter-pager .pager-next { text-align: right; }
+
+.chapter-pager .pager-portal {
+  flex: 0 0 auto;
+  justify-content: center;
+  text-align: center;
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+.chapter-pager .pager-dir { font-size: 12px; color: var(--c-muted); }
+.chapter-pager .pager-title { font-size: 15px; font-weight: 700; color: var(--c-text); }
+.chapter-pager a:hover .pager-title { color: var(--c-primary); }
+.chapter-pager .empty { border: none; background: transparent; }
+
+/* ---------------- 页脚 ---------------- */
+.lesson-footer {
+  border-top: 1px solid var(--c-line);
+  padding: 30px var(--gutter);
+  text-align: center;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.lesson-footer p { margin: 0; }
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 900px) {
+  .lesson-main { grid-template-columns: 1fr; gap: var(--space-lg); }
+  .chapter-nav { position: static; }
+  .course-topbar { padding: 0 var(--space); gap: var(--space-sm); }
+  .lesson-header { padding: 28px var(--space) 18px; }
+  .lesson-main { padding: 0 var(--space) 56px; }
+  .chapter-pager { padding: 0 var(--space) 48px; flex-direction: column; }
+  .chapter-pager a, .chapter-pager span { text-align: center; }
+  .chapter-pager .pager-prev, .chapter-pager .pager-next { text-align: center; }
+}
+
+/* ---------------- 动效降级（尊重系统“减少动态效果”） ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+
+  /* 章节切换的淡入、翻页的位移都取消，信息照样完整呈现 */
+  .tab-panel.active { animation: none; }
+  .chapter-pager a:hover { transform: none; }
+}
+
+

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 5 章 盒模型与文档流 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <!-- ============ 顶栏 ============ -->
+  <nav class="course-topbar" data-current="5">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ 章节头 ============ -->
+  <header class="lesson-header">
+    <div>
+      <h1>第 5 章 盒模型与文档流</h1>
+      <p class="subtitle">一切布局的地基</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <!-- ============ 左侧目录 ============ -->
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-5-1" data-chapter="ch-5-1" class="active">5.1 盒模型</a></li>
+        <li><a href="#ch-5-2" data-chapter="ch-5-2">5.2 文档流</a></li>
+        <li><a href="#ch-5-3" data-chapter="ch-5-3">5.3 display 属性</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <!-- ============ 章节内容 ============ -->
+    <section class="chapter-content">
+
+      <!-- ---------- 1.1 盒模型 ---------- -->
+      <article class="chapter active" id="ch-5-1">
+        <h2>5.1 盒模型</h2>
+        <p class="chapter-subtitle">每个元素都是一个盒子，看懂它，才看得懂布局</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <!-- 讲解 -->
+        <div class="tab-panel active" data-panel="explain">
+          <p>在 CSS 眼里，<strong>页面上每一个元素都是一个矩形盒子</strong>。理解盒子由哪几层组成、各占多少空间，是学会布局的第一步。</p>
+
+          <div class="theory-card">
+            <h3>📦 盒模型的四层结构</h3>
+            <p>由内到外依次是：<code>content</code>（内容区）→ <code>padding</code>（内边距）→ <code>border</code>（边框）→ <code>margin</code>（外边距）。</p>
+          </div>
+
+          <ul>
+            <li><strong>content</strong>：文字、图片真正占据的区域，由 <code>width</code> / <code>height</code> 决定。</li>
+            <li><strong>padding</strong>：内容与边框之间的留白，<em>背景色会覆盖到它</em>。</li>
+            <li><strong>border</strong>：边框本身，也会占据实际空间。</li>
+            <li><strong>margin</strong>：盒子与盒子之间的距离，<em>背景色不覆盖</em>，且相邻外边距可能合并。</li>
+          </ul>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">两种 box-sizing</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>取值</th><th>width 的含义</th><th>实际占宽</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>content-box</code>（默认）</td><td>仅内容区</td><td>width + padding + border</td></tr>
+              <tr><td><code>border-box</code>（推荐）</td><td>含 padding 与 border</td><td>就是 width</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：默认情况下 <code>width: 200px</code> 只算了内容区，
+            加上 <code>padding: 20px</code> 和 <code>border: 2px</code> 后，盒子实际宽 244px——
+            这正是"设了宽度却还是被撑破"的常见原因。
+            所以几乎所有项目第一行都会写 <code>box-sizing: border-box</code>。
+          </p>
+        </div>
+
+        <!-- 关键代码 -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 推荐做法：让宽高包含 padding 与 border */</span>
+* { <span class="prop">box-sizing</span>: <span class="str">border-box</span>; }
+
+.card {
+  <span class="prop">width</span>: <span class="num">240px</span>;
+  <span class="prop">padding</span>: <span class="num">16px</span>;        <span class="cmt">/* 内边距 */</span>
+  <span class="prop">border</span>: <span class="num">2px</span> <span class="str">solid</span> <span class="str">#ccc</span>; <span class="cmt">/* 边框 */</span>
+  <span class="prop">margin</span>: <span class="num">10px</span>;          <span class="cmt">/* 外边距 */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：
+            <code>box-sizing: border-box</code> 让 <code>width</code> 直接代表盒子最终占据的宽度，
+            padding 与 border 向"内"挤压内容，而不是向"外"撑开盒子。
+            这样多个元素并排时，宽度相加就等于总宽，计算简单且不会溢出。
+            <br /><strong>常见坑</strong>：不同元素的 <code>margin</code> 在垂直方向会发生"外边距合并"，
+            两个 20px 的相邻外边距只会得到 20px，而不是 40px。
+          </p>
+        </div>
+
+        <!-- 演示 -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动滑块，观察紫色 content、黄色 padding、实线 border 与虚线 margin 的变化。</p>
+          <div class="demo-mount" data-demo="d-5-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.2 文档流 ---------- -->
+      <article class="chapter" id="ch-5-2">
+        <h2>5.2 文档流</h2>
+        <p class="chapter-subtitle">元素默认是怎么一个个排上去的？</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <!-- 讲解 -->
+        <div class="tab-panel active" data-panel="explain">
+          <p><strong>正常流（Normal Flow）</strong>是浏览器默认的排版方式。如果不写任何布局代码，元素就按正常流排列——它是一切布局的"基准状态"。</p>
+
+          <div class="theory-card">
+            <h3>🌊 正常流的两条规则</h3>
+            <p>
+              <strong>块级元素</strong>（block）：从上到下依次排列，每个独占一整行，宽度默认撑满父容器。<br />
+              <strong>行内元素</strong>（inline）：从左到右并排，一行放不下才换行，宽高由内容决定。
+            </p>
+          </div>
+
+          <ul>
+            <li>常见的块级元素：<code>div</code>、<code>p</code>、<code>h1</code>、<code>section</code>、<code>li</code></li>
+            <li>常见的行内元素：<code>span</code>、<code>a</code>、<code>strong</code>、<code>em</code>、<code>code</code></li>
+            <li>行内块 <code>inline-block</code>：像行内元素一样并排，但可以设置宽高——两全其美。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<strong>脱离文档流</strong>是指元素不再占据原来的位置。
+            <code>position: absolute</code> / <code>fixed</code> 和 <code>float</code> 都会让元素脱离正常流，
+            后面的元素会"补位"上来——这也正是"布局错乱"的常见来源。
+            第 8 章会专门讲定位。
+          </p>
+        </div>
+
+        <!-- 关键代码 -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 块级：独占一行 */</span>
+<span class="sel">div</span> { <span class="prop">display</span>: <span class="str">block</span>; }
+
+<span class="cmt">/* 行内：并排，宽高由内容决定，设置 width 无效 */</span>
+<span class="sel">span</span> { <span class="prop">display</span>: <span class="str">inline</span>; }
+
+<span class="cmt">/* 行内块：并排，且可以设置宽高 */</span>
+<span class="sel">.tag</span> {
+  <span class="prop">display</span>: <span class="str">inline-block</span>;
+  <span class="prop">width</span>: <span class="num">80px</span>;
+  <span class="prop">height</span>: <span class="num">32px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：行内元素设置 <code>width</code> / <code>height</code> <strong>不会生效</strong>，
+            因为它的尺寸由内容撑开，这是初学者最常踩的坑之一。
+            需要"能并排又能设尺寸"时改用 <code>inline-block</code>。
+            <br /><strong>注意</strong>：<code>inline-block</code> 之间的换行符会渲染成一个空格间隙，
+            想消除可以把父元素设为 <code>font-size: 0</code>，或用更现代的 Flex 布局。
+          </p>
+        </div>
+
+        <!-- 演示 -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">点击按钮切换 display 取值，观察盒子是"换行堆叠"还是"并排流动"。</p>
+          <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 1.3 display 属性 ---------- -->
+      <article class="chapter" id="ch-5-3">
+        <h2>5.3 display 属性</h2>
+        <p class="chapter-subtitle">决定元素"以什么身份"参与布局</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <!-- 讲解 -->
+        <div class="tab-panel active" data-panel="explain">
+          <p><code>display</code> 是布局中最关键的属性之一：它决定了元素<b>是不是块级</b>、<b>能不能设宽高</b>、<b>以及内部的子元素怎么排</b>。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>取值</th><th>排布方式</th><th>能否设宽高</th><th>典型用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>block</code></td><td>独占一行</td><td>能</td><td>容器、段落、标题</td></tr>
+              <tr><td><code>inline</code></td><td>并排</td><td>不能</td><td>文字片段、链接</td></tr>
+              <tr><td><code>inline-block</code></td><td>并排</td><td>能</td><td>标签、按钮</td></tr>
+              <tr><td><code>flex</code></td><td>内部一维弹性</td><td>能</td><td>导航条、工具栏（第 6 章）</td></tr>
+              <tr><td><code>grid</code></td><td>内部二维网格</td><td>能</td><td>页面骨架、卡片墙（第 7 章）</td></tr>
+              <tr><td><code>none</code></td><td>不渲染</td><td>—</td><td>隐藏元素（退出布局树）</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>display</code> 不只管自己，还管<b>下一代子元素怎么排</b>——
+            给父元素设 <code>display: flex</code> 或 <code>grid</code>，<b>子元素</b>才会按弹性/网格规则排列。
+            这正是第 6、7 章的核心。
+            <br /><strong>注意</strong>：<code>display: none</code> 与 <code>visibility: hidden</code> 不同——
+            前者完全脱离布局，后者仍占着位置。
+          </p>
+        </div>
+
+        <!-- 关键代码 -->
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 让并排的三个盒子用弹性/网格布局 */</span>
+<span class="sel">.toolbar</span> { <span class="prop">display</span>: <span class="str">flex</span>; <span class="prop">gap</span>: <span class="num">10px</span>; }
+<span class="sel">.wall</span>    { <span class="prop">display</span>: <span class="str">grid</span>; <span class="prop">grid-template-columns</span>: <span class="str">repeat(3, 1fr)</span>; }
+
+<span class="cmt">/* 隐藏元素：两种方式效果不同 */</span>
+<span class="sel">.gone</span>    { <span class="prop">display</span>: <span class="str">none</span>; }        <span class="cmt">/* 不占位 */</span>
+<span class="sel">.invisible</span> { <span class="prop">visibility</span>: <span class="str">hidden</span>; } <span class="cmt">/* 仍占位 */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：切换 <code>display</code> 会触发浏览器<b>重新计算布局</b>（reflow），
+            比只改颜色的开销大得多。所以做动画时不要用 <code>display</code> 过渡，
+            而应使用 <code>opacity</code> / <code>transform</code>。
+          </p>
+        </div>
+
+        <!-- 演示 -->
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">点击不同取值，观察同一组盒子在 block / inline / inline-block 下的排布差异。</p>
+          <div class="demo-mount" data-demo="d-5-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- ============ 翻页 ============ -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-04/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 4 章 布局模式选型</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-06/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 6 章 Flexbox 弹性布局</span>
+    </a>
+  </nav>
+
+  <!-- ============ 页脚 ============ -->
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 5 章 盒模型与文档流 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

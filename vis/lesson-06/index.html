@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 6 章 Flexbox 弹性布局 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <!-- ============ 顶栏 ============ -->
+  <nav class="course-topbar" data-current="6">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ 章节头 ============ -->
+  <header class="lesson-header">
+    <div>
+      <h1>第 6 章 Flexbox 弹性布局</h1>
+      <p class="subtitle">一维弹性盒子：对齐、分布与自适应宽度</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>章节目录</h3>
+      <ul>
+        <li><a href="#ch-6-1" data-chapter="ch-6-1" class="active">6.1 主轴与交叉轴</a></li>
+        <li><a href="#ch-6-2" data-chapter="ch-6-2">6.2 对齐与分布</a></li>
+        <li><a href="#ch-6-3" data-chapter="ch-6-3">6.3 弹性伸缩</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 2.1 主轴与交叉轴 ---------- -->
+      <article class="chapter active" id="ch-6-1">
+        <h2>6.1 主轴与交叉轴</h2>
+        <p class="chapter-subtitle">想理解 Flexbox，先记住"两根轴"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>给父元素写上 <code>display: flex</code>，它就变成了一个 <strong>弹性容器</strong>，里面的子元素成为 <strong>弹性项目</strong>，自动按"轴"来排列。</p>
+
+          <div class="theory-card">
+            <h3>🧭 两根轴</h3>
+            <p>
+              <strong>主轴（main axis）</strong>：项目排列的方向，由 <code>flex-direction</code> 决定。<br />
+              <strong>交叉轴（cross axis）</strong>：与主轴垂直的方向。
+            </p>
+          </div>
+
+          <ul>
+            <li><code>flex-direction: row</code>（默认）：主轴水平向右，交叉轴垂直向下。</li>
+            <li><code>flex-direction: column</code>：主轴垂直向下，交叉轴水平向右。</li>
+            <li>加上 <code>-reverse</code> 后缀（如 <code>row-reverse</code>）则方向反转。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：Flexbox 的所有对齐属性都<b>以轴为参照</b>——
+            <code>justify-content</code> 管<b>主轴</b>，<code>align-items</code> 管<b>交叉轴</b>。
+            一旦 <code>flex-direction</code> 从 row 改成 column，这两个属性的效果就跟着"转 90°"。
+            记住这一点，就不用死记属性表了。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 开启弹性布局 */</span>
+<span class="sel">.container</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">row</span>;  <span class="cmt">/* row | column | row-reverse | column-reverse */</span>
+  <span class="prop">gap</span>: <span class="num">12px</span>;              <span class="cmt">/* 项目之间的间距（推荐，取代 margin 技巧） */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>display: flex</code> 写在<b>父元素</b>上，
+            影响的是<b>直接子元素</b>的排布方式。
+            <br /><strong>注意</strong>：弹性项目会自动"弹性化"——
+            默认 <code>flex-shrink: 1</code>，所以容器变窄时项目会被压缩，
+            这就是为什么有时盒子会"变形"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换 flex-direction，观察主轴方向如何改变项目的排列。</p>
+          <div class="demo-mount" data-demo="d-6-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.2 对齐与分布 ---------- -->
+      <article class="chapter" id="ch-6-2">
+        <h2>6.2 对齐与分布</h2>
+        <p class="chapter-subtitle">justify-content 管主轴，align-items 管交叉轴</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Flexbox 最常用的场景就是"把一个东西居中"或"把几个东西均匀分布"，这靠两组属性完成。</p>
+
+          <table class="theory-table">
+            <thead>
+              <tr><th>属性</th><th>作用轴</th><th>常用取值</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>justify-content</code></td><td>主轴</td><td>flex-start / center / space-between / space-around / space-evenly</td></tr>
+              <tr><td><code>align-items</code></td><td>交叉轴</td><td>stretch / flex-start / center / flex-end</td></tr>
+              <tr><td><code>gap</code></td><td>项目间距</td><td>任意长度，如 <code>12px</code></td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>水平垂直双居中的经典三行代码</b>——
+            <code>display: flex; justify-content: center; align-items: center;</code>
+            这三行几乎能解决初学者 80% 的居中需求，也是 Flexbox 最受欢迎的用途。
+            <br /><strong>注意</strong>：<code>align-items: stretch</code>（默认）会拉伸项目高度，
+            想保持项目自身高度就要显式设为 <code>flex-start</code>。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 水平垂直双居中 —— 最经典的用法 */</span>
+<span class="sel">.center</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">justify-content</span>: <span class="str">center</span>;  <span class="cmt">/* 主轴居中 */</span>
+  <span class="prop">align-items</span>: <span class="str">center</span>;      <span class="cmt">/* 交叉轴居中 */</span>
+}
+
+<span class="cmt">/* 两端对齐的导航条 */</span>
+<span class="sel">.navbar</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">justify-content</span>: <span class="str">space-between</span>;
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+  <span class="prop">gap</span>: <span class="num">16px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>space-between</code> 把剩余空间<b>全部塞到项目之间</b>
+            （两端贴边），正是导航栏"左 Logo 右菜单"的标准做法；
+            而 <code>space-around</code> 会在两端也留出空间，视觉上更松散。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">分别选择 justify-content 与 align-items，实时观察一排盒子的位置变化。</p>
+          <div class="demo-mount" data-demo="d-6-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 2.3 弹性伸缩 ---------- -->
+      <article class="chapter" id="ch-6-3">
+        <h2>6.3 弹性伸缩</h2>
+        <p class="chapter-subtitle">让项目按比例瓜分剩余空间</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>Flexbox 之所以叫"弹性"，是因为项目可以<b>按比例分配</b>容器中的剩余空间。控制它的是三个属性：</p>
+
+          <ul>
+            <li><code>flex-grow</code>：<b>剩余空间</b>分给它的"份数"，默认 0（不参与分配）。</li>
+            <li><code>flex-shrink</code>：<b>空间不够时</b>收缩的比例，默认 1。</li>
+            <li><code>flex-basis</code>：分配前的<b>初始尺寸</b>，默认 <code>auto</code>（由内容决定）。</li>
+          </ul>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<code>flex: 1</code> 是这三个属性的简写
+            （等价于 <code>1 1 0%</code>），意思是"<b>平均瓜分剩余空间</b>"。
+            让三个盒子 <code>flex: 1 2 3</code>，它们就会按 1:2:3 的比例分宽——
+            这是做自适应分栏最常用的手段。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.item</span> { <span class="prop">flex</span>: <span class="num">1</span>; }        <span class="cmt">/* 平均分 */</span>
+
+<span class="sel">.sidebar</span> { <span class="prop">flex</span>: <span class="num">1</span>; }      <span class="cmt">/* 侧栏占 1 份 */</span>
+<span class="sel">.main</span>    { <span class="prop">flex</span>: <span class="num">3</span>; }      <span class="cmt">/* 主区占 3 份 */</span>
+
+<span class="cmt">/* 不想被压缩的固定宽度项 */</span>
+<span class="sel">.avatar</span> { <span class="prop">flex</span>: <span class="num">0 0 48px</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>flex: 0 0 48px</code> 表示
+            "不伸长、不压缩、固定 48px"，常用于头像、图标这类不希望变形的元素。
+            <br /><strong>常见坑</strong>：在省略写法中不要只写一个数字又期望它固定宽度，
+            <code>flex: 1</code> 的 <code>basis</code> 是 <code>0%</code>，会让项目忽略自身宽度。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动三个 flex-grow 滑块，观察剩余空间如何按比例分配。</p>
+          <div class="demo-mount" data-demo="d-6-3"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- ============ 翻页 ============ -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-05/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 5 章 盒模型与文档流</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <a class="pager-next" href="../lesson-07/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 7 章 Grid 网格布局</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《如何进行页面布局》· 第 6 章 Flexbox 弹性布局 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

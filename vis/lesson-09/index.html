@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第 9 章 综合案例：作品集网站 · 页面布局入门</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <link rel="stylesheet" href="../lesson.css" />
+</head>
+<body>
+
+  <nav class="course-topbar" data-current="9">
+    <a class="brand" href="../">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="../lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="../lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="../lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="../lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="../lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="../lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="../lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="../lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="../lesson-09/">第 9 章 · 综合案例</a></li>
+    </ul>
+  </nav>
+
+  <header class="lesson-header">
+    <div>
+      <h1>第 9 章 综合案例：从零搭建「作品集网站」</h1>
+      <p class="subtitle">用一个完整案例，把前面 8 章的理论与技术串起来</p>
+    </div>
+    <div class="header-tip">
+      <span class="kbd">Tab</span> 切换 讲解 / 代码 / 演示
+    </div>
+  </header>
+
+  <main class="lesson-main">
+
+    <aside class="chapter-nav">
+      <h3>案例步骤</h3>
+      <ul>
+        <li><a href="#ch-9-1" data-chapter="ch-9-1" class="active">9.1 案例规划与线框图</a></li>
+        <li><a href="#ch-9-2" data-chapter="ch-9-2">9.2 页面骨架与栅格</a></li>
+        <li><a href="#ch-9-3" data-chapter="ch-9-3">9.3 顶部导航栏</a></li>
+        <li><a href="#ch-9-4" data-chapter="ch-9-4">9.4 首屏 Hero</a></li>
+        <li><a href="#ch-9-5" data-chapter="ch-9-5">9.5 关于我（双栏）</a></li>
+        <li><a href="#ch-9-6" data-chapter="ch-9-6">9.6 作品集卡片墙</a></li>
+        <li><a href="#ch-9-7" data-chapter="ch-9-7">9.7 数据统计区</a></li>
+        <li><a href="#ch-9-8" data-chapter="ch-9-8">9.8 响应式与设计自查</a></li>
+      </ul>
+      <div class="nav-tip">
+        <a href="../">↗ 返回课程门户</a>
+      </div>
+    </aside>
+
+    <section class="chapter-content">
+
+      <!-- ---------- 9.1 案例规划 ---------- -->
+      <article class="chapter active" id="ch-9-1">
+        <h2>9.1 案例规划与线框图</h2>
+        <p class="chapter-subtitle">先定目标与结构，再动手写代码</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>从这一节开始，我们要<b>完整做出一个「个人作品集网站」</b>。整个过程分 8 步，
+          每一步都会用到前面章节讲过的设计原则与技术。</p>
+
+          <div class="theory-card">
+            <h3>🎯 案例需求（第 2 章：先问目标）</h3>
+            <p>
+              <strong>页面目标</strong>：让访客在 10 秒内知道"我是谁、我能做什么"，并愿意联系我。<br />
+              <strong>目标用户</strong>：招聘方、合作方。<br />
+              <strong>成功标准</strong>：访客看完作品集后点击"联系我"。
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">内容清单与优先级</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>区块</th><th>优先级</th><th>理由（第 1 章：对比与层次）</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Hero｜一句话介绍 + 头像</td><td>★★★</td><td>首屏决定访客是否留下</td></tr>
+              <tr><td>作品集</td><td>★★★</td><td>证明能力，是核心说服材料</td></tr>
+              <tr><td>关于我</td><td>★★</td><td>补充背景，建立信任</td></tr>
+              <tr><td>数据统计</td><td>★★</td><td>用数字强化可信度</td></tr>
+              <tr><td>联系方式</td><td>★★</td><td>转化入口</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：注意我们是<b>先列出"页面要让用户做什么"，再倒推出区块</b>的——
+            顺序是「<b>目标 → 内容 → 结构 → 视觉 → 代码</b>」，而不是打开编辑器就开始写。
+            <br /><b>视觉动线</b>（第 2 章）：Hero 在左上（第一眼），作品集居中（主体），
+            联系方式在底部（Z 型终点），符合访客的阅读路径。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">&lt;!-- 线框图阶段：先用语义化的区块把骨架写出来 --&gt;</span>
+&lt;<span class="sel">body</span>&gt;
+  &lt;<span class="sel">header</span> <span class="prop">class</span>=<span class="str">"site-header"</span>&gt; ... &lt;/<span class="sel">header</span>&gt;   <span class="cmt">/* 导航 */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"hero"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;         <span class="cmt">/* 首屏 */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"about"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* 关于我 */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"works"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* 作品集 */</span>
+  &lt;<span class="sel">section</span> <span class="prop">class</span>=<span class="str">"stats"</span>&gt; ... &lt;/<span class="sel">section</span>&gt;        <span class="cmt">/* 数据统计 */</span>
+  &lt;<span class="sel">footer</span> <span class="prop">class</span>=<span class="str">"site-footer"</span>&gt; ... &lt;/<span class="sel">footer</span>&gt;   <span class="cmt">/* 联系 + 页脚 */</span>
+&lt;/<span class="sel">body</span>&gt;</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：这一阶段<b>只写结构和类名，不写任何样式</b>。
+            用 <code>&lt;header&gt;</code> / <code>&lt;section&gt;</code> / <code>&lt;footer&gt;</code>
+            这类语义标签，既利于无障碍，也让"骨架"一目了然。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">在线框图和"内容填充"之间切换，观察骨架不变、内容逐步填入的过程。</p>
+          <div class="demo-mount" data-demo="d-9-1"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.2 页面骨架与栅格 ---------- -->
+      <article class="chapter" id="ch-9-2">
+        <h2>9.2 页面骨架与栅格</h2>
+        <p class="chapter-subtitle">给整个网站装上"统一的刻度"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>骨架有了，接下来是<b>给页面装上刻度</b>——这一步决定了后面所有区块能否对齐。</p>
+
+          <div class="theory-card">
+            <h3>📐 三件事（第 3 章：栅格系统）</h3>
+            <p>
+              <strong>1. 容器</strong>：内容最大宽度 1180px，两侧留白，水平居中。<br />
+              <strong>2. 栅格</strong>：12 列，列间距 24px。<br />
+              <strong>3. 间距体系</strong>：8pt 档位（8 / 16 / 24 / 40）。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>容器 + 栅格一次定义，全站复用</b>——
+            后面 6 个区块都直接用 <code>.container</code> 和 <code>.grid</code>，
+            这样它们的左右边界天然对齐（第 1 章：对齐原则）。
+            <br /><b>为什么是 1180px？</b> 这是常见经验值：
+            在 1366px 及以上的屏幕上左右各留约 90px 呼吸空间，
+            单行文字长度也不会超过阅读舒适区（约 75 字符）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* ① 容器：控制内容最大宽度并居中 */</span>
+<span class="sel">.container</span> {
+  <span class="prop">width</span>: <span class="fn">min</span>(<span class="num">100%</span> - <span class="num">48px</span>, <span class="num">1180px</span>);
+  <span class="prop">margin-inline</span>: <span class="str">auto</span>;
+}
+
+<span class="cmt">/* ② 12 列栅格：全站共用 */</span>
+<span class="sel">.grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(12, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="cmt">/* ③ 间距档位（放在 tokens.css 里） */</span>
+<span class="sel">:root</span> {
+  <span class="prop">--space-sm</span>: <span class="num">8px</span>;
+  <span class="prop">--space</span>:    <span class="num">16px</span>;
+  <span class="prop">--space-lg</span>: <span class="num">24px</span>;
+  <span class="prop">--space-xl</span>: <span class="num">40px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>width: min(100% - 48px, 1180px)</code> 是
+            <b>"小屏留 24px 边距、大屏最多 1180px"</b> 的一行写法，
+            比先写 <code>max-width</code> 再配媒体查询更简洁。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整容器宽度与列间距，观察 6 个区块是否始终对齐到同一套列线。</p>
+          <div class="demo-mount" data-demo="d-9-2"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.3 顶部导航栏 ---------- -->
+      <article class="chapter" id="ch-9-3">
+        <h2>9.3 顶部导航栏</h2>
+        <p class="chapter-subtitle">全站第一个"对齐示范"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>导航栏是最简单的区块，却集中体现了三条原则。</p>
+
+          <div class="theory-card">
+            <h3>🧭 导航栏的设计决策</h3>
+            <p>
+              <strong>布局方式</strong>：Flex + <code>justify-content: space-between</code>
+              （第 6 章）——让 Logo 与菜单分列两端。<br />
+              <strong>对齐</strong>：<code>align-items: center</code> 保证文字垂直居中（第 1 章）。<br />
+              <strong>亲密性</strong>：菜单项之间用 <code>gap</code> 收紧，与 Logo 之间留大距离，
+              让"Logo"与"菜单"形成两个清晰的组（第 1 章）。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>导航栏需要吸顶</b>时用 <code>position: sticky</code>（第 8 章），
+            而不是 <code>fixed</code>——<code>sticky</code> 会保留原本占位，
+            不会让下面的内容"跳上来"。
+            <br /><b>易错点</b>：sticky 的父元素不能有 <code>overflow: hidden</code>，
+            否则会失效（因为滚动容器变了）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.site-header</span> {
+  <span class="prop">position</span>: <span class="str">sticky</span>;      <span class="cmt">/* 吸顶，且保留占位 */</span>
+  <span class="prop">top</span>: <span class="num">0</span>;
+  <span class="prop">z-index</span>: <span class="num">50</span>;
+  <span class="prop">backdrop-filter</span>: <span class="fn">blur</span>(<span class="num">10px</span>);   <span class="cmt">/* 毛玻璃效果 */</span>
+  <span class="prop">border-bottom</span>: <span class="num">1px</span> <span class="str">solid</span> <span class="fn">var</span>(--c-border);
+}
+
+<span class="sel">.site-header .inner</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;                  <span class="cmt">/* 第 6 章 */</span>
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+  <span class="prop">justify-content</span>: <span class="str">space-between</span>;  <span class="cmt">/* Logo ↔ 菜单 分列两端 */</span>
+  <span class="prop">height</span>: <span class="num">60px</span>;
+}
+
+<span class="sel">.site-header nav</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">gap</span>: <span class="num">6px</span>;                  <span class="cmt">/* 菜单项之间：紧 */</span>
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>justify-content: space-between</code>
+            在<b>两个</b>子元素时表现为"一左一右"；若有多个子元素，
+            它会把<b>第一个和最后一个贴边、中间平均分布</b>——
+            理解这一点就不会误用。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整菜单项数量与对齐方式，观察导航栏的分布与分组变化。</p>
+          <div class="demo-mount" data-demo="d-9-3"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.4 首屏 Hero ---------- -->
+      <article class="chapter" id="ch-9-4">
+        <h2>9.4 首屏 Hero</h2>
+        <p class="chapter-subtitle">决定"访客是否留下"的一屏</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>首屏（Hero）是全页<b>视觉重量最大</b>的区块，也是设计原则最密集的地方。</p>
+
+          <div class="theory-card">
+            <h3>🎨 Hero 用到的四条原则</h3>
+            <p>
+              <strong>层次</strong>：主标题 40px+，副标题 16px，正文 14px——档位拉开（第 1.3 节）。<br />
+              <strong>留白</strong>：上下 padding 用最大的 <code>--space-xl</code>，让核心内容"浮"出来。<br />
+              <strong>平衡</strong>：左侧文字 + 右侧头像，用 <code>7fr 5fr</code> 做非对称平衡（第 1.6 节）。<br />
+              <strong>动线</strong>：标题 → 副标题 → 按钮，自上而下，符合 Z 型起点（第 2 章）。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>Hero 里只能有一个"主角"。</b>
+            <br />· 如果标题、头像、按钮都在抢注意力，访客反而不知道该看哪；
+            <br />· 正确做法：<b>标题最大</b>，其他元素依次减弱，最后用<b>一个</b>高对比按钮收尾。
+            <br /><b>对比的力量来自"落差"</b>——把次要元素主动弱化（降低饱和/变灰），比把主角放大更有效。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.hero</span> {
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space-xl) <span class="num">0</span>;     <span class="cmt">/* 松：核心区留白最多 */</span>
+}
+
+<span class="sel">.hero .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>;  <span class="cmt">/* 非对称平衡 */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-xl);
+  <span class="prop">align-items</span>: <span class="str">center</span>;
+}
+
+<span class="sel">.hero h1</span> {
+  <span class="prop">font-size</span>: <span class="fn">clamp</span>(<span class="num">30px</span>, <span class="num">4vw</span>, <span class="num">46px</span>);  <span class="cmt">/* 层次 + 响应式字号 */</span>
+  <span class="prop">line-height</span>: <span class="num">1.2</span>;
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space);      <span class="cmt">/* 标题与副标题：紧 */</span>
+}
+
+<span class="sel">.hero .lead</span> {
+  <span class="prop">font-size</span>: <span class="num">17px</span>;
+  <span class="prop">color</span>: <span class="fn">var</span>(--c-text-soft);       <span class="cmt">/* 弱化，衬托标题 */</span>
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="sel">.hero .cta</span> {
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-primary);        <span class="cmt">/* 唯一的高对比元素 */</span>
+  <span class="prop">color</span>: <span class="num">#fff</span>;
+  <span class="prop">padding</span>: <span class="num">12px</span> <span class="num">24px</span>;
+  <span class="prop">border-radius</span>: <span class="num">999px</span>;
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>align-items: center</code> 让左右两栏在垂直方向居中对齐；
+            但要注意——<b>左右两栏内容高度不同</b>时，居中对齐通常比顶对齐更好看，
+            因为视觉重量更容易平衡。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整标题字号、留白与左右比例，感受"层次"与"平衡"的变化。</p>
+          <div class="demo-mount" data-demo="d-9-4"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.5 关于我（双栏） ---------- -->
+      <article class="chapter" id="ch-9-5">
+        <h2>9.5 关于我（双栏）</h2>
+        <p class="chapter-subtitle">图文混排：比例比"均分"更重要</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>"关于我"是典型的<b>图文双栏</b>：一边是头像/名片，一边是文字介绍。</p>
+
+          <div class="theory-card">
+            <h3>📊 为什么通常不是 1:1？</h3>
+            <p>
+              人像/配图属于<b>视觉信息</b>，文字属于<b>阅读信息</b>。
+              实践中常见的分法是 <b>4:8 或 5:7</b>——
+              让文字栏拿到更多宽度，因为中文单行字数过多会显著降低阅读效率。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>不要用 <code>1fr 1fr</code> 做图文双栏</b>。
+            均分看起来"公平"，但会让文字行过长或图片过大，两边都不舒服。
+            <br /><b>另一个坑</b>：如果图片在 DOM 中排前面、而你希望文字先被读到（对屏幕阅读器与 SEO 友好），
+            应该<b>调整 DOM 顺序或使用 <code>order</code></b>，而不是靠眼睛"看起来对"就够了。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.about .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="num">4fr</span> <span class="num">8fr</span>;   <span class="cmt">/* 图 4 : 文 8 */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-xl);
+  <span class="prop">align-items</span>: <span class="str">start</span>;          <span class="cmt">/* 顶对齐：长文不被"居中"拉扯 */</span>
+}
+
+<span class="cmt">/* 小屏自动堆叠（第 8 章：响应式） */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">760px</span>) {
+  <span class="sel">.about .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }
+}
+
+<span class="cmt">/* 文字段落之间保持"亲密性"：段内紧、段间松 */</span>
+<span class="sel">.about p</span> { <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space); <span class="prop">line-height</span>: <span class="num">1.9</span>; }</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：这里用 <code>align-items: start</code>（顶对齐），
+            而不是 Hero 用的 <code>center</code>。
+            <b>判据是内容长度</b>：短内容配图片用居中更平衡；
+            长段落配图片用顶对齐，否则文字会偏离读者的目光起点。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换图文比例与对齐方式，观察阅读舒适度与视觉平衡的变化。</p>
+          <div class="demo-mount" data-demo="d-9-5"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.6 作品集卡片墙 ---------- -->
+      <article class="chapter" id="ch-9-6">
+        <h2>9.6 作品集卡片墙</h2>
+        <p class="chapter-subtitle">案例的核心区块：一屏展示多个作品</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>作品集是整页的<b>说服核心</b>。用卡片墙来承载，一次能展示多个作品，且天然整齐。</p>
+
+          <div class="theory-card">
+            <h3>🧱 卡片墙用到的原则</h3>
+            <p>
+              <strong>重复</strong>：每张卡片的圆角、内边距、阴影完全一致（第 1.4 节）——这是"成套感"的来源。<br />
+              <strong>共同区域</strong>：卡片背景把内容框成一组（第 1.5 节）。<br />
+              <strong>对齐</strong>：<code>auto-fit + minmax</code> 让卡片宽高自动一致（第 3 章）。<br />
+              <strong>亲密性</strong>：卡内元素（图/标题/标签）间距 8px（紧），卡片之间 24px（松）。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：卡片内部的经典结构是
+            <b>Flex 纵向 + <code>margin-top: auto</code></b>——
+            它能把"查看详情"推到卡片底部，让<b>高度不一</b>的卡片也保持按钮对齐。
+            <br /><b>为什么卡片会等高？</b> 因为 Grid 的默认 <code>align-items: stretch</code>
+            会拉伸同一行的所有卡片到最高者的高度。这不是巧合，是 Grid 特性。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* ① 墙：自适应列数，不需要媒体查询 */</span>
+<span class="sel">.works .wall</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(auto-fit, minmax(260px, 1fr))</span>;
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);         <span class="cmt">/* 卡片之间：松 */</span>
+}
+
+<span class="cmt">/* ② 卡片：纵向 Flex，让底部链接贴底 */</span>
+<span class="sel">.work-card</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border</span>: <span class="num">1px</span> <span class="str">solid</span> <span class="fn">var</span>(--c-border);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+}
+
+<span class="sel">.work-card .thumb</span> {
+  <span class="prop">aspect-ratio</span>: <span class="num">16 / 10</span>;        <span class="cmt">/* 统一比例，避免高度参差 */</span>
+  <span class="prop">border-radius</span>: <span class="num">8px</span>;
+  <span class="prop">margin-bottom</span>: <span class="fn">var</span>(--space-sm);
+}
+
+<span class="sel">.work-card .more</span> { <span class="prop">margin-top</span>: <span class="str">auto</span>; }   <span class="cmt">/* ★ 推到最底部 */</span></code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：<code>aspect-ratio: 16 / 10</code>
+            是让缩略图<b>保持统一比例</b>的关键。如果不加，
+            图片高度会随原始尺寸变化，整面墙就会"高低不平"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">调整最小卡片宽度与间距，并切换卡片数量，观察整面墙的对齐与呼吸感。</p>
+          <div class="demo-mount" data-demo="d-9-6"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.7 数据统计区 ---------- -->
+      <article class="chapter" id="ch-9-7">
+        <h2>9.7 数据统计区</h2>
+        <p class="chapter-subtitle">用数字强化可信度，也考验"信息层级"</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>这一区要同时放<b>多个小指标</b>和<b>一个大图表</b>——正是第 4 章讲的"仪表盘栅格"场景。</p>
+
+          <div class="theory-card">
+            <h3>📈 信息层级怎么分？</h3>
+            <p>
+              <strong>数字</strong>：24～32px 加粗、用主色——它是最重要的。<br />
+              <strong>单位/后缀</strong>：14px 常规——次要。<br />
+              <strong>说明文字</strong>：12px 灰色——辅助。<br />
+              三者形成 3 档落差，一眼就能读懂"这个数字是什么"。
+            </p>
+          </div>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：<b>数字和它的说明必须"靠得住"（亲密性）</b>——
+            垂直间距 4～6px，绝不能和下一个指标一样远，
+            否则读者会分不清哪个说明属于哪个数字。
+            <br /><b>跨列思路</b>：容器设 4 列，小指标各占 1 列，
+            大图表 <code>grid-column: span 4</code> 独占一行（第 4 章）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="sel">.stats .grid</span> {
+  <span class="prop">display</span>: <span class="str">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="str">repeat(4, 1fr)</span>;   <span class="cmt">/* 基准 4 列 */</span>
+  <span class="prop">gap</span>: <span class="fn">var</span>(--space-lg);
+}
+
+<span class="sel">.stat</span> {
+  <span class="prop">display</span>: <span class="str">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="str">column</span>;
+  <span class="prop">gap</span>: <span class="num">4px</span>;                    <span class="cmt">/* 数字与说明：紧 */</span>
+  <span class="prop">padding</span>: <span class="fn">var</span>(--space);
+  <span class="prop">background</span>: <span class="fn">var</span>(--c-surface);
+  <span class="prop">border-radius</span>: <span class="fn">var</span>(--radius);
+}
+
+<span class="sel">.stat .num</span> { <span class="prop">font-size</span>: <span class="num">28px</span>; <span class="prop">font-weight</span>: <span class="num">700</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-primary); }
+<span class="sel">.stat .lbl</span> { <span class="prop">font-size</span>: <span class="num">12px</span>; <span class="prop">color</span>: <span class="fn">var</span>(--c-muted); }
+
+<span class="cmt">/* 大图表独占整行 */</span>
+<span class="sel">.stats .chart</span> { <span class="prop">grid-column</span>: <span class="str">span 4</span>; <span class="prop">min-height</span>: <span class="num">180px</span>; }
+
+<span class="cmt">/* 小屏降为 2 列，跨列自动收缩 */</span>
+<span class="kw">@media</span> (<span class="prop">max-width</span>: <span class="num">760px</span>) {
+  <span class="sel">.stats .grid</span>  { <span class="prop">grid-template-columns</span>: <span class="str">repeat(2, 1fr)</span>; }
+  <span class="sel">.stats .chart</span> { <span class="prop">grid-column</span>: <span class="str">span 2</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：小屏把 <code>span 4</code> 改成 <code>span 2</code>
+            只是<b>一行覆盖</b>，其它指标完全不用动——
+            这正是"用 span 而不是写死 <code>1 / 5</code>"的好处（第 4 章）。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">切换不同的跨列方案，观察信息层级与大图表的关系。</p>
+          <div class="demo-mount" data-demo="d-9-7"></div>
+        </div>
+      </article>
+
+      <!-- ---------- 9.8 响应式与设计自查 ---------- -->
+      <article class="chapter" id="ch-9-8">
+        <h2>9.8 响应式与设计自查</h2>
+        <p class="chapter-subtitle">让案例在所有屏幕上都成立，并给作品做一次体检</p>
+
+        <div class="tabbar">
+          <button class="tab-btn active" data-tab="explain">📖 讲解</button>
+          <button class="tab-btn" data-tab="code">⌨️ 关键代码</button>
+          <button class="tab-btn" data-tab="demo">▶️ 演示</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="explain">
+          <p>最后一步：让整个案例在手机上也能好好显示，并做一次系统性的自查。</p>
+
+          <div class="theory-card">
+            <h3>📱 断点怎么定？（第 8 章）</h3>
+            <p>
+              <b>不是"按设备定"，而是"按内容定"</b>——把浏览器拖窄，
+              直到布局开始"难受"的那一刻，就是你的断点。
+              <br />本案例只用了两个断点：<code>760px</code>（双栏堆叠）与 <code>1040px</code>（列数减少）。
+            </p>
+          </div>
+
+          <h3 style="margin:22px 0 12px;font-size:17px;">✅ 布局设计自查清单</h3>
+          <table class="theory-table">
+            <thead>
+              <tr><th>检查项</th><th>对应理论</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>所有元素都对齐到同一条线了吗？</td><td>对齐（1.1）</td></tr>
+              <tr><td>相关的内容靠得更近了吗？（组内 &lt; 组间）</td><td>亲密性（1.2）</td></tr>
+              <tr><td>最重要的内容最显眼吗？字号跨度够吗？</td><td>对比（1.3）</td></tr>
+              <tr><td>同类元素的圆角/阴影/颜色一致吗？</td><td>重复（1.4）</td></tr>
+              <tr><td>分组是否清晰到"不需要文字解释"？</td><td>格式塔（1.5）</td></tr>
+              <tr><td>左右视觉重量是否平衡？留白是否有节奏？</td><td>平衡与节奏（1.6）</td></tr>
+              <tr><td>间距是否都来自同一套档位？</td><td>间距体系（3.2）</td></tr>
+              <tr><td>手机宽度下，内容是否还能顺畅阅读？</td><td>响应式（第 8 章）</td></tr>
+            </tbody>
+          </table>
+
+          <p class="key-point">
+            <strong>⭐ 关键点</strong>：布局做完后，<b>用这份清单逐条过一遍</b>，
+            比"凭感觉再调调"有效得多。
+            <br />这套清单本身就是本课程前半部分（设计篇）的浓缩——
+            <b>你不需要记住所有 CSS 属性，但应该记住这份清单。</b>
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="code">
+          <pre class="code-block"><code><span class="cmt">/* 移动优先：默认单列，再逐级增强（第 8 章） */</span>
+<span class="sel">.about .grid</span>,
+<span class="sel">.hero .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }        <span class="cmt">/* 默认：手机 */</span>
+
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">760px</span>) {                      <span class="cmt">/* 平板起：双栏 */</span>
+  <span class="sel">.hero .grid</span>  { <span class="prop">grid-template-columns</span>: <span class="num">7fr</span> <span class="num">5fr</span>; }
+  <span class="sel">.about .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">4fr</span> <span class="num">8fr</span>; }
+}
+
+<span class="kw">@media</span> (<span class="prop">min-width</span>: <span class="num">1040px</span>) {                     <span class="cmt">/* 桌面起：更大的留白 */</span>
+  <span class="sel">.hero</span> { <span class="prop">padding</span>: <span class="fn">calc</span>(<span class="fn">var</span>(--space-xl) * <span class="num">1.6</span>) <span class="num">0</span>; }
+}</code></pre>
+
+          <p class="key-point">
+            <strong>⭐ 关键点解释</strong>：注意这里的媒体查询用的是 <code>min-width</code>，
+            默认样式只服务手机——这就是第 8 章讲的<b>移动优先</b>。
+            整个案例里，小屏样式<b>一次都没被覆盖</b>，只是在被"增强"。
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="demo">
+          <p class="demo-hint">拖动"屏幕宽度"查看整个案例的重排过程，并对照右侧清单自查。</p>
+          <div class="demo-mount" data-demo="d-9-8"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-08/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 8 章 定位、层叠与响应式</span>
+    </a>
+    <a class="pager-portal" href="../">课程门户</a>
+    <span class="pager-next empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>《页面布局教学平台》· 第 9 章 综合案例：作品集网站 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+  </footer>
+
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>
