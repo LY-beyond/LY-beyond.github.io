@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>实战环节 · 个人作品集网站 · 页面布局教学平台</title>
+  <meta name="description" content="实战环节：按第 9 章的真实案例，一步步手写 HTML / CSS 搭出个人作品集网站 —— 实时预览、分层提示、自动检查、可保存与导出。" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="lesson.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ 顶栏（复用章节页的 .course-topbar） ============ -->
+  <nav class="course-topbar">
+    <a class="brand" href="./">
+      <span class="back">←</span>
+      <span>课程门户</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="lesson-01/">第 1 章 · 布局设计的基本原则</a></li>
+      <li><a href="lesson-02/">第 2 章 · 从需求到页面骨架</a></li>
+      <li><a href="lesson-03/">第 3 章 · 栅格系统与间距节奏</a></li>
+      <li><a href="lesson-04/">第 4 章 · 布局模式选型</a></li>
+      <li><a href="lesson-05/">第 5 章 · 盒模型与文档流</a></li>
+      <li><a href="lesson-06/">第 6 章 · Flexbox 弹性布局</a></li>
+      <li><a href="lesson-07/">第 7 章 · Grid 网格布局</a></li>
+      <li><a href="lesson-08/">第 8 章 · 定位、层叠与响应式</a></li>
+      <li><a href="lesson-09/">第 9 章 · 综合案例</a></li>
+      <li><a href="practice.html" class="current">🧪 实战环节</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ 页头 ============ -->
+  <header class="lesson-header">
+    <div>
+      <h1>实战环节 · 个人作品集网站</h1>
+      <p class="subtitle">按第 9 章的真实案例，自己动手一步步搭出这个页面 —— 写一点、看一点、验一点</p>
+    </div>
+    <div class="header-tip">
+      每关都有「✅ 检查」：只判效果，不判写法
+    </div>
+  </header>
+
+  <!-- ============ 工作台 ============ -->
+  <main id="lab-root" class="lab-main">
+
+    <!-- 左栏：案例要求 + 环节列表 + 进度 -->
+    <aside class="lab-side">
+      <section class="lab-panel">
+        <h3 class="lab-panel-title">📋 案例要求</h3>
+        <div id="lab-brief"></div>
+      </section>
+
+      <section class="lab-panel">
+        <h3 class="lab-panel-title">🧭 搭建环节</h3>
+        <div id="lab-steps"></div>
+      </section>
+
+      <section class="lab-panel">
+        <h3 class="lab-panel-title">📈 进度</h3>
+        <div id="lab-progress" class="lab-progress"></div>
+      </section>
+    </aside>
+
+    <!-- 中栏：题干 + 提示 + 编辑器 + 检查结果 + 操作 -->
+    <section class="lab-work">
+      <p id="lab-notice" class="lab-notice" role="status" hidden></p>
+
+      <section class="lab-panel" id="lab-task"></section>
+
+      <section class="lab-panel lab-editors">
+        <div class="lab-editor">
+          <div class="lab-editor-head">
+            <span class="lab-editor-name">HTML</span>
+            <span class="lab-editor-note">只写 &lt;body&gt; 里的内容</span>
+          </div>
+          <textarea id="lab-html" class="lab-code" spellcheck="false" wrap="off"
+                    aria-label="HTML 编辑器"></textarea>
+        </div>
+
+        <div class="lab-editor">
+          <div class="lab-editor-head">
+            <span class="lab-editor-name">CSS</span>
+            <span class="lab-editor-note">直接写规则，不用 &lt;style&gt;</span>
+          </div>
+          <textarea id="lab-css" class="lab-code" spellcheck="false" wrap="off"
+                    aria-label="CSS 编辑器"></textarea>
+        </div>
+      </section>
+
+      <section class="lab-panel lab-checks" id="lab-checks"></section>
+
+      <div class="lab-panel lab-actions" id="lab-actions"></div>
+
+      <div class="lab-panel lab-works" id="lab-works" hidden></div>
+    </section>
+
+    <!-- 右栏：实时预览 -->
+    <aside class="lab-preview">
+      <div class="lab-preview-head">
+        <span class="lab-preview-title">▶️ 实时预览</span>
+        <div class="lab-devices" id="lab-devices" role="group" aria-label="预览宽度"></div>
+      </div>
+
+      <div class="lab-frame-wrap" id="lab-frame-wrap">
+        <div class="lab-frame-holder" id="lab-frame-holder">
+          <iframe id="lab-frame" class="lab-frame" title="你的代码渲染结果"
+                  sandbox="allow-same-origin"></iframe>
+        </div>
+      </div>
+
+      <p class="lab-note lab-note--preview">
+        预览按真实宽度布局后等比缩放显示，所以「手机 375」能直接看到响应式效果。
+        预览里已自带基础重置与配色令牌，你只管写布局。
+        <strong>预览不执行 JavaScript</strong>：本案例是纯 HTML/CSS 练习，脚本会被自动移除（导出 .html 时同样如此）。
+      </p>
+
+      <p id="lab-script-note" class="lab-note lab-note--warn" role="status" hidden></p>
+    </aside>
+
+  </main>
+
+  <nav class="chapter-pager" aria-label="页面导航">
+    <a class="pager-prev" href="lesson-09/">
+      <span class="pager-dir">← 去看讲解</span>
+      <span class="pager-title">第 9 章 综合案例：作品集网站</span>
+    </a>
+    <a class="pager-portal" href="./">课程门户</a>
+    <span class="pager-next empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>页面布局教学平台 · 实战环节 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+    <p>代码在你的浏览器里渲染，进度与作品只保存在本机（localStorage），不会上传任何数据。</p>
+  </footer>
+
+  <script src="practice-data.js"></script>
+  <script src="practice.js"></script>
+</body>
+</html>

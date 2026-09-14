@@ -922,6 +922,613 @@ b.is-bad { color: var(--c-danger); }
 .quiz-history-score.is-low  { color: var(--c-danger); }
 .quiz-history-detail { color: var(--c-muted); font-size: 12.5px; }
 
+/* ---------------- 实战环节（工作台） ---------------- */
+/* 三栏布局：左「要求 + 环节」/ 中「编辑器」/ 右「实时预览」
+   颜色、间距、圆角全部取自 tokens.css，本段不出现硬编码色值 */
+
+.lab-main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 72px;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 430px;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.lab-side { display: grid; gap: var(--space); align-content: start; }
+.lab-work { display: grid; gap: var(--space); min-width: 0; }
+
+/* 预览栏吸顶：写代码时右边始终能看到效果 */
+.lab-preview {
+  position: sticky;
+  top: calc(var(--topbar-h) + 16px);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.lab-panel {
+  padding: var(--space);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+}
+
+.lab-panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.lab-empty {
+  margin: 0;
+  color: var(--c-text-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.lab-note {
+  margin: 10px 0 0;
+  color: var(--c-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.lab-note a { color: var(--c-primary); font-weight: 600; }
+
+.lab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- 行内提示条 ---------- */
+.lab-notice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-size: 13.5px;
+}
+
+.lab-notice.is-good {
+  background: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-success) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-success) var(--mix-ink), var(--c-text));
+}
+
+/* ---------- 进度 ---------- */
+.lab-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--c-text-soft);
+  font-size: 13px;
+}
+
+.lab-progress-head b { color: var(--c-text); font-size: 15px; }
+.lab-progress-pct { font-family: var(--font-mono); font-size: 12px; }
+
+.lab-progress-track {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  overflow: hidden;
+}
+
+.lab-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--c-primary-2), var(--c-primary));
+  transition: width var(--dur-base) var(--ease);
+}
+
+/* ---------- 环节列表 ---------- */
+.lab-step-list { display: grid; gap: 4px; }
+
+.lab-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.lab-step:hover { background: var(--c-surface-2); color: var(--c-text); }
+
+.lab-step.is-current {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-primary) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-weight: 700;
+}
+
+.lab-step.is-done .lab-step-no {
+  background: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-success) var(--mix-halo), transparent);
+  color: var(--c-success);
+}
+
+.lab-step-no {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.lab-step-title { flex: 1 1 auto; min-width: 0; }
+
+.lab-step-flag {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* ---------- 案例要求 ---------- */
+.lab-brief-list { margin: 0; font-size: 13px; }
+.lab-brief-list dt { margin-top: 8px; color: var(--c-muted); font-size: 12px; font-weight: 700; }
+.lab-brief-list dt:first-child { margin-top: 0; }
+.lab-brief-list dd { margin: 2px 0 0; color: var(--c-text-soft); line-height: 1.6; }
+
+.lab-assets { margin-top: 10px; }
+.lab-assets summary {
+  cursor: pointer;
+  color: var(--c-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lab-assets ul { display: grid; gap: 4px; margin-top: 8px; }
+
+.lab-asset {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px dashed var(--c-line-2);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.lab-asset:hover { border-color: var(--c-primary); border-style: solid; }
+.lab-asset-label { color: var(--c-muted); font-size: 11px; }
+.lab-asset-value { font-size: 12.5px; line-height: 1.5; }
+
+/* ---------- 题干与要求 ---------- */
+.lab-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+.lab-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-info) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-info) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-info) var(--mix-ink), var(--c-text));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lab-task-title { font-size: 19px; margin-bottom: 4px; }
+.lab-task-sub { margin: 0 0 12px; color: var(--c-text-soft); font-size: 13.5px; }
+
+.lab-task-list { display: grid; gap: 8px; counter-reset: lab-task; }
+
+.lab-task-list li {
+  position: relative;
+  padding-left: 26px;
+  color: var(--c-text-soft);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* 序号用伪元素生成，避免和全局 ul 重置打架 */
+.lab-task-list li::before {
+  counter-increment: lab-task;
+  content: counter(lab-task);
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.lab-task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--space);
+}
+
+.lab-task-hint-note { color: var(--c-muted); font-size: 12.5px; }
+.lab-hint-count { font-family: var(--font-mono); font-size: 11.5px; opacity: .85; }
+
+/* ---------- 提示（分级展开） ---------- */
+.lab-hint-box {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+}
+
+.lab-hint-list { display: grid; gap: 8px; }
+
+.lab-hint-list li {
+  position: relative;
+  padding-left: 20px;
+  color: var(--c-text);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.lab-hint-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.lab-syntax { margin-top: 12px; }
+.lab-syntax summary { cursor: pointer; color: var(--c-text); font-size: 13px; font-weight: 700; }
+.lab-syntax ul { display: grid; gap: 6px; margin-top: 8px; }
+
+.lab-syntax li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+}
+
+.lab-syntax code {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.lab-syntax-note { color: var(--c-text-soft); font-size: 12.5px; }
+
+/* ---------- 编辑器 ---------- */
+.lab-editors { display: grid; gap: var(--space); }
+.lab-editor { display: grid; gap: 6px; }
+
+.lab-editor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.lab-editor-name {
+  color: var(--c-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.lab-editor-note { color: var(--c-muted); font-size: 12px; }
+
+/* 代码输入框：等宽、不自动换行（写代码的常态），可纵向拉伸 */
+.lab-code {
+  width: 100%;
+  height: 220px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre;
+  overflow: auto;
+  resize: vertical;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  transition: var(--t-control);
+}
+
+.lab-code:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  background: var(--c-surface);
+  box-shadow: 0 0 0 3px var(--c-focus);
+}
+
+/* ---------- 检查结果 ---------- */
+.lab-check-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.lab-check-score { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+
+.lab-check-flag {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lab-check-flag.is-good {
+  background: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-success) var(--mix-ink), var(--c-text));
+}
+
+.lab-check-flag.is-warn {
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-danger) var(--mix-ink), var(--c-text));
+}
+
+.lab-check-list { display: grid; gap: 6px; }
+
+.lab-check-list li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 7px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 左侧 3px 竖条常驻、只换颜色 —— 与 .about-item 同一手法 */
+.lab-check-list li.is-ok { border-left: 3px solid var(--c-success); }
+.lab-check-list li.is-bad {
+  border-left: 3px solid var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+}
+
+.lab-check-mark { flex: none; width: 16px; font-weight: 700; }
+.lab-check-list li.is-ok .lab-check-mark { color: var(--c-success); }
+.lab-check-list li.is-bad .lab-check-mark { color: var(--c-danger); }
+
+/* ---------- 操作按钮 ---------- */
+.lab-actions { display: grid; gap: 10px; }
+.lab-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lab-action-row--sub { padding-top: 10px; border-top: 1px dashed var(--c-line-2); }
+.lab-action-gap { flex: 1 1 auto; }
+.lab-hint-note { margin: 0; color: var(--c-muted); font-size: 12.5px; }
+
+.lab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+
+.lab-btn:hover:not(:disabled) {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  transform: translateY(-1px);
+}
+
+.lab-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.lab-btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary));
+  color: var(--c-on-primary);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--c-primary) 28%, transparent);
+}
+
+.lab-btn--primary:hover:not(:disabled) { color: var(--c-on-primary); }
+.lab-btn--ghost { background: transparent; border-style: dashed; color: var(--c-text-soft); }
+
+.lab-btn--hint {
+  border-color: color-mix(in srgb, var(--c-accent) 40%, var(--c-border));
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+}
+
+.lab-btn--danger {
+  border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border));
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+  color: var(--c-danger);
+}
+
+/* 两步确认时的高亮态 */
+.lab-btn.is-confirm {
+  border-color: var(--c-warn);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-weight: 700;
+}
+
+/* ---------- 我的作品 ---------- */
+.lab-works { display: grid; gap: 10px; }
+
+.lab-works-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lab-works-title { font-size: 15px; }
+.lab-works-list { display: grid; gap: 8px; }
+
+.lab-work-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+}
+
+.lab-work-time { color: var(--c-text-soft); font-family: var(--font-mono); font-size: 12px; }
+
+.lab-work-detail {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+}
+
+.lab-work-actions { display: flex; gap: 6px; }
+
+/* ---------- 实时预览 ---------- */
+.lab-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lab-preview-title { font-size: 14px; font-weight: 700; }
+.lab-devices { display: flex; gap: 4px; }
+
+.lab-device {
+  padding: 4px 10px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.lab-device:hover { border-color: var(--c-primary); color: var(--c-primary); }
+
+.lab-device.is-active {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+/* 画布：外层负责滚动；holder 按"缩放后的尺寸"撑开；
+   iframe 用真实宽度布局（媒体查询、vw、fixed 因此都真实生效）。
+   transform: scale 只改变视觉大小，不改变布局宽度 —— 这正是设备预览的常规做法 */
+.lab-frame-wrap {
+  height: 560px;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+}
+
+.lab-frame-holder { position: relative; }
+
+.lab-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--c-line);
+  border-radius: 4px;
+  background: var(--c-surface);
+  transform-origin: top left;
+  box-shadow: var(--shadow-sm);
+}
+
+.lab-note--preview { margin-top: 6px; }
+
+/* 学生代码里写了 <script> / on* 时的提示（黄底，和 .lab-notice 同色系） */
+.lab-note--warn {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-size: 12.5px;
+}
+
+/* ---------- 工作台自己的断点（比门户的 720px 更早收敛） ---------- */
+@media (max-width: 1240px) {
+  .lab-main { grid-template-columns: 230px minmax(0, 1fr); }
+  .lab-preview { position: static; grid-column: 1 / -1; }
+}
+
+@media (max-width: 900px) {
+  .lab-main { grid-template-columns: 1fr; }
+  .lab-work { order: 1; }
+  .lab-side { order: 2; }
+  .lab-preview { order: 3; }
+}
+
 /* ---------------- 响应式（移动优先的断点收敛在 720px） ---------------- */
 @media (max-width: 720px) {
   .hero { padding: 48px var(--space) 32px; }
@@ -940,6 +1547,13 @@ b.is-bad { color: var(--c-danger); }
   .quiz-score-num { font-size: 28px; }
   .quiz-review-item,
   .quiz-wrong-item { padding: 16px; }
+
+  /* 实战环节：窄屏下编辑器与预览都用更紧凑的高度 */
+  .lab-panel { padding: 12px; }
+  .lab-code { height: 180px; font-size: 12.5px; }
+  .lab-frame-wrap { height: 420px; padding: 6px; }
+  .lab-btn { padding: 7px 12px; font-size: 13px; }
+  .lab-action-row { gap: 6px; }
 }
 
 /* ---------------- 动效降级（尊重系统“减少动态效果”） ---------------- */
@@ -959,6 +1573,11 @@ b.is-bad { color: var(--c-danger); }
 
   .quiz-btn:hover,
   .quiz-option:hover { transform: none; }
+
+  .lab-btn:hover,
+  .lab-device:hover,
+  .lab-step:hover,
+  .lab-asset:hover { transform: none; }
 
   .brand:hover .brand-mark { transform: none; }
 
