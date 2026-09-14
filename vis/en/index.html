@@ -184,16 +184,16 @@
       </div>
     </section>
 
-    <!-- ============ Knowledge check (quiz is Chinese-only) ============ -->
+    <!-- ============ Knowledge check ============ -->
     <section id="quiz" class="section">
       <h2 class="section-title">📝 Knowledge check</h2>
       <p class="section-lead">
-        The quiz is a study tool for the <strong>Chinese edition</strong> of this course: it draws
-        <strong>8 multiple-choice</strong> and <strong>2 true/false</strong> questions at random from a
-        50-question bank covering all 9 chapters, grades you instantly with a per-question explanation,
-        and keeps a wrong-answer log plus a score history in your browser.
+        After working through the 9 chapters, test yourself: <strong>8 multiple-choice</strong> and
+        <strong>2 true/false</strong> questions are drawn at random from a <strong>50-question bank</strong>
+        (spread across the chapters); you are graded the moment you submit, every question comes with an
+        explanation, and anything you miss goes into the wrong-answer list. Scores stay in your browser.
       </p>
-      <p><a class="quiz-btn quiz-btn--primary" href="../index.html#quiz">Open the quiz (中文版) →</a></p>
+      <div id="quiz-root" class="quiz"></div>
     </section>
 
     <!-- ============ How to use ============ -->
@@ -208,7 +208,7 @@
         </div>
         <div class="howto-card">
           <h3>🥇 Build a real one</h3>
-          <p>The fastest way to actually learn layout is the <a href="../practice.html"><strong>🧪 Hands-on lab</strong></a> (Chinese edition): rebuild the Chapter 9 portfolio site step by step in your own HTML/CSS — live preview, tiered hints, automatic per-step checks, and the result can be exported as a standalone web page.</p>
+          <p>The fastest way to actually learn layout is the <a href="practice.html"><strong>🧪 Hands-on lab</strong></a>: rebuild the Chapter 9 portfolio site step by step in your own HTML/CSS — live preview, tiered hints, automatic per-step checks, and the result can be exported as a standalone web page.</p>
         </div>
         <div class="howto-card">
           <h3>💻 Preparing a class</h3>
@@ -252,5 +252,8 @@
   </footer>
 
   <script src="../i18n.js"></script>
+  <script src="quiz-data.js"></script>
+  <script src="quiz-ui.js"></script>
+  <script src="../quiz.js"></script>
 </body>
 </html>

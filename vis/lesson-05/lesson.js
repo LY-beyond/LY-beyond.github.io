@@ -90,39 +90,82 @@ window.DEMOS['d-5-1'] = function (mount) {
  * 演示 1.2 —— 文档流：块级 vs 行内块
  * ------------------------------------------------------- */
 window.DEMOS['d-5-2'] = function (mount) {
-  const items = ['A', 'B', 'C'];
-  const boxes = css => items
-    .map((t, i) => `<div class="box d${i + 1}" style="${css}">${t}</div>`)
-    .join('');
+  const items = ['A', 'B', 'C', 'D'];
+  const boxes = items.map((t, i) => `<div class="box d${i + 1}">${t}</div>`).join('');
 
   mount.innerHTML = `
     <div class="demo-card">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-        <div>
-          <p style="margin:0 0 8px;font-weight:700;font-size:14px;color:var(--c-text-soft);">
-            块级 <code>display:block</code> —— 竖着排
-          </p>
-          <div class="demo-stage" style="min-height:160px;">
-            ${boxes('display:block;width:100%;margin-bottom:8px;')}
-          </div>
-        </div>
-        <div>
-          <p style="margin:0 0 8px;font-weight:700;font-size:14px;color:var(--c-text-soft);">
-            行内块 <code>display:inline-block</code> —— 横着排
-          </p>
-          <div class="demo-stage" style="min-height:160px;">
-            ${boxes('display:inline-block;margin:0 6px 6px 0;')}
-          </div>
+      <div class="demo-controls">
+        <label class="demo-control">排列方式
+          <select class="js-mode">
+            <option value="block">块级 block —— 各占一行</option>
+            <option value="inline-block" selected>行内块 inline-block —— 横排，放不下就折行</option>
+            <option value="flex">弹性 flex —— 横排，不折行</option>
+          </select>
+        </label>
+        <label class="demo-control">容器宽度
+          <input type="range" min="220" max="620" value="420" data-ctl="w">
+          <span class="val" data-out="w">420px</span>
+        </label>
+      </div>
+
+      <div class="demo-stage" style="min-height:170px;overflow-x:auto;">
+        <div class="js-flow" style="width:420px;padding:10px;background:var(--c-surface);border:1px dashed var(--c-border-2);border-radius:var(--radius-sm);">
+          ${boxes}
         </div>
       </div>
 
-      <p class="key-point" style="margin-top:16px;">
-        <strong>⭐ 观察</strong>：同一组盒子，只改了 <code>display</code>，
-        结果就完全不同——块级各占一行竖着摞，行内块挤在一行横着排。
-        右边用 <code>inline-block</code> 而不是 <code>inline</code>，
-        是因为 <code>inline</code> 无法设置宽高，盒子会缩成内容大小。
-      </p>
+      <p class="js-note" style="margin:14px 0 0;font-size:13px;font-weight:600;color:var(--c-text-soft);"></p>
+      <pre class="demo-code js-code"></pre>
     </div>`;
+
+  const q = sel => mount.querySelector(sel);
+  const flow  = q('.js-flow');
+  const mode  = q('.js-mode');
+  const width = q('[data-ctl="w"]');
+  const note  = q('.js-note');
+  const code  = q('.js-code');
+
+  const NOTES = {
+    block: '→ 块级盒子各占一行：容器再宽，也是一行一个，宽度默认撑满容器。',
+    'inline-block': '→ 行内级盒子横着排，一行放不下就自动折行 —— 把容器拖窄就知道了。',
+    flex: '→ flex 默认不折行：容器变窄时它把子项挤瘦，而不是换行（第 6 章会讲这套新规则）。',
+  };
+
+  const CODES = {
+    block: `.box { display: block; margin-bottom: 8px; }          /* 各占一行，宽度撑满 */`,
+    'inline-block': `.box { display: inline-block; margin: 0 8px 8px 0; }   /* 横排，放不下折行 */`,
+    flex: `.flow { display: flex; }                           /* 容器不折行 */\n.box  { flex: 1 1 0; }                           /* 子项均分、被挤瘦 */`,
+  };
+
+  function update() {
+    const v = mode.value;
+    const w = +width.value;
+
+    q('[data-out="w"]').textContent = w + 'px';
+    flow.style.width   = w + 'px';
+    flow.style.display = v === 'flex' ? 'flex' : 'block';
+
+    flow.querySelectorAll('.box').forEach(b => {
+      // .box 自带 display:grid（用来把字母居中），所以这里分别对应：
+      //   块级     → display: block
+      //   行内级   → display: inline-block
+      //   flex 子项 → 保留 grid，靠 flex:1 均分、被挤瘦
+      b.style.display    = v === 'flex' ? '' : v;
+      b.style.flex       = v === 'flex' ? '1 1 0' : '';
+      b.style.minWidth   = v === 'flex' ? '0' : '';
+      b.style.textAlign  = 'center';
+      b.style.lineHeight = '30px';
+      b.style.margin     = v === 'block' ? '0 0 8px 0' : '0 8px 8px 0';
+    });
+
+    note.textContent = NOTES[v];
+    code.textContent = CODES[v];
+  }
+
+  mode.addEventListener('change', update);
+  width.addEventListener('input', update);
+  update();
 };
 
 /* ---------------------------------------------------------

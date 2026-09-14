@@ -24,21 +24,150 @@
   var CASE = window.PRACTICE_CASE;
   var root = document.getElementById('lab-root');
 
-  if (!root) return;
-  if (!CASE || !Array.isArray(CASE.steps) || !CASE.steps.length) {
-    root.innerHTML = '<p class="lab-empty">案例数据加载失败：请确认 practice-data.js 已在 practice.js 之前引入。</p>';
-    return;
-  }
+  // 案例校验放到文案表之后（那样出错提示也能跟着语言走）
+  var caseOk = !!(root && CASE && Array.isArray(CASE.steps) && CASE.steps.length);
 
   /* =======================================================
    * 一、配置
    * ===================================================== */
+  /* -------------------------------------------------------
+   * 界面文案（中英共用同一份引擎）
+   *   · 默认值是中文；en/ 下由 en/practice-ui.js 提供 window.PRACTICE_UI 覆盖
+   *   · 逻辑只写一份，中英不会各自漂移（与 quiz.js 同一思路）
+   *   · {xxx} 是占位符，由 t() 替换
+   * ----------------------------------------------------- */
+  var T = {
+    /* ---- 通用 ---- */
+    docLang: 'zh-CN',
+    chapterLabel: '第 {n} 章',
+    trackDesign: '设计篇',
+    trackImpl: '实现篇',
+    trackCapstone: '实战篇',
+    caseError: '案例数据加载失败：请确认 practice-data.js 已在 practice.js 之前引入。',
+
+    /* ---- 预览宽度档位 ---- */
+    deviceDesktop: '桌面 1180',
+    deviceTablet: '平板 768',
+    devicePhone: '手机 375',
+
+    /* ---- 脚本提示 ---- */
+    scriptPartTag: '{n} 个 <script>',
+    scriptPartHandler: '{n} 处内联事件',
+    scriptSep: '、',
+    scriptNote: '⚠️ 已移除 {parts}：预览与导出的 .html 都不执行 JavaScript —— 本案例是纯 HTML/CSS 布局练习，课程不涉及脚本。',
+
+    /* ---- 检查 ---- */
+    checkUnavailable: '当前浏览器不允许读取预览文档，自动检查不可用。'
+      + '请用本地服务器打开本页（python -m http.server 8080）后重试。',
+    checkAllPass: '🎉 本环节 {n} 项检查全部通过，可以进入下一环节了。',
+    checkSomeFail: '本环节还有 {n} 项没通过 —— 对照预览调一调，或点「💡 提示」。',
+    checkEmptyIntro: '还没有检查过。写完这一段代码后，点下方的「✅ 检查这一环节」——'
+      + '我会在 {width}px 宽度下测量真实的渲染结果（计算样式 + 元素位置），不比对代码文本，类名怎么写都行。',
+    checkScore: '{pass} / {total} 项通过',
+    checkFlagGood: '✓ 本环节完成',
+    checkFlagBad: '✗ 还有 {n} 项要修',
+    checkFootnote: '检查的是「效果」不是「写法」：只要浏览器真的渲染成这样就通过。'
+      + '检查时会临时切到 {width}px 宽度，所以响应式也能被验到。',
+    checkError: '检查出错',
+
+    /* ---- 提示 / 参考答案 / 重置 ---- */
+    btnHint: '💡 提示',
+    hintLevelNote: '提示是分级的：再点一次解锁下一级',
+    hintDone: '提示已全部展开。再卡住就点「查看参考答案」，先把这一关过了。',
+    syntaxTitle: '🔤 语法速查（本环节会用到的属性）',
+    btnSolution: '查看参考答案',
+    btnSolutionConfirm: '⚠️ 确认填入参考答案',
+    solutionConfirm: '这会用参考答案覆盖当前代码。再点一次「确认填入」执行。',
+    solutionDone: '已填入参考答案 —— 建议对着它看一遍「为什么这么写」，再点检查。',
+    btnReset: '重置本环节',
+    btnResetConfirm: '⚠️ 确认重置本环节',
+    resetConfirm: '这会把本环节恢复到起始代码（上一环节的成果）。再点一次「确认重置」执行。',
+    resetDone: '已重置到本环节的起始代码。',
+    stepSolutionFlag: '参考答案',
+    btnRestart: '重新开始',
+    btnRestartConfirm: '⚠️ 确认重来',
+    restartConfirm: '这会清空当前进度（「我的作品」里已保存的不受影响）。再点一次「确认重来」执行。',
+    restartDone: '已重新开始，加油。',
+
+    /* ---- 环节流转 ---- */
+    btnCheck: '✅ 检查这一环节',
+    btnPrevStep: '← 上一环节',
+    btnNextStep: '下一环节 →',
+    btnFinishCase: '完成案例 🎉',
+    btnSave: '💾 保存到我的作品',
+    actionsState: '当前环节：{title} · 已完成 {done} / {total} 个环节',
+    progressHead: '已通过 <b>{done}</b> / {total} 个环节',
+    initStart: '从第 1 个环节开始：先看左栏的「案例要求」，再动手写。写不动就点「💡 提示」。',
+    draftRestored: '已恢复上次的草稿（第 {step} 环节）· {time}',
+
+    /* ---- 案例要求 ---- */
+    briefGoal: '页面目标',
+    briefAudience: '目标用户',
+    briefSuccess: '成功标准',
+    briefDeliverable: '最终交付',
+    briefAssets: '📋 案例文案（点一下插入到编辑器）',
+    briefLessonIntro: '配套章节：',
+    briefLessonLink: '第 9 章 · 综合案例：作品集网站 →',
+    insertDone: '已插入文案：{text}',
+
+    /* ---- 我的作品 / 导出 ---- */
+    btnWorks: '📁 我的作品',
+    worksTitle: '📁 我的作品',
+    btnCollapse: '收起',
+    btnLoadWork: '载入继续',
+    btnDeleteWork: '删除',
+    worksItemDetail: '进度 {step}/{total} · 通过 {passed} 个环节 · 用时 {minutes} 分',
+    worksItemSolution: ' · 参考过 {n} 次答案',
+    worksEmpty: '还没有保存过作品。完成几个环节后点「💾 保存到我的作品」，'
+      + '这里就会出现记录（只存在本机浏览器）。',
+    worksNote: '最多保留最近 {max} 份；「导出 .html」会把当前代码打包成一个可以双击打开的完整网页。',
+    workSaved: '已保存到「我的作品」（最多保留最近 {max} 份）。',
+    workSaveFail: '保存失败：浏览器存储空间不足，或处于隐私模式。建议改用「导出 .html」。',
+    workLoaded: '已载入 {time} 的作品继续编辑。',
+    workDeleted: '已删除该作品。',
+    btnExport: '⬇️ 导出 .html',
+    exportPrefix: 'portfolio-',
+    exportDone: '已导出 {name} —— 用浏览器双击打开即可，就是右侧预览的那份页面。',
+
+    /* ---- 判定「好消息」的关键词（与语言无关的写法：改成数组匹配） ---- */
+    goodWords: ['通过', '已保存', '已导出', '已恢复', '已载入', '已插入', '已重新开始'],
+  };
+
+  var UI = (window.PRACTICE_UI && typeof window.PRACTICE_UI === 'object') ? window.PRACTICE_UI : {};
+
+  // 取词：优先用覆盖表，其次默认表；漏译时直接暴露 key，方便自检脚本发现
+  function t(key, vars) {
+    var s = (UI[key] !== undefined && UI[key] !== null) ? UI[key] : T[key];
+    if (s === undefined) s = '[' + key + ']';
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = s.split('{' + k + '}').join(vars[k]);
+      });
+    }
+    return s;
+  }
+
+  // 提示条是不是「好消息」：按关键词数组判断，不靠中文正则（这样换语言也成立）
+  function isGoodNotice(text) {
+    var words = (UI.goodWords && UI.goodWords.length) ? UI.goodWords : (T.goodWords || []);
+    var s = String(text || '');
+    for (var i = 0; i < words.length; i++) {
+      if (s.indexOf(words[i]) >= 0) return true;
+    }
+    return false;
+  }
+
+  if (!caseOk) {
+    if (root) root.innerHTML = '<p class="lab-empty">' + esc(t('caseError')) + '</p>';
+    return;
+  }
+
   // 预览宽度档位：iframe 用真实宽度布局，外层再等比缩放塞进面板
   // 这样媒体查询、vw/vh、position: fixed 都会按这个宽度真实生效
   var DEVICES = [
-    { key: 'desktop', label: '桌面 1180', width: 1180 },
-    { key: 'tablet', label: '平板 768', width: 768 },
-    { key: 'phone', label: '手机 375', width: 375 },
+    { key: 'desktop', labelKey: 'deviceDesktop', width: 1180 },
+    { key: 'tablet', labelKey: 'deviceTablet', width: 768 },
+    { key: 'phone', labelKey: 'devicePhone', width: 375 },
   ];
   var CHECK_WIDTH = 1180;      // 运行检查点时固定使用的宽度（与预览档位无关）
   var PREVIEW_MIN_H = 560;     // 预览画布最小高度
@@ -221,12 +350,12 @@
   function renderScriptNote() {
     if (!el.scriptNote) return;
     var parts = [];
-    if (stripInfo.scripts) parts.push(stripInfo.scripts + ' 个 <script>');
-    if (stripInfo.handlers) parts.push(stripInfo.handlers + ' 处内联事件');
+    if (stripInfo.scripts) parts.push(t('scriptPartTag', { n: stripInfo.scripts }));
+    if (stripInfo.handlers) parts.push(t('scriptPartHandler', { n: stripInfo.handlers }));
 
     el.scriptNote.hidden = parts.length === 0;
     el.scriptNote.textContent = parts.length
-      ? '⚠️ 已移除 ' + parts.join('、') + '：预览与导出的 .html 都不执行 JavaScript —— 本案例是纯 HTML/CSS 布局练习，课程不涉及脚本。'
+      ? t('scriptNote', { parts: parts.join(t('scriptSep')) })
       : '';
   }
 
@@ -238,14 +367,14 @@
   }
 
   function buildDoc() {
-    return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">' +
+    return '<!DOCTYPE html><html lang="' + t('docLang') + '"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<style>' + CASE.baseCss + '</style>' +
       '<style id="lab-user-css">' + cleanCss(state.code.css) + '</style>' +
       '</head><body id="lab-preview-body">' + cleanHtml(state.code.html) + '</body></html>';
   }
 
-  var SHELL = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">' +
+  var SHELL = '<!DOCTYPE html><html lang="' + t('docLang') + '"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>' + CASE.baseCss + '</style>' +
     '<style id="lab-user-css"></style>' +
@@ -451,7 +580,7 @@
 
     if (!canMeasure) {
       state.results = null;
-      state.notice = '当前浏览器不允许读取预览文档，自动检查不可用。请用本地服务器打开本页（python -m http.server 8080）后重试。';
+      state.notice = t('checkUnavailable');
       render();
       return;
     }
@@ -461,7 +590,7 @@
         var ok = false;
         var err = '';
         try { ok = !!evalCheck(c, doc, win); }
-        catch (e) { err = e.message || '检查出错'; }
+        catch (e) { err = e.message || t('checkError'); }
         return { label: c.label, ok: ok, err: err };
       });
     }) || [];
@@ -470,8 +599,8 @@
     state.results = { stepId: step.id, items: items };
     state.passed[step.id] = failed === 0;
     state.notice = failed === 0
-      ? '🎉 本环节 ' + items.length + ' 项检查全部通过，可以进入下一环节了。'
-      : '本环节还有 ' + failed + ' 项没通过 —— 对照预览调一调，或点「💡 提示」。';
+      ? t('checkAllPass', { n: items.length })
+      : t('checkSomeFail', { n: failed });
     fitFrame();
     render();
   }
@@ -541,7 +670,7 @@
     var step = CASE.steps[state.step];
     var level = state.hintLevel[step.id] || 0;
     if (level >= step.hints.length) {
-      state.notice = '提示已全部展开。再卡住就点「查看参考答案」，先把这一关过了。';
+      state.notice = t('hintDone');
     } else {
       state.hintLevel[step.id] = level + 1;
       state.notice = '';
@@ -555,7 +684,7 @@
     var step = CASE.steps[state.step];
     if (state.confirm !== 'solution') {
       state.confirm = 'solution';
-      state.notice = '这会用参考答案覆盖当前代码。再点一次「确认填入」执行。';
+      state.notice = t('solutionConfirm');
       render();
       return;
     }
@@ -566,7 +695,7 @@
     state.solutionUsed[step.id] = true;
     state.confirm = '';
     state.results = null;
-    state.notice = '已填入参考答案 —— 建议对着它看一遍「为什么这么写」，再点检查。';
+    state.notice = t('solutionDone');
     updatePreview();
     saveDraft();
     render();
@@ -575,7 +704,7 @@
   function resetStep() {
     if (state.confirm !== 'reset') {
       state.confirm = 'reset';
-      state.notice = '这会把本环节恢复到起始代码（上一环节的成果）。再点一次「确认重置」执行。';
+      state.notice = t('resetConfirm');
       render();
       return;
     }
@@ -585,7 +714,7 @@
     setEditors();
     state.confirm = '';
     state.results = null;
-    state.notice = '已重置到本环节的起始代码。';
+    state.notice = t('resetDone');
     updatePreview();
     saveDraft();
     render();
@@ -594,7 +723,7 @@
   function restartAll() {
     if (state.confirm !== 'restart') {
       state.confirm = 'restart';
-      state.notice = '这会清空当前进度（"我的作品"里已保存的不受影响）。再点一次「确认重来」执行。';
+      state.notice = t('restartConfirm');
       render();
       return;
     }
@@ -613,7 +742,7 @@
     state.startedAt = Date.now();
     setEditors();
     focusForStep(0, false);
-    state.notice = '已重新开始，加油。';
+    state.notice = t('restartDone');
     updatePreview();
     render();
   }
@@ -628,7 +757,7 @@
     if (ta === el.html) state.code.html = ta.value; else state.code.css = ta.value;
     ta.focus();
     try { ta.setSelectionRange(pos, pos); } catch (e) { /* 忽略 */ }
-    state.notice = '已插入文案：' + text;
+    state.notice = t('insertDone', { text: text });
     updatePreview();
     saveDraftSoon();
     render();
@@ -666,7 +795,7 @@
     state.solutionUsed = d.solutionUsed || {};
     state.hintLevel = d.hintLevel || {};
     state.startedAt = Date.now() - (num(d.seconds) * 1000);
-    state.notice = '已恢复上次的草稿（第 ' + (state.step + 1) + ' 环节）· ' + nowLabel(d.at);
+    state.notice = t('draftRestored', { step: state.step + 1, time: nowLabel(d.at) });
     return true;
   }
 
@@ -691,8 +820,8 @@
     var ok = writeStore(KEY_WORKS, list.slice(0, WORKS_MAX));
     state.showWorks = true;
     state.notice = ok
-      ? '已保存到「我的作品」（最多保留最近 ' + WORKS_MAX + ' 份）。'
-      : '保存失败：浏览器存储空间不足，或处于隐私模式。建议改用「导出 .html」。';
+      ? t('workSaved', { max: WORKS_MAX })
+      : t('workSaveFail');
     render();
   }
 
@@ -706,7 +835,7 @@
     state.showWorks = false;
     setEditors();
     focusForStep(state.step, false);
-    state.notice = '已载入 ' + nowLabel(item.at) + ' 的作品继续编辑。';
+    state.notice = t('workLoaded', { time: nowLabel(item.at) });
     updatePreview();
     saveDraft();
     render();
@@ -717,7 +846,7 @@
     if (index < 0 || index >= list.length) return;
     list.splice(index, 1);
     writeStore(KEY_WORKS, list);
-    state.notice = '已删除该作品。';
+    state.notice = t('workDeleted');
     render();
   }
 
@@ -726,7 +855,7 @@
     var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var d = new Date();
-    var name = 'portfolio-' + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) +
+    var name = t('exportPrefix') + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) +
       '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + '.html';
     var a = document.createElement('a');
     a.href = url;
@@ -735,7 +864,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    state.notice = '已导出 ' + name + ' —— 用浏览器双击打开即可，就是右侧预览的那份页面。';
+    state.notice = t('exportDone', { name: name });
     render();
   }
 
@@ -764,7 +893,7 @@
     var pct = Math.round(done / total * 100);
     el.progress.innerHTML =
       '<div class="lab-progress-head">' +
-        '<span>已通过 <b>' + done + '</b> / ' + total + ' 个环节</span>' +
+        '<span>' + t('progressHead', { done: done, total: total }) + '</span>' +
         '<span class="lab-progress-pct">' + pct + '%</span>' +
       '</div>' +
       '<div class="lab-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '">' +
@@ -775,7 +904,7 @@
   function renderNotice() {
     el.notice.hidden = !state.notice;
     el.notice.textContent = state.notice || '';
-    el.notice.classList.toggle('is-good', /通过|已保存|已导出|已恢复|已载入|已插入|已重新开始/.test(state.notice || ''));
+    el.notice.classList.toggle('is-good', isGoodNotice(state.notice));
   }
 
   function renderBrief() {
@@ -789,17 +918,27 @@
 
     el.brief.innerHTML =
       '<dl class="lab-brief-list">' +
-        '<dt>页面目标</dt><dd>' + esc(b.goal) + '</dd>' +
-        '<dt>目标用户</dt><dd>' + esc(b.audience) + '</dd>' +
-        '<dt>成功标准</dt><dd>' + esc(b.success) + '</dd>' +
-        '<dt>最终交付</dt><dd>' + esc(b.deliverable) + '</dd>' +
+        '<dt>' + esc(t('briefGoal')) + '</dt><dd>' + esc(b.goal) + '</dd>' +
+        '<dt>' + esc(t('briefAudience')) + '</dt><dd>' + esc(b.audience) + '</dd>' +
+        '<dt>' + esc(t('briefSuccess')) + '</dt><dd>' + esc(b.success) + '</dd>' +
+        '<dt>' + esc(t('briefDeliverable')) + '</dt><dd>' + esc(b.deliverable) + '</dd>' +
       '</dl>' +
       '<p class="lab-note">' + esc(CASE.baseNote) + '</p>' +
       '<details class="lab-assets">' +
-        '<summary>📋 案例文案（点一下插入到编辑器）</summary>' +
+        '<summary>' + esc(t('briefAssets')) + '</summary>' +
         '<ul>' + assets + '</ul>' +
       '</details>' +
-      '<p class="lab-note">配套章节：<a href="' + esc(CASE.lesson) + '">第 9 章 · 综合案例：作品集网站 →</a></p>';
+      '<p class="lab-note">' + esc(t('briefLessonIntro')) +
+        '<a href="' + esc(CASE.lesson) + '">' + esc(t('briefLessonLink')) + '</a></p>';
+  }
+
+  // 侧栏用的短标题：'环节 1 · 搭出页面骨架' / 'Step 1 · Build the page skeleton' → 去掉 '·' 之前的部分
+  // 用分隔符切分而不是中文正则，这样换语言也成立
+  function shortTitle(title) {
+    var s = String(title || '');
+    var i = s.indexOf('·');
+    var out = i >= 0 ? s.slice(i + 1).trim() : s;
+    return out || s;
   }
 
   function renderSteps() {
@@ -808,8 +947,8 @@
       return '<li>' +
         '<button type="button" class="' + cls + '" data-lab-act="goto" data-lab-step="' + i + '">' +
           '<span class="lab-step-no">' + (state.passed[s.id] ? '✓' : (i + 1)) + '</span>' +
-          '<span class="lab-step-title">' + esc(s.title.replace(/^环节\s*\d+\s*·\s*/, '')) + '</span>' +
-          (state.solutionUsed[s.id] ? '<span class="lab-step-flag">参考答案</span>' : '') +
+          '<span class="lab-step-title">' + esc(shortTitle(s.title)) + '</span>' +
+          (state.solutionUsed[s.id] ? '<span class="lab-step-flag">' + esc(t('stepSolutionFlag')) + '</span>' : '') +
         '</button>' +
       '</li>';
     }).join('') + '</ol>';
@@ -831,7 +970,7 @@
             s.hints.slice(0, level).map(function (h) { return '<li>' + esc(h) + '</li>'; }).join('') +
           '</ol>' +
           '<details class="lab-syntax" open>' +
-            '<summary>🔤 语法速查（本环节会用到的属性）</summary>' +
+            '<summary>' + esc(t('syntaxTitle')) + '</summary>' +
             '<ul>' + s.syntax.map(function (k) {
               return '<li><code>' + esc(k.code) + '</code><span class="lab-syntax-note">' + esc(k.note) + '</span></li>';
             }).join('') + '</ul>' +
@@ -848,9 +987,9 @@
       taskHtml +
       '<div class="lab-task-actions">' +
         '<button type="button" class="lab-btn lab-btn--hint" data-lab-act="hint">' +
-          '💡 提示 <span class="lab-hint-count">' + level + ' / ' + s.hints.length + '</span>' +
+          esc(t('btnHint')) + ' <span class="lab-hint-count">' + level + ' / ' + s.hints.length + '</span>' +
         '</button>' +
-        (level > 0 ? '<span class="lab-task-hint-note">提示是分级的：再点一次解锁下一级</span>' : '') +
+        (level > 0 ? '<span class="lab-task-hint-note">' + esc(t('hintLevelNote')) + '</span>' : '') +
       '</div>' +
       hintsHtml;
   }
@@ -860,9 +999,7 @@
     var res = (state.results && state.results.stepId === s.id) ? state.results : null;
 
     if (!res) {
-      el.checks.innerHTML = '<p class="lab-empty">还没有检查过。写完这一段代码后，点右下角的「✅ 检查这一环节」——'
-        + '我会在 ' + CHECK_WIDTH + 'px 宽度下测量真实的渲染结果（计算样式 + 元素位置），'
-        + '不比对代码文本，类名怎么写都行。</p>';
+      el.checks.innerHTML = '<p class="lab-empty">' + esc(t('checkEmptyIntro', { width: CHECK_WIDTH })) + '</p>';
       return;
     }
 
@@ -871,9 +1008,9 @@
 
     el.checks.innerHTML =
       '<div class="lab-check-head">' +
-        '<span class="lab-check-score">' + pass + ' / ' + all + ' 项通过</span>' +
+        '<span class="lab-check-score">' + esc(t('checkScore', { pass: pass, total: all })) + '</span>' +
         '<span class="lab-check-flag ' + (pass === all ? 'is-good' : 'is-warn') + '">' +
-          (pass === all ? '✓ 本环节完成' : '✗ 还有 ' + (all - pass) + ' 项要修') +
+          esc(pass === all ? t('checkFlagGood') : t('checkFlagBad', { n: all - pass })) +
         '</span>' +
       '</div>' +
       '<ul class="lab-check-list">' + res.items.map(function (it) {
@@ -882,8 +1019,7 @@
           '<span>' + esc(it.label) + (it.err ? '（' + esc(it.err) + '）' : '') + '</span>' +
         '</li>';
       }).join('') + '</ul>' +
-      '<p class="lab-note">检查的是"效果"不是"写法"：只要浏览器真的渲染成这样就通过。'
-        + '检查时会临时切到 ' + CHECK_WIDTH + 'px 宽度，所以响应式也能被验到。</p>';
+      '<p class="lab-note">' + esc(t('checkFootnote', { width: CHECK_WIDTH })) + '</p>';
   }
 
   function renderActions() {
@@ -891,41 +1027,46 @@
     var isFirst = state.step === 0;
     var isLast = state.step === CASE.steps.length - 1;
     var works = worksList().length;
-    var nextLabel = isLast ? '完成案例 🎉' : '下一环节 →';
+    var nextLabel = isLast ? t('btnFinishCase') : t('btnNextStep');
 
     el.actions.innerHTML =
       '<div class="lab-action-row">' +
-        '<button type="button" class="lab-btn lab-btn--primary" data-lab-act="check">✅ 检查这一环节</button>' +
-        '<button type="button" class="lab-btn" data-lab-act="prev"' + (isFirst ? ' disabled' : '') + '>← 上一环节</button>' +
-        '<button type="button" class="lab-btn" data-lab-act="next"' + (isLast ? ' disabled' : '') + '>' + nextLabel + '</button>' +
-        (isLast ? '<button type="button" class="lab-btn lab-btn--primary" data-lab-act="save">💾 保存到我的作品</button>' : '') +
+        '<button type="button" class="lab-btn lab-btn--primary" data-lab-act="check">' + esc(t('btnCheck')) + '</button>' +
+        '<button type="button" class="lab-btn" data-lab-act="prev"' + (isFirst ? ' disabled' : '') + '>' +
+          esc(t('btnPrevStep')) + '</button>' +
+        '<button type="button" class="lab-btn" data-lab-act="next"' + (isLast ? ' disabled' : '') + '>' +
+          esc(nextLabel) + '</button>' +
+        (isLast ? '<button type="button" class="lab-btn lab-btn--primary" data-lab-act="save">' +
+          esc(t('btnSave')) + '</button>' : '') +
       '</div>' +
 
       '<div class="lab-action-row lab-action-row--sub">' +
         '<button type="button" class="lab-btn lab-btn--ghost' + (state.confirm === 'solution' ? ' is-confirm' : '') + '" data-lab-act="solution">' +
-          (state.confirm === 'solution' ? '⚠️ 确认填入参考答案' : '查看参考答案') +
+          esc(state.confirm === 'solution' ? t('btnSolutionConfirm') : t('btnSolution')) +
         '</button>' +
         '<button type="button" class="lab-btn lab-btn--ghost' + (state.confirm === 'reset' ? ' is-confirm' : '') + '" data-lab-act="reset">' +
-          (state.confirm === 'reset' ? '⚠️ 确认重置本环节' : '重置本环节') +
+          esc(state.confirm === 'reset' ? t('btnResetConfirm') : t('btnReset')) +
         '</button>' +
         '<span class="lab-action-gap" aria-hidden="true"></span>' +
-        '<button type="button" class="lab-btn" data-lab-act="save">💾 保存到我的作品</button>' +
-        '<button type="button" class="lab-btn" data-lab-act="works">📁 我的作品' +
+        '<button type="button" class="lab-btn" data-lab-act="save">' + esc(t('btnSave')) + '</button>' +
+        '<button type="button" class="lab-btn" data-lab-act="works">' + esc(t('btnWorks')) +
           (works ? '<span class="lab-count">' + works + '</span>' : '') + '</button>' +
-        '<button type="button" class="lab-btn" data-lab-act="export">⬇️ 导出 .html</button>' +
+        '<button type="button" class="lab-btn" data-lab-act="export">' + esc(t('btnExport')) + '</button>' +
         '<button type="button" class="lab-btn lab-btn--danger' + (state.confirm === 'restart' ? ' is-confirm' : '') + '" data-lab-act="restart">' +
-          (state.confirm === 'restart' ? '⚠️ 确认重来' : '重新开始') +
+          esc(state.confirm === 'restart' ? t('btnRestartConfirm') : t('btnRestart')) +
         '</button>' +
       '</div>' +
 
-      '<p class="lab-hint-note">当前环节：' + esc(s.title) + ' · 已完成 ' + passedCount() + ' / ' + CASE.steps.length + ' 个环节</p>';
+      '<p class="lab-hint-note">' + esc(t('actionsState', {
+        title: s.title, done: passedCount(), total: CASE.steps.length,
+      })) + '</p>';
   }
 
   function renderDevices() {
     var html = DEVICES.map(function (d) {
       return '<button type="button" class="lab-device' + (state.device === d.key ? ' is-active' : '') + '"' +
         ' data-lab-act="device" data-lab-device="' + d.key + '"' +
-        ' aria-pressed="' + (state.device === d.key) + '">' + d.label + '</button>';
+        ' aria-pressed="' + (state.device === d.key) + '">' + esc(t(d.labelKey)) + '</button>';
     }).join('');
     el.devices.innerHTML = html;
   }
@@ -937,26 +1078,34 @@
     var list = worksList();
     el.works.innerHTML =
       '<div class="lab-works-head">' +
-        '<h3 class="lab-works-title">📁 我的作品 <span class="lab-count">' + list.length + '</span></h3>' +
-        '<button type="button" class="lab-btn lab-btn--ghost" data-lab-act="works-close">收起</button>' +
+        '<h3 class="lab-works-title">' + esc(t('worksTitle')) +
+          ' <span class="lab-count">' + list.length + '</span></h3>' +
+        '<button type="button" class="lab-btn lab-btn--ghost" data-lab-act="works-close">' +
+          esc(t('btnCollapse')) + '</button>' +
       '</div>' +
       (list.length
         ? '<ul class="lab-works-list">' + list.map(function (w, i) {
             return '<li class="lab-work-item">' +
               '<span class="lab-work-time">' + nowLabel(w.at) + '</span>' +
-              '<span class="lab-work-detail">进度 ' + ((num(w.step) + 1)) + '/' + CASE.steps.length +
-                ' · 通过 ' + num(w.passed) + ' 个环节' +
-                (w.solutionUsed ? ' · 参考过 ' + num(w.solutionUsed) + ' 次答案' : '') +
-                ' · 用时 ' + Math.max(1, Math.round(num(w.seconds) / 60)) + ' 分' +
+              '<span class="lab-work-detail">' +
+                esc(t('worksItemDetail', {
+                  step: num(w.step) + 1,
+                  total: CASE.steps.length,
+                  passed: num(w.passed),
+                  minutes: Math.max(1, Math.round(num(w.seconds) / 60)),
+                })) +
+                (w.solutionUsed ? esc(t('worksItemSolution', { n: num(w.solutionUsed) })) : '') +
               '</span>' +
               '<span class="lab-work-actions">' +
-                '<button type="button" class="lab-btn lab-btn--ghost" data-lab-act="work-load" data-lab-index="' + i + '">载入继续</button>' +
-                '<button type="button" class="lab-btn lab-btn--danger" data-lab-act="work-delete" data-lab-index="' + i + '">删除</button>' +
+                '<button type="button" class="lab-btn lab-btn--ghost" data-lab-act="work-load" data-lab-index="' + i + '">' +
+                  esc(t('btnLoadWork')) + '</button>' +
+                '<button type="button" class="lab-btn lab-btn--danger" data-lab-act="work-delete" data-lab-index="' + i + '">' +
+                  esc(t('btnDeleteWork')) + '</button>' +
               '</span>' +
             '</li>';
           }).join('') + '</ul>'
-        : '<p class="lab-empty">还没有保存过作品。完成几个环节后点「💾 保存到我的作品」，这里就会出现记录（只存在本机浏览器）。</p>') +
-      '<p class="lab-note">最多保留最近 ' + WORKS_MAX + ' 份；"导出 .html"会把当前代码打包成一个可以双击打开的完整网页。</p>';
+        : '<p class="lab-empty">' + esc(t('worksEmpty')) + '</p>') +
+      '<p class="lab-note">' + esc(t('worksNote', { max: WORKS_MAX })) + '</p>';
   }
 
   /* =======================================================
@@ -1058,7 +1207,7 @@
         html: (CASE.startCode && CASE.startCode.html) || '',
         css: (CASE.startCode && CASE.startCode.css) || '',
       };
-      state.notice = '从第 1 个环节开始：先看右侧的「案例要求」，再动手写。写不动就点「💡 提示」。';
+      state.notice = t('initStart');
     }
 
     setEditors();

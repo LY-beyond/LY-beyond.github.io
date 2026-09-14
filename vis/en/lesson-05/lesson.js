@@ -90,39 +90,82 @@ window.DEMOS['d-5-1'] = function (mount) {
  * Demo 5.2 — document flow: block vs inline-block
  * ------------------------------------------------------- */
 window.DEMOS['d-5-2'] = function (mount) {
-  const items = ['A', 'B', 'C'];
-  const boxes = css => items
-    .map((t, i) => `<div class="box d${i + 1}" style="${css}">${t}</div>`)
-    .join('');
+  const items = ['A', 'B', 'C', 'D'];
+  const boxes = items.map((t, i) => `<div class="box d${i + 1}">${t}</div>`).join('');
 
   mount.innerHTML = `
     <div class="demo-card">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-        <div>
-          <p style="margin:0 0 8px;font-weight:700;font-size:14px;color:var(--c-text-soft);">
-            Block <code>display:block</code> — stacks vertically
-          </p>
-          <div class="demo-stage" style="min-height:160px;">
-            ${boxes('display:block;width:100%;margin-bottom:8px;')}
-          </div>
-        </div>
-        <div>
-          <p style="margin:0 0 8px;font-weight:700;font-size:14px;color:var(--c-text-soft);">
-            Inline-block <code>display:inline-block</code> — flows horizontally
-          </p>
-          <div class="demo-stage" style="min-height:160px;">
-            ${boxes('display:inline-block;margin:0 6px 6px 0;')}
-          </div>
+      <div class="demo-controls">
+        <label class="demo-control">Layout mode
+          <select class="js-mode">
+            <option value="block">Block — one per row</option>
+            <option value="inline-block" selected>Inline-block — side by side, wraps when full</option>
+            <option value="flex">Flex — side by side, never wraps</option>
+          </select>
+        </label>
+        <label class="demo-control">Container width
+          <input type="range" min="220" max="620" value="420" data-ctl="w">
+          <span class="val" data-out="w">420px</span>
+        </label>
+      </div>
+
+      <div class="demo-stage" style="min-height:170px;overflow-x:auto;">
+        <div class="js-flow" style="width:420px;padding:10px;background:var(--c-surface);border:1px dashed var(--c-border-2);border-radius:var(--radius-sm);">
+          ${boxes}
         </div>
       </div>
 
-      <p class="key-point" style="margin-top:16px;">
-        <strong>⭐ Observe</strong>: the same set of boxes, with only <code>display</code> changed,
-        behave completely differently — block boxes each take a row and pile up, while inline-blocks crowd onto a single row.
-        The right-hand side uses <code>inline-block</code> rather than <code>inline</code>
-        because <code>inline</code> cannot take a width or height — the box shrinks to fit its content.
-      </p>
+      <p class="js-note" style="margin:14px 0 0;font-size:13px;font-weight:600;color:var(--c-text-soft);"></p>
+      <pre class="demo-code js-code"></pre>
     </div>`;
+
+  const q = sel => mount.querySelector(sel);
+  const flow  = q('.js-flow');
+  const mode  = q('.js-mode');
+  const width = q('[data-ctl="w"]');
+  const note  = q('.js-note');
+  const code  = q('.js-code');
+
+  const NOTES = {
+    block: '→ Block boxes each take a whole row: however wide the container gets, one box per row, stretched to fill it.',
+    'inline-block': '→ Inline-level boxes sit side by side and wrap when the row runs out — drag the container narrower to see it.',
+    flex: '→ A flex container does not wrap by default: as it narrows, the items get squeezed instead of wrapping (that is Chapter 6).',
+  };
+
+  const CODES = {
+    block: `.box { display: block; margin-bottom: 8px; }          /* one per row, fills the width */`,
+    'inline-block': `.box { display: inline-block; margin: 0 8px 8px 0; }   /* side by side, wraps when full */`,
+    flex: `.flow { display: flex; }                            /* the container never wraps */\n.box  { flex: 1 1 0; }                            /* items split the space, squeezed */`,
+  };
+
+  function update() {
+    const v = mode.value;
+    const w = +width.value;
+
+    q('[data-out="w"]').textContent = w + 'px';
+    flow.style.width   = w + 'px';
+    flow.style.display = v === 'flex' ? 'flex' : 'block';
+
+    flow.querySelectorAll('.box').forEach(b => {
+      // .box ships with display:grid (to centre the letter), so map the three modes to:
+      //   block      → display: block
+      //   inline     → display: inline-block
+      //   flex child → keep grid, let flex:1 split and squeeze it
+      b.style.display    = v === 'flex' ? '' : v;
+      b.style.flex       = v === 'flex' ? '1 1 0' : '';
+      b.style.minWidth   = v === 'flex' ? '0' : '';
+      b.style.textAlign  = 'center';
+      b.style.lineHeight = '30px';
+      b.style.margin     = v === 'block' ? '0 0 8px 0' : '0 8px 8px 0';
+    });
+
+    note.textContent = NOTES[v];
+    code.textContent = CODES[v];
+  }
+
+  mode.addEventListener('change', update);
+  width.addEventListener('input', update);
+  update();
 };
 
 /* ---------------------------------------------------------

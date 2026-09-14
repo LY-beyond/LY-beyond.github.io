@@ -165,6 +165,82 @@ if (!C.startCode || !C.startCode.html || !C.startCode.css) problems.push('缺少
 if (!Array.isArray(C.assets) || !C.assets.length) problems.push('缺少 assets（必要文案数据）');
 if (!C.brief || !C.brief.goal) problems.push('缺少 brief.goal（案例目标）');
 
+/* =========================================================
+ * D. 中英两份案例逐环节对齐
+ * ---------------------------------------------------------
+ * 只比对「结构」：id / 检查点（类型 + 选择器 + 数值）/ 光标锚点 / 参考答案 HTML 是否复用。
+ * 文案当然不同，属于预期差异。
+ * ======================================================= */
+const CE = (() => {
+  try {
+    const s = {};
+    new Function('window', readFileSync(new URL('./en/practice-data.js', import.meta.url), 'utf8'))(s);
+    return s.PRACTICE_CASE;
+  } catch (e) {
+    problems.push('[对照] 英文案例加载失败：' + (e && e.message));
+    return null;
+  }
+})();
+
+// 把一个检查点压成一行签名，便于逐项比对
+function sig(checks) {
+  return checks.map((c) => {
+    if (c.type === 'atWidth') return `atWidth:${c.width}[${sig(c.checks)}]`;
+    if (c.type === 'cssVar') return `cssVar:${c.name}=${c.expect}`;
+    return [c.type, c.selector, c.prop || '', c.expect || '', c.min ?? '', c.max ?? '', c.tolerance ?? ''].join('|');
+  }).join(' ／ ');
+}
+
+if (!CE) {
+  problems.push('[对照] 找不到 en/practice-data.js 的 window.PRACTICE_CASE');
+} else {
+  if (CE.steps.length !== C.steps.length) {
+    problems.push(`[对照] 环节数不一致：zh=${C.steps.length}，en=${CE.steps.length}`);
+  } else {
+    C.steps.forEach((zhStep, i) => {
+      const enStep = CE.steps[i];
+      const at = `[对照] 环节 ${i + 1}`;
+      if (enStep.id !== zhStep.id) problems.push(`${at} id 不一致：zh=${zhStep.id}，en=${enStep.id}`);
+      if (sig(enStep.checks || []) !== sig(zhStep.checks || [])) {
+        problems.push(`${at}（${zhStep.id}）的检查点结构不一致 —— 中英必须一一对应`);
+      }
+      const zf = zhStep.focus || {};
+      const ef = enStep.focus || {};
+      if (!!zf.html !== !!ef.html) problems.push(`${at}（${zhStep.id}）focus.html 有无不一致`);
+      if (!!zf.css !== !!ef.css) problems.push(`${at}（${zhStep.id}）focus.css 有无不一致`);
+      if (!!(zhStep.solution.html) !== !!(enStep.solution.html)) {
+        problems.push(`${at}（${zhStep.id}）「是否复用上一环节 HTML」不一致`);
+      }
+    });
+  }
+  if (CE.steps.length !== WANT_STEPS) problems.push(`[对照] 英文案例环节数应为 ${WANT_STEPS}，实际 ${CE.steps.length}`);
+  if (!CE.startCode || !CE.startCode.html) problems.push('[对照] 英文案例缺少 startCode');
+  if (!Array.isArray(CE.assets) || !CE.assets.length) problems.push('[对照] 英文案例缺少 assets');
+}
+
+// 英文案例也要过一遍「字段齐全 + 选择器可达 + 没留占位符」
+const enSolutionHtml = [];
+if (CE && Array.isArray(CE.steps)) {
+  CE.steps.forEach((s, i) => {
+    const title = `[en] 环节 ${i + 1}(${s.id})`;
+    if (!Array.isArray(s.task) || !s.task.length) problems.push(`${title}：缺少 task`);
+    if (!Array.isArray(s.hints) || s.hints.length < 2) problems.push(`${title}：提示少于 2 级`);
+    if (!Array.isArray(s.syntax) || !s.syntax.length) problems.push(`${title}：缺少语法速查`);
+    if (!Array.isArray(s.checks) || !s.checks.length) problems.push(`${title}：缺少检查点`);
+
+    const html = s.solution.html || (enSolutionHtml[i - 1] || '');
+    enSolutionHtml.push(html);
+
+    if (/__CSS__|__HTML__/.test(s.solution.css) || /__CSS__|__HTML__/.test(html)) {
+      problems.push(`${title}：参考答案里还留着 __CSS__ / __HTML__ 占位符`);
+    }
+    walkChecks(s.checks || [], html, title, '');
+  });
+  const finalEn = enSolutionHtml[enSolutionHtml.length - 1] || '';
+  const missedEn = REQUIRED_BLOCKS.filter((c) => !classesOf(finalEn).has(c));
+  if (missedEn.length) problems.push(`[en] 最终成品缺少区块：${missedEn.join(', ')}`);
+}
+
 const finalHtml = solutionHtml[solutionHtml.length - 1] || '';
 const missed = REQUIRED_BLOCKS.filter((c) => !classesOf(finalHtml).has(c));
 if (missed.length) problems.push(`最终成品缺少区块：${missed.join(', ')}`);

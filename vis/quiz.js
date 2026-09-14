@@ -25,10 +25,6 @@
   if (!root) return;
 
   var BANK = window.QUIZ_BANK;
-  if (!BANK || !BANK.choice || !BANK.judge) {
-    root.innerHTML = '<p class="quiz-empty">题库加载失败：请确认 quiz-data.js 已在 quiz.js 之前引入。</p>';
-    return;
-  }
 
   /* =======================================================
    * 一、配置
@@ -43,7 +39,139 @@
   var KEY_WRONG    = 'layout-course-quiz-wrong';
   var KEY_HISTORY  = 'layout-course-quiz-history';
 
-  var JUDGE_OPTIONS = ['正确', '错误'];   // 判断题固定顺序，不参与洗牌
+  /* =======================================================
+   * 一之二、界面文案（中英共用同一份引擎）
+   *   · 默认值是中文；en/ 下由 en/quiz-ui.js 提供 window.QUIZ_UI 覆盖
+   *   · 逻辑只写一份，中英不会各自漂移（与 lesson-core.js / i18n.js 同思路）
+   *   · {xxx} 是占位符，由 t() 替换
+   * ===================================================== */
+  var T = {
+    /* ---- 通用 ---- */
+    chapterLabel: '第 {n} 章',
+    typeChoice: '选择题',
+    typeJudge: '判断题',
+    judgeTrue: '正确',
+    judgeFalse: '错误',
+    scoreUnit: '分',
+    unanswered: '未作答',
+    listSep: '、',
+    durationMin: '{m} 分 {s} 秒',
+    durationSec: '{s} 秒',
+
+    /* ---- 三个篇 ---- */
+    trackDesign: '设计篇',
+    trackImpl: '实现篇',
+    trackCapstone: '实战篇',
+
+    /* ---- 评级 ---- */
+    gradeBest: '优秀',
+    gradeBestHint: '知识点掌握得很扎实 —— 可以去做第 9 章的完整实战了。',
+    gradeGood: '良好',
+    gradeGoodHint: '主干已经清楚，把错题解析再过一遍就更稳了。',
+    gradePass: '合格',
+    gradePassHint: '刚刚及格，仍有明显漏洞，建议按下面的薄弱章节回看。',
+    gradeLow: '需要复习',
+    gradeLowHint: '先把相关章节的「讲解」读一遍，再回来重做错题本。',
+
+    /* ---- 起始页 ---- */
+    idleTitle: '随机测验 · {n} 题',
+    idleDesc: '题库覆盖 9 章全部知识点，共 {bank} 道题（{choice} 道选择题 + {judge} 道判断题）。'
+      + '每次随机抽取 <strong>{pick} 道选择题</strong>与 <strong>{pickJudge} 道判断题</strong>，并让题目尽量分布在不同章节。',
+    idleRuleScore: '共 {n} 题，每题 {per} 分，满分 {full} 分',
+    idleRuleJudge: '提交后立即判分，并给出逐题解析与薄弱章节跳转',
+    idleRuleWrong: '答错的题自动进入「错题本」，之后答对会自动移出',
+    idleRuleHistory: '已记录 {n} 次成绩，最高 {best} 分',
+    idleRuleLocal: '成绩保存在本机浏览器里（localStorage），换设备不会同步',
+    btnStart: '开始答题',
+    btnWrongBook: '错题本',
+    btnHistory: '历史成绩',
+
+    /* ---- 答题页 ---- */
+    modeReview: '错题重做',
+    modeQuiz: '随机测验',
+    progress: '{mode} · 第 <b>{i}</b> / {total} 题',
+    answeredCount: '已答 {n} / {total}',
+    ariaOptions: '选项',
+    btnPrev: '← 上一题',
+    btnNext: '下一题 →',
+    btnSubmit: '提交答卷',
+    btnQuitReview: '退出重做',
+    btnQuitQuiz: '放弃本局',
+
+    /* ---- 结果页 ---- */
+    resultTitleReview: '错题重做完成 · {grade}',
+    resultTitleQuiz: '本次成绩 · {grade}',
+    resultMeta: '答对 <b>{correct}</b> / {total} 题 · 用时 {duration}',
+    resultMetaReview: ' · 重做不计入历史成绩',
+    weakTitle: '需要回看的章节',
+    weakItem: '第 {chapter} 章 · {n} 题出错',
+    flagOk: '✓ 正确',
+    flagBad: '✗ 错误',
+    yourAnswer: '你的答案：',
+    correctAnswer: '正确答案：',
+    answerSep: '　',
+    explainTag: '解析',
+    resultEmpty: '本局没有错题，很干净 🎉',
+    btnAgain: '再来一局',
+    btnSeeAll: '查看全部解析',
+    btnOnlyWrong: '只看错题',
+    subtitleReview: '逐题解析',
+    ariaScore: '得分 {n} 分',
+
+    /* ---- 错题本 ---- */
+    wrongTitle: '错题本',
+    wrongDesc: '答错的题会自动收录在这里，下次答对时自动移出。记录只保存在本机浏览器（localStorage）。',
+    btnRedoWrong: '重做错题',
+    btnNewQuiz: '开始新测验',
+    btnBack: '返回',
+    lastPick: '　上次你选：',
+    wrongCount: '错 {n} 次',
+    btnRemove: '移出错题本',
+    btnBackToChapter: '回看第 {n} 章',
+    wrongEmpty: '错题本是空的 —— 要么你答得不错，要么还没开始测验。',
+
+    /* ---- 历史成绩 ---- */
+    historyTitle: '历史成绩',
+    historyDesc: '只记录「随机测验」的成绩，重做错题不计入（避免刷分）；'
+      + '最多保留最近 {max} 次，数据只存在本机浏览器。',
+    statRuns: '已完成测验',
+    statAvg: '平均分',
+    statBest: '最高分',
+    historyCorrect: '答对 {c} / {t} 题',
+    historyDuration: '用时 {d}',
+    historyEmpty: '还没有成绩记录 —— 做一局测验就会自动记下来。',
+    btnClear: '清空成绩记录',
+    btnClearConfirm: '确认清空全部记录？',
+
+    /* ---- 动态提示 ---- */
+    noticeUnanswered: '还有 {n} 题未作答（第 {list} 题），已跳到第一道未答题。',
+    noticeRemoved: '已从错题本移出。',
+    noticeCleared: '成绩记录已清空。',
+    noticeReviewEmpty: '错题本是空的 —— 先在测验里答几题吧。',
+    bankError: '题库加载失败：请确认 quiz-data.js 已在 quiz.js 之前引入。',
+  };
+
+  var UI = (window.QUIZ_UI && typeof window.QUIZ_UI === 'object') ? window.QUIZ_UI : {};
+
+  // 取词：优先用覆盖表，其次默认表；漏译时直接暴露 key，方便自检脚本发现
+  function t(key, vars) {
+    var s = (UI[key] !== undefined && UI[key] !== null) ? UI[key] : T[key];
+    if (s === undefined) s = '[' + key + ']';
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = s.split('{' + k + '}').join(vars[k]);
+      });
+    }
+    return s;
+  }
+
+  var JUDGE_OPTIONS = [t('judgeTrue'), t('judgeFalse')];   // 判断题固定顺序，不参与洗牌
+
+  // 题库校验放在文案表之后，这样出错提示也能跟着语言走
+  if (!BANK || !BANK.choice || !BANK.judge) {
+    root.innerHTML = '<p class="quiz-empty">' + esc(t('bankError')) + '</p>';
+    return;
+  }
 
   /* =======================================================
    * 二、通用工具
@@ -195,20 +323,22 @@
   function formatDuration(sec) {
     var m = Math.floor(sec / 60);
     var s = sec % 60;
-    return m > 0 ? m + ' 分 ' + s + ' 秒' : s + ' 秒';
+    return m > 0
+      ? t('durationMin', { m: m, s: s })
+      : t('durationSec', { s: s });
   }
 
   function gradeOf(score) {
-    if (score >= 90) return { text: '优秀', level: 'best', hint: '知识点掌握得很扎实 —— 可以去做第 9 章的完整实战了。' };
-    if (score >= 70) return { text: '良好', level: 'good', hint: '主干已经清楚，把错题解析再过一遍就更稳了。' };
-    if (score >= 60) return { text: '合格', level: 'pass', hint: '刚刚及格，仍有明显漏洞，建议按下面的薄弱章节回看。' };
-    return { text: '需要复习', level: 'low', hint: '先把相关章节的「讲解」读一遍，再回来重做错题本。' };
+    if (score >= 90) return { text: t('gradeBest'), level: 'best', hint: t('gradeBestHint') };
+    if (score >= 70) return { text: t('gradeGood'), level: 'good', hint: t('gradeGoodHint') };
+    if (score >= 60) return { text: t('gradePass'), level: 'pass', hint: t('gradePassHint') };
+    return { text: t('gradeLow'), level: 'low', hint: t('gradeLowHint') };
   }
 
   function trackOf(chapter) {
-    if (chapter <= 4) return '设计篇';
-    if (chapter <= 8) return '实现篇';
-    return '实战篇';
+    if (chapter <= 4) return t('trackDesign');
+    if (chapter <= 8) return t('trackImpl');
+    return t('trackCapstone');
   }
 
   function optionKey(q, i) {
@@ -216,7 +346,7 @@
   }
 
   function optionText(q, idx) {
-    if (idx === null || idx === undefined || idx < 0) return '未作答';
+    if (idx === null || idx === undefined || idx < 0) return t('unanswered');
     return (q.type === 'judge' ? '' : optionKey(q, idx) + '. ') + q.options[idx];
   }
 
@@ -263,7 +393,7 @@
     var book = wrongBook();
     var ids = Object.keys(book).filter(function (id) { return !!findQuestion(id); });
     if (!ids.length) {
-      state.notice = '错题本是空的 —— 先在测验里答几题吧。';
+      state.notice = t('noticeReviewEmpty');
       renderWrong();
       return;
     }
@@ -282,7 +412,10 @@
       if (a === null || a === undefined) unanswered.push(i + 1);
     });
     if (unanswered.length) {
-      state.notice = '还有 ' + unanswered.length + ' 题未作答（第 ' + unanswered.join('、') + ' 题），已跳到第一道未答题。';
+      state.notice = t('noticeUnanswered', {
+        n: unanswered.length,
+        list: unanswered.join(t('listSep')),
+      });
       state.index = unanswered[0] - 1;
       renderQuestion();
       return;
@@ -373,23 +506,26 @@
 
     root.innerHTML =
       '<div class="quiz-card quiz-card--intro">' +
-        '<h3 class="quiz-title">随机测验 · ' + totalQ + ' 题</h3>' +
-        '<p class="quiz-desc">题库覆盖 9 章全部知识点，共 ' +
-          (BANK.choice.length + BANK.judge.length) + ' 道题（' + BANK.choice.length + ' 道选择题 + ' +
-          BANK.judge.length + ' 道判断题）。每次随机抽取 <strong>' + PICK_CHOICE + ' 道选择题</strong>与 <strong>' +
-          PICK_JUDGE + ' 道判断题</strong>，并让题目尽量分布在不同章节。</p>' +
+        '<h3 class="quiz-title">' + esc(t('idleTitle', { n: totalQ })) + '</h3>' +
+        '<p class="quiz-desc">' + t('idleDesc', {
+          bank: BANK.choice.length + BANK.judge.length,
+          choice: BANK.choice.length,
+          judge: BANK.judge.length,
+          pick: PICK_CHOICE,
+          pickJudge: PICK_JUDGE,
+        }) + '</p>' +
         '<ul class="quiz-rules">' +
-          '<li>共 ' + totalQ + ' 题，每题 ' + PER_SCORE + ' 分，满分 ' + (totalQ * PER_SCORE) + ' 分</li>' +
-          '<li>提交后立即判分，并给出逐题解析与薄弱章节跳转</li>' +
-          '<li>答错的题自动进入「错题本」，之后答对会自动移出</li>' +
+          '<li>' + esc(t('idleRuleScore', { n: totalQ, per: PER_SCORE, full: totalQ * PER_SCORE })) + '</li>' +
+          '<li>' + esc(t('idleRuleJudge')) + '</li>' +
+          '<li>' + esc(t('idleRuleWrong')) + '</li>' +
           (list.length
-            ? '<li>已记录 ' + list.length + ' 次成绩，最高 ' + best + ' 分</li>'
-            : '<li>成绩保存在本机浏览器里（localStorage），换设备不会同步</li>') +
+            ? '<li>' + esc(t('idleRuleHistory', { n: list.length, best: best })) + '</li>'
+            : '<li>' + esc(t('idleRuleLocal')) + '</li>') +
         '</ul>' +
         '<div class="quiz-actions">' +
-          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">开始答题</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="wrong">错题本' + badge(wrongCount) + '</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="history">历史成绩' + badge(list.length) + '</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">' + esc(t('btnStart')) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="wrong">' + esc(t('btnWrongBook')) + badge(wrongCount) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="history">' + esc(t('btnHistory')) + badge(list.length) + '</button>' +
         '</div>' +
       '</div>' +
       noticeHtml();
@@ -413,31 +549,37 @@
       '</button>';
     }).join('');
 
+    var modeLabel = isReview ? t('modeReview') : t('modeQuiz');
+
     root.innerHTML =
       '<div class="quiz-card">' +
         '<div class="quiz-progress">' +
           '<div class="quiz-progress-head">' +
-            '<span>' + (isReview ? '错题重做' : '随机测验') + ' · 第 <b>' + (state.index + 1) + '</b> / ' + total + ' 题</span>' +
-            '<span class="quiz-progress-count">已答 ' + answered + ' / ' + total + '</span>' +
+            '<span>' + t('progress', { mode: modeLabel, i: state.index + 1, total: total }) + '</span>' +
+            '<span class="quiz-progress-count">' + esc(t('answeredCount', { n: answered, total: total })) + '</span>' +
           '</div>' +
           '<div class="quiz-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"' +
             ' aria-valuenow="' + progress + '"><span style="width:' + progress + '%"></span></div>' +
         '</div>' +
 
         '<div class="quiz-qmeta">' +
-          '<span class="quiz-tag quiz-tag--chapter">第 ' + q.chapter + ' 章 · ' + trackOf(q.chapter) + '</span>' +
-          '<span class="quiz-tag quiz-tag--type">' + (q.type === 'choice' ? '选择题' : '判断题') + '</span>' +
+          '<span class="quiz-tag quiz-tag--chapter">' + esc(t('chapterLabel', { n: q.chapter })) + ' · ' +
+            esc(trackOf(q.chapter)) + '</span>' +
+          '<span class="quiz-tag quiz-tag--type">' + esc(q.type === 'choice' ? t('typeChoice') : t('typeJudge')) + '</span>' +
           '<span class="quiz-tag">' + esc(q.topic) + '</span>' +
         '</div>' +
 
         '<p class="quiz-qtext">' + esc(q.q) + '</p>' +
-        '<div class="quiz-options" role="group" aria-label="选项">' + optionsHtml + '</div>' +
+        '<div class="quiz-options" role="group" aria-label="' + esc(t('ariaOptions')) + '">' + optionsHtml + '</div>' +
 
         '<div class="quiz-actions">' +
-          '<button type="button" class="quiz-btn" data-quiz-act="prev"' + (state.index === 0 ? ' disabled' : '') + '>← 上一题</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="next"' + (state.index === total - 1 ? ' disabled' : '') + '>下一题 →</button>' +
-          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="submit">提交答卷</button>' +
-          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="quit">' + (isReview ? '退出重做' : '放弃本局') + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="prev"' + (state.index === 0 ? ' disabled' : '') + '>' +
+            esc(t('btnPrev')) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="next"' + (state.index === total - 1 ? ' disabled' : '') + '>' +
+            esc(t('btnNext')) + '</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="submit">' + esc(t('btnSubmit')) + '</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="quit">' +
+            esc(isReview ? t('btnQuitReview') : t('btnQuitQuiz')) + '</button>' +
         '</div>' +
       '</div>' +
       noticeHtml();
@@ -456,10 +598,11 @@
     });
     var weakKeys = Object.keys(weak).sort(function (a, b) { return a - b; });
     var weakHtml = weakKeys.length
-      ? '<div class="quiz-weak-box"><h4>需要回看的章节</h4><div class="quiz-weak-list">' +
+      ? '<div class="quiz-weak-box"><h4>' + esc(t('weakTitle')) + '</h4><div class="quiz-weak-list">' +
           weakKeys.map(function (c) {
-            return '<a class="quiz-weak" href="lesson-0' + c + '/">第 ' + c + ' 章 · ' + weak[c] +
-              ' 题出错 <span aria-hidden="true">→</span></a>';
+            return '<a class="quiz-weak" href="lesson-0' + c + '/">' +
+              esc(t('weakItem', { chapter: c, n: weak[c] })) +
+              ' <span aria-hidden="true">→</span></a>';
           }).join('') +
         '</div></div>'
       : '';
@@ -473,19 +616,20 @@
           return '<li class="quiz-review-item ' + (d.ok ? 'is-ok' : 'is-bad') + '">' +
             '<div class="quiz-review-head">' +
               '<span class="quiz-review-no">' + x.no + '</span>' +
-              '<span class="quiz-tag quiz-tag--chapter">第 ' + d.q.chapter + ' 章</span>' +
+              '<span class="quiz-tag quiz-tag--chapter">' + esc(t('chapterLabel', { n: d.q.chapter })) + '</span>' +
               '<span class="quiz-tag">' + esc(d.q.topic) + '</span>' +
-              '<span class="quiz-review-flag">' + (d.ok ? '✓ 正确' : '✗ 错误') + '</span>' +
+              '<span class="quiz-review-flag">' + esc(d.ok ? t('flagOk') : t('flagBad')) + '</span>' +
             '</div>' +
             '<p class="quiz-review-q">' + esc(d.q.q) + '</p>' +
-            '<p class="quiz-review-line">你的答案：<b class="' + (d.ok ? 'is-ok' : 'is-bad') + '">' +
-              esc(optionText(d.q, d.picked)) + '</b>' +
-              (d.ok ? '' : '　正确答案：<b class="is-ok">' + esc(optionText(d.q, d.q.answer)) + '</b>') +
+            '<p class="quiz-review-line">' + esc(t('yourAnswer')) +
+              '<b class="' + (d.ok ? 'is-ok' : 'is-bad') + '">' + esc(optionText(d.q, d.picked)) + '</b>' +
+              (d.ok ? '' : esc(t('answerSep')) + esc(t('correctAnswer')) + '<b class="is-ok">' +
+                esc(optionText(d.q, d.q.answer)) + '</b>') +
             '</p>' +
-            '<p class="quiz-review-explain"><span>解析</span>' + esc(d.q.explain) + '</p>' +
+            '<p class="quiz-review-explain"><span>' + esc(t('explainTag')) + '</span>' + esc(d.q.explain) + '</p>' +
           '</li>';
         }).join('') + '</ul>'
-      : '<p class="quiz-empty">本局没有错题，很干净 🎉</p>';
+      : '<p class="quiz-empty">' + esc(t('resultEmpty')) + '</p>';
 
     var wrongCount = Object.keys(wrongBook()).length;
 
@@ -493,29 +637,31 @@
       '<div class="quiz-card quiz-card--result">' +
         '<div class="quiz-result-top">' +
           '<div class="quiz-score is-' + g.level + '" style="--quiz-score:' + r.score + '" role="img"' +
-            ' aria-label="得分 ' + r.score + ' 分">' +
+            ' aria-label="' + esc(t('ariaScore', { n: r.score })) + '">' +
             '<span class="quiz-score-num">' + r.score + '</span>' +
-            '<span class="quiz-score-unit">分</span>' +
+            '<span class="quiz-score-unit">' + esc(t('scoreUnit')) + '</span>' +
           '</div>' +
           '<div class="quiz-result-msg">' +
-            '<h3 class="quiz-title">' + (isReview ? '错题重做完成 · ' : '本次成绩 · ') + g.text + '</h3>' +
-            '<p class="quiz-result-meta">答对 <b>' + r.correct + '</b> / ' + r.total + ' 题 · 用时 ' +
-              formatDuration(r.seconds) + (isReview ? ' · 重做不计入历史成绩' : '') + '</p>' +
+            '<h3 class="quiz-title">' +
+              t(isReview ? 'resultTitleReview' : 'resultTitleQuiz', { grade: esc(g.text) }) + '</h3>' +
+            '<p class="quiz-result-meta">' +
+              t('resultMeta', { correct: r.correct, total: r.total, duration: formatDuration(r.seconds) }) +
+              (isReview ? esc(t('resultMetaReview')) : '') + '</p>' +
             '<p class="quiz-result-hint">' + esc(g.hint) + '</p>' +
           '</div>' +
         '</div>' +
         weakHtml +
         '<div class="quiz-actions">' +
-          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">再来一局</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">' + esc(t('btnAgain')) + '</button>' +
           (state.wrongOnly
-            ? '<button type="button" class="quiz-btn" data-quiz-act="toggle-wrong-only">查看全部解析</button>'
+            ? '<button type="button" class="quiz-btn" data-quiz-act="toggle-wrong-only">' + esc(t('btnSeeAll')) + '</button>'
             : '<button type="button" class="quiz-btn" data-quiz-act="toggle-wrong-only"' +
-              (r.correct === r.total ? ' disabled' : '') + '>只看错题</button>') +
-          '<button type="button" class="quiz-btn" data-quiz-act="wrong">错题本' + badge(wrongCount) + '</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="history">历史成绩</button>' +
+              (r.correct === r.total ? ' disabled' : '') + '>' + esc(t('btnOnlyWrong')) + '</button>') +
+          '<button type="button" class="quiz-btn" data-quiz-act="wrong">' + esc(t('btnWrongBook')) + badge(wrongCount) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="history">' + esc(t('btnHistory')) + '</button>' +
         '</div>' +
       '</div>' +
-      '<h4 class="quiz-subtitle">逐题解析</h4>' +
+      '<h4 class="quiz-subtitle">' + esc(t('subtitleReview')) + '</h4>' +
       reviewHtml;
   }
 
@@ -532,36 +678,39 @@
           var rec = book[id];
           var mine = (rec.myAnswer === undefined || rec.myAnswer === null)
             ? ''
-            : '　上次你选：<b class="is-bad">' + esc(optionText(q, rec.myAnswer)) + '</b>';
+            : esc(t('lastPick')) + '<b class="is-bad">' + esc(optionText(q, rec.myAnswer)) + '</b>';
           return '<li class="quiz-wrong-item">' +
             '<div class="quiz-review-head">' +
-              '<span class="quiz-tag quiz-tag--chapter">第 ' + q.chapter + ' 章 · ' + trackOf(q.chapter) + '</span>' +
-              '<span class="quiz-tag quiz-tag--type">' + (q.type === 'choice' ? '选择题' : '判断题') + '</span>' +
+              '<span class="quiz-tag quiz-tag--chapter">' + esc(t('chapterLabel', { n: q.chapter })) + ' · ' +
+                esc(trackOf(q.chapter)) + '</span>' +
+              '<span class="quiz-tag quiz-tag--type">' + esc(q.type === 'choice' ? t('typeChoice') : t('typeJudge')) + '</span>' +
               '<span class="quiz-tag">' + esc(q.topic) + '</span>' +
-              '<span class="quiz-wrong-count">错 ' + (rec.count || 1) + ' 次</span>' +
+              '<span class="quiz-wrong-count">' + esc(t('wrongCount', { n: rec.count || 1 })) + '</span>' +
             '</div>' +
             '<p class="quiz-review-q">' + esc(q.q) + '</p>' +
-            '<p class="quiz-review-line">正确答案：<b class="is-ok">' + esc(optionText(q, q.answer)) + '</b>' + mine + '</p>' +
-            '<p class="quiz-review-explain"><span>解析</span>' + esc(q.explain) + '</p>' +
+            '<p class="quiz-review-line">' + esc(t('correctAnswer')) +
+              '<b class="is-ok">' + esc(optionText(q, q.answer)) + '</b>' + mine + '</p>' +
+            '<p class="quiz-review-explain"><span>' + esc(t('explainTag')) + '</span>' + esc(q.explain) + '</p>' +
             '<div class="quiz-actions quiz-actions--tight">' +
               '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="remove-wrong" data-quiz-id="' +
-                esc(id) + '">移出错题本</button>' +
-              '<a class="quiz-btn quiz-btn--ghost" href="lesson-0' + q.chapter + '/">回看第 ' + q.chapter + ' 章</a>' +
+                esc(id) + '">' + esc(t('btnRemove')) + '</button>' +
+              '<a class="quiz-btn quiz-btn--ghost" href="lesson-0' + q.chapter + '/">' +
+                esc(t('btnBackToChapter', { n: q.chapter })) + '</a>' +
             '</div>' +
           '</li>';
         }).join('') + '</ul>'
-      : '<p class="quiz-empty">错题本是空的 —— 要么你答得不错，要么还没开始测验。</p>';
+      : '<p class="quiz-empty">' + esc(t('wrongEmpty')) + '</p>';
 
     root.innerHTML =
       '<div class="quiz-card">' +
-        '<h3 class="quiz-title">错题本' + badge(ids.length) + '</h3>' +
-        '<p class="quiz-desc">答错的题会自动收录在这里，下次答对时自动移出。记录只保存在本机浏览器（localStorage）。</p>' +
+        '<h3 class="quiz-title">' + esc(t('wrongTitle')) + badge(ids.length) + '</h3>' +
+        '<p class="quiz-desc">' + esc(t('wrongDesc')) + '</p>' +
         '<div class="quiz-actions">' +
           '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="review"' +
-            (ids.length ? '' : ' disabled') + '>重做错题</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="start">开始新测验</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="history">历史成绩</button>' +
-          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="home">返回</button>' +
+            (ids.length ? '' : ' disabled') + '>' + esc(t('btnRedoWrong')) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="start">' + esc(t('btnNewQuiz')) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="history">' + esc(t('btnHistory')) + '</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="home">' + esc(t('btnBack')) + '</button>' +
         '</div>' +
       '</div>' +
       noticeHtml() +
@@ -577,9 +726,12 @@
 
     var statsHtml = count
       ? '<div class="quiz-stats">' +
-          '<div class="quiz-stat"><span class="quiz-stat-num">' + count + '</span><span class="quiz-stat-label">已完成测验</span></div>' +
-          '<div class="quiz-stat"><span class="quiz-stat-num">' + avg + '</span><span class="quiz-stat-label">平均分</span></div>' +
-          '<div class="quiz-stat"><span class="quiz-stat-num">' + best + '</span><span class="quiz-stat-label">最高分</span></div>' +
+          '<div class="quiz-stat"><span class="quiz-stat-num">' + count + '</span><span class="quiz-stat-label">' +
+            esc(t('statRuns')) + '</span></div>' +
+          '<div class="quiz-stat"><span class="quiz-stat-num">' + avg + '</span><span class="quiz-stat-label">' +
+            esc(t('statAvg')) + '</span></div>' +
+          '<div class="quiz-stat"><span class="quiz-stat-num">' + best + '</span><span class="quiz-stat-label">' +
+            esc(t('statBest')) + '</span></div>' +
         '</div>'
       : '';
 
@@ -589,27 +741,29 @@
           return '<li class="quiz-history-item">' +
             '<span class="quiz-history-no">' + (count - i) + '</span>' +
             '<span class="quiz-history-time">' + formatTime(r.at || 0) + '</span>' +
-            '<span class="quiz-history-score is-' + g.level + '">' + (r.score || 0) + ' 分</span>' +
-            '<span class="quiz-history-detail">答对 ' + (r.correct || 0) + ' / ' + (r.total || 0) + ' 题</span>' +
-            '<span class="quiz-history-detail">用时 ' + formatDuration(r.seconds || 0) + '</span>' +
+            '<span class="quiz-history-score is-' + g.level + '">' + (r.score || 0) + ' ' +
+              esc(t('scoreUnit')) + '</span>' +
+            '<span class="quiz-history-detail">' +
+              esc(t('historyCorrect', { c: r.correct || 0, t: r.total || 0 })) + '</span>' +
+            '<span class="quiz-history-detail">' +
+              esc(t('historyDuration', { d: formatDuration(r.seconds || 0) })) + '</span>' +
           '</li>';
         }).join('') + '</ol>'
-      : '<p class="quiz-empty">还没有成绩记录 —— 做一局测验就会自动记下来。</p>';
+      : '<p class="quiz-empty">' + esc(t('historyEmpty')) + '</p>';
 
     root.innerHTML =
       '<div class="quiz-card">' +
-        '<h3 class="quiz-title">历史成绩' + badge(count) + '</h3>' +
-        '<p class="quiz-desc">只记录「随机测验」的成绩，重做错题不计入（避免刷分）；最多保留最近 ' +
-          HISTORY_MAX + ' 次，数据只存在本机浏览器。</p>' +
+        '<h3 class="quiz-title">' + esc(t('historyTitle')) + badge(count) + '</h3>' +
+        '<p class="quiz-desc">' + esc(t('historyDesc', { max: HISTORY_MAX })) + '</p>' +
         statsHtml +
         '<div class="quiz-actions">' +
-          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">开始新测验</button>' +
-          '<button type="button" class="quiz-btn" data-quiz-act="wrong">错题本</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--primary" data-quiz-act="start">' + esc(t('btnNewQuiz')) + '</button>' +
+          '<button type="button" class="quiz-btn" data-quiz-act="wrong">' + esc(t('btnWrongBook')) + '</button>' +
           (count
             ? '<button type="button" class="quiz-btn quiz-btn--danger" data-quiz-act="clear-history">' +
-              (state.confirmClear ? '确认清空全部记录？' : '清空成绩记录') + '</button>'
+              esc(state.confirmClear ? t('btnClearConfirm') : t('btnClear')) + '</button>'
             : '') +
-          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="home">返回</button>' +
+          '<button type="button" class="quiz-btn quiz-btn--ghost" data-quiz-act="home">' + esc(t('btnBack')) + '</button>' +
         '</div>' +
       '</div>' +
       noticeHtml() +
@@ -674,7 +828,7 @@
 
     if (act === 'remove-wrong') {
       removeWrong(btn.getAttribute('data-quiz-id'));
-      state.notice = '已从错题本移出。';
+      state.notice = t('noticeRemoved');
       renderWrong();
       return;
     }
@@ -690,7 +844,7 @@
       if (!state.confirmClear) { state.confirmClear = true; renderHistory(); return; }
       writeStore(KEY_HISTORY, []);
       state.confirmClear = false;
-      state.notice = '成绩记录已清空。';
+      state.notice = t('noticeCleared');
       renderHistory();
       return;
     }

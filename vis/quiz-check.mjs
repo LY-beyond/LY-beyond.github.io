@@ -1,13 +1,15 @@
 // =========================================================
-// quiz-check.mjs —— 校验答题系统题库的数据正确性
+// quiz-check.mjs —— 校验答题系统（中英两份题库）
 // ---------------------------------------------------------
 // 用法：node quiz-check.mjs
-// 作用：读写题库时最容易犯的四类错误，这里一次全查出来
-//   ① 题目数量不足（选择题 30 / 判断题 20）
-//   ② id 重复（错题本 / 历史成绩都按 id 认题，重复会串题）
-//   ③ answer 下标越界（选择题）、answer 不是布尔值（判断题）
-//   ④ chapter 越界或字段缺失
-// 另外打印章节分布与判断题的对错比例，方便肉眼确认覆盖是否均衡。
+//
+// 查三件事：
+//   A. 每份题库自身是否合法：id 唯一、chapter 合法、答案下标有效、字段齐全
+//   B. 中英两份是否**逐题对齐**：同一套 id、同一个 chapter、同一个答案下标、同样多的选项
+//      —— 这是「两种语言内容一致」在题库层面的自动化保证
+//   C. en/quiz-ui.js 的键与 quiz.js 的 T 表是否完全对应
+//      —— 漏一个键，英文页面就会把 [key] 直接显示出来
+// 另外打印章节分布与判断题对错比例，方便肉眼确认覆盖是否均衡。
 // 说明：本脚本只做开发期自检，不被网站加载，不影响静态部署。
 // =========================================================
 import { readFileSync } from 'node:fs';
@@ -16,64 +18,123 @@ const WANT_CHOICE = 30;
 const WANT_JUDGE = 20;
 const CHAPTERS = 9;
 
-// quiz-data.js 是普通脚本（window.QUIZ_BANK = ...），这里给它一个假的 window 沙箱
-const sandbox = {};
-new Function('window', readFileSync(new URL('./quiz-data.js', import.meta.url), 'utf8'))(sandbox);
-const BANK = sandbox.QUIZ_BANK;
-
-if (!BANK || !Array.isArray(BANK.choice) || !Array.isArray(BANK.judge)) {
-  console.log('✗ quiz-data.js 里没有找到 window.QUIZ_BANK = { choice: [...], judge: [...] }');
-  process.exit(1);
+function load(file) {
+  const sandbox = {};
+  new Function('window', readFileSync(new URL(file, import.meta.url), 'utf8'))(sandbox);
+  return sandbox;
 }
 
 const problems = [];
-const ids = new Set();
+const zh = load('./quiz-data.js').QUIZ_BANK;
+const en = load('./en/quiz-data.js').QUIZ_BANK;
 
-function checkList(list, kind) {
-  const label = kind === 'choice' ? '选择题' : '判断题';
-  list.forEach((q, i) => {
-    const at = `${label}第 ${i + 1} 条`;
-    if (!q.id) problems.push(`${at}：缺少 id`);
-    else if (ids.has(q.id)) problems.push(`${at}（${q.id}）：id 与前面重复`);
-    else ids.add(q.id);
+if (!zh || !zh.choice || !en || !en.choice) {
+  console.log('✗ 找不到 window.QUIZ_BANK —— 请检查 quiz-data.js / en/quiz-data.js');
+  process.exit(1);
+}
 
-    if (!(Number.isInteger(q.chapter) && q.chapter >= 1 && q.chapter <= CHAPTERS)) {
-      problems.push(`${at}（${q.id}）：chapter 必须是 1–${CHAPTERS} 的整数`);
-    }
-    if (!q.q) problems.push(`${at}（${q.id}）：缺少题干 q`);
-    if (!q.explain) problems.push(`${at}（${q.id}）：缺少解析 explain`);
-    if (!q.topic) problems.push(`${at}（${q.id}）：缺少知识点 topic`);
+/* ---------------- A. 单份题库合法性 ---------------- */
+function checkBank(bank, label) {
+  const ids = new Set();
+  const bad = (msg) => problems.push(`[${label}] ${msg}`);
 
-    if (kind === 'choice') {
-      if (!Array.isArray(q.options) || q.options.length < 2) {
-        problems.push(`${at}（${q.id}）：options 至少要有 2 个选项`);
-      } else if (!(Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length)) {
-        problems.push(`${at}（${q.id}）：answer 必须是 options 的有效下标（0–${q.options.length - 1}）`);
+  function checkList(list, kind) {
+    const what = kind === 'choice' ? '选择题' : '判断题';
+    list.forEach((q, i) => {
+      const at = `${what}第 ${i + 1} 条`;
+      if (!q.id) bad(`${at}：缺少 id`);
+      else if (ids.has(q.id)) bad(`${at}（${q.id}）：id 重复`);
+      else ids.add(q.id);
+
+      if (!(Number.isInteger(q.chapter) && q.chapter >= 1 && q.chapter <= CHAPTERS)) {
+        bad(`${at}（${q.id}）：chapter 必须是 1–${CHAPTERS} 的整数`);
       }
-    } else if (typeof q.answer !== 'boolean') {
-      problems.push(`${at}（${q.id}）：判断题的 answer 必须是 true / false`);
+      if (!q.q) bad(`${at}（${q.id}）：缺少题干 q`);
+      if (!q.explain) bad(`${at}（${q.id}）：缺少解析 explain`);
+      if (!q.topic) bad(`${at}（${q.id}）：缺少知识点 topic`);
+
+      if (kind === 'choice') {
+        if (!Array.isArray(q.options) || q.options.length < 2) {
+          bad(`${at}（${q.id}）：options 至少 2 个`);
+        } else if (!(Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length)) {
+          bad(`${at}（${q.id}）：answer 必须是 options 的有效下标`);
+        }
+      } else if (typeof q.answer !== 'boolean') {
+        bad(`${at}（${q.id}）：判断题 answer 必须是 true / false`);
+      }
+    });
+  }
+
+  checkList(bank.choice, 'choice');
+  checkList(bank.judge, 'judge');
+
+  if (bank.choice.length < WANT_CHOICE) bad(`选择题只有 ${bank.choice.length} 道，少于 ${WANT_CHOICE}`);
+  if (bank.judge.length < WANT_JUDGE) bad(`判断题只有 ${bank.judge.length} 道，少于 ${WANT_JUDGE}`);
+
+  const dist = {};
+  [...bank.choice, ...bank.judge].forEach((q) => { dist[q.chapter] = (dist[q.chapter] || 0) + 1; });
+  return { ids, dist, count: ids.size };
+}
+
+const zhInfo = checkBank(zh, 'zh');
+const enInfo = checkBank(en, 'en');
+
+/* ---------------- B. 中英逐题对齐 ---------------- */
+function compare(kind) {
+  const a = zh[kind];
+  const b = en[kind];
+  const what = kind === 'choice' ? '选择题' : '判断题';
+  if (a.length !== b.length) {
+    problems.push(`[对照] ${what}数量不一致：zh=${a.length}，en=${b.length}`);
+    return;
+  }
+  a.forEach((qa, i) => {
+    const qb = b[i];
+    if (qa.id !== qb.id) problems.push(`[对照] ${what}第 ${i + 1} 条 id 不一致：zh=${qa.id}，en=${qb.id}`);
+    if (qa.chapter !== qb.chapter) {
+      problems.push(`[对照] ${qa.id} 的 chapter 不一致：zh=${qa.chapter}，en=${qb.chapter}`);
+    }
+    if (String(qa.answer) !== String(qb.answer)) {
+      problems.push(`[对照] ${qa.id} 的 answer 不一致：zh=${qa.answer}，en=${qb.answer}`);
+    }
+    if (kind === 'choice' && qa.options.length !== qb.options.length) {
+      problems.push(`[对照] ${qa.id} 的选项数不一致：zh=${qa.options.length}，en=${qb.options.length}`);
     }
   });
 }
+compare('choice');
+compare('judge');
 
-checkList(BANK.choice, 'choice');
-checkList(BANK.judge, 'judge');
+/* ---------------- C. 英文文案表与 T 表对齐 ---------------- */
+const quizSrc = readFileSync(new URL('./quiz.js', import.meta.url), 'utf8');
+const tBlock = quizSrc.match(/var T = \{([\s\S]*?)\n  \};/);
+const tKeys = tBlock
+  ? [...tBlock[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*)\s*:/gm)].map((m) => m[1])
+  : [];
+const uiKeys = Object.keys(load('./en/quiz-ui.js').QUIZ_UI || {});
 
-const dist = {};
-[...BANK.choice, ...BANK.judge].forEach((q) => {
-  dist[q.chapter] = (dist[q.chapter] || 0) + 1;
-});
+if (!tKeys.length) {
+  problems.push('[文案] 没能从 quiz.js 里解析出 T 表（正则可能失效）');
+} else {
+  const missing = tKeys.filter((k) => !uiKeys.includes(k));
+  const extra = uiKeys.filter((k) => !tKeys.includes(k));
+  if (missing.length) problems.push(`[文案] en/quiz-ui.js 缺少键：${missing.join(', ')}`);
+  if (extra.length) problems.push(`[文案] en/quiz-ui.js 多出无效键：${extra.join(', ')}`);
+}
 
-console.log(`题库规模：选择题 ${BANK.choice.length} 道 · 判断题 ${BANK.judge.length} 道 · 合计 ${ids.size} 道（id 唯一）`);
-console.log('章节分布：' + Array.from({ length: CHAPTERS }, (_, i) =>
-  `第${i + 1}章 ${dist[i + 1] || 0}`).join(' · '));
-console.log(`判断题对错比例：正确 ${BANK.judge.filter((q) => q.answer).length} · 错误 ${BANK.judge.filter((q) => !q.answer).length}`);
+/* ---------------- 输出 ---------------- */
+const fmt = (info) => Array.from({ length: CHAPTERS }, (_, i) => `第${i + 1}章 ${info.dist[i + 1] || 0}`).join(' · ');
 
-if (BANK.choice.length < WANT_CHOICE) problems.push(`选择题只有 ${BANK.choice.length} 道，少于预期的 ${WANT_CHOICE} 道`);
-if (BANK.judge.length < WANT_JUDGE) problems.push(`判断题只有 ${BANK.judge.length} 道，少于预期的 ${WANT_JUDGE} 道`);
+console.log('中文题库：选择题 ' + zh.choice.length + ' · 判断题 ' + zh.judge.length + ' · 合计 ' + zhInfo.count + '（id 唯一）');
+console.log('  章节分布：' + fmt(zhInfo));
+console.log('  判断题对错：正确 ' + zh.judge.filter((q) => q.answer).length + ' · 错误 ' + zh.judge.filter((q) => !q.answer).length);
+console.log('英文题库：选择题 ' + en.choice.length + ' · 判断题 ' + en.judge.length + ' · 合计 ' + enInfo.count + '（id 唯一）');
+console.log('  章节分布：' + fmt(enInfo));
+console.log('  判断题对错：正确 ' + en.judge.filter((q) => q.answer).length + ' · 错误 ' + en.judge.filter((q) => !q.answer).length);
+console.log('文案表：T 表 ' + tKeys.length + ' 键 · en/quiz-ui.js ' + uiKeys.length + ' 键');
 
 if (problems.length === 0) {
-  console.log('\n✓ 题库校验通过：id 唯一、章节合法、答案下标有效、字段齐全');
+  console.log('\n✓ 校验通过：两份题库各自合法，且逐题一一对应；英文文案表与 T 表完全对齐');
 } else {
   console.log(`\n✗ 发现 ${problems.length} 个问题：`);
   problems.forEach((p) => console.log('     ' + p));
