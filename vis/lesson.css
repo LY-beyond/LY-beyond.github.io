@@ -297,6 +297,80 @@
 .tab-panel li { margin-bottom: 6px; }
 
 .tab-panel strong { color: var(--c-text); font-weight: 700; }
+/* ---------------- 案例抓手（知识点 ⇄ 案例 的交叉引用） ---------------- */
+/* 第 1–8 章：这个小节在第 9 章案例的哪一步用到
+   第 9 章  ：这一步用到了前面哪几章
+   全站配色仍走 tokens.css，本段不出现硬编码色值 */
+.case-note {
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+  /* 左侧竖条常驻、只换颜色 —— 与 .about-item 同一手法 */
+  border-left: 4px solid var(--c-accent);
+}
+
+.case-note-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.case-note p {
+  margin: 0;
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.case-note a {
+  color: var(--c-primary);
+  font-weight: 600;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-primary) 35%, transparent);
+  transition: var(--t-control);
+}
+
+.case-note a:hover { border-bottom-color: var(--c-primary); }
+
+/* ---------------- 关键代码 tab 的「这段代码用到」角标 ---------------- */
+/* 读到代码时顺手就能知道这个写法出自哪一章。
+   与 .case-note 同一手法，但改用 --c-info：橙色留给「案例抓手」，两者不混色。 */
+.code-source {
+  margin: 0 0 14px;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-info) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-info) var(--mix-halo), transparent);
+  border-left: 4px solid var(--c-info);
+  color: var(--c-text-soft);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.code-source a {
+  color: color-mix(in srgb, var(--c-info) var(--mix-ink), var(--c-text));
+  font-weight: 600;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-info) 35%, transparent);
+  transition: var(--t-control);
+}
+
+.code-source a:hover { border-bottom-color: var(--c-info); }
+
+/* 角标内的行内 code：**刻意不覆盖配色** —— 让上面那条
+   `.tab-panel p code`（全站行内 code 统一的主色小胶囊）生效，
+   这样角标里的 `clamp()` 与相邻讲解里的 `clamp()` 长得一模一样。
+   本规则只补它没管的字号 / 圆角 / 内距。 */
+.code-source code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+
 
 /* 嵌入理论卡片 */
 .theory-card {

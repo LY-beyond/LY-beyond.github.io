@@ -202,12 +202,12 @@ window.DEMOS['d-8-4'] = function (mount) {
 </style></head><body>
   <div class="bar">Simulated screen</div>
   <div class="cards">
-    <div class="card">Card 1</div>
-    <div class="card">Card 2</div>
-    <div class="card">Card 3</div>
-    <div class="card">Card 4</div>
-    <div class="card">Card 5</div>
-    <div class="card">Card 6</div>
+    <div class="card">Dashboard</div>
+    <div class="card">Data viz</div>
+    <div class="card">Mobile</div>
+    <div class="card">Design system</div>
+    <div class="card">Portfolio</div>
+    <div class="card">Components</div>
   </div>
 </body></html>`;
 

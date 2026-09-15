@@ -98,6 +98,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>The sticky nav uses <code>position: sticky</code>, not <code>fixed</code> — <a href="../lesson-09/#ch-9-3">9.3 Top nav bar</a>. <a href="../practice.html">Lab step 3</a> checks position and top.</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="cmt">/* Absolute child, relative parent: the classic pairing */</span>
 <span class="sel">.card</span> {
@@ -165,6 +170,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>In the case <code>top: 0</code> is the offset that means “stick to the top of the viewport” — <a href="../lesson-09/#ch-9-3">9.3 Top nav bar</a>.</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="cmt">/* relative: offsets from its own original position */</span>
 <span class="sel">.shift</span> { <span class="prop">position</span>: <span class="str">relative</span>; <span class="prop">top</span>: <span class="num">12px</span>; <span class="prop">left</span>: <span class="num">24px</span>; }
@@ -221,6 +231,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>The nav’s <code>z-index: 50</code> keeps it above the content scrolling underneath — <a href="../lesson-09/#ch-9-3">9.3 Top nav bar</a>.</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="sel">.box-a</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">1</span>; }
 <span class="sel">.box-b</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">2</span>; }  <span class="cmt">/* b covers a */</span>
@@ -272,6 +287,11 @@
             "<b>mobile looking like a shrunken desktop page</b>" — iOS / Android render at 980px wide by default and then scale the whole thing down.
             Add this one line and media queries start using the real logical width.
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>The case uses exactly two breakpoints: 760px (two columns) and 1040px (more whitespace) — <a href="../lesson-09/#ch-9-8">9.8 Responsive & self-check</a>.</p>
         </div>
 
         <div class="tab-panel" data-panel="code">
@@ -327,6 +347,11 @@
             <br /><strong>Practical advice</strong>: order the <code>min-width</code> media queries from small to large,
             and in each breakpoint write only "what is newly added compared to the step before".
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>The case’s last step refactors desktop-first into mobile-first: a single column by default, enhanced with <code>min-width</code> — <a href="../lesson-09/#ch-9-8">9.8 Responsive & self-check</a>. <a href="../practice.html">Lab step 8</a> verifies 375 = one column, 1180 = two.</p>
         </div>
 
         <div class="tab-panel" data-panel="code">
@@ -389,6 +414,11 @@
             The advantage of sizing type in <code>rem</code> is that <b>when a user changes their browser's font size setting,
             the whole page scales up proportionally</b>, whereas <code>px</code> does not — an important part of accessibility (a11y).
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 See it in the case</span>
+          <p>Two places use relative units in the case: the hero’s <code>clamp(30px, 4vw, 46px)</code> and the container’s <code>min(100% - 48px, 1180px)</code> — <a href="../lesson-09/#ch-9-4">9.4 Hero</a>.</p>
         </div>
 
         <div class="tab-panel" data-panel="code">

@@ -97,6 +97,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>导航吸顶用 <code>position: sticky</code> 而不是 <code>fixed</code>，见 <a href="../lesson-09/#ch-9-3">9.3 顶部导航栏</a>；<a href="../practice.html">实战环节 3</a> 会检查 position 与 top。</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="cmt">/* 子绝父相：经典组合 */</span>
 <span class="sel">.card</span> {
@@ -164,6 +169,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>案例里 <code>top: 0</code> 就是「吸在视口顶部」这个偏移量的表达，见 <a href="../lesson-09/#ch-9-3">9.3 顶部导航栏</a>。</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="cmt">/* relative：相对自己的原位偏移 */</span>
 <span class="sel">.shift</span> { <span class="prop">position</span>: <span class="str">relative</span>; <span class="prop">top</span>: <span class="num">12px</span>; <span class="prop">left</span>: <span class="num">24px</span>; }
@@ -220,6 +230,11 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>导航的 <code>z-index: 50</code> 让它盖住下面滚上来的内容，见 <a href="../lesson-09/#ch-9-3">9.3 顶部导航栏</a>。</p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
           <pre class="code-block"><code><span class="sel">.box-a</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">1</span>; }
 <span class="sel">.box-b</span> { <span class="prop">position</span>: <span class="str">absolute</span>; <span class="prop">z-index</span>: <span class="num">2</span>; }  <span class="cmt">/* b 盖住 a */</span>
@@ -269,6 +284,11 @@
             的头号原因——iOS/Android 会默认按 980px 宽渲染再整体缩小。
             写完这行，媒体查询才会按真实逻辑宽度生效。
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>案例只用了两个断点：760px（双栏）与 1040px（留白加大），见 <a href="../lesson-09/#ch-9-8">9.8 响应式与自查</a>。</p>
         </div>
 
         <div class="tab-panel" data-panel="code">
@@ -323,6 +343,11 @@
             <br /><strong>实践建议</strong>：媒体查询里的 <code>min-width</code> 从小到大排列，
             且每个断点只写"相比上一档新增了什么"。
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>案例最后一步就是把「桌面优先」重构为「移动优先」：默认单列 + <code>min-width</code> 增强，见 <a href="../lesson-09/#ch-9-8">9.8 响应式与自查</a>；<a href="../practice.html">实战环节 8</a> 要验证 375 单列、1180 两栏。</p>
         </div>
 
         <div class="tab-panel" data-panel="code">
@@ -384,6 +409,11 @@
             用 <code>rem</code> 写字号的好处是：<b>用户改浏览器字号设置时，整个页面会跟着等比放大</b>，
             而 <code>px</code> 不会——这是无障碍（a11y）的重要一环。
           </p>
+        </div>
+
+        <div class="case-note">
+          <span class="case-note-tag">👉 在案例里看它</span>
+          <p>案例的相对单位用在两处：首屏字号 <code>clamp(30px, 4vw, 46px)</code>、容器 <code>min(100% - 48px, 1180px)</code>，见 <a href="../lesson-09/#ch-9-4">9.4 首屏 Hero</a>。</p>
         </div>
 
         <div class="tab-panel" data-panel="code">

@@ -202,12 +202,12 @@ window.DEMOS['d-8-4'] = function (mount) {
 </style></head><body>
   <div class="bar">模拟屏幕</div>
   <div class="cards">
-    <div class="card">卡片 1</div>
-    <div class="card">卡片 2</div>
-    <div class="card">卡片 3</div>
-    <div class="card">卡片 4</div>
-    <div class="card">卡片 5</div>
-    <div class="card">卡片 6</div>
+    <div class="card">仪表盘</div>
+    <div class="card">数据可视化</div>
+    <div class="card">移动端改版</div>
+    <div class="card">设计系统</div>
+    <div class="card">作品集首页</div>
+    <div class="card">组件库</div>
   </div>
 </body></html>`;
 

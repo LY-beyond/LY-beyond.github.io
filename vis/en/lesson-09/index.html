@@ -111,7 +111,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-02/#ch-2-1">Ch. 2 goals &amp; priority</a> · <a href="../lesson-02/#ch-2-3">wireframes</a> · <a href="../lesson-01/#ch-1-3">Ch. 1 contrast &amp; hierarchy</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-02/#ch-2-3">Ch. 2 wireframes</a> (skeleton first) · <a href="../lesson-05/#ch-5-2">Ch. 5 normal flow</a> (blocks stack vertically)</p>
           <pre class="code-block"><code><span class="cmt">&lt;!-- Wireframe stage: sketch the skeleton with semantic sections first --&gt;</span>
 &lt;<span class="sel">body</span>&gt;
   &lt;<span class="sel">header</span> <span class="prop">class</span>=<span class="str">"site-header"</span>&gt; ... &lt;/<span class="sel">header</span>&gt;   <span class="cmt">/* navigation */</span>
@@ -167,7 +173,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-03/#ch-3-1">Ch. 3 the 12-column grid</a> · <a href="../lesson-03/#ch-3-2">8pt spacing</a> · <a href="../lesson-01/#ch-1-1">Ch. 1 alignment</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-03/#ch-3-2">Ch. 3 8pt spacing</a> (the <code>:root</code> steps) · <a href="../lesson-03/#ch-3-1">Ch. 3 the 12-column grid</a> (<code>repeat(12, 1fr)</code>) · <a href="../lesson-01/#ch-1-1">Ch. 1 alignment</a> (container centred)</p>
           <pre class="code-block"><code><span class="cmt">/* 1. Container: cap the content width and center it */</span>
 <span class="sel">.container</span> {
   <span class="prop">width</span>: <span class="fn">min</span>(<span class="num">100%</span> - <span class="num">48px</span>, <span class="num">1180px</span>);
@@ -235,7 +247,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-06/#ch-6-2">Ch. 6 align &amp; distribute</a> · <a href="../lesson-08/#ch-8-1">Ch. 8 position</a> · <a href="../lesson-08/#ch-8-3">z-index</a> · <a href="../lesson-01/#ch-1-2">Ch. 1 proximity</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-08/#ch-8-1">Ch. 8 position: sticky</a> · <a href="../lesson-06/#ch-6-2">Ch. 6 align &amp; distribute</a> (<code>justify-content</code>) · <a href="../lesson-01/#ch-1-2">Ch. 1 proximity</a> (<code>gap</code> tightens the menu)</p>
           <pre class="code-block"><code><span class="sel">.site-header</span> {
   <span class="prop">position</span>: <span class="str">sticky</span>;      <span class="cmt">/* sticks to the top, and keeps its slot */</span>
   <span class="prop">top</span>: <span class="num">0</span>;
@@ -303,7 +321,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-01/#ch-1-6">Ch. 1 visual balance</a> · <a href="../lesson-01/#ch-1-3">contrast</a> · <a href="../lesson-07/#ch-7-3">Ch. 7 grid placement</a> · <a href="../lesson-08/#ch-8-6">Ch. 8 relative units</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-07/#ch-7-3">Ch. 7 grid placement</a> (<code>7fr 5fr</code> overrides the 12 columns) · <a href="../lesson-08/#ch-8-6">Ch. 8 relative units</a> (<code>clamp()</code>) · <a href="../lesson-01/#ch-1-6">Ch. 1 visual balance</a></p>
           <pre class="code-block"><code><span class="sel">.hero</span> {
   <span class="prop">padding</span>: <span class="fn">var</span>(--space-xl) <span class="num">0</span>;     <span class="cmt">/* loose: the core area gets the most whitespace */</span>
 }
@@ -379,7 +403,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-07/#ch-7-3">Ch. 7 grid placement</a> · <a href="../lesson-05/#ch-5-1">Ch. 5 box model</a> · <a href="../lesson-01/#ch-1-2">Ch. 1 proximity &amp; whitespace</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-07/#ch-7-3">Ch. 7 grid placement</a> (<code>4fr 8fr</code>) · <a href="../lesson-05/#ch-5-1">Ch. 5 box model</a> (padding makes the whitespace) · <a href="../lesson-01/#ch-1-2">Ch. 1 proximity</a> (tight inside, loose between)</p>
           <pre class="code-block"><code><span class="sel">.about .grid</span> {
   <span class="prop">display</span>: <span class="str">grid</span>;
   <span class="prop">grid-template-columns</span>: <span class="num">4fr</span> <span class="num">8fr</span>;   <span class="cmt">/* image 4 : text 8 */</span>
@@ -441,7 +471,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-07/#ch-7-2">Ch. 7 auto-fit</a> · <a href="../lesson-06/#ch-6-3">Ch. 6 flex sizing</a> · <a href="../lesson-01/#ch-1-4">Ch. 1 repetition</a> · <a href="../lesson-01/#ch-1-5">Gestalt</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-07/#ch-7-2">Ch. 7 auto-fit</a> · <a href="../lesson-06/#ch-6-3">Ch. 6 flex sizing</a> (<code>margin-top: auto</code> pins the link) · <a href="../lesson-05/#ch-5-1">Ch. 5 box model</a> (card padding) · <a href="../lesson-01/#ch-1-4">Ch. 1 repetition</a></p>
           <pre class="code-block"><code><span class="cmt">/* 1. The wall: an adaptive column count, no media query needed */</span>
 <span class="sel">.works .wall</span> {
   <span class="prop">display</span>: <span class="str">grid</span>;
@@ -513,7 +549,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-04/#ch-4-3">Ch. 4 dashboard grid</a> · <a href="../lesson-01/#ch-1-3">Ch. 1 hierarchy</a> · <a href="../lesson-03/#ch-3-2">Ch. 3 8pt spacing</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-04/#ch-4-3">Ch. 4 dashboard grid</a> (cell size follows importance) · <a href="../lesson-01/#ch-1-3">Ch. 1 contrast &amp; hierarchy</a> (three type steps) · <a href="../lesson-03/#ch-3-2">Ch. 3 8pt spacing</a></p>
           <pre class="code-block"><code><span class="sel">.stats .grid</span> {
   <span class="prop">display</span>: <span class="str">grid</span>;
   <span class="prop">grid-template-columns</span>: <span class="str">repeat(4, 1fr)</span>;   <span class="cmt">/* baseline: 4 columns */</span>
@@ -602,7 +644,13 @@
           </p>
         </div>
 
+        <div class="case-note">
+          <span class="case-note-tag">👉 This step draws on</span>
+          <p>Draws on: <a href="../lesson-08/#ch-8-4">Ch. 8 media queries</a> · <a href="../lesson-08/#ch-8-5">mobile first</a> · <a href="../lesson-03/#ch-3-3">Ch. 3 aligning to the grid</a></p>
+        </div>
+
         <div class="tab-panel" data-panel="code">
+          <p class="code-source">📚 This code draws on: <a href="../lesson-08/#ch-8-4">Ch. 8 media queries</a> (enhance upwards with <code>min-width</code>) · <a href="../lesson-08/#ch-8-5">Ch. 8 mobile first</a> · <a href="../lesson-03/#ch-3-3">Ch. 3 aligning to the grid</a> (does it still hold when narrow?)</p>
           <pre class="code-block"><code><span class="cmt">/* Mobile first: single column by default, then progressively enhanced (Ch. 8) */</span>
 <span class="sel">.about .grid</span>,
 <span class="sel">.hero .grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }        <span class="cmt">/* default: phone */</span>

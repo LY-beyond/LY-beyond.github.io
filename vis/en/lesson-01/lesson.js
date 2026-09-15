@@ -12,10 +12,10 @@ window.DEMOS = window.DEMOS || {};
  * ------------------------------------------------------- */
 window.DEMOS['d-1-1'] = function (mount) {
   const ROWS = [
-    { t: 'Dashboard layout', s: 'Luo Ji · 2 hours ago' },
-    { t: 'Charts and axes', s: 'Wang Miao · 5 hours ago' },
-    { t: 'Grid system', s: 'Liu Yang · 1 day ago' },
-    { t: 'Responsive design', s: 'Zhao Min · 2 days ago' },
+    { t: 'Portfolio · top nav', s: 'Nav bar · Chapter 9 STEP 3' },
+    { t: 'Portfolio · hero', s: 'Hero · Chapter 9 STEP 4' },
+    { t: 'Portfolio · card wall', s: 'Card wall · Chapter 9 STEP 6' },
+    { t: 'Portfolio · numbers', s: 'Numbers strip · Chapter 9 STEP 7' },
   ];
 
   // The "eyeballed" offsets used in the misaligned state
