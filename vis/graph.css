@@ -73,29 +73,10 @@
 
 .kg-btn--icon { width: 36px; padding: 0; font-size: 15px; }
 
-.kg-btn--primary {
-  border-color: var(--c-primary);
-  color: var(--c-on-primary);
-  background: var(--c-primary);
-}
-
-.kg-btn--primary:hover {
-  color: var(--c-on-primary);
-  filter: brightness(1.06);
-}
-
-.kg-btn--flat {
-  border-style: dashed;
-  color: var(--c-text-soft);
-  cursor: default;
-}
-
-.kg-btn--flat:hover { border-color: var(--c-border); color: var(--c-text-soft); }
-
-/* ---------------- 主体：图 + 侧栏 ---------------- */
+/* ---------------- 主体：图 + 图例侧栏 ---------------- */
 .kg-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 304px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space);
   align-items: start;
 }
@@ -118,15 +99,10 @@
   cursor: grab;
 }
 
-.kg-svg.is-panning { cursor: grabbing; }
+.kg-svg.is-panning,
+.kg-svg.is-dragging-node { cursor: grabbing; }
 
 .kg-node { cursor: grab; }
-.kg-node:active { cursor: grabbing; }
-
-.kg-node:focus-visible {
-  outline: 2px solid var(--c-focus);
-  outline-offset: 3px;
-}
 
 .kg-stats {
   position: absolute;
@@ -195,6 +171,17 @@
   outline-offset: 1px;
 }
 
+/* 没有对应页面的节点：纯展示，不可点 */
+.kg-list-item--static {
+  cursor: default;
+  color: var(--c-text-soft);
+}
+
+.kg-list-item--static:hover {
+  border-color: transparent;
+  background: none;
+}
+
 .kg-list-dot {
   width: 10px;
   height: 10px;
@@ -206,7 +193,7 @@
 .kg-list-cat,
 .kg-list-rel { color: var(--c-text-soft); font-size: 12px; white-space: nowrap; }
 
-/* ---------------- 侧栏：图例 + 详情 ---------------- */
+/* ---------------- 侧栏：关系图例 ---------------- */
 .kg-side {
   display: flex;
   flex-direction: column;
@@ -219,6 +206,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  max-width: 230px;
   padding: 10px 12px;
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
@@ -233,93 +221,6 @@
 .kg-legend-item { display: inline-flex; align-items: center; gap: 5px; }
 
 .kg-legend-item svg { width: 34px; height: 10px; display: block; }
-
-.kg-detail {
-  padding: var(--space-sm) var(--space);
-  border: 1px solid var(--c-border);
-  border-left: 4px solid var(--c-primary);
-  border-radius: var(--radius-lg);
-  background: var(--c-surface);
-}
-
-.kg-detail-empty { margin: 0; color: var(--c-muted); font-size: 13px; line-height: 1.7; }
-
-.kg-badge {
-  display: inline-block;
-  margin-bottom: 6px;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  color: var(--kg-c, var(--c-primary));
-  font-size: 11.5px;
-  font-weight: 800;
-  background: color-mix(in srgb, var(--kg-c, var(--c-primary)) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--kg-c, var(--c-primary)) 34%, transparent);
-}
-
-.kg-detail-title {
-  margin: 0 0 6px;
-  color: var(--c-text);
-  font-size: 16px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
-.kg-detail-desc {
-  margin: 0 0 var(--space-sm);
-  color: var(--c-text-soft);
-  font-size: 13px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
-.kg-detail-sub {
-  margin: 0 0 5px;
-  color: var(--c-text-soft);
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.kg-rels {
-  display: grid;
-  gap: 3px;
-  margin-bottom: var(--space-sm);
-}
-
-.kg-rel {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--c-text);
-  font: inherit;
-  font-size: 12.5px;
-  text-align: left;
-  background: none;
-  cursor: pointer;
-  transition: var(--t-control);
-}
-
-.kg-rel:hover { border-color: var(--c-border); background: var(--c-surface-2); }
-
-.kg-rel:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
-
-.kg-rel-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-.kg-rel-name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-
-.kg-rel-tag { color: var(--c-text-soft); font-size: 11.5px; white-space: nowrap; }
-
-.kg-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: var(--space-sm);
-}
 
 .kg-hint {
   margin: var(--space-sm) 0 0;
@@ -366,5 +267,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kg-btn, .kg-list-item, .kg-rel { transition: none; }
+  .kg-btn, .kg-list-item { transition: none; }
 }

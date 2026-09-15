@@ -624,12 +624,169 @@
 
 .lesson-footer p { margin: 0; }
 
+/* =========================================================
+   小节流动路径带（.lesson-header 下方，纯装饰）
+   几何由 lesson-path.js 生成；流动来自 CSS dashoffset 动画
+   ========================================================= */
+.lesson-path {
+  position: relative;
+  max-width: var(--maxw);
+  margin: 0 auto 12px;
+  padding: 2px var(--gutter) 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.lesson-path__track {
+  position: relative;
+  margin: 0 auto;
+}
+
+.lesson-path__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 静态轨道底：一条柔和的半透明粗灰线 */
+.lesson-path__base {
+  fill: none;
+  stroke: var(--c-line);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+/* 流动层：pathLength=1 归一化后，虚线周期与像素长度无关，
+   任意间距的小节都能无缝跑动 */
+.lesson-path__flow {
+  fill: none;
+  stroke: var(--c-primary);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: .02 .016;
+  opacity: .9;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-primary) 38%, transparent));
+  animation: lessonPathFlow 1.6s linear infinite;
+}
+
+@keyframes lessonPathFlow {
+  to { stroke-dashoffset: -.036; }   /* 恰好一个虚线周期（.02+.016），循环无接缝 */
+}
+
+/* 节点：绝对定位在 JS 算出的坐标上，自身垂直排布徽章 + 标题 */
+.lesson-path__node {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 104px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  pointer-events: none;                 /* 纯展示，不响应任何点击/键盘 */
+  opacity: 0;
+  transition: opacity .45s var(--ease) calc(var(--i, 0) * 60ms);
+}
+
+.lesson-path.is-revealed .lesson-path__node { opacity: 1; }
+
+.lesson-path__badge {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .92), transparent 46%),
+    var(--c-surface);
+  border: 2px solid color-mix(in srgb, var(--c-primary) 45%, transparent);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--c-primary) 14%, transparent),
+              var(--shadow-xs);
+  transition: box-shadow var(--dur-base) var(--ease),
+              background-color var(--dur-base) var(--ease),
+              border-color var(--dur-base) var(--ease);
+}
+
+.lesson-path__label {
+  max-width: 104px;
+  margin: 0;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--c-text-soft);
+  /* 波浪线会从标题区域穿过：给标题一层页面底色的胶囊底，保证文字始终清晰 */
+  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--dur-fast) var(--ease), font-weight var(--dur-fast) var(--ease),
+              background-color var(--dur-fast) var(--ease);
+}
+
+/* 当前小节：实心徽章 + 白字 + 脉冲圆环，跟随 .chapter.active */
+.lesson-path__node.is-current .lesson-path__badge {
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+  border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c-primary) 13%, transparent),
+              0 8px 18px color-mix(in srgb, var(--c-primary) 24%, transparent);
+}
+
+.lesson-path__node.is-current .lesson-path__badge::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid color-mix(in srgb, var(--c-primary) 42%, transparent);
+  border-radius: inherit;
+  animation: lessonPathPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lesson-path__node.is-current .lesson-path__label {
+  color: var(--c-text);
+  font-weight: 800;
+}
+
+@keyframes lessonPathPulse {
+  0%, 100% { opacity: .3; transform: scale(.94); }
+  50%      { opacity: .85; transform: scale(1.08); }
+}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 900px) {
+  .lesson-main { grid-template-columns: 1fr; gap: var(--space-lg); }
+  .chapter-nav { position: static; }
+  .course-topbar { padding: 0 var(--space); gap: var(--space-sm); }
+  .lesson-header { padding: 28px var(--space) 18px; }
+  .lesson-path { padding-left: var(--space); padding-right: var(--space); }
+  .lesson-main { padding: 0 var(--space) 56px; }
+  .chapter-pager { padding: 0 var(--space) 48px; flex-direction: column; }
+  .chapter-pager a, .chapter-pager span { text-align: center; }
+  .chapter-pager .pager-prev, .chapter-pager .pager-next { text-align: center; }
+}
+
 /* ---------------- 动效降级（尊重系统“减少动态效果”） ---------------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 
   *, *::before, *::after {
     animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
   }
 
