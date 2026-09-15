@@ -26,10 +26,10 @@
 | 4 | 首屏 Hero | 第 1 章 对比与视觉层次、第 1 章 非对称平衡、第 7 章 Grid 分栏 | 7 |
 | 5 | 关于我（双栏） | 第 7 章 Grid 分栏、第 1 章 亲密性与节奏、第 1 章 对齐方式选择 | 7 |
 | 6 | 作品集卡片墙 | 第 7 章 auto-fit 自动填充、第 1 章 重复与统一、第 6 章 卡片内纵向 Flex | 7 |
-| 7 | 数据统计区 | 第 1 章 对比与层次、第 4 章 仪表盘栅格、第 3 章 间距节奏 | 7 |
+| 7 | 数据统计区 | 第 1 章 对比与层次、第 4 章 仪表盘栅格、第 3 章 间距节奏 | 9 |
 | 8 | 响应式与设计自查 | 第 8 章 媒体查询与移动优先、第 9 章 设计自查清单 | 7 |
 
-> 共 8 个环节、61 个检查点。
+> 共 8 个环节、63 个检查点。
 > 最终成品 = 第 8 个环节的代码（也可以在页面上点「⬇️ 导出 .html」直接拿到成品文件）。
 
 ---
@@ -416,7 +416,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -431,6 +439,11 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
 ```
 
 ---
@@ -444,7 +457,7 @@
   - `.hero` 上下用最大的档位 `var(--space-xl)` 留白。
   - `.hero .grid` 改成两栏 `7fr 5fr`，并让左右两栏垂直居中。
   - 标题是唯一主角：字号 ≥ 30px（可用 `clamp()` 做响应式字号）；副标题弱化成灰色。
-  - 按钮用主色背景 + 白色文字 + 胶囊圆角；头像块保持正方形（`aspect-ratio: 1 / 1`）。
+  - 按钮用主色背景 + 白色文字 + 胶囊圆角；头像块保持正方形（`aspect-ratio: 1 / 1`），里面的图片用 `object-fit: cover` 裁切、容器加 `overflow: hidden` 收口圆角。
 - **检查点**：7 项 —— 主标题字号 ≥ 30px（全场最大）；.hero 上下留白 ≥ 40px；.hero .grid 是两栏；左栏比右栏宽（非对称平衡）；左右两栏垂直居中；按钮有实色背景（唯一的高对比元素）；头像块近似正方形
 - **起始代码**：第 3 环节的参考答案
 - **参考答案来源**：本环节自己的 solution
@@ -533,7 +546,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -547,6 +568,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 ```
 
@@ -573,7 +599,7 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
@@ -640,7 +666,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -654,6 +688,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero：留白 + 非对称两栏 + 层次 */
@@ -687,15 +726,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 ```
 
@@ -736,7 +783,7 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
@@ -801,7 +848,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -815,6 +870,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero：留白 + 非对称两栏 + 层次 */
@@ -848,15 +908,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 ```
 
@@ -883,13 +951,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -955,7 +1023,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -969,6 +1045,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero */
@@ -1002,15 +1083,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* 关于我：图 4 : 文 8，顶对齐 */
@@ -1024,15 +1113,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1084,13 +1188,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -1154,7 +1258,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1168,6 +1280,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero */
@@ -1201,15 +1318,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* 关于我：图 4 : 文 8，顶对齐 */
@@ -1223,15 +1348,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1269,13 +1409,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -1289,27 +1429,27 @@
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -1365,7 +1505,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1379,6 +1527,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -1412,15 +1565,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -1434,15 +1595,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1473,10 +1649,11 @@
   gap: var(--space-lg);
 }
 
-/* 卡片：纵向 Flex，让底部链接贴底 */
+/* 卡片：纵向 Flex，让底部链接贴底；min-width:0 防止图片把卡片撑出网格轨道 */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1487,11 +1664,19 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;                 /* 图片裁进圆角，且任何情况下都不溢出卡片 */
+  background: var(--c-surface-2);  /* 图片加载完成前的兜底底色 */
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1520,7 +1705,8 @@
   - 三段字号形成落差：数字 24–32px 加粗并用主色，单位 14px 常规色，说明 12px 灰色。
   - `.stats-grid` 用 `repeat(auto-fit, minmax(180px, 1fr))` 横向排开。
   - 这一区整体给一个浅底色（`var(--c-surface-2)`），把它和相邻区块区分开。
-- **检查点**：7 项 —— 至少 3 个统计项；.stats-grid 用 Grid 排布；统计项横向并排；数字字号 ≥ 24px（最醒目）；数字加粗（font-weight ≥ 700）；说明文字 ≤ 14px（最弱一级）；统计项有卡片底色
+  - 最后顺手收尾页脚：案例成功标准是「访客点击联系我」——把页脚补成真正的联系区：一句邀请文案 + 一个 `mailto:` 按钮 + 一行版权 / 链接，并用主色深底把整页收住。
+- **检查点**：9 项 —— 至少 3 个统计项；.stats-grid 用 Grid 排布；统计项横向并排；数字字号 ≥ 24px（最醒目）；数字加粗（font-weight ≥ 700）；说明文字 ≤ 14px（最弱一级）；统计项有卡片底色；页脚里有可点击的联系按钮（转化入口不能只写个标题）；页脚有收口底色（与浅色内容区分开）
 - **起始代码**：第 6 环节的参考答案
 - **参考答案来源**：本环节自己的 solution
 
@@ -1545,13 +1731,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -1565,27 +1751,27 @@
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -1639,7 +1825,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1653,6 +1847,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -1686,15 +1885,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -1708,15 +1915,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1747,10 +1969,11 @@
   gap: var(--space-lg);
 }
 
-/* 卡片：纵向 Flex，让底部链接贴底 */
+/* 卡片：纵向 Flex，让底部链接贴底；min-width:0 防止图片把卡片撑出网格轨道 */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1761,11 +1984,19 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;                 /* 图片裁进圆角，且任何情况下都不溢出卡片 */
+  background: var(--c-surface-2);  /* 图片加载完成前的兜底底色 */
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1805,13 +2036,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -1825,27 +2056,27 @@
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -1872,9 +2103,20 @@
   </div>
 </section>
 
+<!-- ⑥ 页脚 / 联系区：整页的转化收口 -->
 <footer class="site-footer" id="contact">
   <div class="container">
     <h2>一起做点什么？</h2>
+    <p class="footer-lead">新的前端 / 页面布局合作都欢迎，邮件我通常当天回复。</p>
+    <a class="footer-cta" href="mailto:lilei@example.com">给我写邮件 →</a>
+    <div class="footer-meta">
+      <span class="copy">© 2026 李雷</span>
+      <nav>
+        <a href="#">GitHub</a>
+        <a href="mailto:lilei@example.com">邮箱</a>
+        <a href="#">回到顶部 ↑</a>
+      </nav>
+    </div>
   </div>
 </footer>
 ```
@@ -1913,7 +2155,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1927,6 +2177,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -1960,15 +2215,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -1982,15 +2245,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -2020,9 +2298,11 @@
   gap: var(--space-lg);
 }
 
+/* min-width:0 防止图片把卡片撑出网格轨道（窄屏经典坑） */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -2033,11 +2313,19 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -2096,6 +2384,64 @@
   margin-top: 6px;
   font-size: 12px;
   color: var(--c-muted);     /* ③ 辅助：最小 + 最灰 */
+}
+
+/* ---- 页脚 / 联系区：主色深底收口，把视线引向全页最后一个 CTA ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 3.4vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+/* 深底上的 CTA 反色：白底 + 主色字，与 Hero 的主色按钮首尾呼应 */
+.footer-cta {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-cta:hover {
+  background: var(--c-surface-2);
+}
+
+/* 底栏：版权与链接分列两端，一条半透明分隔线把它和 CTA 分开 */
+.footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-meta a:hover {
+  color: #fff;
 }
 ```
 
@@ -2136,13 +2482,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -2156,27 +2502,27 @@
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -2203,9 +2549,20 @@
   </div>
 </section>
 
+<!-- ⑥ 页脚 / 联系区：整页的转化收口 -->
 <footer class="site-footer" id="contact">
   <div class="container">
     <h2>一起做点什么？</h2>
+    <p class="footer-lead">新的前端 / 页面布局合作都欢迎，邮件我通常当天回复。</p>
+    <a class="footer-cta" href="mailto:lilei@example.com">给我写邮件 →</a>
+    <div class="footer-meta">
+      <span class="copy">© 2026 李雷</span>
+      <nav>
+        <a href="#">GitHub</a>
+        <a href="mailto:lilei@example.com">邮箱</a>
+        <a href="#">回到顶部 ↑</a>
+      </nav>
+    </div>
   </div>
 </footer>
 ```
@@ -2242,7 +2599,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -2256,6 +2621,11 @@
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -2289,15 +2659,23 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -2311,15 +2689,30 @@
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -2349,9 +2742,11 @@
   gap: var(--space-lg);
 }
 
+/* min-width:0 防止图片把卡片撑出网格轨道（窄屏经典坑） */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -2362,11 +2757,19 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -2426,6 +2829,64 @@
   font-size: 12px;
   color: var(--c-muted);     /* ③ 辅助：最小 + 最灰 */
 }
+
+/* ---- 页脚 / 联系区：主色深底收口，把视线引向全页最后一个 CTA ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 3.4vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+/* 深底上的 CTA 反色：白底 + 主色字，与 Hero 的主色按钮首尾呼应 */
+.footer-cta {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-cta:hover {
+  background: var(--c-surface-2);
+}
+
+/* 底栏：版权与链接分列两端，一条半透明分隔线把它和 CTA 分开 */
+.footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-meta a:hover {
+  color: #fff;
+}
 ```
 
 </details>
@@ -2451,13 +2912,13 @@
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -2471,27 +2932,27 @@
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -2518,9 +2979,20 @@
   </div>
 </section>
 
+<!-- ⑥ 页脚 / 联系区：整页的转化收口 -->
 <footer class="site-footer" id="contact">
   <div class="container">
     <h2>一起做点什么？</h2>
+    <p class="footer-lead">新的前端 / 页面布局合作都欢迎，邮件我通常当天回复。</p>
+    <a class="footer-cta" href="mailto:lilei@example.com">给我写邮件 →</a>
+    <div class="footer-meta">
+      <span class="copy">© 2026 李雷</span>
+      <nav>
+        <a href="#">GitHub</a>
+        <a href="mailto:lilei@example.com">邮箱</a>
+        <a href="#">回到顶部 ↑</a>
+      </nav>
+    </div>
   </div>
 </footer>
 ```
@@ -2559,7 +3031,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -2575,6 +3055,11 @@
   font-weight: 600;
 }
 
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
 /* ---- 首屏：默认单列（手机优先） ---- */
 .hero {
   padding: var(--space-xl) 0;
@@ -2585,7 +3070,7 @@
 }
 
 .hero h1 {
-  font-size: clamp(30px, 4vw, 46px);
+  font-size: clamp(30px, 5vw, 46px);
   line-height: 1.2;
   margin-bottom: var(--space);
 }
@@ -2605,15 +3090,25 @@
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 手机上头像不撑满整屏：限宽 + 居中，到平板再随两栏放开 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  width: min(72%, 280px);
+  margin-inline: auto;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我：默认单列 ---- */
@@ -2623,18 +3118,34 @@
 
 .about .grid {
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram（手机上同样限宽居中） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  width: min(78%, 300px);
+  margin-inline: auto;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -2664,9 +3175,11 @@
   gap: var(--space-lg);
 }
 
+/* min-width:0 防止图片把卡片撑出网格轨道（窄屏经典坑） */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -2677,11 +3190,19 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -2742,12 +3263,60 @@
   color: var(--c-muted);
 }
 
+/* ---- 页脚 / 联系区：手机上元素堆叠居中，CTA 整行宽，好点按 ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 5vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+.footer-cta {
+  display: block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* =========================================
  * 移动优先：只用 min-width 逐级「增强」
  * 小屏样式一次都没有被覆盖，只是在被加强
  * ======================================= */
 
-/* 平板起：双栏 */
+/* 平板起：双栏；放开头像/名片宽度，页脚也切回横向排布 */
 @media (min-width: 760px) {
   .hero .grid {
     grid-template-columns: 7fr 5fr;
@@ -2757,6 +3326,23 @@
   .about .grid {
     grid-template-columns: 4fr 8fr;
     align-items: start;
+    gap: var(--space-xl);
+  }
+
+  .hero .avatar,
+  .about .portrait {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  .footer-cta {
+    display: inline-block;
+  }
+
+  .footer-meta {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 

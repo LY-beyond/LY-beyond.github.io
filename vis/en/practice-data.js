@@ -78,6 +78,7 @@ img { display: block; max-width: 100%; }
     { label: 'Work titles', value: 'Dashboard / Chart library / Campus navigation / Weather visualisation' },
     { label: 'Stats', value: '42 projects shipped / 5 years / 18 clients' },
     { label: 'Footer heading', value: 'Shall we build something?' },
+    { label: 'Email', value: 'alex.chen@example.com' },
   ],
 
   /* ---------------- Starting code for step 1 (where the student begins) ---------------- */
@@ -394,7 +395,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -408,6 +417,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 `,
       },
@@ -426,13 +440,13 @@ img { display: block; max-width: 100%; }
         'Give `.hero` its whitespace from the largest step, `var(--space-xl)`.',
         'Turn `.hero .grid` into two columns, `7fr 5fr`, and centre both columns vertically.',
         'The heading is the one hero: at least 30px (a `clamp()` works well for responsive type); push the sub-headline back with a softer colour.',
-        'Give the button a primary background, white text and a pill radius; keep the avatar square with `aspect-ratio: 1 / 1`.',
+        'Give the button a primary background, white text and a pill radius; keep the avatar square with `aspect-ratio: 1 / 1`, crop the image inside it with `object-fit: cover`, and let the container clip the rounded corners with `overflow: hidden`.',
       ],
       focus: { html: '<h1>', css: '' },
       hints: [
         'A hero allows exactly one hero. If the heading, the avatar and the button all compete, the visitor does not know where to look — make the heading strong first, then weaken the rest in turn.',
         'The column ratio goes on `.hero .grid`: grid-template-columns: 7fr 5fr. It overrides the 12-column set from step 2, because .hero .grid is more specific than .grid. A wider left column is asymmetric balance.',
-        'Fallback: .hero { padding: var(--space-xl) 0; }; .hero .grid { grid-template-columns: 7fr 5fr; align-items: center; }; .hero h1 { font-size: clamp(30px, 4vw, 46px); }; .hero .lead { color: var(--c-text-soft); }; .hero .cta { background: var(--c-primary); color: #fff; border-radius: var(--radius-pill); }; .hero .avatar { aspect-ratio: 1 / 1; background: var(--c-primary-2); }',
+        'Fallback: .hero { padding: var(--space-xl) 0; }; .hero .grid { grid-template-columns: 7fr 5fr; align-items: center; }; .hero h1 { font-size: clamp(30px, 4vw, 46px); }; .hero .lead { color: var(--c-text-soft); }; .hero .cta { background: var(--c-primary); color: #fff; border-radius: var(--radius-pill); }; .hero .avatar { aspect-ratio: 1 / 1; overflow: hidden; border-radius: var(--radius); }; .hero .avatar img { width: 100%; height: 100%; object-fit: cover; }',
       ],
       syntax: [
         { code: 'grid-template-columns: 7fr 5fr;', note: 'Left 7, right 5: asymmetric yet balanced, with a clear focus' },
@@ -469,8 +483,7 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
@@ -533,7 +546,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -547,6 +568,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* Hero: whitespace + an asymmetric two-column split + hierarchy */
@@ -580,15 +606,24 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* Avatar: a fixed square; the image is cropped with cover (no stretch),
+   the container owns the radius */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 `,
       },
@@ -613,7 +648,7 @@ img { display: block; max-width: 100%; }
       hints: [
         'Two columns is not “cut in half”. The image is visual information and the text is reading information, so the text deserves more width — 4:8 or 5:7 are the usual splits.',
         'The ratio again lives on `.about .grid`: grid-template-columns: 4fr 8fr, plus align-items: start. Note how it differs from the hero: short content centres nicely, but a long paragraph must be top-aligned or the reader’s starting point drifts.',
-        'Fallback: .about { padding: var(--space-xl) 0; }; .about .grid { grid-template-columns: 4fr 8fr; align-items: start; gap: var(--space-xl); }; .about .portrait { aspect-ratio: 4 / 5; background: var(--c-surface-2); border-radius: var(--radius); }; .about p { color: var(--c-text-soft); line-height: 1.9; margin-bottom: var(--space); }',
+        'Fallback: .about { padding: var(--space-xl) 0; }; .about .grid { grid-template-columns: 4fr 8fr; align-items: start; gap: var(--space-xl); }; .about .portrait { aspect-ratio: 4 / 5; display: grid; place-items: center; border-radius: var(--radius); background: var(--c-primary-2); color: #fff; } (a monogram initial or a real photo both work inside the block); .about p { color: var(--c-text-soft); line-height: 1.9; margin-bottom: var(--space); }',
       ],
       syntax: [
         { code: 'grid-template-columns: 4fr 8fr;', note: 'Image 4 : text 8, so lines do not run absurdly long' },
@@ -649,14 +684,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">Photo</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">A</span></div>
     <div>
       <h2>About me</h2>
       <p>Five years of front-end experience, good at turning a design into a clearly structured page.</p>
@@ -718,7 +752,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -732,6 +774,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* Hero */
@@ -765,15 +812,24 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* Avatar: a fixed square; the image is cropped with cover (no stretch),
+   the container owns the radius */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* About me: image 4 : text 8, top-aligned */
@@ -787,15 +843,31 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* A name-card block: brand gradient + a monogram initial is itself a
+   proper visual (the ::before hairline frame gives the “card” feel;
+   the same structure works with a real photo) */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -831,7 +903,7 @@ img { display: block; max-width: 100%; }
       hints: [
         'The point of a card wall is repetition: the same radius, padding and border on all four cards is what makes it read as one set.',
         'Let the browser work out the columns: grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)). Inside a card use display: flex + flex-direction: column, then give .more margin-top: auto to push it to the bottom.',
-        'Fallback: .wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-lg); }; .work-card { display: flex; flex-direction: column; padding: var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }; .work-card .thumb { aspect-ratio: 16 / 10; border-radius: var(--radius-sm); }; .work-card .more { margin-top: auto; color: var(--c-primary); }',
+        'Fallback: .wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-lg); }; .work-card { display: flex; flex-direction: column; min-width: 0; padding: var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }; .work-card .thumb { aspect-ratio: 16 / 10; border-radius: var(--radius-sm); overflow: hidden; }; .work-card .thumb img { width: 100%; height: 100%; object-fit: cover; }; .work-card .more { margin-top: auto; color: var(--c-primary); }',
       ],
       syntax: [
         { code: 'repeat(auto-fit, minmax(260px, 1fr))', note: 'Column count decided automatically: never below 260px, leftover space shared' },
@@ -867,14 +939,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">Photo</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">A</span></div>
     <div>
       <h2>About me</h2>
       <p>Five years of front-end experience, good at turning a design into a clearly structured page.</p>
@@ -888,29 +959,25 @@ img { display: block; max-width: 100%; }
     <h2>Selected work</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""></div>
         <h3>Dashboard</h3>
         <p class="meta">Data visualisation · 2026</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""></div>
         <h3>Chart library</h3>
         <p class="meta">Charting system · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""></div>
         <h3>Campus navigation</h3>
         <p class="meta">Mobile app · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""></div>
         <h3>Weather visualisation</h3>
         <p class="meta">Web app · 2024</p>
         <a class="more" href="#">View details →</a>
@@ -964,7 +1031,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -978,6 +1053,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* Hero */
@@ -1011,15 +1091,24 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* Avatar: a fixed square; the image is cropped with cover (no stretch),
+   the container owns the radius */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* About me */
@@ -1033,15 +1122,31 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* A name-card block: brand gradient + a monogram initial is itself a
+   proper visual (the ::before hairline frame gives the “card” feel;
+   the same structure works with a real photo) */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1072,9 +1177,11 @@ img { display: block; max-width: 100%; }
 }
 
 /* A card is a column flex container, so the bottom link can be pinned */
+/* min-width:0 stops the image pushing the card past its grid track */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1085,11 +1192,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1122,18 +1237,21 @@ img { display: block; max-width: 100%; }
         'Build a three-step type scale: the number 24–32px bold in the primary colour, the unit 14px, the label 12px grey.',
         'Lay `.stats-grid` out with `repeat(auto-fit, minmax(180px, 1fr))` so the stats sit in a row.',
         'Give the whole block a soft background (`var(--c-surface-2)`) to separate it from its neighbours.',
+        'Then finish the footer: the success criterion of this case study is “a visitor clicks to contact me” — turn the footer into a real contact zone: one inviting line + one `mailto:` button + a copyright / links row, and close the page on a solid band of the primary colour.',
       ],
       focus: { html: 'class="stats-grid"', css: '' },
       hints: [
         'What this step really tests is hierarchy: within one block, what matters most, what is secondary and what is just a note — said with size and colour.',
         'The number is 30px + font-weight: 800 + the primary colour; the unit is 14px; the label is 12px grey. Three steps differing by roughly 2× and the reader instantly knows what the number means.',
-        'Fallback: .stats { padding: var(--space-xl) 0; background: var(--c-surface-2); }; .stat { padding: var(--space-lg) var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); text-align: center; }; .stat .num { display: block; font-size: 30px; font-weight: 800; color: var(--c-primary); }; .stat .label { display: block; margin-top: 6px; font-size: 12px; color: var(--c-muted); }',
+        'Fallback: .stats { padding: var(--space-xl) 0; background: var(--c-surface-2); }; .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-lg); }; .stat { padding: var(--space-lg) var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); text-align: center; }; .stat .num { display: block; font-size: 30px; font-weight: 800; color: var(--c-primary); }; .stat .unit { font-size: 14px; }; .stat .label { display: block; margin-top: 6px; font-size: 12px; color: var(--c-muted); }',
+        'The footer is the end point of the page’s Z-pattern: a solid primary band with white text closes the page against the light sections above, the last CTA sits in the middle (inverted: white pill, primary text), and a translucent hairline holds the copyright and links. It is not decoration — the case study’s success criterion rides on that one button.',
       ],
       syntax: [
         { code: 'display: block;', note: 'Turns an inline span into a block, so the number and the unit each get their own line' },
         { code: 'font-weight: 800;', note: 'Weight is visual weight — often stronger than size alone' },
         { code: 'margin-top: 6px;', note: 'Tight (6px) inside a stat, loose (24px) between cards' },
         { code: 'background: var(--c-surface-2);', note: 'A soft background separates sections more lightly than a border' },
+        { code: 'href="mailto:name@example.com"', note: 'Opens the visitor’s mail client directly — the simplest conversion entry point a contact zone can have' },
       ],
       checks: [
         { type: 'count', selector: '.stat', min: 3, label: 'at least 3 stats' },
@@ -1143,6 +1261,8 @@ img { display: block; max-width: 100%; }
         { type: 'weightMin', selector: '.stat .num', min: 700, label: 'the number is bold (font-weight ≥ 700)' },
         { type: 'styleMax', selector: '.stat .label', prop: 'fontSize', max: 14, label: 'the label is ≤ 14px (the quietest level)' },
         { type: 'bgSet', selector: '.stat', label: 'a stat has a card background' },
+        { type: 'exists', selector: '.site-footer .footer-cta', label: 'the footer contains a clickable contact button (a heading alone is not a conversion path)' },
+        { type: 'bgSet', selector: '.site-footer', label: 'the footer has a closing background (distinct from the light content)' },
       ],
       solution: {
         html: `<header class="site-header">
@@ -1163,14 +1283,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">Photo</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">A</span></div>
     <div>
       <h2>About me</h2>
       <p>Five years of front-end experience, good at turning a design into a clearly structured page.</p>
@@ -1184,29 +1303,25 @@ img { display: block; max-width: 100%; }
     <h2>Selected work</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""></div>
         <h3>Dashboard</h3>
         <p class="meta">Data visualisation · 2026</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""></div>
         <h3>Chart library</h3>
         <p class="meta">Charting system · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""></div>
         <h3>Campus navigation</h3>
         <p class="meta">Mobile app · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""></div>
         <h3>Weather visualisation</h3>
         <p class="meta">Web app · 2024</p>
         <a class="more" href="#">View details →</a>
@@ -1238,6 +1353,16 @@ img { display: block; max-width: 100%; }
 <footer class="site-footer" id="contact">
   <div class="container">
     <h2>Shall we build something?</h2>
+    <p class="footer-lead">Open to front-end and layout work — I usually reply the same day.</p>
+    <a class="footer-cta" href="mailto:alex.chen@example.com">Email me →</a>
+    <div class="footer-meta">
+      <span class="copy">© 2026 Alex Chen</span>
+      <nav>
+        <a href="#">GitHub</a>
+        <a href="mailto:alex.chen@example.com">Email</a>
+        <a href="#">Back to top ↑</a>
+      </nav>
+    </div>
   </div>
 </footer>
 `,
@@ -1272,7 +1397,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1286,6 +1419,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* Hero */
@@ -1319,15 +1457,24 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* Avatar: a fixed square; the image is cropped with cover (no stretch),
+   the container owns the radius */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* About me */
@@ -1341,15 +1488,31 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* A name-card block: brand gradient + a monogram initial is itself a
+   proper visual (the ::before hairline frame gives the “card” feel;
+   the same structure works with a real photo) */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1379,9 +1542,11 @@ img { display: block; max-width: 100%; }
   gap: var(--space-lg);
 }
 
+/* min-width:0 stops the image pushing the card past its grid track */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1392,11 +1557,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1455,6 +1628,64 @@ img { display: block; max-width: 100%; }
   margin-top: 6px;
   font-size: 12px;
   color: var(--c-muted);     /* ③ supporting: smallest and quietest */
+}
+
+/* ---- Footer / contact: a solid brand band that funnels the eye to the final CTA ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 3.4vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+/* Inverted CTA on the dark band: white pill with primary text, echoing the hero button */
+.footer-cta {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-cta:hover {
+  background: var(--c-surface-2);
+}
+
+/* Meta bar: copyright and links pushed to the two ends, divided by a hairline */
+.footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-meta a:hover {
+  color: #fff;
 }
 `,
       },
@@ -1541,7 +1772,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* The logo is the brand — one level stronger than the nav: dark and bold */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1557,6 +1796,11 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
 }
 
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
 /* Hero: a single column by default (mobile first) */
 .hero {
   padding: var(--space-xl) 0;
@@ -1567,7 +1811,7 @@ img { display: block; max-width: 100%; }
 }
 
 .hero h1 {
-  font-size: clamp(30px, 4vw, 46px);
+  font-size: clamp(30px, 5vw, 46px);
   line-height: 1.2;
   margin-bottom: var(--space);
 }
@@ -1587,15 +1831,26 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* On a phone the avatar must not fill the screen: cap its width and centre
+   it; the two-column layout releases it again from tablet up */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  width: min(72%, 280px);
+  margin-inline: auto;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* About me: a single column by default */
@@ -1605,18 +1860,34 @@ img { display: block; max-width: 100%; }
 
 .about .grid {
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
+/* The name-card is width-capped and centred on phones too */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  width: min(78%, 300px);
+  margin-inline: auto;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1646,9 +1917,11 @@ img { display: block; max-width: 100%; }
   gap: var(--space-lg);
 }
 
+/* min-width:0 stops the image pushing the card past its grid track */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1659,11 +1932,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1724,12 +2005,62 @@ img { display: block; max-width: 100%; }
   color: var(--c-muted);
 }
 
+/* ---- Footer / contact: on phones everything stacks and centres; the CTA
+   goes full width for an easy tap target ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 5vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+.footer-cta {
+  display: block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* =========================================
  * Mobile first: only min-width, enhancing upwards.
  * The small-screen styles are never overridden, only built on.
  * ======================================= */
 
-/* From tablet up: two columns */
+/* From tablet up: two columns; release the avatar/card widths and lay the
+   footer meta out horizontally */
 @media (min-width: 760px) {
   .hero .grid {
     grid-template-columns: 7fr 5fr;
@@ -1739,6 +2070,23 @@ img { display: block; max-width: 100%; }
   .about .grid {
     grid-template-columns: 4fr 8fr;
     align-items: start;
+    gap: var(--space-xl);
+  }
+
+  .hero .avatar,
+  .about .portrait {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  .footer-cta {
+    display: inline-block;
+  }
+
+  .footer-meta {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 

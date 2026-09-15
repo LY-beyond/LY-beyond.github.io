@@ -112,6 +112,7 @@ img { display: block; max-width: 100%; }
     { label: '作品标题', value: '数据看板 / 图表组件库 / 校园导航 / 天气可视化' },
     { label: '统计项', value: '42 个已完成项目 / 5 年经验 / 18 位合作客户' },
     { label: '页脚标题', value: '一起做点什么？' },
+    { label: '联系邮箱', value: 'lilei@example.com' },
   ],
 
   /* ---------------- 第 1 个环节的起始代码（学生从这里开始写） ---------------- */
@@ -425,7 +426,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -439,6 +448,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 `,
       },
@@ -456,13 +470,13 @@ img { display: block; max-width: 100%; }
         '`.hero` 上下用最大的档位 `var(--space-xl)` 留白。',
         '`.hero .grid` 改成两栏 `7fr 5fr`，并让左右两栏垂直居中。',
         '标题是唯一主角：字号 ≥ 30px（可用 `clamp()` 做响应式字号）；副标题弱化成灰色。',
-        '按钮用主色背景 + 白色文字 + 胶囊圆角；头像块保持正方形（`aspect-ratio: 1 / 1`）。',
+        '按钮用主色背景 + 白色文字 + 胶囊圆角；头像块保持正方形（`aspect-ratio: 1 / 1`），里面的图片用 `object-fit: cover` 裁切、容器加 `overflow: hidden` 收口圆角。',
       ],
       focus: { html: '<h1>', css: '' },
       hints: [
         'Hero 里只能有一个主角。如果标题、头像、按钮都在抢注意力，访客反而不知道看哪 —— 先把标题做强，再把其他元素依次减弱。',
         '两栏比例写在 `.hero .grid` 上：grid-template-columns: 7fr 5fr。它会覆盖环节 2 那套 12 列（.hero .grid 比 .grid 更具体）。左侧比右侧宽，就是非对称平衡。',
-        '兜底片段：.hero { padding: var(--space-xl) 0; }；.hero .grid { grid-template-columns: 7fr 5fr; align-items: center; }；.hero h1 { font-size: clamp(30px, 4vw, 46px); }；.hero .lead { color: var(--c-text-soft); }；.hero .cta { background: var(--c-primary); color: #fff; border-radius: var(--radius-pill); }；.hero .avatar { aspect-ratio: 1 / 1; background: var(--c-primary-2); }',
+        '兜底片段：.hero { padding: var(--space-xl) 0; }；.hero .grid { grid-template-columns: 7fr 5fr; align-items: center; }；.hero h1 { font-size: clamp(30px, 4vw, 46px); }；.hero .lead { color: var(--c-text-soft); }；.hero .cta { background: var(--c-primary); color: #fff; border-radius: var(--radius-pill); }；.hero .avatar { aspect-ratio: 1 / 1; overflow: hidden; border-radius: var(--radius); }；.hero .avatar img { width: 100%; height: 100%; object-fit: cover; }',
       ],
       syntax: [
         { code: 'grid-template-columns: 7fr 5fr;', note: '左 7 右 5：非对称但视觉平衡，比 1fr 1fr 更有重点' },
@@ -499,8 +513,7 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
@@ -563,7 +576,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -577,6 +598,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero：留白 + 非对称两栏 + 层次 */
@@ -610,15 +636,23 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 `,
       },
@@ -642,7 +676,7 @@ img { display: block; max-width: 100%; }
       hints: [
         '双栏不是「一分为二」。图片是视觉信息、文字是阅读信息，文字应该拿到更多宽度 —— 常见分法是 4:8 或 5:7。',
         '比例还是写在 `.about .grid` 上：grid-template-columns: 4fr 8fr，同时加 align-items: start。注意它与 Hero 的区别：Hero 内容短用 center，这里文字长必须顶对齐，否则读者的目光起点会乱。',
-        '兜底片段：.about { padding: var(--space-xl) 0; }；.about .grid { grid-template-columns: 4fr 8fr; align-items: start; gap: var(--space-xl); }；.about .portrait { aspect-ratio: 4 / 5; background: var(--c-surface-2); border-radius: var(--radius); }；.about p { color: var(--c-text-soft); line-height: 1.9; margin-bottom: var(--space); }',
+        '兜底片段：.about { padding: var(--space-xl) 0; }；.about .grid { grid-template-columns: 4fr 8fr; align-items: start; gap: var(--space-xl); }；.about .portrait { aspect-ratio: 4 / 5; display: grid; place-items: center; border-radius: var(--radius); background: var(--c-primary-2); color: #fff; }（块里放姓名首字或真实照片都可以）；.about p { color: var(--c-text-soft); line-height: 1.9; margin-bottom: var(--space); }',
       ],
       syntax: [
         { code: 'grid-template-columns: 4fr 8fr;', note: '图 4 : 文 8，让文字行不至于过长' },
@@ -678,14 +712,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -747,7 +780,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -761,6 +802,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* 首屏 Hero */
@@ -794,15 +840,23 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* 关于我：图 4 : 文 8，顶对齐 */
@@ -816,15 +870,30 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -859,7 +928,7 @@ img { display: block; max-width: 100%; }
       hints: [
         '卡片墙的关键是「重复」：4 张卡片的圆角、内边距、边框完全一致，整面墙才有成套感。',
         '列数交给浏览器算：grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) —— 宽屏列多、窄屏列少。卡片内部用 display: flex + flex-direction: column，再给 .more 加 margin-top: auto，它就会被推到最底部。',
-        '兜底片段：.wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-lg); }；.work-card { display: flex; flex-direction: column; padding: var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }；.work-card .thumb { aspect-ratio: 16 / 10; border-radius: var(--radius-sm); }；.work-card .more { margin-top: auto; color: var(--c-primary); }',
+        '兜底片段：.wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-lg); }；.work-card { display: flex; flex-direction: column; min-width: 0; padding: var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }；.work-card .thumb { aspect-ratio: 16 / 10; border-radius: var(--radius-sm); overflow: hidden; }；.work-card .thumb img { width: 100%; height: 100%; object-fit: cover; }；.work-card .more { margin-top: auto; color: var(--c-primary); }',
       ],
       syntax: [
         { code: 'repeat(auto-fit, minmax(260px, 1fr))', note: '自动决定列数：每列不小于 260px，剩余空间等分' },
@@ -895,14 +964,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -916,29 +984,25 @@ img { display: block; max-width: 100%; }
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
         <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
         <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
         <h3>校园导航</h3>
         <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
         <h3>天气可视化</h3>
         <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
@@ -992,7 +1056,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1006,6 +1078,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -1039,15 +1116,23 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -1061,15 +1146,30 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1100,10 +1200,11 @@ img { display: block; max-width: 100%; }
   gap: var(--space-lg);
 }
 
-/* 卡片：纵向 Flex，让底部链接贴底 */
+/* 卡片：纵向 Flex，让底部链接贴底；min-width:0 防止图片把卡片撑出网格轨道 */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1114,11 +1215,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;                 /* 图片裁进圆角，且任何情况下都不溢出卡片 */
+  background: var(--c-surface-2);  /* 图片加载完成前的兜底底色 */
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1150,18 +1259,21 @@ img { display: block; max-width: 100%; }
         '三段字号形成落差：数字 24–32px 加粗并用主色，单位 14px 常规色，说明 12px 灰色。',
         '`.stats-grid` 用 `repeat(auto-fit, minmax(180px, 1fr))` 横向排开。',
         '这一区整体给一个浅底色（`var(--c-surface-2)`），把它和相邻区块区分开。',
+        '最后顺手收尾页脚：案例成功标准是「访客点击联系我」——把页脚补成真正的联系区：一句邀请文案 + 一个 `mailto:` 按钮 + 一行版权 / 链接，并用主色深底把整页收住。',
       ],
       focus: { html: 'class="stats-grid"', css: '' },
       hints: [
         '这一步考验的不是排版技巧，而是「信息层级」：同一块内容里，谁最重要、谁次要、谁只是注解，要用字号和颜色说清楚。',
         '数字用 30px + font-weight: 800 + 主色；单位 14px；说明 12px 灰色。三段落差 ≥ 2 倍时，读者一眼就知道「这个数字是什么」。',
         '兜底片段：.stats { padding: var(--space-xl) 0; background: var(--c-surface-2); }；.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-lg); }；.stat { padding: var(--space-lg) var(--space); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); text-align: center; }；.stat .num { display: block; font-size: 30px; font-weight: 800; color: var(--c-primary); }；.stat .unit { font-size: 14px; }；.stat .label { display: block; margin-top: 6px; font-size: 12px; color: var(--c-muted); }',
+        '页脚是全页的「Z 型阅读终点」：用主色深底 + 白字和上面的浅色区块形成收口，中间放全页最后一个 CTA（反色：白底主色字），底部用一条半透明分隔线放版权和链接。它不是装饰 —— 案例的成功标准就靠这个按钮完成。',
       ],
       syntax: [
         { code: 'display: block;', note: '把行内 span 变成块级，数字与单位才会各占一行' },
         { code: 'font-weight: 800;', note: '数字加粗 = 视觉重量，比单纯放更大更有效' },
         { code: 'margin-top: 6px;', note: '说明与数字之间 6px（紧），与相邻卡片 24px（松）' },
         { code: 'background: var(--c-surface-2);', note: '整块浅底：用底色区分区块，比加边框更轻' },
+        { code: 'href="mailto:name@example.com"', note: '点击直接唤起邮件客户端，联系区最朴素的转化入口' },
       ],
       checks: [
         { type: 'count', selector: '.stat', min: 3, label: '至少 3 个统计项' },
@@ -1171,6 +1283,8 @@ img { display: block; max-width: 100%; }
         { type: 'weightMin', selector: '.stat .num', min: 700, label: '数字加粗（font-weight ≥ 700）' },
         { type: 'styleMax', selector: '.stat .label', prop: 'fontSize', max: 14, label: '说明文字 ≤ 14px（最弱一级）' },
         { type: 'bgSet', selector: '.stat', label: '统计项有卡片底色' },
+        { type: 'exists', selector: '.site-footer .footer-cta', label: '页脚里有可点击的联系按钮（转化入口不能只写个标题）' },
+        { type: 'bgSet', selector: '.site-footer', label: '页脚有收口底色（与浅色内容区分开）' },
       ],
       solution: {
         html: `<header class="site-header">
@@ -1191,14 +1305,13 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
-      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="container grid">
-    <div class="portrait" aria-hidden="true">照片</div>
+    <div class="portrait" aria-hidden="true"><span class="mono">李</span></div>
     <div>
       <h2>关于我</h2>
       <p>5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。</p>
@@ -1212,29 +1325,25 @@ img { display: block; max-width: 100%; }
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""></div>
         <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""></div>
         <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""></div>
         <h3>校园导航</h3>
         <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""
-          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""></div>
         <h3>天气可视化</h3>
         <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
@@ -1263,9 +1372,20 @@ img { display: block; max-width: 100%; }
   </div>
 </section>
 
+<!-- ⑥ 页脚 / 联系区：整页的转化收口 -->
 <footer class="site-footer" id="contact">
   <div class="container">
     <h2>一起做点什么？</h2>
+    <p class="footer-lead">新的前端 / 页面布局合作都欢迎，邮件我通常当天回复。</p>
+    <a class="footer-cta" href="mailto:lilei@example.com">给我写邮件 →</a>
+    <div class="footer-meta">
+      <span class="copy">© 2026 李雷</span>
+      <nav>
+        <a href="#">GitHub</a>
+        <a href="mailto:lilei@example.com">邮箱</a>
+        <a href="#">回到顶部 ↑</a>
+      </nav>
+    </div>
   </div>
 </footer>
 `,
@@ -1300,7 +1420,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1314,6 +1442,11 @@ img { display: block; max-width: 100%; }
   color: var(--c-text-soft);
   font-size: 14px;
   font-weight: 600;
+}
+
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
 
 /* ---- 首屏 ---- */
@@ -1347,15 +1480,23 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 头像：固定正方形；图片用 cover 裁切，不拉伸变形，圆角由容器统一收口 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我 ---- */
@@ -1369,15 +1510,30 @@ img { display: block; max-width: 100%; }
   gap: var(--space-xl);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram，本身就是一张正式配图
+   （::before 的内圈细线做出「名片」质感；放真实照片时结构同样适用） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1407,9 +1563,11 @@ img { display: block; max-width: 100%; }
   gap: var(--space-lg);
 }
 
+/* min-width:0 防止图片把卡片撑出网格轨道（窄屏经典坑） */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1420,11 +1578,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1483,6 +1649,64 @@ img { display: block; max-width: 100%; }
   margin-top: 6px;
   font-size: 12px;
   color: var(--c-muted);     /* ③ 辅助：最小 + 最灰 */
+}
+
+/* ---- 页脚 / 联系区：主色深底收口，把视线引向全页最后一个 CTA ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 3.4vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+/* 深底上的 CTA 反色：白底 + 主色字，与 Hero 的主色按钮首尾呼应 */
+.footer-cta {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-cta:hover {
+  background: var(--c-surface-2);
+}
+
+/* 底栏：版权与链接分列两端，一条半透明分隔线把它和 CTA 分开 */
+.footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-meta a:hover {
+  color: #fff;
 }
 `,
       },
@@ -1568,7 +1792,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space);
   height: 60px;
+}
+
+/* Logo 是品牌，比菜单更强一级：深色 + 加粗 */
+.site-header .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
 }
 
 .site-header nav {
@@ -1584,6 +1816,11 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
 }
 
+.site-header nav a:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
 /* ---- 首屏：默认单列（手机优先） ---- */
 .hero {
   padding: var(--space-xl) 0;
@@ -1594,7 +1831,7 @@ img { display: block; max-width: 100%; }
 }
 
 .hero h1 {
-  font-size: clamp(30px, 4vw, 46px);
+  font-size: clamp(30px, 5vw, 46px);
   line-height: 1.2;
   margin-bottom: var(--space);
 }
@@ -1614,15 +1851,25 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.hero .cta:hover {
+  background: var(--c-primary-2);
+}
+
+/* 手机上头像不撑满整屏：限宽 + 居中，到平板再随两栏放开 */
 .hero .avatar {
   aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  width: min(72%, 280px);
+  margin-inline: auto;
+  overflow: hidden;
   border-radius: var(--radius);
   background: linear-gradient(150deg, var(--c-primary-2), var(--c-primary));
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ---- 关于我：默认单列 ---- */
@@ -1632,18 +1879,34 @@ img { display: block; max-width: 100%; }
 
 .about .grid {
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
+/* 名片块：品牌色渐变 + 姓名首字 monogram（手机上同样限宽居中） */
 .about .portrait {
   aspect-ratio: 4 / 5;
+  width: min(78%, 300px);
+  margin-inline: auto;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 14px;
+  background: linear-gradient(160deg, var(--c-primary-2), var(--c-primary));
+  color: #fff;
+}
+
+.about .portrait::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.about .portrait .mono {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .about h2 {
@@ -1673,9 +1936,11 @@ img { display: block; max-width: 100%; }
   gap: var(--space-lg);
 }
 
+/* min-width:0 防止图片把卡片撑出网格轨道（窄屏经典坑） */
 .work-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: var(--space);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -1686,11 +1951,19 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 16 / 10;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--c-surface-2), #ece8e1);
+  overflow: hidden;
+  background: var(--c-surface-2);
+}
+
+.work-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .work-card h3 {
   font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .work-card .meta {
@@ -1751,12 +2024,60 @@ img { display: block; max-width: 100%; }
   color: var(--c-muted);
 }
 
+/* ---- 页脚 / 联系区：手机上元素堆叠居中，CTA 整行宽，好点按 ---- */
+.site-footer {
+  padding: calc(var(--space-xl) * 1.4) 0 var(--space-lg);
+  background: var(--c-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.site-footer h2 {
+  font-size: clamp(24px, 5vw, 32px);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-lead {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: var(--space-lg);
+}
+
+.footer-cta {
+  display: block;
+  padding: 12px 26px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: calc(var(--space-xl) * 1.2);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-meta nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.footer-meta a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* =========================================
  * 移动优先：只用 min-width 逐级「增强」
  * 小屏样式一次都没有被覆盖，只是在被加强
  * ======================================= */
 
-/* 平板起：双栏 */
+/* 平板起：双栏；放开头像/名片宽度，页脚也切回横向排布 */
 @media (min-width: 760px) {
   .hero .grid {
     grid-template-columns: 7fr 5fr;
@@ -1766,6 +2087,23 @@ img { display: block; max-width: 100%; }
   .about .grid {
     grid-template-columns: 4fr 8fr;
     align-items: start;
+    gap: var(--space-xl);
+  }
+
+  .hero .avatar,
+  .about .portrait {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  .footer-cta {
+    display: inline-block;
+  }
+
+  .footer-meta {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
