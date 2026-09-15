@@ -89,8 +89,8 @@ window.DEMOS['d-1-1'] = function (mount) {
  * ------------------------------------------------------- */
 window.DEMOS['d-1-2'] = function (mount) {
   const GROUPS = [
-    { name: 'Basic information', items: ['Name · Li Yue', 'Student ID · 202406', 'Class · Intelligent Science and Technology 1'] },
-    { name: 'Contact details', items: ['Email · li@example.com', 'Phone · 138****0000', 'Address · Qingdao, Shandong'] },
+    { name: 'Basic information', items: ['Name · Alex Chen', 'Student ID · 202406', 'Class · Intelligent Science and Technology 1'] },
+    { name: 'Contact details', items: ['Email · alex@example.com', 'Phone · 138****0000', 'Address · Qingdao, Shandong'] },
   ];
 
   mount.innerHTML = `

@@ -223,7 +223,7 @@ window.DEMOS['d-9-4'] = function (mount) {
       <div class="demo-stage js-stage" style="background:var(--c-surface);padding:0;overflow:hidden;">
         <div class="js-grid" style="display:grid;gap:20px;align-items:center;padding:0 18px;">
           <div>
-            <h4 class="js-title" style="margin:0 0 10px;line-height:1.2;">你好，我是罗辑</h4>
+            <h4 class="js-title" style="margin:0 0 10px;line-height:1.2;">你好，我是李雷</h4>
             <p style="margin:0 0 16px;font-size:14px;color:var(--c-text-soft);">
               专注于 Web 前端与数据可视化，喜欢把复杂的信息整理得清晰好看。
             </p>
@@ -524,7 +524,7 @@ window.DEMOS['d-9-8'] = function (mount) {
                   grid-template-columns:${narrow ? '1fr' : '7fr 5fr'};align-items:center;">
         <div>
           <div style="font-size:${narrow ? 18 : 24}px;font-weight:700;line-height:1.25;margin-bottom:6px;">
-            你好，我是罗辑
+            你好，我是李雷
           </div>
           <div style="font-size:11.5px;color:var(--c-text-soft);margin-bottom:10px;">
             专注于 Web 前端与数据可视化
@@ -560,7 +560,7 @@ window.DEMOS['d-9-8'] = function (mount) {
 
       <div style="background:var(--c-surface-2);padding:14px ${pad}px;border-top:1px solid var(--c-border);
                   text-align:center;font-size:10.5px;color:var(--c-muted);">
-        © 2026 罗辑 · 保持联系
+        © 2026 李雷 · 保持联系
       </div>`;
 
     frame.style.width = w + 'px';

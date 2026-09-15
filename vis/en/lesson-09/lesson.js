@@ -223,7 +223,7 @@ window.DEMOS['d-9-4'] = function (mount) {
       <div class="demo-stage js-stage" style="background:var(--c-surface);padding:0;overflow:hidden;">
         <div class="js-grid" style="display:grid;gap:20px;align-items:center;padding:0 18px;">
           <div>
-            <h4 class="js-title" style="margin:0 0 10px;line-height:1.2;">Hello, I am Luo Ji</h4>
+            <h4 class="js-title" style="margin:0 0 10px;line-height:1.2;">Hi, I’m Alex Chen</h4>
             <p style="margin:0 0 16px;font-size:14px;color:var(--c-text-soft);">
               Focused on web front-end and data visualization; I enjoy turning complex information into something clear and good-looking.
             </p>
@@ -524,7 +524,7 @@ window.DEMOS['d-9-8'] = function (mount) {
                   grid-template-columns:${narrow ? '1fr' : '7fr 5fr'};align-items:center;">
         <div>
           <div style="font-size:${narrow ? 18 : 24}px;font-weight:700;line-height:1.25;margin-bottom:6px;">
-            Hello, I am Luo Ji
+            Hi, I’m Alex Chen
           </div>
           <div style="font-size:11.5px;color:var(--c-text-soft);margin-bottom:10px;">
             Focused on web front-end and data visualization
@@ -560,7 +560,7 @@ window.DEMOS['d-9-8'] = function (mount) {
 
       <div style="background:var(--c-surface-2);padding:14px ${pad}px;border-top:1px solid var(--c-border);
                   text-align:center;font-size:10.5px;color:var(--c-muted);">
-        © 2026 Luo Ji · Get in touch
+        © 2026 Alex Chen · Get in touch
       </div>`;
 
     frame.style.width = w + 'px';
