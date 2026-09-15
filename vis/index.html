@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="i18n.css" />
+  <link rel="stylesheet" href="graph.css" />
   <link rel="alternate" hreflang="en" href="en/index.html" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
@@ -23,6 +24,7 @@
       <nav class="topnav" aria-label="站点导航">
         <a href="#chapters">📚 章节</a>
         <a href="#storyline">🧭 主线</a>
+        <a href="#graph">🧠 图谱</a>
         <a href="#quiz">📝 测验</a>
         <a href="practice.html">🧪 实战</a>
         <a href="#howto">▶️ 使用方式</a>
@@ -256,10 +258,21 @@
       </p>
     </section>
 
+    <!-- ============ 课程知识图谱 ============ -->
+    <section id="graph" class="section">
+      <h2 class="section-title">🧠 课程知识图谱</h2>
+      <p class="section-lead">
+        9 章 38 个小节不是互相孤立的：这里把它们之间的 <strong>包含结构</strong>、<strong>前置知识</strong>
+        与 <strong>「用在案例哪一步」</strong> 画成一张可以点的图。点节点看说明与关联，滚轮缩放、空白处拖拽平移；
+        带虚线圆环的节点（各章）可以展开成下一层。
+      </p>
+      <div id="kg-root" class="kg"></div>
+    </section>
+
     <!-- ============ 使用方式 ============ -->
     <section id="howto" class="section">
       <h2 class="section-title">▶️ 使用方式</h2>
-      <p class="section-lead">这是一个零依赖的静态站点，不需要安装任何东西。</p>
+      <p class="section-lead">这是一个纯静态站点，不需要安装任何东西；唯一的第三方库（d3-force）也已内置。</p>
 
       <div class="howto">
         <div class="howto-card">
@@ -288,7 +301,7 @@
       <div class="about">
         <div class="about-item">
           <h4>🛠️ 技术栈</h4>
-          <p>零依赖、零构建：纯 <strong>HTML + CSS + JavaScript（ES Modules）</strong>。不依赖任何框架，也不需要 npm 打包。</p>
+          <p>零构建：纯 <strong>HTML + CSS + JavaScript（ES Modules）</strong>。不依赖任何框架，也不需要 npm 打包；唯一的第三方库（力导向用的 d3-force，17 KB）已内置在 <code>vendor/</code>。</p>
         </div>
         <div class="about-item">
           <h4>🎯 设计原则</h4>
@@ -307,12 +320,19 @@
   </main>
 
   <footer class="footer">
-    <p>© 2026 页面布局教学平台 · 零依赖 · 纯 HTML + CSS + JavaScript</p>
+    <p>© 2026 页面布局教学平台 · 纯静态 · HTML + CSS + JavaScript</p>
     <p class="footer-meta">配色令牌化 · 响应式 · 可部署于 GitHub Pages</p>
   </footer>
 
   <script src="i18n.js"></script>
   <script src="quiz-data.js"></script>
   <script src="quiz.js"></script>
+  <script src="graph-data.js"></script>
+  <!-- 力导向布局用 d3-force（本地内置，共 17 KB）：顺序必须是 quadtree → dispatch → timer → force -->
+  <script src="vendor/d3-quadtree.min.js"></script>
+  <script src="vendor/d3-dispatch.min.js"></script>
+  <script src="vendor/d3-timer.min.js"></script>
+  <script src="vendor/d3-force.min.js"></script>
+  <script src="graph.js"></script>
 </body>
 </html>

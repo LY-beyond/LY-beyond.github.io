@@ -1,0 +1,370 @@
+/* =========================================================
+   graph.css —— 课程知识图谱样式（门户用）
+   --------------------------------------------------------
+   配色/圆角/间距/动效全部走 tokens.css 的设计令牌：
+   暗色模式与整体换肤自动跟随，本文件不出现任何硬编码色值。
+   SVG 内部的颜色由 graph.js 读令牌后写成「表现属性」（为了导出 PNG 不掉色）。
+   ========================================================= */
+
+.kg {
+  margin-top: var(--space);
+}
+
+/* ---------------- 工具栏 ---------------- */
+.kg-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.kg-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.kg-crumb-sep { color: var(--c-muted); }
+
+.kg-crumb--cur { color: var(--c-text); font-weight: 800; }
+
+.kg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kg-gap { width: 4px; }
+
+.kg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  color: var(--c-text-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--c-surface);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--t-control);
+}
+
+.kg-btn:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+.kg-btn:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+.kg-btn--icon { width: 36px; padding: 0; font-size: 15px; }
+
+.kg-btn--primary {
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+}
+
+.kg-btn--primary:hover {
+  color: var(--c-on-primary);
+  filter: brightness(1.06);
+}
+
+.kg-btn--flat {
+  border-style: dashed;
+  color: var(--c-text-soft);
+  cursor: default;
+}
+
+.kg-btn--flat:hover { border-color: var(--c-border); color: var(--c-text-soft); }
+
+/* ---------------- 主体：图 + 侧栏 ---------------- */
+.kg-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 304px;
+  gap: var(--space);
+  align-items: start;
+}
+
+.kg-stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+}
+
+.kg-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 960 / 560;   /* 与 viewBox 同比例：坐标换算才准确 */
+  touch-action: none;        /* 交给 pointer 事件做拖拽/平移 */
+  cursor: grab;
+}
+
+.kg-svg.is-panning { cursor: grabbing; }
+
+.kg-node { cursor: grab; }
+.kg-node:active { cursor: grabbing; }
+
+.kg-node:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 3px;
+}
+
+.kg-stats {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--c-surface) 86%, transparent);
+  border: 1px solid var(--c-border);
+  pointer-events: none;
+}
+
+/* 列表视图：图形之外的等价入口（键盘/读屏/手机） */
+.kg-list {
+  max-height: 520px;
+  overflow: auto;
+  padding: var(--space-sm);
+}
+
+.kg-list-head {
+  margin: 0 0 4px;
+  color: var(--c-text);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.kg-list-hint {
+  margin: 0 0 var(--space-sm);
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.kg-list-items { display: grid; gap: 4px; }
+
+.kg-list-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.kg-list-item:hover {
+  border-color: var(--c-border);
+  background: var(--c-surface-2);
+}
+
+.kg-list-item:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 1px;
+}
+
+.kg-list-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.kg-list-name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+.kg-list-cat,
+.kg-list-rel { color: var(--c-text-soft); font-size: 12px; white-space: nowrap; }
+
+/* ---------------- 侧栏：图例 + 详情 ---------------- */
+.kg-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.kg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kg-legend-title { color: var(--c-muted); font-weight: 800; }
+
+.kg-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+
+.kg-legend-item svg { width: 34px; height: 10px; display: block; }
+
+.kg-detail {
+  padding: var(--space-sm) var(--space);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--c-primary);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+}
+
+.kg-detail-empty { margin: 0; color: var(--c-muted); font-size: 13px; line-height: 1.7; }
+
+.kg-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--kg-c, var(--c-primary));
+  font-size: 11.5px;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--kg-c, var(--c-primary)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kg-c, var(--c-primary)) 34%, transparent);
+}
+
+.kg-detail-title {
+  margin: 0 0 6px;
+  color: var(--c-text);
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.kg-detail-desc {
+  margin: 0 0 var(--space-sm);
+  color: var(--c-text-soft);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.kg-detail-sub {
+  margin: 0 0 5px;
+  color: var(--c-text-soft);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.kg-rels {
+  display: grid;
+  gap: 3px;
+  margin-bottom: var(--space-sm);
+}
+
+.kg-rel {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.kg-rel:hover { border-color: var(--c-border); background: var(--c-surface-2); }
+
+.kg-rel:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+
+.kg-rel-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.kg-rel-name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+.kg-rel-tag { color: var(--c-text-soft); font-size: 11.5px; white-space: nowrap; }
+
+.kg-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--space-sm);
+}
+
+.kg-hint {
+  margin: var(--space-sm) 0 0;
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.kg-error {
+  margin: 0;
+  padding: var(--space-sm) var(--space);
+  border: 1px dashed var(--c-danger);
+  border-radius: var(--radius);
+  color: var(--c-danger);
+  font-size: 13.5px;
+  background: var(--c-surface);
+}
+
+/* 读屏专用（状态播报） */
+.kg-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 980px) {
+  .kg-body { grid-template-columns: minmax(0, 1fr); }
+  .kg-list { max-height: none; }
+}
+
+@media (max-width: 620px) {
+  .kg-actions { width: 100%; }
+  .kg-btn { flex: 1 1 auto; }
+  .kg-btn--icon { flex: 0 0 36px; }
+  .kg-list-item { grid-template-columns: 10px minmax(0, 1fr); }
+  .kg-list-cat, .kg-list-rel { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kg-btn, .kg-list-item, .kg-rel { transition: none; }
+}

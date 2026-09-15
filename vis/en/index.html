@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../tokens.css" />
   <link rel="stylesheet" href="../styles.css" />
   <link rel="stylesheet" href="../i18n.css" />
+  <link rel="stylesheet" href="../graph.css" />
   <link rel="alternate" hreflang="zh-CN" href="../index.html" />
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 </head>
@@ -23,6 +24,7 @@
       <nav class="topnav" aria-label="Site navigation">
         <a href="#chapters">📚 Chapters</a>
         <a href="#storyline">🧭 Storyline</a>
+        <a href="#graph">🧠 Graph</a>
         <a href="#quiz">📝 Quiz</a>
         <a href="../practice.html">🧪 Lab</a>
         <a href="#howto">▶️ How to use</a>
@@ -259,10 +261,22 @@
       </p>
     </section>
 
+    <!-- ============ Course knowledge graph ============ -->
+    <section id="graph" class="section">
+      <h2 class="section-title">🧠 Course knowledge graph</h2>
+      <p class="section-lead">
+        The 9 chapters and 38 sections are not isolated: this map draws the <strong>part-of structure</strong>,
+        the <strong>prerequisites</strong> and the <strong>“which case step uses it”</strong> links as one
+        interactive graph. Click a node for its description and relations, scroll to zoom, drag the background
+        to pan; nodes with a dashed ring (each chapter) expand into the next layer.
+      </p>
+      <div id="kg-root" class="kg"></div>
+    </section>
+
     <!-- ============ How to use ============ -->
     <section id="howto" class="section">
       <h2 class="section-title">▶️ How to use this site</h2>
-      <p class="section-lead">This is a zero-dependency static site — there is nothing to install.</p>
+      <p class="section-lead">This is a plain static site — there is nothing to install; the one third-party library (d3-force) is vendored.</p>
 
       <div class="howto">
         <div class="howto-card">
@@ -291,7 +305,7 @@
       <div class="about">
         <div class="about-item">
           <h4>🛠️ Tech stack</h4>
-          <p>Zero dependencies, zero build: plain <strong>HTML + CSS + JavaScript (ES Modules)</strong>. No framework, and no npm bundling.</p>
+          <p>Zero build: plain <strong>HTML + CSS + JavaScript (ES Modules)</strong>. No framework and no npm bundling; the one third-party library (d3-force, 17 KB, for the force layout) is vendored in <code>vendor/</code>.</p>
         </div>
         <div class="about-item">
           <h4>🎯 Design principle</h4>
@@ -310,7 +324,7 @@
   </main>
 
   <footer class="footer">
-    <p>© 2026 Page Layout Academy · Zero dependencies · Plain HTML + CSS + JavaScript</p>
+    <p>© 2026 Page Layout Academy · Plain static · HTML + CSS + JavaScript</p>
     <p class="footer-meta">Token-driven colors · Responsive · Deployable to GitHub Pages</p>
   </footer>
 
@@ -318,5 +332,13 @@
   <script src="quiz-data.js"></script>
   <script src="quiz-ui.js"></script>
   <script src="../quiz.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="graph-ui.js"></script>
+  <!-- Force layout uses d3-force (vendored, 17 KB total): quadtree → dispatch → timer → force -->
+  <script src="../vendor/d3-quadtree.min.js"></script>
+  <script src="../vendor/d3-dispatch.min.js"></script>
+  <script src="../vendor/d3-timer.min.js"></script>
+  <script src="../vendor/d3-force.min.js"></script>
+  <script src="../graph.js"></script>
 </body>
 </html>

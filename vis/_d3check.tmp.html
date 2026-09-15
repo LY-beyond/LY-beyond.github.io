@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh">
+<head><meta charset="utf-8"><title>d3-force 加载自检（临时）</title></head>
+<body>
+<script src="vendor/d3-quadtree.min.js"></script>
+<script src="vendor/d3-dispatch.min.js"></script>
+<script src="vendor/d3-timer.min.js"></script>
+<script src="vendor/d3-force.min.js"></script>
+<script>
+/* 临时自检：确认四个 UMD 文件在浏览器里挂到同一个 window.d3 上，且 d3-force 可用、结果确定 */
+window.__d3check = (function () {
+  try {
+    if (typeof window.d3 === 'undefined') return { ok: false, why: 'window.d3 未定义（UMD 未挂载）' };
+    const need = ['quadtree', 'dispatch', 'timer', 'forceSimulation', 'forceLink',
+      'forceManyBody', 'forceCenter', 'forceCollide', 'forceX', 'forceY'];
+    const missing = need.filter((k) => typeof window.d3[k] === 'undefined');
+    if (missing.length) return { ok: false, why: '缺少：' + missing.join(', ') };
+
+    const run = () => {
+      const nodes = Array.from({ length: 12 }, (_, i) => ({ id: 'n' + i }));
+      const links = nodes.slice(1).map((n, i) => ({ source: 'n' + i, target: n.id }));
+      const sim = window.d3.forceSimulation(nodes)
+        .force('link', window.d3.forceLink(links).id((d) => d.id).distance(90))
+        .force('charge', window.d3.forceManyBody().strength(-600))
+        .force('center', window.d3.forceCenter(480, 280))
+        .force('collide', window.d3.forceCollide(22))
+        .stop();
+      for (let i = 0; i < 300; i++) sim.tick();
+      return nodes.map((n) => Math.round(n.x) + ',' + Math.round(n.y)).join(' ');
+    };
+
+    const a = run();
+    const b = run();
+    const hasNaN = /NaN/.test(a);
+    const span = (() => {
+      const xs = a.split(' ').map((p) => +p.split(',')[0]);
+      const ys = a.split(' ').map((p) => +p.split(',')[1]);
+      return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)].join('×');
+    })();
+
+    return {
+      ok: true,
+      d3版本注释: (document.querySelector('script[src*="d3-force"]') ? 'd3-force@3' : '?'),
+      可用方法数: need.length - missing.length,
+      确定性: a === b,
+      含NaN: hasNaN,
+      布局跨度: span,
+      首次位置: a.slice(0, 60),
+    };
+  } catch (e) {
+    return { ok: false, why: '抛错：' + e.message };
+  }
+}());
+
+/* 把结果写进 DOM —— dump-dom 才能带出来 */
+const pre = document.createElement('pre');
+pre.id = 'out';
+pre.textContent = JSON.stringify(window.__d3check);
+document.body.appendChild(pre);
+</script>
+</body>
+</html>
