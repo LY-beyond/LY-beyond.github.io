@@ -133,6 +133,7 @@
       soft: token('--c-text-soft', '#4b5563'),
       muted: token('--c-muted', '#9ca3af'),
       line: token('--c-border', '#d1d5db'),
+      bg: token('--c-bg', '#faf9f7'),
       surface: token('--c-surface', '#ffffff'),
       surface2: token('--c-surface-2', '#f3f4f6'),
     };
@@ -342,6 +343,14 @@
     labelFontSize: 13,         // 与 renderSvg 里的标签字号一致
     ticks: 320,                // 常规视图松弛轮数
     ticksLarge: 460,           // 全图（> 40 节点）多跑几轮
+    /* 全图标签画在节点「正下方」，51 个长名字不可能完全不碰，
+       策略是：小字号 + 底色描边保证叠住也能读 + 碰撞只给部分宽度、
+       不把整图撑散；初始 fit 下偏紧凑，滚轮放大后清晰。 */
+    fullLabelFsBig: 11,        // 骨架节点（篇章/章节）字号基数
+    fullLabelFsSmall: 9.5,     // 叶节点（知识点/步骤/实战）字号基数
+    fullLabelHalfCap: 24,      // 全图标签参与碰撞的半宽上限
+    fullLabelBandX: 44,        // 全图归一化时右侧留白（标签在下方，只需防贴边）
+    fullLabelBandY: 22,        // 全图归一化时下方给标签留的空白带
   };
 
   function nodeRadius(n, view) {
@@ -353,17 +362,34 @@
 
   /* 估算标签半宽：中日韩字符约 1 em，拉丁字符约 0.55 em。
      用于让 d3-force 的 collide 也给"标签"留出位置（否则标签会压住相邻节点）。 */
-  function labelWidthOf(name) {
+  function labelWidthOf(name, fs) {
+    fs = fs || SIM.labelFontSize;
     var w = 0;
     for (var i = 0; i < name.length; i++) {
       w += /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/.test(name[i])
-        ? SIM.labelFontSize * 1.02
-        : SIM.labelFontSize * 0.56;
+        ? fs * 1.02
+        : fs * 0.56;
     }
     return Math.min(w, 230);
   }
   function labelHalfWidth(name) {
     return Math.min(labelWidthOf(name) / 2, SIM.labelCap);
+  }
+
+  /* 全图标签宽度：按全图小字号估算，只取一个有上限的半宽参与碰撞
+     （给足全宽会把 51 节点撑到极小；部分宽度足以让同排节点错开）。 */
+  function fullLabelHalfWidth(name) {
+    return Math.min(labelWidthOf(name, SIM.fullLabelFsSmall) / 2, SIM.fullLabelHalfCap);
+  }
+
+  /* 全图标签是否为骨架节点：篇章 / 章节名字短、节点大，用大字加粗 */
+  function isBackboneCat(cat) { return cat === 'part' || cat === 'chapter'; }
+
+  /* 全图标签字号：骨架 9.5–11.5，叶节点 8.5–10，跟随归一化缩放 */
+  function fullLabelFs(big) {
+    var base = big ? SIM.fullLabelFsBig : SIM.fullLabelFsSmall;
+    var lo = big ? 9.5 : 8.5, hi = big ? 11.5 : 10;
+    return Math.max(lo, Math.min(hi, base * (state.fitK || 1)));
   }
 
   /* =======================================================
@@ -385,7 +411,7 @@
   function renderSvg(view) {
     var pos = state.pos;
     var tk = palette().tk;
-    var isFull = view.nodes.length > 40;      // 全图模式：小节点 + 默认隐藏标签
+    var isFull = view.nodes.length > 40;      // 全图模式：小节点 + 下方紧凑标签
     var fs = labelFs();
     var out = ['<g id="kg-world" transform="' + worldTransform() + '">'];
 
@@ -406,8 +432,10 @@
         ' opacity="' + (isFull ? 0.45 : 0.7) + '"/>');
     });
 
-    /* ② 节点。节点只负责被拖动，没有点击/选中语义：
-       不加 role/tabindex，全图模式标签隐藏（节点太小，标签会糊成一片）。 */
+    /* ② 节点。节点只负责被拖动，没有点击/选中语义：不加 role/tabindex。
+       普通视图标签在节点右侧；全图标签在节点正下方——小字号分层（篇章/章节
+       加粗加大），并给文字描一圈底色（paint-order: stroke），即使压着连线或
+       彼此轻微重叠也读得清；悬停时无关节点整体淡出，局部关系一目了然。 */
     view.nodes.forEach(function (n) {
       var p = pos[n.id];
       if (!p) return;
@@ -418,7 +446,14 @@
         ' aria-label="' + esc(n.name + '（' + catLabel + '，' + deg + ' 条关联）') + '">');
       out.push('<circle class="kg-node-main" cx="' + r1(p.x) + '" cy="' + r1(p.y) + '" r="' + r1(p.r) + '" fill="' + esc(c) + '"' +
         ' fill-opacity="0.92" stroke="' + esc(tk.surface) + '" stroke-width="2"/>');
-      if (!isFull) {
+      if (isFull) {
+        var big = isBackboneCat(n.cat);
+        var ffs = fullLabelFs(big);
+        out.push('<text x="' + r1(p.x) + '" y="' + r1(p.y + p.r + ffs + 2) + '"' +
+          ' text-anchor="middle" font-size="' + r1(ffs) + '" font-weight="' + (big ? 700 : 600) + '"' +
+          ' paint-order="stroke" stroke="' + esc(tk.bg) + '" stroke-width="' + (big ? 3.4 : 2.8) + '"' +
+          ' stroke-linejoin="round" fill="' + esc(big ? tk.text : tk.soft) + '">' + esc(n.name) + '</text>');
+      } else {
         out.push('<text x="' + r1(p.x + p.r + fs * 0.6) + '" y="' + r1(p.y + fs * 0.35) + '"' +
           ' font-size="' + r1(fs) + '" font-weight="600"' +
           ' fill="' + esc(tk.soft) + '">' + esc(n.name) + '</text>');
@@ -589,8 +624,14 @@
       ref.main.setAttribute('cy', r1(y));
       if (ref.text) {
         var fs2 = parseFloat(ref.text.getAttribute('font-size')) || 13;
-        ref.text.setAttribute('x', r1(x + p.r + fs2 * 0.6));
-        ref.text.setAttribute('y', r1(y + fs2 * 0.35));
+        if (VIEWS[state.viewId].nodes.length > 40) {
+          /* 全图标签：节点正下方居中 */
+          ref.text.setAttribute('x', r1(x));
+          ref.text.setAttribute('y', r1(y + p.r + fs2 + 2));
+        } else {
+          ref.text.setAttribute('x', r1(x + p.r + fs2 * 0.6));
+          ref.text.setAttribute('y', r1(y + fs2 * 0.35));
+        }
       }
     }
     var adj = viewIndex(VIEWS[state.viewId]).adj[id] || [];
@@ -791,7 +832,8 @@
 
     /* ① 确定性初值：固定种子撒在圆环上（d3-force 在此基础上松弛）
           —— 这样"同一视图每次打开位置一致"，刷新不跳、截图可复现。 */
-    var showLabels = nodes.length <= 40;      // 全图不显示标签，也就不必给标签留位
+    /* 普通视图标签在节点右侧、给全半宽；全图标签在节点下方、只给有上限的部分半宽 */
+    var fullLayout = nodes.length > 40;
     var simNodes = nodes.map(function (n, i) {
       var ang = (i / nodes.length) * Math.PI * 2 + rnd() * 0.5;
       var r = nodeRadius(n, view);
@@ -800,7 +842,7 @@
       pos[n.id] = { x: x, y: y, r: r };
       return {
         id: n.id, r: r, x: x, y: y,
-        labelHalf: showLabels ? labelHalfWidth(n.name) : 0,
+        labelHalf: fullLayout ? fullLabelHalfWidth(n.name) : labelHalfWidth(n.name),
       };
     });
 
@@ -837,22 +879,24 @@
     return pos;
   }
 
-  /* 把布局结果等比缩放到画布内（右侧给标签留位）。
+  /* 把布局结果等比缩放到画布内（普通视图右侧给标签留位；全图标签在节点下方，
+     给下方留位、右侧只防贴边）。
      注意：**位置、半径、字号都乘同一个 k** —— 单位统一之后，
      d3-force 里按标签宽度算出来的间距才是准的。 */
   function fitIntoCanvas(view, pos) {
+    var isFull = view.nodes.length > 40;
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     view.nodes.forEach(function (n) {
       var p = pos[n.id];
       if (!p) return;
       var pad = n.drillTo ? 6 : 0;
-      /* 右侧只预留一块"标签带"（不是每条标签的完整宽度）：
+      /* 只预留一块"标签带"（不是每条标签的完整宽度）：
          图形本身接近圆形，宽画布左右两侧本来就有余量，标签正好落进去。
          若按最长标签全宽预留，会把整个图撑开、缩放变小、字号被压小。 */
       minX = Math.min(minX, p.x - p.r - pad);
-      maxX = Math.max(maxX, p.x + p.r + pad + SIM.labelBand);
+      maxX = Math.max(maxX, p.x + p.r + pad + (isFull ? SIM.fullLabelBandX : SIM.labelBand));
       minY = Math.min(minY, p.y - p.r - pad);
-      maxY = Math.max(maxY, p.y + p.r + pad);
+      maxY = Math.max(maxY, p.y + p.r + pad + (isFull ? SIM.fullLabelBandY : 0));
     });
     var spanX = Math.max(maxX - minX, 1), spanY = Math.max(maxY - minY, 1);
     var k = Math.min((W - 60) / spanX, (H - 60) / spanY, 1.5);

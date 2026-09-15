@@ -18,7 +18,16 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const VIS = fileURLToPath(new URL('.', import.meta.url));
-const strip = (s) => s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+/* 去标签 + 解码常见 HTML 实体（门户卡片标题里可能写 &amp; 等，
+   不做解码的话数据里会带上字面 &amp;，图谱上就显示成 "&amp;"）。 */
+const decodeEntities = (s) => s
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"')
+  .replace(/&#39;/g, "'")
+  .replace(/&nbsp;/g, ' ')
+  .replace(/&amp;/g, '&');   // &amp; 必须最后解，避免二次解码
+const strip = (s) => decodeEntities(s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim());
 const firstSentence = (s, cap = 96) => {
   const m = s.match(/^[\s\S]*?[。！？.!?]/);
   const t = (m ? m[0] : s).trim();

@@ -142,7 +142,7 @@ window.KG_DATA = {
         },
         {
           "id": "c8",
-          "name": "Positioning, Stacking &amp; Responsive Design",
+          "name": "Positioning, Stacking & Responsive Design",
           "cat": "chapter",
           "desc": "Take elements out of the document flow, control stacking order, and make one codebase fit everything from phones to large screens.",
           "route": "lesson-08/",
@@ -1009,7 +1009,7 @@ window.KG_DATA = {
       ]
     },
     "v-8": {
-      "title": "Positioning, Stacking &amp; Responsive Design",
+      "title": "Positioning, Stacking & Responsive Design",
       "path": [
         "Knowledge graph",
         "Implementation (Ch. 5–8)",
@@ -1018,7 +1018,7 @@ window.KG_DATA = {
       "nodes": [
         {
           "id": "c8",
-          "name": "Positioning, Stacking &amp; Responsive Design",
+          "name": "Positioning, Stacking & Responsive Design",
           "cat": "chapter",
           "desc": "Take elements out of the document flow, control stacking order, and make one codebase fit everything from phones to large screens.",
           "route": "lesson-08/"
@@ -1296,7 +1296,7 @@ window.KG_DATA = {
         },
         {
           "id": "c8",
-          "name": "Positioning, Stacking &amp; Responsive Design",
+          "name": "Positioning, Stacking & Responsive Design",
           "cat": "chapter",
           "desc": "Take elements out of the document flow, control stacking order, and make one codebase fit everything from phones to large screens.",
           "route": "lesson-08/",
