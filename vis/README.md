@@ -87,6 +87,8 @@ Visualization/
 ├── graph-data.js           # ★ 知识图谱数据（中，从站点自身抽取）
 ├── graph-check.mjs         # 开发自检：图谱结构/悬空边/route 落地/文案表逐键对齐
 ├── graph-gen.mjs           # 开发工具：从站点自身重新生成图谱数据（改完页面跑一次）
+├── audit.mjs               # 开发自检：把 22 个页面在 Chrome 里逐页打开，查 JS 报错与溢出
+├── graph-verify.mjs        # 开发自检：图谱真机验证（布局确定性 / 防重叠 / 交互 / 拖拽）
 ├── vendor/                 # 第三方库（本地内置，不走 CDN）
 │   ├── README.md           #   ↑ 版本 / 来源 / 许可 / 加载顺序
 │   ├── d3-quadtree.min.js  #   d3-force 的运行时依赖，必须按顺序加载
@@ -346,7 +348,11 @@ window.DEMOS['d-X-Y'] = function (mount) {
 - **图谱数据是从正文抽出来的**：`graph-data.js` 的节点描述取自各章 `h2 + 讲解面板首句`，章节名取自门户卡片墙，「用于案例」的边直接来自各章 case-note 里指向 `lesson-09` / `practice` 的真实链接（中英各一份，英文版从英文页面抽取）。所以图谱不可能与正文脱节；`node graph-check.mjs` 会校验中英逐视图/逐节点/逐边一致、无悬空边、每个 `route` 的文件与锚点都真实存在。**改完页面后跑一次 `node graph-gen.mjs` 重新生成即可**（它是幂等的，内容没变就不会改文件）。
 - **图谱的「全图」视图是运行时合并出来的**：由 root + 9 个章视图去重合并，不在数据里再存第三份 —— 少一份数据就少一处不一致。
 - **图谱颜色全部读自 tokens.css**：渲染时把设计令牌写成 SVG 的**表现属性**（而不是 CSS 类），这样①暗色模式自动跟随、②**导出 PNG 不会掉色**（外部 CSS 不会被序列化）。
-- **改动后跑一遍自检**：`node parity-check.mjs && node link-check.mjs && node quiz-check.mjs && node practice-check.mjs && node graph-check.mjs`（PowerShell 5.1 下把 `&&` 换成 `;`）。五个脚本都不联网、不写文件，纯静态检查。
+- **改动后跑一遍自检**：`node parity-check.mjs && node link-check.mjs && node quiz-check.mjs && node practice-check.mjs && node graph-check.mjs`（PowerShell 5.1 下把 `&&` 换成 `;`）。这五个脚本都不联网、不写文件、毫秒级返回，属于**纯静态**检查。
+- **改动图谱或布局时，再跑一次"真机自检"**（可选，需要 Chrome 与本地服务器）：
+  - `node graph-verify.mjs` —— 图谱专项：d3-force 是否加载、**两次加载的节点坐标是否完全一致**（布局确定性）、节点最小间隙（防重叠）、选中/钻取/全图/列表等交互、以及用真实鼠标事件拖拽后是否重新平衡；
+  - `node audit.mjs` —— 全站体检：把 22 个页面在 Chrome 里逐页打开，查 JS 异常 / console.error / 资源 404，以及 1440px 与 375px 两档宽度下是否横向溢出。
+  - 两者都要先起本地服务器：`python -m http.server 8099`；端口或浏览器不同可用 `SITE_URL` / `CHROME` / `CDP_PORT` 环境变量覆盖。它们不写文件、不联网（除本机），失败时退出码非 0，便于接进 CI。
 - **中英双语**：英文版在 `en/`，与中文版**同构**；`node parity-check.mjs` 逐页校验两版结构一致。
 - **切换器刻意用普通 script**：`i18n.js` 不用 ES Module —— 这样即使用 `file://` 直接打开（module 会被浏览器 CORS 拦截），**语言切换仍然可用**。
 - **答题系统同样用普通 script**：`quiz-data.js` / `quiz.js` 沿用同一取舍，门户首页双击打开也能答题。
