@@ -40,7 +40,14 @@
     btnModeList: '☰ 列表',
     stats: '{nodes} 个节点 · {links} 条关系',
     legend: '关系图例',
-    hint: '按住节点可自由拖动（松手即停在放下的位置）· 悬停看邻接关系 · 滚轮缩放 · 空白处拖拽平移',
+    hint: '悬停看邻接关系 · 单击选中 · 双击（或选中后点「展开子图」）钻入下一层 · 滚轮缩放 · 空白处拖拽平移',
+    detailEmpty: '点击图中任意节点，这里会显示它的说明与关联。',
+    relationIn: '被这些节点指向',
+    relationOut: '指向这些节点',
+    noRelation: '暂无关联',
+    btnOpen: '进入章节',
+    btnDrill: '展开子图',
+    btnNoOpen: '此节点无对应页面',
     listHead: '当前视图的节点清单（可直接跳转）',
     listHint: '列表视图便于键盘浏览与读屏，也是手机上的高效入口。',
     fullTitle: '完整图谱',
@@ -48,7 +55,9 @@
     d3Error: 'd3-force 未加载：请确认 vendor/ 下的 d3-quadtree / d3-dispatch / d3-timer / d3-force 四个文件已按顺序引入。',
     exported: '已导出 PNG',
     exportFailed: '导出失败，请改用截图工具',
+    a11yPicked: '已选中 {name}，{rel} 条关联',
     a11yView: '当前视图：{title}，{nodes} 个节点',
+    a11yDrill: '已展开「{name}」的子图',
   };
   var UI = (window.KG_UI && typeof window.KG_UI === 'object') ? window.KG_UI : {};
 
@@ -117,14 +126,8 @@
   /* =======================================================
    * 三、颜色：一律从 tokens.css 的设计令牌读
    * ===================================================== */
-  /* getComputedStyle 本身不便宜：整次会话只取一次，主题切换时清缓存重取 */
-  var _cs = null;
-  function cs() {
-    if (!_cs) _cs = getComputedStyle(document.documentElement);
-    return _cs;
-  }
   function token(name, fallback) {
-    var v = cs().getPropertyValue(name).trim();
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return v || fallback;
   }
   function tokens() {
@@ -138,29 +141,16 @@
     };
   }
   var CAT_TOKEN = { part: '--c-primary', chapter: '--c-info', section: '--c-accent', step: '--c-primary', lab: '--c-accent' };
-  function resolveCatColor(cat) {
+  function catColor(cat) {
     var meta = CAT[cat] || {};
     var fromData = meta.color ? '--' + meta.color : '';
     var name = /^--c-/.test(fromData) ? fromData : (CAT_TOKEN[cat] || '--c-info');
     return token(name, '#64748b');
   }
   var REL_TOKEN = { 'part-of': '--c-border', prereq: '--c-info', 'used-in': '--c-accent' };
-
-  /* 调色板缓存：一次渲染里每个类别（≤5 个）/ 关系（3 种）只解析一次令牌。
-     若不缓存，全图视图每帧要对 51 个节点 + 121 条边各调一次
-     getComputedStyle().getPropertyValue() —— 那是渲染里最贵的调用之一。 */
-  var paletteCache = null;
-  function palette() {
-    if (paletteCache) return paletteCache;
-    var cats = {}, rels = {};
-    DATA.categories.forEach(function (c) { cats[c.id] = resolveCatColor(c.id); });
-    DATA.relations.forEach(function (r) { rels[r.id] = token(REL_TOKEN[r.id] || '--c-border', '#cbd5e1'); });
-    paletteCache = { tk: tokens(), cats: cats, rels: rels };
-    return paletteCache;
+  function relColor(rel) {
+    return token(REL_TOKEN[rel] || '--c-border', '#cbd5e1');
   }
-  function catColor(cat) { return palette().cats[cat] || token('--c-info', '#64748b'); }
-  function relColor(rel) { return palette().rels[rel] || token('--c-border', '#cbd5e1'); }
-  function resetPalette() { paletteCache = null; _cs = null; }
   function relDash(rel) {
     var style = (REL[rel] || {}).style;
     return style === 'dashed' ? '7 5' : style === 'dotted' ? '2 5' : '';
@@ -175,16 +165,15 @@
    * ===================================================== */
   var state = {
     viewId: DATA.defaultView,
-    hist: [],
+    sel: null,      // 选中节点 id
+    hist: [],       // 钻取历史
     k: 1, tx: 0, ty: 0,
     mode: 'graph',
     pos: null,
     drag: null,
     pan: null,
-    sim: null,        // d3-force 模拟实例（仅初始布局时跑一次；拖动后节点钉住，不再重平衡）
+    sim: null,        // d3-force 模拟实例（拖动松手后重新平衡用）
     simNodes: null,   // 模拟里的节点（带 x/y/vx/vy/fx/fy）
-    nodeEls: null,    // 渲染引用表：id → { g, main, text }
-    edgeEls: null,    // 渲染引用表：边索引（对应 view.links）→ { el, from, to, rel }
   };
 
   root.className = 'kg';
@@ -211,6 +200,7 @@
       '</div>' +
       '<aside class="kg-side">' +
         '<div class="kg-legend" id="kg-legend"></div>' +
+        '<div class="kg-detail" id="kg-detail"></div>' +
       '</aside>' +
     '</div>' +
     '<p class="kg-hint">' + esc(t('hint')) + '</p>' +
@@ -218,49 +208,30 @@
 
   var el = {
     svg: document.getElementById('kg-svg'),
-    world: null,       // 当前 #kg-world 元素（每次重渲染后刷新引用）
+    world: null,
     stage: document.getElementById('kg-stage'),
     crumbs: document.getElementById('kg-crumbs'),
     stats: document.getElementById('kg-stats'),
     legend: document.getElementById('kg-legend'),
+    detail: document.getElementById('kg-detail'),
     list: document.getElementById('kg-list'),
     live: document.getElementById('kg-live'),
   };
 
   function announce(msg) { el.live.textContent = msg; }
 
-  /* 节点查询：视图内按 id 找节点（≤51 个，线性查找足够；加缓存反而增加失配成本） */
+  /* 节点查询：视图内按 id 找节点 / 找与某节点相连的边 */
   function nodeOf(view, id) {
     for (var i = 0; i < view.nodes.length; i++) if (view.nodes[i].id === id) return view.nodes[i];
     return null;
   }
-
-  /* 每视图只建一次的邻接索引：度数 + 「节点 → 相邻边在 view.links 里的下标」。
-     渲染度数、悬停高亮、拖拽更新都走它，避免每次对全部边做 filter ——
-     否则光渲染一张全图就是 O(节点数 × 边数) 次比较，拖拽时每一帧还要再来一遍。 */
-  function viewIndex(view) {
-    if (view._idx) return view._idx;
-    var deg = {}, adj = {};
-    view.nodes.forEach(function (n) { deg[n.id] = 0; adj[n.id] = []; });
-    view.links.forEach(function (l, i) {
-      if (adj[l.from] && adj[l.to]) {
-        deg[l.from]++;
-        deg[l.to]++;
-        adj[l.from].push(i);
-        adj[l.to].push(i);
-      }
-    });
-    return (view._idx = { deg: deg, adj: adj });
+  function edgesOf(view, id) {
+    return view.links.filter(function (l) { return l.from === id || l.to === id; });
   }
-  function degOf(view, id) { return viewIndex(view).deg[id] || 0; }
   function neighborIds(view, id) {
-    var set = {}, adj = viewIndex(view).adj[id] || [];
+    var set = {};
     set[id] = 1;
-    for (var i = 0; i < adj.length; i++) {
-      var l = view.links[adj[i]];
-      set[l.from] = 1;
-      set[l.to] = 1;
-    }
+    edgesOf(view, id).forEach(function (l) { set[l.from] = 1; set[l.to] = 1; });
     return set;
   }
 
@@ -295,10 +266,10 @@
         var inner = '<span class="kg-list-dot" style="background:' + esc(catColor(n.cat)) + '"></span>' +
           '<span class="kg-list-name">' + esc(n.name) + '</span>' +
           '<span class="kg-list-cat">' + esc(cat) + '</span>' +
-          '<span class="kg-list-rel">' + t('stats', { nodes: 1, links: degOf(view, n.id) }).replace(/^\S+\s*·\s*/, '') + '</span>';
+          '<span class="kg-list-rel">' + t('stats', { nodes: 1, links: edgesOf(view, n.id).length }).replace(/^\S+\s*·\s*/, '') + '</span>';
         return n.route
           ? '<a class="kg-list-item" href="' + esc(n.route) + '">' + inner + '</a>'
-          : '<span class="kg-list-item kg-list-item--static" aria-disabled="true">' + inner + '</span>';
+          : '<button type="button" class="kg-list-item" data-kg-list="' + esc(n.id) + '">' + inner + '</button>';
       }).join('') + '</div>';
   }
 
@@ -342,10 +313,11 @@
     labelFontSize: 13,         // 与 renderSvg 里的标签字号一致
     ticks: 320,                // 常规视图松弛轮数
     ticksLarge: 460,           // 全图（> 40 节点）多跑几轮
+    settleTicks: 70,           // 拖动松手后重新平衡的轮数
   };
 
   function nodeRadius(n, view) {
-    var deg = degOf(view, n.id);
+    var deg = view.links.filter(function (l) { return l.from === n.id || l.to === n.id; }).length;
     var base = { part: 30, chapter: 26, section: 17, step: 17, lab: 19 }[n.cat] || 17;
     if (view.nodes.length > 40) base *= 0.55;      // 全图模式整体缩小
     return Math.round(base + Math.min(deg, 8) * 1.6);
@@ -377,16 +349,12 @@
     return 'translate(' + r1(state.tx) + ',' + r1(state.ty) + ') scale(' + (Math.round(state.k * 1000) / 1000) + ')';
   }
 
-  /* 标签字号跟随归一化缩放 */
-  function labelFs() {
-    return Math.max(11, Math.min(14, 13 * (state.fitK || 1)));
-  }
-
   function renderSvg(view) {
     var pos = state.pos;
-    var tk = palette().tk;
+    var tk = tokens();
     var isFull = view.nodes.length > 40;      // 全图模式：小节点 + 默认隐藏标签
-    var fs = labelFs();
+    var sel = state.sel;
+    var fs = Math.max(11, Math.min(14, 13 * (state.fitK || 1)));   // 字号跟随归一化缩放
     var out = ['<g id="kg-world" transform="' + worldTransform() + '">'];
 
     /* ① 边（先画，压在节点下面） */
@@ -406,77 +374,96 @@
         ' opacity="' + (isFull ? 0.45 : 0.7) + '"/>');
     });
 
-    /* ② 节点。节点只负责被拖动，没有点击/选中语义：
-       不加 role/tabindex，全图模式标签隐藏（节点太小，标签会糊成一片）。 */
+    /* ② 节点 */
     view.nodes.forEach(function (n) {
       var p = pos[n.id];
       if (!p) return;
       var c = catColor(n.cat);
-      var deg = degOf(view, n.id);
+      var isSel = n.id === sel;
+      var deg = edgesOf(view, n.id).length;
       var catLabel = (CAT[n.cat] || {}).label || n.cat;
-      out.push('<g class="kg-node" data-kg-node="' + esc(n.id) + '"' +
+      var showLabel = !isFull || isSel;
+      out.push('<g class="kg-node' + (isSel ? ' is-sel' : '') + '" data-kg-node="' + esc(n.id) + '"' +
+        ' tabindex="0" role="button"' +
         ' aria-label="' + esc(n.name + '（' + catLabel + '，' + deg + ' 条关联）') + '">');
-      out.push('<circle class="kg-node-main" cx="' + r1(p.x) + '" cy="' + r1(p.y) + '" r="' + r1(p.r) + '" fill="' + esc(c) + '"' +
-        ' fill-opacity="0.92" stroke="' + esc(tk.surface) + '" stroke-width="2"/>');
-      if (!isFull) {
+      /* 带子图的节点套一圈虚线环，暗示"可以展开" */
+      if (n.drillTo) {
+        out.push('<circle cx="' + r1(p.x) + '" cy="' + r1(p.y) + '" r="' + r1(p.r + 6) + '" fill="none"' +
+          ' stroke="' + esc(c) + '" stroke-width="1.4" stroke-dasharray="3 3" opacity="0.8"/>');
+      }
+      out.push('<circle cx="' + r1(p.x) + '" cy="' + r1(p.y) + '" r="' + r1(p.r) + '" fill="' + esc(c) + '"' +
+        ' fill-opacity="0.92" stroke="' + esc(tk.surface) + '" stroke-width="' + (isSel ? 4 : 2) + '"/>');
+      if (showLabel) {
         out.push('<text x="' + r1(p.x + p.r + fs * 0.6) + '" y="' + r1(p.y + fs * 0.35) + '"' +
-          ' font-size="' + r1(fs) + '" font-weight="600"' +
-          ' fill="' + esc(tk.soft) + '">' + esc(n.name) + '</text>');
+          ' font-size="' + r1(isSel ? fs * 1.12 : fs) + '" font-weight="' + (isSel ? 700 : 600) + '"' +
+          ' fill="' + esc(isSel ? tk.text : tk.soft) + '">' + esc(n.name) + '</text>');
       }
       out.push('</g>');
     });
 
     out.push('</g>');
     el.svg.innerHTML = out.join('');
-
-    /* ③ 建一次渲染引用表：之后悬停高亮 / 拖拽全部走引用，
-          不 querySelectorAll 全图、不逐个 getAttribute 读 from/to/rel。 */
-    cacheEls(view);
-    applyDim(null);
-  }
-
-  /* innerHTML 之后收集 DOM 引用（一次 QSA，摊薄到后续所有交互上） */
-  function cacheEls(view) {
-    el.world = el.svg.querySelector('#kg-world');
-    var nodeEls = {};
-    Array.prototype.forEach.call(el.svg.querySelectorAll('[data-kg-node]'), function (g) {
-      var id = g.getAttribute('data-kg-node');
-      var main = g.querySelector('.kg-node-main');
-      nodeEls[id] = { g: g, main: main, text: g.querySelector('text') };
-    });
-    var edgeEls = new Array(view.links.length);
-    Array.prototype.forEach.call(el.svg.querySelectorAll('[data-kg-edge]'), function (ln) {
-      edgeEls[+ln.getAttribute('data-kg-edge')] = {
-        el: ln,
-        from: ln.getAttribute('data-from'),
-        to: ln.getAttribute('data-to'),
-        rel: ln.getAttribute('data-rel'),
-      };
-    });
-    state.nodeEls = nodeEls;
-    state.edgeEls = edgeEls;
+    applyDim(sel);
   }
 
   /* 邻接高亮：给定节点，淡出与它无关的节点与边
-     （这就是"力导向图别变成一团毛线球"的关键手法）。
-     只改 opacity / stroke-width 两个表现属性，且直接用缓存引用 —— 不触碰布局。 */
+     （这就是"力导向图别变成一团毛线球"的关键手法） */
   function applyDim(activeId) {
     var view = VIEWS[state.viewId];
     var isFull = view.nodes.length > 40;
     var near = activeId ? neighborIds(view, activeId) : null;
-    var nodeEls = state.nodeEls || {};
-    var edgeEls = state.edgeEls || [];
 
-    Object.keys(nodeEls).forEach(function (id) {
-      nodeEls[id].g.setAttribute('opacity', (!near || near[id]) ? '1' : '0.22');
+    Array.prototype.forEach.call(el.svg.querySelectorAll('[data-kg-node]'), function (g) {
+      var id = g.getAttribute('data-kg-node');
+      g.setAttribute('opacity', (!near || near[id]) ? '1' : '0.22');
     });
-    for (var i = 0; i < edgeEls.length; i++) {
-      var e = edgeEls[i];
-      if (!e) continue;
-      var on = !near || (near[e.from] && near[e.to]);
-      e.el.setAttribute('opacity', on ? (isFull ? '0.45' : '0.7') : '0.1');
-      e.el.setAttribute('stroke-width', on ? (isFull ? 1.1 : 1.6) : '1');
+    Array.prototype.forEach.call(el.svg.querySelectorAll('[data-kg-edge]'), function (ln) {
+      var a = ln.getAttribute('data-from'), b = ln.getAttribute('data-to');
+      var on = !near || (near[a] && near[b]);
+      ln.setAttribute('opacity', on ? (isFull ? '0.45' : '0.7') : '0.1');
+      ln.setAttribute('stroke-width', on ? (isFull ? 1.1 : 1.6) : '1');
+    });
+  }
+
+  /* 详情面板：说明 + 双向关联（可点着走过去）+ 动作按钮 */
+  function renderDetail(view) {
+    var node = state.sel ? nodeOf(view, state.sel) : null;
+    if (!node) {
+      el.detail.innerHTML = '<p class="kg-detail-empty">' + esc(t('detailEmpty')) + '</p>';
+      return;
     }
+    var catLabel = (CAT[node.cat] || {}).label || node.cat;
+
+    function rows(list, dir) {
+      return list.map(function (l) {
+        var other = nodeOf(view, dir === 'out' ? l.to : l.from);
+        if (!other) return '';
+        var rel = (REL[l.rel] || {}).label || l.rel;
+        return '<button type="button" class="kg-rel" data-kg-pick="' + esc(other.id) + '">' +
+          '<span class="kg-rel-dot" style="background:' + esc(catColor(other.cat)) + '"></span>' +
+          '<span class="kg-rel-name">' + esc(other.name) + '</span>' +
+          '<span class="kg-rel-tag">' + esc(rel) + (l.note ? ' ' + esc(l.note) : '') + '</span>' +
+          '</button>';
+      }).join('');
+    }
+
+    var outList = view.links.filter(function (l) { return l.from === node.id; });
+    var inList = view.links.filter(function (l) { return l.to === node.id; });
+
+    el.detail.innerHTML =
+      '<span class="kg-badge" style="--kg-c:' + esc(catColor(node.cat)) + '">' + esc(catLabel) + '</span>' +
+      '<h3 class="kg-detail-title">' + esc(node.name) + '</h3>' +
+      (node.desc ? '<p class="kg-detail-desc">' + esc(node.desc) + '</p>' : '') +
+      (outList.length ? '<p class="kg-detail-sub">' + esc(t('relationOut')) + '</p><div class="kg-rels">' + rows(outList, 'out') + '</div>' : '') +
+      (inList.length ? '<p class="kg-detail-sub">' + esc(t('relationIn')) + '</p><div class="kg-rels">' + rows(inList, 'in') + '</div>' : '') +
+      (!outList.length && !inList.length ? '<p class="kg-detail-sub">' + esc(t('noRelation')) + '</p>' : '') +
+      '<div class="kg-detail-actions">' +
+        (node.route
+          ? '<a class="kg-btn kg-btn--primary" href="' + esc(node.route) + '">' + esc(t('btnOpen')) + '</a>'
+          : '<span class="kg-btn kg-btn--flat">' + esc(t('btnNoOpen')) + '</span>') +
+        (node.drillTo ? '<button type="button" class="kg-btn" data-kg="drill">' + esc(t('btnDrill')) + '</button>' : '') +
+        '<button type="button" class="kg-btn" data-kg="full">' + esc(t('btnFull')) + '</button>' +
+      '</div>';
   }
 
   function renderAll() {
@@ -484,6 +471,7 @@
     renderCrumbs(view);
     renderMeta(view);
     renderSvg(view);
+    renderDetail(view);
     renderList(view);
     el.svg.hidden = state.mode !== 'graph';
     el.list.hidden = state.mode !== 'list';
@@ -495,30 +483,59 @@
   }
 
   /* =======================================================
-   * 七、视图切换 / 缩放平移
+   * 七、视图切换 / 选中 / 缩放平移
    * ===================================================== */
-  function showView(id) {
+  function showView(id, selId) {
     if (!VIEWS[id]) return;
     state.viewId = id;
-    state.pos = activateLayout(id);   // 确定性布局：同一视图每次位置一致（二次进入走快照）
+    state.sel = selId || null;
+    state.pos = layout(VIEWS[id]);   // 确定性布局：同一视图每次位置一致
     state.k = 1; state.tx = 0; state.ty = 0;
     renderAll();
     announce(t('a11yView', { title: VIEWS[id].title, nodes: VIEWS[id].nodes.length }));
   }
 
+  function drillInto(id, fromNodeId) {
+    if (!VIEWS[id]) return;
+    state.hist.push(state.viewId);
+    showView(id, null);
+    var n = fromNodeId ? nodeOf(VIEWS[id], fromNodeId) : null;
+    announce(t('a11yDrill', { name: n ? n.name : id }));
+  }
+
   function goBack() {
     var prev = state.hist.pop();
-    if (prev) showView(prev);
+    if (prev) showView(prev, null);
   }
 
   function goRoot() {
     state.hist = [];
-    showView(DATA.defaultView);
+    showView(DATA.defaultView, null);
+  }
+
+  /* 选中：重画（选中环 / 标签加粗）并刷新详情面板。
+     重画会替换 DOM，所以键盘用户要把焦点还给同一个节点，否则焦点会丢。 */
+  function selectNode(id) {
+    var view = VIEWS[state.viewId];
+    var hadFocus = document.activeElement && document.activeElement.closest &&
+      document.activeElement.closest('[data-kg-node]');
+    state.sel = id || null;
+    renderSvg(view);
+    renderDetail(view);
+    if (hadFocus && id) {
+      var again = el.svg.querySelector('[data-kg-node="' + id + '"]');
+      if (again) again.focus();
+    }
+    if (id) {
+      var n = nodeOf(view, id);
+      if (n) announce(t('a11yPicked', { name: n.name, rel: edgesOf(view, id).length }));
+    }
   }
 
   /* 缩放/平移只改 <g transform>，不重画 DOM —— 拖拽时才不会卡 */
   function applyTransform() {
-    if (el.world) el.world.setAttribute('transform', worldTransform());
+    var w = el.svg.querySelector('#kg-world');
+    if (w) w.setAttribute('transform', worldTransform());
   }
 
   function clampK(k) { return Math.min(Math.max(k, 0.4), 3); }
@@ -538,9 +555,9 @@
     return { x: (clientX - r.left) / r.width * W, y: (clientY - r.top) / r.height * H };
   }
 
-  /* 适应窗口：从快照复原初始布局并复位缩放（等于"恢复原状"，不重跑物理迭代） */
+  /* 适应窗口：重跑一次布局并复位缩放（等于"恢复原状"） */
   function fitView() {
-    state.pos = activateLayout(state.viewId);
+    state.pos = layout(VIEWS[state.viewId]);
     state.k = 1; state.tx = 0; state.ty = 0;
     renderSvg(VIEWS[state.viewId]);
   }
@@ -571,10 +588,8 @@
     return null;
   }
 
-  /* 拖动一个节点：更新它自己 + **仅相邻的边**（典型 2–5 条，不扫全部边）。
-     位置同时同步回 d3-force 节点并用 fx/fy 永久钉住 —— 松手后节点就停在放下的位置，
-     不会被弹簧拉回去；「适应窗口」或重新进入视图时才从初始快照复位。
-     所有 DOM 引用都来自渲染时建好的缓存表，没有一次 querySelectorAll / getAttribute。 */
+  /* 拖动一个节点：更新它自己 + 相连的边（不重画整张图），
+     同时把位置同步回 d3-force 的节点（fx/fy 钉住，松手后才放开重新平衡） */
   function moveNode(id, x, y) {
     var p = state.pos[id];
     if (!p) return;
@@ -583,35 +598,35 @@
     var sn = simNodeOf(id);
     if (sn) { sn.fx = x; sn.fy = y; sn.x = x; sn.y = y; }
 
-    var ref = state.nodeEls && state.nodeEls[id];
-    if (ref) {
-      ref.main.setAttribute('cx', r1(x));
-      ref.main.setAttribute('cy', r1(y));
-      if (ref.text) {
-        var fs2 = parseFloat(ref.text.getAttribute('font-size')) || 13;
-        ref.text.setAttribute('x', r1(x + p.r + fs2 * 0.6));
-        ref.text.setAttribute('y', r1(y + fs2 * 0.35));
+    var g = el.svg.querySelector('[data-kg-node="' + id + '"]');
+    if (g) {
+      Array.prototype.forEach.call(g.querySelectorAll('circle'), function (c) {
+        c.setAttribute('cx', r1(x)); c.setAttribute('cy', r1(y));
+      });
+      var txt = g.querySelector('text');
+      if (txt) {
+        var fs2 = parseFloat(txt.getAttribute('font-size')) || 13;
+        txt.setAttribute('x', r1(x + p.r + fs2 * 0.6));
+        txt.setAttribute('y', r1(y + fs2 * 0.35));
       }
     }
-    var adj = viewIndex(VIEWS[state.viewId]).adj[id] || [];
-    var edgeEls = state.edgeEls || [];
-    for (var i = 0; i < adj.length; i++) {
-      var e = edgeEls[adj[i]];
-      if (!e) continue;
-      var pa = state.pos[e.from], pb = state.pos[e.to];
-      if (!pa || !pb) continue;
-      var gap = e.rel === 'part-of' ? 2 : 6;
+    Array.prototype.forEach.call(el.svg.querySelectorAll('[data-kg-edge]'), function (ln) {
+      var a = ln.getAttribute('data-from'), b = ln.getAttribute('data-to');
+      if (a !== id && b !== id) return;
+      var pa = state.pos[a], pb = state.pos[b];
+      if (!pa || !pb) return;
+      var gap = ln.getAttribute('data-rel') === 'part-of' ? 2 : 6;
       var dx = pb.x - pa.x, dy = pb.y - pa.y;
       var d = Math.sqrt(dx * dx + dy * dy) || 1;
-      e.el.setAttribute('x1', r1(pa.x + (dx / d) * (pa.r + 2)));
-      e.el.setAttribute('y1', r1(pa.y + (dy / d) * (pa.r + 2)));
-      e.el.setAttribute('x2', r1(pb.x - (dx / d) * (pb.r + gap)));
-      e.el.setAttribute('y2', r1(pb.y - (dy / d) * (pb.r + gap)));
-    }
+      ln.setAttribute('x1', r1(pa.x + (dx / d) * (pa.r + 2)));
+      ln.setAttribute('y1', r1(pa.y + (dy / d) * (pa.r + 2)));
+      ln.setAttribute('x2', r1(pb.x - (dx / d) * (pb.r + gap)));
+      ln.setAttribute('y2', r1(pb.y - (dy / d) * (pb.r + gap)));
+    });
   }
 
   function bindEvents() {
-    /* --- 指针：拖节点 / 拖空白平移（节点没有点击动作，按下即开始拖） --- */
+    /* --- 指针：拖节点 / 拖空白平移 --- */
     el.svg.addEventListener('pointerdown', function (ev) {
       if (ev.button !== 0) return;
       var id = nodeIdFrom(ev);
@@ -619,7 +634,6 @@
         var w = toWorldCoords(ev.clientX, ev.clientY);
         var p = state.pos[id];
         state.drag = { id: id, dx: p.x - w.x, dy: p.y - w.y };
-        el.svg.classList.add('is-dragging-node');
       } else {
         state.drag = { pan: true, sx: ev.clientX, sy: ev.clientY, ox: state.tx, oy: state.ty };
         el.svg.classList.add('is-panning');
@@ -629,37 +643,41 @@
 
     el.svg.addEventListener('pointermove', function (ev) {
       if (!state.drag) {
-        /* 未拖拽时：只做悬停邻接高亮 */
         var id0 = nodeIdFrom(ev);
-        if (id0 !== hoverId) { hoverId = id0; applyDim(id0); }
+        if (id0 !== hoverId) { hoverId = id0; applyDim(id0 || state.sel); }
         return;
       }
       if (state.drag.pan) {
-        /* 平移只写一个 transform 属性，开销极小，保持跟手不延迟 */
         state.tx = state.drag.ox + (ev.clientX - state.drag.sx);
         state.ty = state.drag.oy + (ev.clientY - state.drag.sy);
         applyTransform();
       } else {
-        /* 直接同步更新：moveNode 只动被拖节点 + 相邻几条边（走缓存引用），
-           单次开销已经极小；同步还能保证无头浏览器 / 后台标签节流时照样跟手。 */
         var w = toWorldCoords(ev.clientX, ev.clientY);
         moveNode(state.drag.id, w.x + state.drag.dx, w.y + state.drag.dy);
       }
     });
 
-    /* 松手 / 取消 / 窗口失焦：统一清理。节点位置在 moveNode 里已钉住，
-       这里什么都不用做 —— 节点自然停在放下的位置。 */
     var endDrag = function () {
+      var draggedNode = state.drag && state.drag.id;
       if (state.drag && state.drag.pan) el.svg.classList.remove('is-panning');
-      el.svg.classList.remove('is-dragging-node');
       state.drag = null;
+      if (draggedNode) settle();     // 松手后让 d3-force 重新平衡（邻居自动让开）
     };
     el.svg.addEventListener('pointerup', endDrag);
     el.svg.addEventListener('pointercancel', endDrag);
-    window.addEventListener('blur', endDrag);
     el.svg.addEventListener('pointerleave', function () {
       hoverId = null;
-      if (!state.drag) applyDim(null);
+      if (!state.drag) applyDim(state.sel);
+    });
+
+    /* --- 点击选中 / 双击钻取 --- */
+    el.svg.addEventListener('click', function (ev) {
+      selectNode(nodeIdFrom(ev));
+    });
+    el.svg.addEventListener('dblclick', function (ev) {
+      var id = nodeIdFrom(ev);
+      var n = id ? nodeOf(VIEWS[state.viewId], id) : null;
+      if (n && n.drillTo) drillInto(n.drillTo, n.id);
     });
 
     /* --- 滚轮缩放（以指针为中心） --- */
@@ -668,27 +686,56 @@
       var p = toSvgCoords(ev.clientX, ev.clientY);
       zoomBy(ev.deltaY < 0 ? 1.12 : 1 / 1.12, p.x, p.y);
     }, { passive: false });
-  }
 
-  /* 工具栏事件统一委托到 #kg-root（只挂一个监听） */
-  function bindToolbar() {
-    root.addEventListener('click', function (ev) {
-      var btn = (ev.target && ev.target.closest) ? ev.target.closest('[data-kg]') : null;
-      if (!btn) return;
-      var act = btn.getAttribute('data-kg');
-      if (act === 'back') { goBack(); return; }
-      if (act === 'root') { goRoot(); return; }
-      if (act === 'full') {
-        if (state.viewId !== 'full') { state.hist.push(state.viewId); showView('full'); }
+    /* --- 键盘：节点上回车/空格选中；图上 Esc 取消、← 返回 --- */
+    el.svg.addEventListener('keydown', function (ev) {
+      var id = nodeIdFrom(ev);
+      if (id && (ev.key === 'Enter' || ev.key === ' ')) {
+        ev.preventDefault();
+        selectNode(id);
         return;
       }
-      if (act === 'zoom-in') { zoomBy(1.2, W / 2, H / 2); return; }
-      if (act === 'zoom-out') { zoomBy(1 / 1.2, W / 2, H / 2); return; }
-      if (act === 'fit') { fitView(); return; }
-      if (act === 'export') { exportPng(); return; }
-      if (act === 'mode') {
-        state.mode = state.mode === 'graph' ? 'list' : 'graph';
+      if (ev.key === 'Escape') { selectNode(null); return; }
+      if (ev.key === 'ArrowLeft') { ev.preventDefault(); goBack(); }
+    });
+  }
+
+  /* 工具栏与「关联跳转」统一委托到 #kg-root（只挂一个监听） */
+  function bindToolbar() {
+    root.addEventListener('click', function (ev) {
+      var target = ev.target;
+      var btn = (target && target.closest) ? target.closest('[data-kg]') : null;
+      if (btn) {
+        var act = btn.getAttribute('data-kg');
+        if (act === 'back') { goBack(); return; }
+        if (act === 'root') { goRoot(); return; }
+        if (act === 'full') {
+          if (state.viewId !== 'full') { state.hist.push(state.viewId); showView('full', null); }
+          return;
+        }
+        if (act === 'zoom-in') { zoomBy(1.2, W / 2, H / 2); return; }
+        if (act === 'zoom-out') { zoomBy(1 / 1.2, W / 2, H / 2); return; }
+        if (act === 'fit') { fitView(); return; }
+        if (act === 'export') { exportPng(); return; }
+        if (act === 'drill') {
+          var n = state.sel ? nodeOf(VIEWS[state.viewId], state.sel) : null;
+          if (n && n.drillTo) drillInto(n.drillTo, n.id);
+          return;
+        }
+        if (act === 'mode') {
+          state.mode = state.mode === 'graph' ? 'list' : 'graph';
+          renderAll();
+          return;
+        }
+      }
+      var pick = (target && target.closest) ? target.closest('[data-kg-pick]') : null;
+      if (pick) { selectNode(pick.getAttribute('data-kg-pick')); return; }
+
+      var listPick = (target && target.closest) ? target.closest('[data-kg-list]') : null;
+      if (listPick) {
+        state.mode = 'graph';
         renderAll();
+        selectNode(listPick.getAttribute('data-kg-list'));
       }
     });
   }
@@ -744,45 +791,9 @@
 
   /* 初始化块放在文件末尾 —— 原因见文末说明 */
 
-  /* 布局快照缓存：布局是**确定性**的（固定种子 + 定数 tick），同一视图第二次进入时，
-     直接从快照复原即可，省掉 320–460 轮物理迭代（全图视图是最贵的一笔）。
-     缓存的是「初始快照」：自由拖动只在当前 pos/simNodes 上钉位置（fx/fy），
-     不会污染快照 —— 所以再进入该视图（或点「适应窗口」）仍精确回到初始布局。 */
-  var layoutCache = {};
-  function clonePos(pos) {
-    var out = {};
-    Object.keys(pos).forEach(function (id) { out[id] = { x: pos[id].x, y: pos[id].y, r: pos[id].r }; });
-    return out;
-  }
-  function activateLayout(viewId) {
-    var view = VIEWS[viewId];
-    var snap = layoutCache[viewId];
-    if (!snap) {
-      var firstPos = computeLayout(view);
-      snap = layoutCache[viewId] = {
-        fitK: state.fitK,
-        sim: state.sim,
-        simNodes: state.simNodes,
-        simXY: state.simNodes.map(function (n) { return { x: n.x, y: n.y }; }),
-        pos: clonePos(firstPos),
-      };
-    }
-    /* 从快照复原：新的 pos 对象 + 把 d3-force 节点也搬回初始坐标并解除钉住 */
-    state.fitK = snap.fitK;
-    state.sim = snap.sim;
-    state.simNodes = snap.simNodes;
-    snap.simNodes.forEach(function (n, i) {
-      n.x = snap.simXY[i].x;
-      n.y = snap.simXY[i].y;
-      n.fx = null;
-      n.fy = null;
-    });
-    return clonePos(snap.pos);
-  }
-
   /* 用 d3-force 松弛布局，再把结果归一化到画布内。
      d3-force 只管物理、不管画布尺寸，所以"装进画布"这一步仍由我们兜底。 */
-  function computeLayout(view) {
+  function layout(view) {
     var nodes = view.nodes;
     var pos = {};
     var ids = nodes.map(function (n) { return n.id; });
@@ -832,7 +843,7 @@
     /* ③ 归一化到画布内 */
     fitIntoCanvas(view, pos);
 
-    state.sim = sim;            // 已 stop()；保留引用只为拖拽时把坐标钉到 fx/fy
+    state.sim = sim;            // 拖动松手后还要用它重新平衡
     state.simNodes = simNodes;
     return pos;
   }
@@ -867,20 +878,36 @@
     return k;
   }
 
+  /* 拖动松手：解除钉住、给一点 alpha，再松弛若干轮 —— 邻居会自动让开
+     （这是用 d3-force 换来的手感；纯手写布局做不到这么自然） */
+  function settle() {
+    var sim = state.sim;
+    if (!sim || !state.simNodes) return;
+    state.simNodes.forEach(function (n) { n.fx = null; n.fy = null; });
+    sim.alpha(0.6);
+    for (var t = 0; t < SIM.settleTicks; t++) sim.tick();
+    state.simNodes.forEach(function (n) {
+      var p = state.pos[n.id];
+      if (p) { p.x = n.x; p.y = n.y; }
+    });
+    fitIntoCanvas(VIEWS[state.viewId], state.pos);
+    renderSvg(VIEWS[state.viewId]);
+  }
+
   /* =======================================================
    * 九、初始化
    * -------------------------------------------------------
-   * 放在文件末尾是有意的：computeLayout() 等函数定义在下面，
+   * 放在文件末尾是有意的：layout() 等函数定义在下面，
    * 这里一执行就会用到它们（函数声明会提升，但为了可读性仍放最后）。
    * ===================================================== */
   bindEvents();
   bindToolbar();
-  showView(DATA.defaultView);
+  showView(DATA.defaultView, null);
 
   /* 系统深浅色切换时重画：颜色是实时从 tokens.css 读的，直接重画即可 */
   if (window.matchMedia) {
     var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    var onThemeChange = function () { resetPalette(); renderAll(); };
+    var onThemeChange = function () { renderAll(); };
     if (mq.addEventListener) mq.addEventListener('change', onThemeChange);
     else if (mq.addListener) mq.addListener(onThemeChange);
   }

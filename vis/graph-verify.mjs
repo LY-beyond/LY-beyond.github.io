@@ -14,8 +14,8 @@
 //   · d3-force 是否真的加载了（力导向布局依赖它）
 //   · 布局是否**确定**：两次独立加载的节点坐标是否完全一致（刷新不跳）
 //   · 几何是否健康：节点最小间隙（防重叠）、包围盒是否落在画布内
-//   · 交互：单击节点不应有跳转/选中面板；全图 / 列表视图 / 回到总览正常
-//   · 拖拽：真实鼠标事件拖动节点，拖动时跟随，松手后停在放下的位置（不回弹）
+//   · 交互：选中详情 / 双击钻取 / 全图 / 列表视图 / 回到总览
+//   · 拖拽：用真实鼠标事件拖动节点，松手后 d3-force 是否重新平衡
 //
 // ⚠️ 踩过的坑：站点设了 scroll-behavior: smooth，滚动是动画的，
 //    拖拽测试前必须把它改成 auto，否则量到的是滚动前的坐标（事件会落空）。
@@ -185,20 +185,18 @@ for (const page of ['index.html', 'en/index.html']) {
   if (geoA.最小间隙 < 0) problems.push(`${page}: 节点重叠（最小间隙 ${geoA.最小间隙}）`);
   if (geoA.节点数 !== 12) problems.push(`${page}: 总览视图应有 12 个节点，实测 ${geoA.节点数}`);
 
-  /* ② 交互：单击节点什么都不发生（无跳转、无详情面板）；全图 / 列表 / 回总览正常 */
+  /* ② 交互（在第一个页面上继续） */
   const inter = await EV(a.cdp, async () => {
     const sleep2 = (ms) => new Promise((z) => setTimeout(z, ms));
     const out = {};
-    const crumbBefore = document.querySelector('.kg-crumb--cur').textContent;
-
     document.querySelector('[data-kg-node="c1"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await sleep2(250);
+    out.选中详情 = !!document.querySelector('.kg-detail-title');
+    out.关联数 = document.querySelectorAll('.kg-rel').length;
+
     document.querySelector('[data-kg-node="c1"]').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-    await sleep2(300);
-    out.单击无跳转 = document.querySelectorAll('#kg-svg [data-kg-node]').length === 12 &&
-      document.querySelector('.kg-crumb--cur').textContent === crumbBefore;
-    out.无详情面板 = !document.querySelector('.kg-detail');
-    out.节点无按钮语义 = !document.querySelector('#kg-svg [data-kg-node][role]') &&
-      !document.querySelector('#kg-svg [data-kg-node][tabindex]');
+    await sleep2(450);
+    out.钻取后节点 = document.querySelectorAll('#kg-svg [data-kg-node]').length;
 
     document.querySelector('[data-kg="full"]').click();
     await sleep2(600);
@@ -207,7 +205,6 @@ for (const page of ['index.html', 'en/index.html']) {
     document.querySelector('[data-kg="mode"]').click();
     await sleep2(250);
     out.列表条目 = document.querySelectorAll('.kg-list-item').length;
-    out.列表含静态项 = !!document.querySelector('.kg-list-item--static');
     document.querySelector('[data-kg="mode"]').click();
     await sleep2(200);
 
@@ -248,41 +245,34 @@ for (const page of ['index.html', 'en/index.html']) {
     return [Math.round(+c.getAttribute('cx')), Math.round(+c.getAttribute('cy'))];
   });
   await send('mouseReleased', box.x + 140, box.y + 80);
-  await sleep(300);
+  await sleep(450);
   const after = await EV(a.cdp, () => {
     const c = document.querySelector('[data-kg-node="c1"] circle');
     return [Math.round(+c.getAttribute('cx')), Math.round(+c.getAttribute('cy'))];
   });
-  /* 自由拖动的关键断言：松手后节点必须停在拖动结束的位置（不再被力导向拉回去） */
-  const stayed = String(mid) === String(after);
   console.log('  拖拽（真实鼠标事件）：', JSON.stringify({
     拖动前: box.拖动前, 拖动中: mid, 松手后: after,
     拖动时跟随了: String(box.拖动前) !== String(mid),
-    松手后停住了: stayed,
+    松手后重新平衡过: String(mid) !== String(after),
   }));
   if (String(box.拖动前) === String(mid)) problems.push(`${page}: 拖拽没有跟随（事件是否落在节点上？）`);
-  if (!stayed) problems.push(`${page}: 松手后节点回弹了（应停在放下的位置，实测 mid=${mid} after=${after}）`);
+  if (String(mid) === String(after)) problems.push(`${page}: 松手后没有重新平衡（settle 未生效）`);
 
   const errsAfter = a.cdp.evts.filter((e) => e.method === 'Runtime.exceptionThrown')
     .map((e) => (e.params.exceptionDetails.exception?.description || '').split('\n')[0]);
   console.log('  交互后 JS 异常：', errsAfter.length ? errsAfter.slice(0, 3) : '无');
   if (errsAfter.length) problems.push(`${page}: 交互过程中出现 JS 异常`);
 
-  /* ④ 点「适应窗口」应从快照复位，几何重新健康（防重叠） */
-  await EV(a.cdp, () => document.querySelector('[data-kg="fit"]').click());
-  await sleep(300);
+  /* ④ 拖动后几何（防重叠仍然成立） */
   const geoAfter = await EV(a.cdp, geometry);
-  console.log('  适应窗口复位后几何：', JSON.stringify(geoAfter));
-  if (geoAfter.最小间隙 < 0) problems.push(`${page}: 复位后节点重叠（最小间隙 ${geoAfter.最小间隙}）`);
-  if (geoAfter.节点数 !== 12) problems.push(`${page}: 复位后总览应仍为 12 个节点，实测 ${geoAfter.节点数}`);
+  console.log('  拖动后几何：', JSON.stringify(geoAfter));
+  if (geoAfter.最小间隙 < 0) problems.push(`${page}: 拖动后节点重叠（最小间隙 ${geoAfter.最小间隙}）`);
 
   /* ⑤ 交互断言 */
-  if (!inter.单击无跳转) problems.push(`${page}: 单击/双击节点不应改变视图`);
-  if (!inter.无详情面板) problems.push(`${page}: 详情面板应该已移除`);
-  if (!inter.节点无按钮语义) problems.push(`${page}: 节点不应再带 role/tabindex`);
+  if (!inter.选中详情 || !inter.关联数) problems.push(`${page}: 点节点没显示详情/关联`);
+  if (inter.钻取后节点 !== 12) problems.push(`${page}: 双击钻取后应为 12 个节点，实测 ${inter.钻取后节点}`);
   if (inter.全图节点 !== 51) problems.push(`${page}: 全图应为 51 个节点，实测 ${inter.全图节点}`);
   if (inter.列表条目 !== 51) problems.push(`${page}: 列表视图应为 51 条，实测 ${inter.列表条目}`);
-  if (!inter.列表含静态项) problems.push(`${page}: 列表中无页面的节点应为静态项`);
   if (inter.回总览节点 !== 12) problems.push(`${page}: 回到总览应为 12 个节点，实测 ${inter.回总览节点}`);
 
   a.cdp.close(); b.cdp.close();
