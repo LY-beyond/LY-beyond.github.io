@@ -877,12 +877,14 @@
   bindToolbar();
   showView(DATA.defaultView);
 
-  /* 系统深浅色切换时重画：颜色是实时从 tokens.css 读的，直接重画即可 */
+  /* 深浅色变化时重画：颜色是实时从 tokens.css 读的，直接重画即可。
+     来源有两个：① 系统主题变化（未手动选择时）② 顶栏手动切换（theme.js 派发） */
+  var onThemeChange = function () { resetPalette(); renderAll(); };
   if (window.matchMedia) {
     var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    var onThemeChange = function () { resetPalette(); renderAll(); };
     if (mq.addEventListener) mq.addEventListener('change', onThemeChange);
     else if (mq.addListener) mq.addListener(onThemeChange);
   }
+  document.addEventListener('themechange', onThemeChange);
 }());
 

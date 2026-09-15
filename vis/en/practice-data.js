@@ -75,7 +75,7 @@ img { display: block; max-width: 100%; }
     { label: 'Nav items', value: 'Work / About / Contact' },
     { label: 'About · paragraph 1', value: 'Five years of front-end experience, good at turning a design into a clearly structured page.' },
     { label: 'About · paragraph 2', value: 'I believe layout is part of the content — the same page reads completely differently when it is arranged differently.' },
-    { label: 'Work titles', value: 'Dashboard design / Data visualisation / Mobile redesign / Design system' },
+    { label: 'Work titles', value: 'Dashboard / Chart library / Campus navigation / Weather visualisation' },
     { label: 'Stats', value: '42 projects shipped / 5 years / 18 clients' },
     { label: 'Footer heading', value: 'Shall we build something?' },
   ],
@@ -469,7 +469,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true">A</div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -648,7 +649,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true">A</div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -865,7 +867,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true">A</div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -885,27 +888,31 @@ img { display: block; max-width: 100%; }
     <h2>Selected work</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Dashboard design</h3>
+        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Dashboard</h3>
         <p class="meta">Data visualisation · 2026</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Data visualisation</h3>
+        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Chart library</h3>
         <p class="meta">Charting system · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Mobile redesign</h3>
-        <p class="meta">Responsive · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Campus navigation</h3>
+        <p class="meta">Mobile app · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Design system</h3>
-        <p class="meta">Component library · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Weather visualisation</h3>
+        <p class="meta">Web app · 2024</p>
         <a class="more" href="#">View details →</a>
       </article>
     </div>
@@ -1156,7 +1163,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">I focus on page layout and interaction — 40+ projects shipped.</p>
       <a class="cta" href="#works">See the work →</a>
     </div>
-    <div class="avatar" aria-hidden="true">A</div>
+    <div class="avatar" aria-hidden="true"><img src="../figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -1176,27 +1184,31 @@ img { display: block; max-width: 100%; }
     <h2>Selected work</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Dashboard design</h3>
+        <div class="thumb" aria-hidden="true"><img src="../figs/数据看板.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Dashboard</h3>
         <p class="meta">Data visualisation · 2026</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Data visualisation</h3>
+        <div class="thumb" aria-hidden="true"><img src="../figs/图表组件库.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Chart library</h3>
         <p class="meta">Charting system · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Mobile redesign</h3>
-        <p class="meta">Responsive · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="../figs/校园导航.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Campus navigation</h3>
+        <p class="meta">Mobile app · 2025</p>
         <a class="more" href="#">View details →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>Design system</h3>
-        <p class="meta">Component library · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="../figs/天气可视化.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>Weather visualisation</h3>
+        <p class="meta">Web app · 2024</p>
         <a class="more" href="#">View details →</a>
       </article>
     </div>

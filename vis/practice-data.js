@@ -109,7 +109,7 @@ img { display: block; max-width: 100%; }
     { label: '菜单项', value: '作品 / 关于 / 联系' },
     { label: '关于我 · 第 1 段', value: '5 年前端开发经验，擅长把设计稿还原成结构清晰的页面。' },
     { label: '关于我 · 第 2 段', value: '相信「布局是内容的一部分」——同一个页面换个排法，可读性完全不同。' },
-    { label: '作品标题', value: '仪表盘设计 / 数据可视化 / 移动端改版 / 设计系统' },
+    { label: '作品标题', value: '数据看板 / 图表组件库 / 校园导航 / 天气可视化' },
     { label: '统计项', value: '42 个已完成项目 / 5 年经验 / 18 位合作客户' },
     { label: '页脚标题', value: '一起做点什么？' },
   ],
@@ -499,7 +499,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -677,7 +678,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -893,7 +895,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -913,27 +916,31 @@ img { display: block; max-width: 100%; }
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>
@@ -1184,7 +1191,8 @@ img { display: block; max-width: 100%; }
       <p class="lead">专注页面布局与交互实现，做过 40+ 个项目。</p>
       <a class="cta" href="#works">查看作品 →</a>
     </div>
-    <div class="avatar" aria-hidden="true">李</div>
+    <div class="avatar" aria-hidden="true"><img src="figs/李雷证件照.png" alt=""
+      style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);display:block;"></div>
   </div>
 </section>
 
@@ -1204,27 +1212,31 @@ img { display: block; max-width: 100%; }
     <h2>作品集</h2>
     <div class="wall">
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>仪表盘设计</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/数据看板.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>数据看板</h3>
         <p class="meta">数据可视化 · 2026</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>数据可视化</h3>
+        <div class="thumb" aria-hidden="true"><img src="figs/图表组件库.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>图表组件库</h3>
         <p class="meta">图表系统 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>移动端改版</h3>
-        <p class="meta">响应式 · 2025</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/校园导航.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>校园导航</h3>
+        <p class="meta">移动端 · 2025</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
       <article class="work-card">
-        <div class="thumb" aria-hidden="true"></div>
-        <h3>设计系统</h3>
-        <p class="meta">组件库 · 2024</p>
+        <div class="thumb" aria-hidden="true"><img src="figs/天气可视化.png" alt=""
+          style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);display:block;"></div>
+        <h3>天气可视化</h3>
+        <p class="meta">Web 应用 · 2024</p>
         <a class="more" href="#">查看详情 →</a>
       </article>
     </div>

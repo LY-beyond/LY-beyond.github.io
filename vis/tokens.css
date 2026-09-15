@@ -110,51 +110,52 @@
 }
 
 /* =========================================================
- * 深色模式（可选加分项）
- * 系统切换到深色时自动生效，同样只改变量
+ * 深色模式
+ * 由 <html data-theme="dark"> 驱动：theme.js 在 <head> 里渲染前
+ * 按「用户手动选择（localStorage）→ 系统 prefers-color-scheme」
+ * 的顺序解析并写入 data-theme，因此切换无闪烁（FOUC）。
+ * 未手动选择时自动跟随系统；手动选择后全站记住偏好。
  * ========================================================= */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-    --c-bg:        #0f1518;
-    --c-surface:   #161f24;
-    --c-surface-2: #1d272d;
+  --c-bg:        #0f1518;
+  --c-surface:   #161f24;
+  --c-surface-2: #1d272d;
 
-    --c-text:      #e6edf1;
-    --c-text-soft: #a9b6bf;
-    --c-muted:     #74838d;
+  --c-text:      #e6edf1;
+  --c-text-soft: #a9b6bf;
+  --c-muted:     #74838d;
 
-    --c-border:    #263239;
-    --c-border-2:  #33424a;
+  --c-border:    #263239;
+  --c-border-2:  #33424a;
 
-    --c-primary:      #2dd4bf;
-    --c-primary-2:    #5eead4;
-    --c-primary-weak: #10312e;
-    --c-accent:       #fb923c;
-    --c-accent-weak:  #3a2413;
+  --c-primary:      #2dd4bf;
+  --c-primary-2:    #5eead4;
+  --c-primary-weak: #10312e;
+  --c-accent:       #fb923c;
+  --c-accent-weak:  #3a2413;
 
-    /* 语义色在深底上必须提亮，否则对比度掉到 4.5:1 以下（尤其小字徽章） */
-    --c-info:    #38bdf8;
-    --c-success: #4ade80;
-    --c-warn:    #fbbf24;
-    --c-danger:  #f87171;
+  /* 语义色在深底上必须提亮，否则对比度掉到 4.5:1 以下（尤其小字徽章） */
+  --c-info:    #38bdf8;
+  --c-success: #4ade80;
+  --c-warn:    #fbbf24;
+  --c-danger:  #f87171;
 
-    /* 深色下主色偏亮，前景必须翻成深色才够对比（白字会糊） */
-    --c-on-primary: #04201d;
-    --c-on-accent:  #2a1405;
+  /* 深色下主色偏亮，前景必须翻成深色才够对比（白字会糊） */
+  --c-on-primary: #04201d;
+  --c-on-accent:  #2a1405;
 
-    /* 深色下浅底要更“实”才看得见，深字要更“亮”才读得清 */
-    --mix-soft: 24%;
-    --mix-halo: 34%;
-    --mix-ink:  62%;
-    --mix-line: 92%;
+  /* 深色下浅底要更“实”才看得见，深字要更“亮”才读得清 */
+  --mix-soft: 24%;
+  --mix-halo: 34%;
+  --mix-ink:  62%;
+  --mix-line: 92%;
 
-    --shadow-xs:    0 1px 2px rgba(0, 0, 0, .40);
-    --shadow-sm:    0 4px 10px rgba(0, 0, 0, .42);
-    --shadow-card:  0 10px 21px rgba(0, 0, 0, .45);
-    --shadow:       0 12px 30px rgba(0, 0, 0, .48);
-    --shadow-lg:    0 18px 46px rgba(0, 0, 0, .55);
-    --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 26%, transparent);
-  }
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, .40);
+  --shadow-sm:    0 4px 10px rgba(0, 0, 0, .42);
+  --shadow-card:  0 10px 21px rgba(0, 0, 0, .45);
+  --shadow:       0 12px 30px rgba(0, 0, 0, .48);
+  --shadow-lg:    0 18px 46px rgba(0, 0, 0, .55);
+  --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 26%, transparent);
 }

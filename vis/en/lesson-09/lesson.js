@@ -230,9 +230,9 @@ window.DEMOS['d-9-4'] = function (mount) {
             <span class="js-cta" style="display:inline-block;background:var(--c-primary);color:#fff;
                          padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;">Contact me</span>
           </div>
-          <div style="aspect-ratio:1/1;border-radius:16px;background:var(--c-primary-weak);
-                      display:grid;place-items:center;color:var(--c-primary);font-weight:700;font-size:13px;">
-            Avatar / hero visual
+          <div style="aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:var(--c-primary-weak);">
+            <img src="../../figs/李雷证件照.png" alt="Portrait of Alex Chen"
+                 style="width:100%;height:100%;object-fit:cover;display:block;">
           </div>
         </div>
       </div>
@@ -294,9 +294,9 @@ window.DEMOS['d-9-5'] = function (mount) {
 
       <div class="demo-stage js-stage" style="background:var(--c-surface);padding:18px;">
         <div class="js-grid" style="display:grid;gap:22px;">
-          <div style="aspect-ratio:4/5;border-radius:14px;background:var(--c-primary-weak);
-                      display:grid;place-items:center;color:var(--c-primary);font-weight:700;font-size:13px;">
-            Avatar / photo
+          <div style="aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:var(--c-primary-weak);">
+            <img src="../../figs/李雷证件照.png" alt="Photo of Alex Chen"
+                 style="width:100%;height:100%;object-fit:cover;display:block;">
           </div>
           <div>
             <h4 style="margin:0 0 10px;font-size:19px;">About me</h4>
@@ -343,6 +343,8 @@ window.DEMOS['d-9-6'] = function (mount) {
   const TITLES = ['Course project: weather visualization', 'Campus navigation mini-app', 'Dashboard prototype',
                   'Personal blog template', 'Chart component library', 'Online résumé builder',
                   'Reading-notes system', 'Travel footprint map'];
+  const SHOTS  = ['天气可视化.png', '校园导航.png', '数据看板.png',
+                  '个人博客.png', '图表组件库.png', '在线简历生成器.png'];
 
   mount.innerHTML = `
     <div class="demo-card">
@@ -384,8 +386,11 @@ window.DEMOS['d-9-6'] = function (mount) {
     stage.innerHTML = TITLES.slice(0, n).map((t, i) => `
       <div style="display:flex;flex-direction:column;padding:14px;background:var(--c-surface);
                   border:1px solid var(--c-border);border-radius:12px;">
-        <div style="aspect-ratio:16/10;border-radius:8px;margin-bottom:10px;
-                    background:linear-gradient(135deg, var(--d${(i % 6) + 1}), var(--c-primary-weak));"></div>
+        <div style="aspect-ratio:16/10;border-radius:8px;margin-bottom:10px;overflow:hidden;
+                    background:linear-gradient(135deg, var(--d${(i % 6) + 1}), var(--c-primary-weak));">
+          ${i < SHOTS.length ? `<img src="../../figs/${SHOTS[i]}" alt="${t} preview"
+             style="width:100%;height:100%;object-fit:cover;display:block;">` : ''}
+        </div>
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">${t}</div>
         <div style="font-size:11.5px;color:var(--c-muted);">Web · 2026</div>
         <div style="margin-top:auto;padding-top:10px;border-top:1px dashed var(--c-border);
@@ -532,13 +537,18 @@ window.DEMOS['d-9-8'] = function (mount) {
           <span style="display:inline-block;background:var(--c-primary);color:#fff;padding:6px 14px;
                        border-radius:999px;font-size:11px;font-weight:700;">Contact me</span>
         </div>
-        <div style="aspect-ratio:1/1;border-radius:12px;background:var(--c-primary-weak);
-                    display:grid;place-items:center;color:var(--c-primary);font-size:11px;font-weight:700;">Avatar</div>
+        <div style="aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--c-primary-weak);">
+          <img src="../../figs/李雷证件照.png" alt="Alex Chen avatar"
+               style="width:100%;height:100%;object-fit:cover;display:block;">
+        </div>
       </div>
 
       <div style="display:grid;gap:14px;padding:0 ${pad}px ${pad}px;
                   grid-template-columns:${narrow ? '1fr' : '4fr 8fr'};">
-        <div style="aspect-ratio:4/5;border-radius:10px;background:var(--c-surface-2);"></div>
+        <div style="aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:var(--c-surface-2);">
+          <img src="../../figs/李雷证件照.png" alt="Alex Chen photo"
+               style="width:100%;height:100%;object-fit:cover;display:block;">
+        </div>
         <div style="font-size:11.5px;line-height:1.9;color:var(--c-text-soft);">
           I am a student majoring in software engineering. Over the past two years I have worked on several course projects and small products,
           and gradually narrowed my interest down to front-end layout and information design.
@@ -549,10 +559,13 @@ window.DEMOS['d-9-8'] = function (mount) {
         <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Portfolio</div>
         <div style="display:grid;gap:10px;
                     grid-template-columns:repeat(auto-fit, minmax(${narrow ? 110 : 130}px, 1fr));">
-          ${Array.from({ length: 4 }, (_, i) => `
+          ${['天气可视化.png', '校园导航.png', '数据看板.png', '个人博客.png'].map((shot, i) => `
             <div style="padding:8px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;">
-              <div style="aspect-ratio:16/10;border-radius:5px;margin-bottom:6px;
-                          background:linear-gradient(135deg, var(--d${i + 1}), var(--c-primary-weak));"></div>
+              <div style="aspect-ratio:16/10;border-radius:5px;margin-bottom:6px;overflow:hidden;
+                          background:linear-gradient(135deg, var(--d${i + 1}), var(--c-primary-weak));">
+                <img src="../../figs/${shot}" alt="Project ${i + 1} thumbnail"
+                     style="width:100%;height:100%;object-fit:cover;display:block;">
+              </div>
               <div style="font-size:10.5px;font-weight:700;color:var(--c-text-soft);">Project ${i + 1}</div>
             </div>`).join('')}
         </div>
