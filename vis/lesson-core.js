@@ -6,8 +6,10 @@
 //   2) 最后调用 initLesson()
 //
 // 本文件集中实现：Tab 切换 / 章节导航 / Demo 注入 / 顶栏高亮
-// 修改这里，6 个章节同时生效
+// 修改这里，9 个章节（中英共 18 页）同时生效
 // =========================================================
+
+import { initLessonPath } from './lesson-path.js';  // 章节头下方的小节流动路径带（纯装饰）
 
 /* ---------------------------------------------------------
  * Demo 注入引擎
@@ -111,6 +113,8 @@ export function initLesson(label) {
 
   const hash = location.hash.replace(/^#/, '');
   if (hash) activateChapter(hash);
+
+  initLessonPath();   // 章节头下方的「小节流动路径带」（读左侧目录自动生成）
 
   renderAllDemos();
 
