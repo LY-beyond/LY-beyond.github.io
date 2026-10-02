@@ -13,8 +13,13 @@
 window.AI_DATA = (function () {
   'use strict';
 
-  /* 图表调色板（渲染时会被 charts.js 替换为 tokens.css 里的真实色值） */
-  var PALETTE_KEYS = ['--c-primary', '--c-accent', '--c-info', '--d5', '--c-success', '--d6', '--d3', '--d4'];
+  /* 图表调色板：分两档（渲染时由 charts.js 换成 tokens.css 里的真实色值）
+   *   底色档 = 大面积填充用，低彩度（OKLCH C ≤ 7）
+   *   强调档 = 线条 / 数据点 / 悬停高亮 / 异常点，高彩度（C ≥ 12）
+   * 判定别用 HSL 的 S：浅色底 S 会虚高，详见 tokens.css 注释 */
+  var PALETTE_BASE = ['--s-base', '--s-base-alt', '--s-base-warm'];
+  var PALETTE_ACCENT = ['--c-accent', '--c-danger', '--c-info', '--c-primary', '--d5', '--d6', '--d3', '--d4'];
+  var PALETTE_KEYS = PALETTE_BASE.concat(PALETTE_ACCENT);
 
   /* ---------------- ① 首页 KPI ---------------- */
   var kpis = [
@@ -203,10 +208,11 @@ window.AI_DATA = (function () {
     penetration: { zh: 'AI 渗透率', en: 'AI penetration' },
     gain: { zh: '效率增益', en: 'Efficiency gain' },
     sizeLabel: { zh: '产业增加值占 GDP 比重', en: 'Share of GDP value added' },
+    /* id 需要和 bubble.points[].sector 对得上，跨图联动靠它把行业映射到产业 */
     rows: [
-      { key: { zh: '第三产业 · 服务业', en: 'Tertiary · Services' }, penetration: 31, gain: 35, size: 55, note: { zh: '金融、零售、内容与专业服务最先被大模型重塑', en: 'Finance, retail, content and professional services lead adoption' } },
-      { key: { zh: '第二产业 · 工业', en: 'Secondary · Industry' }, penetration: 22, gain: 28, size: 37, note: { zh: '智能制造、机器质检、预测性维护是主战场', en: 'Smart manufacturing, machine inspection and predictive maintenance dominate' } },
-      { key: { zh: '第一产业 · 农业', en: 'Primary · Agriculture' }, penetration: 8, gain: 12, size: 7, note: { zh: '遥感、无人机与智能育种正在打开空间', en: 'Remote sensing, drones and smart breeding open new space' } }
+      { id: 'tertiary', key: { zh: '第三产业 · 服务业', en: 'Tertiary · Services' }, penetration: 31, gain: 35, size: 55, note: { zh: '金融、零售、内容与专业服务最先被大模型重塑', en: 'Finance, retail, content and professional services lead adoption' } },
+      { id: 'secondary', key: { zh: '第二产业 · 工业', en: 'Secondary · Industry' }, penetration: 22, gain: 28, size: 37, note: { zh: '智能制造、机器质检、预测性维护是主战场', en: 'Smart manufacturing, machine inspection and predictive maintenance dominate' } },
+      { id: 'primary', key: { zh: '第一产业 · 农业', en: 'Primary · Agriculture' }, penetration: 8, gain: 12, size: 7, note: { zh: '遥感、无人机与智能育种正在打开空间', en: 'Remote sensing, drones and smart breeding open new space' } }
     ],
     note: { zh: '渗透率 = 使用 AI 技术的企业比例；效率增益为应用企业自报的均值', en: 'Penetration = share of firms using AI; gain = average self-reported improvement' },
     source: { zh: '国家统计局产业结构数据 + 行业调研整理', en: 'National Bureau of Statistics plus industry surveys' }
@@ -224,26 +230,86 @@ window.AI_DATA = (function () {
       { zh: '低渗透 · 低增益', en: 'Low / Low' },
       { zh: '高渗透 · 低增益', en: 'High / Low' }
     ],
+    /* id 是稳定键（语言切换时 name 会变，id 不会），
+       sector 按国家统计局三次产业划分，用于把行业联动到产业条形图。
+       「建筑地产」按建筑业计入第二产业。 */
     points: [
-      { name: { zh: '金融', en: 'Finance' }, x: 42, y: 32, size: 900 },
-      { name: { zh: '传媒内容', en: 'Media' }, x: 45, y: 38, size: 650 },
-      { name: { zh: '安防', en: 'Security' }, x: 40, y: 33, size: 750 },
-      { name: { zh: '零售电商', en: 'Retail' }, x: 35, y: 30, size: 800 },
-      { name: { zh: '汽车', en: 'Automotive' }, x: 33, y: 31, size: 1100 },
-      { name: { zh: '政务服务', en: 'Public service' }, x: 30, y: 25, size: 450 },
-      { name: { zh: '交通物流', en: 'Logistics' }, x: 28, y: 29, size: 520 },
-      { name: { zh: '制造业', en: 'Manufacturing' }, x: 25, y: 28, size: 1200 },
-      { name: { zh: '能源电力', en: 'Energy' }, x: 22, y: 24, size: 400 },
-      { name: { zh: '医疗健康', en: 'Healthcare' }, x: 20, y: 26, size: 600 },
-      { name: { zh: '教育', en: 'Education' }, x: 18, y: 22, size: 500 },
-      { name: { zh: '法律', en: 'Legal' }, x: 15, y: 20, size: 150 },
-      { name: { zh: '建筑地产', en: 'Construction' }, x: 12, y: 18, size: 300 },
-      { name: { zh: '农业', en: 'Agriculture' }, x: 8, y: 12, size: 200 },
-      { name: { zh: '矿业', en: 'Mining' }, x: 6, y: 14, size: 180 }
+      { id: 'finance', name: { zh: '金融', en: 'Finance' }, x: 42, y: 32, size: 900, sector: 'tertiary' },
+      { id: 'media', name: { zh: '传媒内容', en: 'Media' }, x: 45, y: 38, size: 650, sector: 'tertiary' },
+      { id: 'security', name: { zh: '安防', en: 'Security' }, x: 40, y: 33, size: 750, sector: 'tertiary' },
+      { id: 'retail', name: { zh: '零售电商', en: 'Retail' }, x: 35, y: 30, size: 800, sector: 'tertiary' },
+      { id: 'automotive', name: { zh: '汽车', en: 'Automotive' }, x: 33, y: 31, size: 1100, sector: 'secondary' },
+      { id: 'public', name: { zh: '政务服务', en: 'Public service' }, x: 30, y: 25, size: 450, sector: 'tertiary' },
+      { id: 'logistics', name: { zh: '交通物流', en: 'Logistics' }, x: 28, y: 29, size: 520, sector: 'tertiary' },
+      { id: 'manufacturing', name: { zh: '制造业', en: 'Manufacturing' }, x: 25, y: 28, size: 1200, sector: 'secondary' },
+      { id: 'energy', name: { zh: '能源电力', en: 'Energy' }, x: 22, y: 24, size: 400, sector: 'secondary' },
+      { id: 'healthcare', name: { zh: '医疗健康', en: 'Healthcare' }, x: 20, y: 26, size: 600, sector: 'tertiary' },
+      { id: 'education', name: { zh: '教育', en: 'Education' }, x: 18, y: 22, size: 500, sector: 'tertiary' },
+      { id: 'legal', name: { zh: '法律', en: 'Legal' }, x: 15, y: 20, size: 150, sector: 'tertiary' },
+      { id: 'construction', name: { zh: '建筑地产', en: 'Construction' }, x: 12, y: 18, size: 300, sector: 'secondary' },
+      { id: 'agriculture', name: { zh: '农业', en: 'Agriculture' }, x: 8, y: 12, size: 200, sector: 'primary' },
+      { id: 'mining', name: { zh: '矿业', en: 'Mining' }, x: 6, y: 14, size: 180, sector: 'secondary' }
     ],
     note: { zh: '气泡越大代表该行业可被 AI 改造的市场规模越大；纵轴为应用企业报告的效率增益中位数', en: 'Larger bubbles mean larger addressable market; the vertical axis is the median reported efficiency gain' },
     source: { zh: '综合 IDC、艾瑞咨询、行业年报整理测算', en: 'Compiled from IDC, iResearch and industry annual reports' }
   };
+
+  /* ---------------- ⑦b 行业 × 指标热力矩阵（B2） ---------------- */
+  /* 前三个指标（渗透率 / 效率增益 / 市场规模）直接从气泡矩阵取，保证「图与图之间是同一份数」；
+     两个新指标（市场增速 / 人才密度）只在这里维护，避免和气泡图的多余耦合。 */
+  var heatExtra = {
+    finance: { cagr: 17, talent: 78 }, media: { cagr: 21, talent: 70 },
+    security: { cagr: 15, talent: 62 }, retail: { cagr: 19, talent: 58 },
+    automotive: { cagr: 24, talent: 66 }, public: { cagr: 13, talent: 55 },
+    logistics: { cagr: 18, talent: 48 }, manufacturing: { cagr: 20, talent: 61 },
+    energy: { cagr: 16, talent: 52 }, healthcare: { cagr: 26, talent: 72 },
+    education: { cagr: 22, talent: 64 }, legal: { cagr: 12, talent: 57 },
+    construction: { cagr: 11, talent: 38 }, agriculture: { cagr: 25, talent: 30 },
+    mining: { cagr: 9, talent: 27 }
+  };
+  var heatmap = {
+    caption: { zh: '15 个行业 × 5 项指标：一张热力矩阵', en: '15 industries × 5 metrics in one heat matrix' },
+    metrics: [
+      { id: 'pen', label: { zh: 'AI 渗透率', en: 'AI penetration' }, short: { zh: '渗透率', en: 'Penetr.' }, unit: '%', decimals: 0 },
+      { id: 'gain', label: { zh: '效率增益', en: 'Efficiency gain' }, short: { zh: '效率增益', en: 'Gain' }, unit: '%', decimals: 0 },
+      { id: 'size', label: { zh: '市场规模', en: 'Market size' }, short: { zh: '市场规模', en: 'Market' }, unit: { zh: ' 亿元', en: ' (100M CNY)' }, decimals: 0 },
+      { id: 'cagr', label: { zh: '市场五年增速', en: '5-year CAGR' }, short: { zh: '五年增速', en: 'CAGR' }, unit: '%', decimals: 0 },
+      { id: 'talent', label: { zh: '人才密度指数', en: 'Talent density' }, short: { zh: '人才密度', en: 'Talent' }, unit: '/100', decimals: 0 }
+    ],
+    rows: bubble.points.map(function (p) {
+      var e = heatExtra[p.id] || { cagr: 0, talent: 0 };
+      return { id: p.id, name: p.name, pen: p.x, gain: p.y, size: p.size, cagr: e.cagr, talent: e.talent };
+    }),
+    legend: { zh: '同列内相对高低', en: 'Relative within a column' },
+    legendLow: { zh: '低', en: 'low' },
+    legendHigh: { zh: '高', en: 'high' },
+    note: { zh: '每列各自按最小值→最大值着色（列内归一化，不是全局），所以颜色深浅只表示「在这一列里排第几」；渗透率 / 效率增益 / 市场规模与上方的气泡矩阵同源。', en: 'Each column is normalised on its own min–max scale, so darker only means higher within that column; penetration, gain and market size share the same source as the bubble matrix above.' },
+    source: { zh: '综合 IDC、艾瑞咨询、行业年报与招聘平台数据整理测算', en: 'Compiled from IDC, iResearch, industry annual reports and hiring platforms' }
+  };
+
+  /* ---------------- ⑥b 三次产业：渗透率小倍数（B3） ---------------- */
+  /* 与「⑤ 三次产业赋能」同源：把 2024 年的两个数拆成 2019–2025E 的时间序列。
+     三块小图共享同一套纵轴刻度，所以「谁涨得更快」可以直接比高度，不必换算。 */
+  var sectorById = {};
+  industry.rows.forEach(function (r) { sectorById[r.id] = r; });
+  var multiples = {
+    caption: { zh: '三次产业：AI 渗透率与效率增益的七年轨迹（小倍数图）', en: 'Three sectors: seven-year tracks of AI penetration and efficiency gain (small multiples)' },
+    series: [
+      { id: 'tertiary', key: sectorById.tertiary.key, colorKey: '--c-accent',
+        penetration: [12, 16, 19, 23, 26, 31, 36], gain: [14, 18, 21, 25, 29, 35, 40] },
+      { id: 'secondary', key: sectorById.secondary.key, colorKey: '--c-primary',
+        penetration: [7, 9, 12, 15, 18, 22, 27], gain: [10, 13, 16, 20, 23, 28, 33] },
+      { id: 'primary', key: sectorById.primary.key, colorKey: '--c-info',
+        penetration: [2.5, 3.2, 4, 5, 6.2, 8, 10.5], gain: [3, 4, 5.5, 7, 9, 12, 15] }
+    ],
+    seriesLabels: {
+      penetration: { zh: 'AI 渗透率', en: 'AI penetration' },
+      gain: { zh: '效率增益', en: 'Efficiency gain' }
+    },
+    note: { zh: '2024 年的两个端点与上方「三次产业赋能」条形图完全一致（渗透率 31 / 22 / 8，增益 35 / 28 / 12）；2025 年为预测，用虚线表示。', en: 'The 2024 end points match the sector bars above exactly (penetration 31 / 22 / 8, gain 35 / 28 / 12); 2025 is a forecast drawn dashed.' },
+    source: { zh: '国家统计局产业结构数据 + 行业调研整理推算', en: 'National Bureau of Statistics plus industry survey estimates' }
+  };
+
 
   /* ---------------- ⑧ 全球格局排名 ---------------- */
   var globalRank = {
@@ -265,6 +331,58 @@ window.AI_DATA = (function () {
       { name: { zh: '加拿大', en: 'Canada' }, value: 44, flag: '🇨🇦' },
       { name: { zh: '阿联酋', en: 'UAE' }, value: 40, flag: '🇦🇪' }
     ]
+  };
+
+  /* ---------------- ⑧b 中国省级算力与企业分布（B1 地理可视化） ---------------- */
+  /* id = 省级行政区划代码，与 map-china.js 里的几何一一对应（改 id 之前先看那里的注释）。
+     compute = 智能算力规模（EFLOPS，示意），firms = AI 企业数量（家，示意）。 */
+  var province = {
+    caption: { zh: '中国人工智能算力与企业的地理分布（示意）', en: 'Where AI compute and firms sit in China (indicative)' },
+    metrics: [
+      { id: 'compute', label: { zh: '智能算力规模', en: 'Intelligent compute' }, unit: { zh: ' EFLOPS', en: ' EFLOPS' }, decimals: 1 },
+      { id: 'firms', label: { zh: '人工智能企业数量', en: 'AI firms' }, unit: { zh: ' 家', en: ' firms' }, decimals: 0 }
+    ],
+    rows: [
+      { id: '110000', name: { zh: '北京', en: 'Beijing' }, compute: 4.8, firms: 3900 },
+      { id: '310000', name: { zh: '上海', en: 'Shanghai' }, compute: 3.6, firms: 2500 },
+      { id: '440000', name: { zh: '广东', en: 'Guangdong' }, compute: 4.2, firms: 3600 },
+      { id: '330000', name: { zh: '浙江', en: 'Zhejiang' }, compute: 2.8, firms: 1700 },
+      { id: '320000', name: { zh: '江苏', en: 'Jiangsu' }, compute: 2.6, firms: 1500 },
+      { id: '370000', name: { zh: '山东', en: 'Shandong' }, compute: 1.8, firms: 800 },
+      { id: '510000', name: { zh: '四川', en: 'Sichuan' }, compute: 1.6, firms: 900 },
+      { id: '420000', name: { zh: '湖北', en: 'Hubei' }, compute: 1.4, firms: 600 },
+      { id: '340000', name: { zh: '安徽', en: 'Anhui' }, compute: 1.2, firms: 500 },
+      { id: '350000', name: { zh: '福建', en: 'Fujian' }, compute: 1.0, firms: 600 },
+      { id: '120000', name: { zh: '天津', en: 'Tianjin' }, compute: 0.9, firms: 380 },
+      { id: '610000', name: { zh: '陕西', en: 'Shaanxi' }, compute: 0.8, firms: 400 },
+      { id: '430000', name: { zh: '湖南', en: 'Hunan' }, compute: 0.8, firms: 400 },
+      { id: '410000', name: { zh: '河南', en: 'Henan' }, compute: 0.8, firms: 300 },
+      { id: '500000', name: { zh: '重庆', en: 'Chongqing' }, compute: 0.7, firms: 350 },
+      { id: '130000', name: { zh: '河北', en: 'Hebei' }, compute: 0.6, firms: 240 },
+      { id: '210000', name: { zh: '辽宁', en: 'Liaoning' }, compute: 0.6, firms: 300 },
+      { id: '710000', name: { zh: '台湾', en: 'Taiwan' }, compute: 0.6, firms: 300 },
+      { id: '360000', name: { zh: '江西', en: 'Jiangxi' }, compute: 0.5, firms: 250 },
+      { id: '520000', name: { zh: '贵州', en: 'Guizhou' }, compute: 0.5, firms: 150 },
+      { id: '140000', name: { zh: '山西', en: 'Shanxi' }, compute: 0.4, firms: 100 },
+      { id: '450000', name: { zh: '广西', en: 'Guangxi' }, compute: 0.4, firms: 140 },
+      { id: '530000', name: { zh: '云南', en: 'Yunnan' }, compute: 0.4, firms: 130 },
+      { id: '810000', name: { zh: '香港', en: 'Hong Kong' }, compute: 0.4, firms: 260 },
+      { id: '220000', name: { zh: '吉林', en: 'Jilin' }, compute: 0.3, firms: 120 },
+      { id: '230000', name: { zh: '黑龙江', en: 'Heilongjiang' }, compute: 0.3, firms: 110 },
+      { id: '150000', name: { zh: '内蒙古', en: 'Inner Mongolia' }, compute: 0.3, firms: 80 },
+      { id: '620000', name: { zh: '甘肃', en: 'Gansu' }, compute: 0.2, firms: 70 },
+      { id: '650000', name: { zh: '新疆', en: 'Xinjiang' }, compute: 0.2, firms: 60 },
+      { id: '460000', name: { zh: '海南', en: 'Hainan' }, compute: 0.15, firms: 90 },
+      { id: '640000', name: { zh: '宁夏', en: 'Ningxia' }, compute: 0.1, firms: 40 },
+      { id: '630000', name: { zh: '青海', en: 'Qinghai' }, compute: 0.08, firms: 25 },
+      { id: '540000', name: { zh: '西藏', en: 'Tibet' }, compute: 0.05, firms: 15 },
+      { id: '820000', name: { zh: '澳门', en: 'Macao' }, compute: 0.06, firms: 40 }
+    ],
+    insetLabel: { zh: '南海诸岛', en: 'South China Sea Is.' },
+    noData: { zh: '暂无数据', en: 'No data' },
+    leaders: { zh: '前五名', en: 'Top five' },
+    note: { zh: '省级算力与企业数没有统一权威口径，此处按公开报道与各省「人工智能 +」方案目标折算成示意值（全国合计约 32 EFLOPS、2.2 万家企业），用于比较结构而非绝对水平；地图为抽稀后的示意轮廓。', en: 'There is no single authoritative provincial breakdown, so these are indicative values converted from public reports and provincial AI action plans (about 32 EFLOPS and 22,000 firms nationwide) — read the structure, not absolute levels. Boundaries are simplified for illustration.' },
+    source: { zh: '工信部与各省「人工智能 +」行动方案公开数据整理；底图几何：阿里云 DataV.GeoAtlas 省级边界（抽稀后使用）', en: 'MIIT and provincial AI action plans; boundaries: DataV.GeoAtlas province outlines, simplified' }
   };
 
   /* ---------------- ⑨ 要素重构流向图 ---------------- */
@@ -425,6 +543,32 @@ window.AI_DATA = (function () {
       zh: '模型是一个公开、可复现的线性加权示意模型，用于说明各要素的相对重要性，不代表真实经济预测。',
       en: 'The model is an open, reproducible linear-weight illustration of relative importance rather than a real economic forecast.'
     },
+    /* —— 敏感性分析（B4）：龙卷风图 + 蒙特卡洛分布 ——
+       两套计算都基于下面同一个 model()，参数只在这里写一份，
+       所以「旋钮位置 → 结果」在图和数之间永远一致。 */
+    sensitivity: {
+      caption: { zh: '敏感性分析：哪个旋钮最关键', en: 'Sensitivity: which dial matters most' },
+      target: { zh: '综合新质生产力指数', en: 'Composite NQPF index' },
+      tornadoTitle: { zh: '① 单因素敏感性（龙卷风图）', en: '① One-factor sensitivity (tornado)' },
+      tornadoHint: { zh: '固定其他三项、只让这一项从 0 走到 100，看指数能被拉开多大差距——条形越长，这个因素越关键。', en: 'Hold the other three fixed and sweep this one from 0 to 100; the longer the bar, the more decisive the factor.' },
+      mcTitle: { zh: '② 蒙特卡洛分布（500 次抽样）', en: '② Monte Carlo spread (500 draws)' },
+      mcHint: { zh: '四项投入各自在 ±15% 内随机扰动、抽 500 次，看指数落在哪里；虚线依次是 P5 / 中位数 / P95。', en: 'Jitter all four inputs by ±15% and draw 500 times to see where the index lands; dashed lines mark P5 / median / P95.' },
+      sweepLabel: { zh: '指数区间', en: 'Index range' },
+      lowLabel: { zh: '取最小时', en: 'at minimum' },
+      highLabel: { zh: '取最大时', en: 'at maximum' },
+      swingLabel: { zh: '区间宽度', en: 'Swing' },
+      p5Label: { zh: 'P5', en: 'P5' },
+      p50Label: { zh: '中位数', en: 'median' },
+      p95Label: { zh: 'P95', en: 'P95' },
+      currentLabel: { zh: '当前设定', en: 'Current setting' },
+      countLabel: { zh: '抽样频次', en: 'draws' },
+      lowWord: { zh: '低', en: 'low' },
+      highWord: { zh: '高', en: 'high' },
+      perturb: 0.15,
+      draws: 500,
+      seed: 20261002,
+      note: { zh: '两幅图都由同一个公开模型算出：龙卷风图一次只动一个因素，回答「先调哪个」；蒙特卡洛四个一起小幅扰动，回答「结果有多不确定」。', en: 'Both panels come from the same open model: the tornado moves one factor at a time to answer “what to tune first”, while the Monte Carlo jitters all four to show how uncertain the outcome is.' }
+    },
     /* 公开可复现的示意模型：四个输入均为 0–1 */
     model: function (v) {
       var p = (v.penetration || 0) / 100;
@@ -469,14 +613,14 @@ window.AI_DATA = (function () {
     caption: { zh: 'AI 走进生产现场的八个场景', en: 'Eight scenarios where AI reaches the shop floor' },
     note: { zh: '以下数字为公开案例报道中的典型值区间，用于说明量级', en: 'Figures below are typical ranges reported in public case studies' },
     items: [
-      { icon: '🏭', name: { zh: '智能制造', en: 'Smart manufacturing' }, desc: { zh: '机器视觉替代人工目检，预测性维护把非计划停机压到最低。', en: 'Machine vision replaces manual inspection; predictive maintenance minimizes unplanned downtime.' }, metrics: [{ k: { zh: '质检效率', en: 'Inspection efficiency' }, v: '+30%' }, { k: { zh: '非计划停机', en: 'Unplanned downtime' }, v: '-25%' }] },
-      { icon: '🩺', name: { zh: '智慧医疗', en: 'Smart healthcare' }, desc: { zh: '影像辅助诊断把初筛时间压到分钟级，并让优质诊断能力下沉到基层。', en: 'AI-assisted imaging shortens triage to minutes and brings quality diagnosis to grassroots clinics.' }, metrics: [{ k: { zh: '阅片时间', en: 'Reading time' }, v: '-40%' }, { k: { zh: '基层覆盖率', en: 'Grassroots coverage' }, v: '60%' }] },
-      { icon: '🌾', name: { zh: '智慧农业', en: 'Smart agriculture' }, desc: { zh: '遥感巡田与无人机植保按需施药，育种周期被算法显著压缩。', en: 'Remote sensing and drone spraying apply inputs on demand; breeding cycles shrink.' }, metrics: [{ k: { zh: '农药用量', en: 'Pesticide use' }, v: '-20%' }, { k: { zh: '亩均产量', en: 'Yield per mu' }, v: '+12%' }] },
-      { icon: '🎓', name: { zh: '智慧教育', en: 'Smart education' }, desc: { zh: 'AI 助教批改与备课，教师把时间还给学生；个性化路径让因材施教可规模复制。', en: 'AI assistants grade and prepare lessons, returning time to students; personalization scales.' }, metrics: [{ k: { zh: '备课时间', en: 'Lesson prep time' }, v: '-50%' }, { k: { zh: '个性化学习覆盖', en: 'Personalized coverage' }, v: '45%' }] },
-      { icon: '💳', name: { zh: '金融科技', en: 'Fintech' }, desc: { zh: '风控模型实时识别异常交易，智能客服承接大部分重复咨询。', en: 'Risk models flag anomalies in real time; AI service desks absorb repetitive enquiries.' }, metrics: [{ k: { zh: '欺诈识别率', en: 'Fraud detection' }, v: '+35%' }, { k: { zh: '客服成本', en: 'Service cost' }, v: '-30%' }] },
-      { icon: '⚡', name: { zh: '智慧能源', en: 'Smart energy' }, desc: { zh: '功率预测与电网调度协同，让更多绿电被消纳、更少电能被浪费。', en: 'Forecasting and dispatch work together so more renewables are absorbed and less power wasted.' }, metrics: [{ k: { zh: '风光预测准确率', en: 'Renewable forecast accuracy' }, v: '+15%' }, { k: { zh: '综合线损', en: 'Grid losses' }, v: '-8%' }] },
-      { icon: '🚦', name: { zh: '智慧交通', en: 'Smart mobility' }, desc: { zh: '信号配时随车流自适应，轨迹预测让安全预警提前几秒。', en: 'Adaptive signal timing follows traffic; trajectory prediction buys seconds of warning.' }, metrics: [{ k: { zh: '路口通行效率', en: 'Intersection throughput' }, v: '+20%' }, { k: { zh: '事故率', en: 'Accident rate' }, v: '-15%' }] },
-      { icon: '🏛️', name: { zh: '数字政务', en: 'Digital government' }, desc: { zh: '智能预审与材料复用让「最多跑一次」落到实处。', en: 'Smart pre-review and document reuse make one-visit service real.' }, metrics: [{ k: { zh: '平均审批时长', en: 'Approval time' }, v: '-60%' }, { k: { zh: '群众满意度', en: 'Citizen satisfaction' }, v: '+18%' }] }
+      { icon: '🏭', match: 'manufacturing', name: { zh: '智能制造', en: 'Smart manufacturing' }, desc: { zh: '机器视觉替代人工目检，预测性维护把非计划停机压到最低。', en: 'Machine vision replaces manual inspection; predictive maintenance minimizes unplanned downtime.' }, metrics: [{ k: { zh: '质检效率', en: 'Inspection efficiency' }, v: '+30%' }, { k: { zh: '非计划停机', en: 'Unplanned downtime' }, v: '-25%' }] },
+      { icon: '🩺', match: 'healthcare', name: { zh: '智慧医疗', en: 'Smart healthcare' }, desc: { zh: '影像辅助诊断把初筛时间压到分钟级，并让优质诊断能力下沉到基层。', en: 'AI-assisted imaging shortens triage to minutes and brings quality diagnosis to grassroots clinics.' }, metrics: [{ k: { zh: '阅片时间', en: 'Reading time' }, v: '-40%' }, { k: { zh: '基层覆盖率', en: 'Grassroots coverage' }, v: '60%' }] },
+      { icon: '🌾', match: 'agriculture', name: { zh: '智慧农业', en: 'Smart agriculture' }, desc: { zh: '遥感巡田与无人机植保按需施药，育种周期被算法显著压缩。', en: 'Remote sensing and drone spraying apply inputs on demand; breeding cycles shrink.' }, metrics: [{ k: { zh: '农药用量', en: 'Pesticide use' }, v: '-20%' }, { k: { zh: '亩均产量', en: 'Yield per mu' }, v: '+12%' }] },
+      { icon: '🎓', match: 'education', name: { zh: '智慧教育', en: 'Smart education' }, desc: { zh: 'AI 助教批改与备课，教师把时间还给学生；个性化路径让因材施教可规模复制。', en: 'AI assistants grade and prepare lessons, returning time to students; personalization scales.' }, metrics: [{ k: { zh: '备课时间', en: 'Lesson prep time' }, v: '-50%' }, { k: { zh: '个性化学习覆盖', en: 'Personalized coverage' }, v: '45%' }] },
+      { icon: '💳', match: 'finance', name: { zh: '金融科技', en: 'Fintech' }, desc: { zh: '风控模型实时识别异常交易，智能客服承接大部分重复咨询。', en: 'Risk models flag anomalies in real time; AI service desks absorb repetitive enquiries.' }, metrics: [{ k: { zh: '欺诈识别率', en: 'Fraud detection' }, v: '+35%' }, { k: { zh: '客服成本', en: 'Service cost' }, v: '-30%' }] },
+      { icon: '⚡', match: 'energy', name: { zh: '智慧能源', en: 'Smart energy' }, desc: { zh: '功率预测与电网调度协同，让更多绿电被消纳、更少电能被浪费。', en: 'Forecasting and dispatch work together so more renewables are absorbed and less power wasted.' }, metrics: [{ k: { zh: '风光预测准确率', en: 'Renewable forecast accuracy' }, v: '+15%' }, { k: { zh: '综合线损', en: 'Grid losses' }, v: '-8%' }] },
+      { icon: '🚦', match: 'logistics', name: { zh: '智慧交通', en: 'Smart mobility' }, desc: { zh: '信号配时随车流自适应，轨迹预测让安全预警提前几秒。', en: 'Adaptive signal timing follows traffic; trajectory prediction buys seconds of warning.' }, metrics: [{ k: { zh: '路口通行效率', en: 'Intersection throughput' }, v: '+20%' }, { k: { zh: '事故率', en: 'Accident rate' }, v: '-15%' }] },
+      { icon: '🏛️', match: 'public', name: { zh: '数字政务', en: 'Digital government' }, desc: { zh: '智能预审与材料复用让「最多跑一次」落到实处。', en: 'Smart pre-review and document reuse make one-visit service real.' }, metrics: [{ k: { zh: '平均审批时长', en: 'Approval time' }, v: '-60%' }, { k: { zh: '群众满意度', en: 'Citizen satisfaction' }, v: '+18%' }] }
     ]
   };
 
@@ -489,7 +633,11 @@ window.AI_DATA = (function () {
     { name: { zh: '麦肯锡《生成式人工智能的经济潜力》', en: 'McKinsey — The Economic Potential of Generative AI' }, note: { zh: '生产率与市场价值', en: 'Productivity and market value' } },
     { name: { zh: 'IDC《全球人工智能支出指南》', en: 'IDC Worldwide AI Spending Guide' }, note: { zh: '市场规模与行业渗透', en: 'Market size and penetration' } },
     { name: { zh: '斯坦福 HAI《人工智能指数报告》', en: 'Stanford HAI — AI Index Report' }, note: { zh: '技术与国家比较', en: 'Technology and country comparison' } },
-    { name: { zh: '世界经济论坛《未来就业报告》', en: 'World Economic Forum — Future of Jobs' }, note: { zh: '就业与技能结构', en: 'Jobs and skills' } }
+    { name: { zh: '世界经济论坛《未来就业报告》', en: 'World Economic Forum — Future of Jobs' }, note: { zh: '就业与技能结构', en: 'Jobs and skills' } },
+    { name: { zh: '工业和信息化部与各省「人工智能 +」行动方案', en: 'MIIT and provincial AI+ action plans' }, note: { zh: '省级算力规模与企业数量（示意）', en: 'Provincial compute and AI firms (indicative)' } },
+    { name: { zh: '阿里云 DataV.GeoAtlas 行政区边界', en: 'Aliyun DataV.GeoAtlas administrative boundaries' }, note: { zh: '省级地图底图（抽稀后的示意轮廓，非审图号地图）', en: 'Province outlines, simplified for illustration' } },
+    { name: { zh: '行业招聘平台与年报数据（人才密度 / 市场增速）', en: 'Hiring platforms and annual reports (talent, CAGR)' }, note: { zh: '热力矩阵后两列指标口径', en: 'Definitions for the last two heat-map columns' } },
+    { name: { zh: '本页模拟器的公开线性模型', en: 'The open linear model behind this page’s simulator' }, note: { zh: '敏感性分析与蒙特卡洛抽样的计算依据', en: 'Basis for the sensitivity and Monte Carlo panels' } }
   ];
 
   /* ---------------- ⑮ 阅读地图 ---------------- */
@@ -498,6 +646,7 @@ window.AI_DATA = (function () {
     { icon: '💪', name: { zh: '作用力：六维雷达', en: 'Forces: six-dimension radar' }, desc: { zh: '配合五股看得见的作用力', en: 'Plus five tangible forces of change' }, href: '#power' },
     { icon: '📈', name: { zh: '产业规模：增长曲线', en: 'Scale: growth curve' }, desc: { zh: '核心产业与带动产业的双曲线', en: 'Core and enabled industry curves' }, href: '#scale' },
     { icon: '🎯', name: { zh: '行业赋能：气泡矩阵', en: 'Industries: bubble matrix' }, desc: { zh: '15 个行业的渗透率 × 增益 × 规模', en: '15 industries in one matrix' }, href: '#industry' },
+    { icon: '🗺️', name: { zh: '区域格局：算力地图', en: 'Regions: compute map' }, desc: { zh: '34 个省级单元的算力与企业分布', en: 'Compute and firms across 34 provinces' }, href: '#region' },
     { icon: '🌍', name: { zh: '全球格局：实力排名', en: 'Global: ranking' }, desc: { zh: '12 个经济体的 AI 发展指数', en: 'AI index of 12 economies' }, href: '#global' },
     { icon: '🔀', name: { zh: '要素重构：流向图', en: 'Factors: flow diagram' }, desc: { zh: '从 AI 投入到产出，资源怎么走', en: 'How inputs turn into outcomes' }, href: '#flow' },
     { icon: '🕸️', name: { zh: '关系图谱：可拖动', en: 'Graph: draggable' }, desc: { zh: '21 个节点、36 条关系的全景图', en: '21 nodes and 36 relations' }, href: '#graph' },
@@ -509,6 +658,8 @@ window.AI_DATA = (function () {
   /* ---------------- 导出 ---------------- */
   return {
     paletteKeys: PALETTE_KEYS,
+    paletteBase: PALETTE_BASE,
+    paletteAccent: PALETTE_ACCENT,
     kpis: kpis,
     define: define,
     radar: radar,
@@ -516,18 +667,17 @@ window.AI_DATA = (function () {
     scale: scale,
     industry: industry,
     bubble: bubble,
+    heatmap: heatmap,
+    multiples: multiples,
     globalRank: globalRank,
+    province: province,
     flow: flow,
     graph: graph,
     sim: sim,
     timeline: timeline,
     scenes: scenes,
     sources: sources,
-    overview: overview,
-    disclaimer: {
-      zh: '本站所有数据来自公开资料整理与示意测算，不同机构统计口径存在差异，仅用于可视化表达与课堂讨论，不作为严谨的统计引用。',
-      en: 'All data on this site is compiled from public sources and illustrative estimates. Statistical scopes differ between institutions; figures are for visualization and classroom discussion only.'
-    }
+    overview: overview
   };
 }());
 

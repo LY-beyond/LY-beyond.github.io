@@ -17,6 +17,83 @@
 | 本方案怎么解决 | 已把根 `netlify.toml` 的 `publish` 去掉（只留说明注释），两个站点各自在 UI 里声明 Publish directory。 |
 | 需要几条命令 | 只有 4 条（见 §1），其余全在网页上点。 |
 | 预计耗时 | 首次约 10 分钟；之后再更新只要 `git push`，Netlify 自动重新部署。 |
+| 可以先不部署、改完再一次性部署吗？ | **可以**，完全没问题；预览方式见 §0.5（**本地预览已实测可用**；GitHub Pages 这个通道当前不可用，原因见 §0.5）。 |
+
+---
+
+## 0.5 先不部署：不花额度也能看效果的 3 条通道
+
+**结论：随意推迟部署。** `vis2/` 只是静态文件，放在本地或 GitHub 上随时都能看，
+真正"必须"部署的时刻只有一个 —— **你要交最终 URL 的时候**（详见本节末尾）。
+
+### 三种预览方式对比
+
+| 方式 | 怎么用 | 地址 | 说明 |
+|---|---|---|---|
+| ① **双击打开**（最省事） | 双击 `D:\Vis\LY-beyond.github.io\vis2\index.html` | `file:///D:/.../vis2/index.html` | 本页**特意全部使用普通 `<script src>`**：无 `type="module"`、无 `fetch`/XHR，所以 `file://` 下功能完整、完全离线 |
+| ② **本地 HTTP 服务器**（最接近线上） | 仓库根目录执行 `python -m http.server 8099 --directory vis2` | <http://localhost:8099/> | 已在本机验证（Python 3.8）；也可用 VS Code 的 **Live Server** 扩展，或 `npx serve vis2` |
+| ③ **GitHub Pages**（不占额度，但 ⚠️ **当前不可用**，见下） | `git push origin main` 后自动生效 | <https://ly-beyond.github.io/vis2/> | 本该是最方便的真机预览通道，但本仓库的 Pages 自 2026-09-14 起没部署成功过（实测数据见下） |
+
+> ⚠️ **实测（2026-10-02）：这个仓库的 GitHub Pages 目前是"卡住"状态，自 2026-09-14 起就没有成功部署过**，
+> 所以方式 ③ **现在还不能当预览用**：
+>
+> | 探测项 | Pages 上 | 本地 | 结论 |
+> |---|---|---|---|
+> | `/vis/index.html` | 200，10,359 B | 16,504 B | 还是 9/14 的旧版 |
+> | `/vis/theme.js`、`vis/graph.js`、`vis/FEATURES.md`、`vis/practice-data.js` | **404** | 存在 | 这些是 **9/15** 才加入的文件，没被部署 |
+> | `/vis2/index.html` | **404** | 14,887 B | vis2 是 **10/02** 提交的，自然没有 |
+>
+> **结论：日常预览请用方式 ① 和 ②（都已验证可用）**，别等 Pages。
+> 想让 Pages 恢复（可选，作业不依赖它）：
+>
+> 1. 打开 **仓库 → Settings → Pages**，确认 Source 是 `Deploy from a branch` → `main` → `/ (root)`；
+>    然后看 **Actions → 左侧 "pages build and deployment"** 最近几次是不是红色失败，并翻一下邮箱里的 *Page build failed* 通知；
+> 2. 或者改用 **GitHub Actions 发布**（新增一个 `.github/workflows/pages.yml`，把 `vis/` 与 `vis2/` 目录直接上传，绕开 Jekyll 构建），
+>    再到 Settings → Pages → Source 选 **GitHub Actions**。需要的话说一声，我可以直接帮你加上这个工作流文件。
+>
+> 💡 也可以完全不折腾：**交作业用 Netlify 的 URL（见 §4）即可**，预览用本地 ①②。
+
+### 本地预览的 3 个小提示
+
+1. **强刷**：改了 CSS/JS 后按 `Ctrl+F5`（或开无痕窗口），避免浏览器缓存旧文件；
+2. **`localStorage`**：`file://` 下个别浏览器/隐身模式会禁用（本页已用 `try/catch` 兜底，语言与主题回落到默认值）；
+   用方式 ② 则与线上完全一致；
+3. **真机**：手机与电脑连同一 WiFi 时，可用 `python -m http.server 8099 --directory vis2 --bind 0.0.0.0`，
+   然后手机访问 `http://<电脑局域网 IP>:8099/`。
+
+### Netlify 额度到底怎么算（决定你要不要省）
+
+| 你的账号类型 | 计量方式 | 关键数字 |
+|---|---|---|
+| **2025-09-04 之后新建**（Credit-based） | 按 **credits** 计，Free = **300 credits/月**，硬上限 | **带宽 20 credits/GB**；**网页请求 2 credits / 1 万次**；额度耗尽后站点显示 `Site not available` |
+| **2025-09-04 之前创建**（Legacy Free/Starter） | 按 **build minutes + 带宽** 计 | 通常 300 build minutes/月、100 GB 带宽/月 |
+
+- **部署次数本身不单独计费**（计的是带宽与请求量）；
+- 粗算本页的消耗：一次完整访问约 **400 KB、约 25 个请求**
+  → 带宽 0.0004 GB × 20 ≈ **0.008 credit**，请求 25/10000 × 2 ≈ **0.005 credit**，
+  即约 **0.013 credit / 次访问**；**1000 次访问 ≈ 13 credits**，相对 300 credits/月 很宽裕；
+- 真正的额度大头通常是**上一份作业里的高清图片/视频**，请在
+  **Usage & billing → Monitor credit usage** 里看当前用量，再决定要不要省。
+
+### 开发期间想让 Netlify 完全不动？（可选）
+
+每次 `git push origin main` 都会让已连接的旧站点跑一次部署（本页很小，成本可忽略）。
+若你想在这几天**一次部署都不产生**：
+
+1. 进旧站点 → **Project configuration > Developer settings > Continuous deployment > Build settings**；
+2. 点 **Configure** → 把 **Build status** 切到 **Stopped builds**。
+
+⚠️ 代价：停用后 Netlify **不会**因 push / build hook / API / UI 触发任何构建（
+**Deploys 页面的 `Trigger deploy` 按钮也会变灰**）。
+想重新部署时，再切回 **Active builds**（激活本身不会立即构建，需要再触发一次）。
+
+> 如果你的旧站点还需要随时能重发，就别停用，直接让它跟着 push 跑，成本可以忽略。
+
+### 那什么时候"必须"部署？
+
+只有**你要交最终 URL 的时刻**。中间所有修改用 §0.5 的 **①②** 预览即可（③ Pages 通道当前不可用）；
+最后按 §4 建好站点后，之后每次 `git push` 都会自动重新部署，
+所以完全可以"**开发期本地看 → 收尾时一次性部署**"。
 
 ---
 
@@ -55,6 +132,11 @@ git status --short        # 应该没有未跟踪的 vis2/
 去掉之后，旧站点就必须自己在 UI 里记住「发布目录 = vis」；否则它下次重新部署时会找不到页面（默认变成仓库根目录，而根目录没有 `index.html`）。
 
 **操作（约 30 秒，只做一次）**
+
+> ⚠️ **如果你已经 push 过了**（例如 `63abbd2` 已在 `origin/main`）：那次推送很可能已经让旧站点重建过一次，
+> 而当时 UI 里若没写 `vis`，旧站点现在**可能已经挂掉**。请立刻打开旧站点 URL 看一眼：
+> 首页 404 或出现的是目录/空白 → 说明 UI 里没有 `publish = vis`，现在按下面 1–5 步设成 `vis` 并
+> **Trigger deploy** 一次即可恢复（约 10 秒）；一切正常也建议按 1–5 步把设置写死，避免以后再踩。
 
 1. 打开 <https://app.netlify.com/>，进入**旧站点**（上次部署 vis 的那个）。
 2. 左侧 **Site configuration → Build & deployment → Build settings**。
@@ -125,7 +207,7 @@ git status --short        # 应该没有未跟踪的 vis2/
 
 ### 4.3 等部署完成
 
-- 大约 **10~30 秒**（本次发布内容很小：19 个文件 / 约 235 KB，无构建步骤，
+- 大约 **10~30 秒**（本次发布内容很小：20 个文件 / 约 401 KB，无构建步骤，
   其中 5 个 d3 脚本累计只有约 30 KB）。
 - 完成后得到形如 `https://sparkly-otter-1a2b3c.netlify.app` 的地址；
   在站点 **Deploys** 页面可以看到这次部署日志，其中会打印发布目录：
@@ -188,6 +270,9 @@ git status --short        # 应该没有未跟踪的 vis2/
 ---
 
 ## 7. 以后怎么更新页面（日常流程）
+
+> 💡 **还没定稿 / 想省额度？** 中间修改**不用 push**：本地预览（§0.5 的 ①②）就够了。
+> 每次 `git push origin main` 都会触发一次部署与少量带宽/请求计量，收尾时一起推即可。
 
 ```
 改代码  →  node vis2/check.mjs  →  git add/commit/push  →  Netlify 自动重新部署（约 10 秒）

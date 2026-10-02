@@ -12,7 +12,12 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* 锚点跳转时给吸顶栏留位置（比逐块写 scroll-margin-top 更省事）：
+     没有这一行，窄屏点目录后章节标题会被顶栏整行盖住 */
+  scroll-padding-top: calc(var(--topbar-h) + var(--space));
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
@@ -83,8 +88,9 @@ b, strong { font-weight: 800; }
   padding: 0 var(--gutter);
 }
 
-.brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; }
 .brand-mark {
+  flex: 0 0 auto;
   width: 26px; height: 26px;
   border-radius: 8px;
   background:
@@ -93,7 +99,14 @@ b, strong { font-weight: 800; }
     color-mix(in srgb, var(--c-primary) 16%, var(--c-surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 26%, transparent);
 }
-.brand-text { font-weight: 800; font-size: 15px; letter-spacing: .01em; }
+.brand-text {
+  overflow: hidden;              /* 极窄屏优先截断站名，而不是把 ☰ 挤出屏幕 */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .01em;
+}
 
 .topnav {
   display: flex;
@@ -107,7 +120,7 @@ b, strong { font-weight: 800; }
 
 .nav-link {
   flex: 0 0 auto;
-  padding: 6px 10px;
+  padding: 6px 9px;
   border-radius: var(--radius-pill);
   color: var(--c-text-soft);
   font-size: 13px;
@@ -126,7 +139,8 @@ b, strong { font-weight: 800; }
 
 .nav-toggle {
   display: none;
-  width: 36px; height: 32px;
+  flex: 0 0 auto;          /* 不加这句，360~414px 时它会被 flex 压窄（36→28px） */
+  width: 40px; height: 36px;
   border: 1px solid var(--c-line);
   border-radius: var(--radius-sm);
   background: var(--c-surface);
@@ -135,7 +149,12 @@ b, strong { font-weight: 800; }
   cursor: pointer;
 }
 
-@media (max-width: 900px) {
+/* 断点 1160px：901~1150px 之间导航项放不下（1024px 时超出 101px，
+   而 .topnav 隐藏了滚动条，用户根本不知道还能横滑），所以折叠成抽屉。
+   注：导航内边距从 10px 收到 9px —— 加上第 13 项「区域格局」后，
+   1180px 以上的宽屏也会差 19px（.topbar-inner 有 max-width，不是窗口宽度决定），
+   收 1px 正好留出余量，中英文都不会被裁。 */
+@media (max-width: 1160px) {
   .nav-toggle { display: block; margin-left: auto; order: 3; }
   .topnav {
     position: absolute;
@@ -153,6 +172,12 @@ b, strong { font-weight: 800; }
   }
   .topnav.is-open { max-height: 70vh; overflow-y: auto; }
   .nav-link { border-radius: 0; padding: 12px var(--gutter); }
+}
+
+/* 手机：顶栏元素（站名 / ☰ / 主题 / 语言）间距收紧，
+   否则 360px 下站名被截到只剩「AI · 新…」 */
+@media (max-width: 420px) {
+  .topbar-inner { gap: var(--space-sm); }
 }
 
 /* ---------------- 首屏 ---------------- */
@@ -247,13 +272,16 @@ b, strong { font-weight: 800; }
 .card-note,
 .card-source {
   margin-top: var(--space-sm);
+  max-width: 68ch;          /* 不限宽时 1440px 下脚注一行 86.6em（≈100 字），远超舒适区 */
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--c-muted);
 }
 .card-source { margin-top: 4px; }
 
-/* 图表画布：aspect-ratio 交给内部 SVG 的 viewBox 决定高度 */
+/* 图表画布：aspect-ratio 交给内部 SVG 的 viewBox 决定高度。
+   charts.js 现在按「容器实际宽度」出图（viewBox 与屏幕 1:1），
+   所以字号在宽窄屏上都是 11~13px，不会再被等比放大/缩小。 */
 .viz { position: relative; width: 100%; }
 .viz-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .viz-svg--graph { touch-action: none; }
@@ -346,6 +374,152 @@ b, strong { font-weight: 800; }
   border-radius: var(--radius);
   color: var(--c-danger);
   font-size: 13px;
+}
+
+/* ---------------- 图表工具栏：视图切换 / 筛选 / 播放 / 导出 ----------------
+   8 张图共用同一套控件（见 app.js 的 chartTools()），夹在卡片标题与画布之间。
+   「图表 / 数据表」按分段控件处理：两枚按钮共用一圈外框，
+   视觉上读作一个控件，而不是两个各自为政的按钮。 */
+.viz-seg {
+  display: inline-flex;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--c-surface);
+}
+.viz-seg .viz-btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--c-text-soft);
+}
+.viz-seg .viz-btn + .viz-btn { border-left: 1px solid var(--c-line-2); }
+.viz-seg .viz-btn:hover {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  color: var(--c-primary);
+}
+.viz-seg .viz-btn.is-on { background: var(--c-primary); color: var(--c-on-primary); }
+.viz-seg .viz-btn.is-on:hover { background: var(--c-primary-2); color: var(--c-on-primary); }
+
+/* 导出组推到右边；窄屏换行后自成一行，不会挤住左边的分段控件 */
+.viz-acts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-left: auto;
+}
+
+.viz-btn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.viz-btn.is-ghost { border-style: dashed; color: var(--c-text-soft); }
+.viz-btn.is-ghost[hidden] { display: none; }
+.viz-btn.is-play.is-on { border-color: var(--c-accent); color: var(--c-accent); }
+
+/* 关系图内部那条（适应窗口 + 操作提示）：贴着画布下沿，用虚线分出层次 */
+.viz-toolbar--inset {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--c-line);
+}
+
+/* 行业筛选：label 与 select 同排，键盘可达 */
+.viz-filter { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.viz-filter-label { font-size: 12.5px; font-weight: 800; color: var(--c-muted); }
+.viz-select {
+  max-width: 220px;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+.viz-select:hover { border-color: var(--c-primary); color: var(--c-primary); }
+.viz-select:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+/* 联动状态播报：数字走等宽，播放时文字不会左右跳 */
+.viz-live {
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 年份播放器：range 用 accent-color 跟随强调色，不必自己画轨道 */
+.viz-range {
+  width: 160px;
+  min-width: 110px;
+  height: 22px;
+  accent-color: var(--c-accent);
+  cursor: pointer;
+}
+.viz-range:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.viz-year {
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* 窄屏：年份徽标很长（年份 + 核心 + 带动），nowrap 会顶破卡片、
+   给整页添一条横向滚动条；所以让它独占一行并允许折行。 */
+@media (max-width: 520px) {
+  .viz-year { flex: 1 1 100%; white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* ---------------- 「数据表」视图（每张图的无障碍等价物） ----------------
+   图给「形状」，表给「数字」：读屏用户和要抄数的人都有一个出口。
+   表头吸顶，长表滚动时列名不丢。 */
+/* ---------- 第二次作业新增的四张图：样式很少，图都在 SVG 里 ----------
+   工具栏上的「前五名」这类开关用 is-on 表示按下；
+   .region-note 是地图卡片下面的一句操作提示。 */
+.viz-btn.is-on {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  background: var(--c-primary-weak);
+}
+.region-note { margin-top: var(--space); font-size: 12.5px; color: var(--c-muted); }
+
+.viz-table-wrap { margin-top: var(--space); overflow-x: auto; }
+.viz-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.viz-table + .viz-table { margin-top: var(--space-lg); }
+.viz-table caption {
+  padding-bottom: var(--space-sm);
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-align: left;
+}
+.viz-table th,
+.viz-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-line);
+  text-align: left;
+  vertical-align: top;
+}
+.viz-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--c-surface-2);
+  border-bottom: 1px solid var(--c-border-2);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.viz-table tbody th { font-weight: 700; color: var(--c-text); }
+.viz-table tbody tr:hover th,
+.viz-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
 }
 
 
@@ -486,11 +660,57 @@ b, strong { font-weight: 800; }
 #compare-table { overflow-x: auto; }
 #compare-table .cmp { min-width: 640px; }
 
+/* 窄屏：不再让用户去横滑一张 640px 的表（容器只有 316px 时右侧列完全看不见），
+   改成上下堆叠 —— 每个单元格自带列名（data-label 由 app.js 写入） */
+@media (max-width: 700px) {
+  #compare-table { overflow-x: visible; }
+  #compare-table .cmp { min-width: 0; font-size: 13px; }
+  .cmp thead { display: none; }
+  .cmp, .cmp tbody, .cmp tr, .cmp th, .cmp td { display: block; }
+  .cmp tr {
+    padding: var(--space) 0;
+    border-bottom: 1px dashed var(--c-line);
+  }
+  .cmp tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
+  .cmp tbody th {
+    padding: 0 0 8px;
+    border: 0;
+    white-space: normal;
+    font-size: 14.5px;
+  }
+  .cmp td {
+    margin-top: 6px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--c-surface-2);
+  }
+  .cmp td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--c-muted);
+    font-size: 11.5px;
+    font-weight: 800;
+  }
+  .cmp .is-after { background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent); }
+}
+
 /* ---------------- ③ 五股作用力 ---------------- */
 .force-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space);
+}
+
+/* 5 张卡在 4 列时会剩 1 张独占一排（右边 3 个空位）。
+   ≥1120px 改成「6 轨 × 跨 2 轨 = 3 列」，第二排两张居中，末排不再落单。
+   注意：这个写法是为 5 条数据定制的，将来加第 6 张卡会自动落到第三排。 */
+@media (min-width: 1120px) {
+  .force-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .force-card { grid-column: span 2; }
+  .force-card:nth-child(4) { grid-column: 2 / span 2; }
+  .force-card:nth-child(5) { grid-column: 4 / span 2; }
 }
 .force-card {
   display: flex;
@@ -605,7 +825,7 @@ b, strong { font-weight: 800; }
 
 .sim-readout {
   display: grid;
-  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  grid-template-columns: minmax(160px, 230px) minmax(0, 1fr);
   gap: var(--space-lg);
   align-items: start;
 }
@@ -618,7 +838,9 @@ b, strong { font-weight: 800; }
   border-radius: var(--radius-lg);
 }
 .sim-index-label { font-size: 13px; font-weight: 800; color: var(--c-primary); }
-.sim-gauge { width: 100%; max-width: 190px; margin: 0 auto; }
+/* 模拟器仪表：原来 max-width:190px 会把 200×200 的 viewBox 压到 125px 渲染，
+   12 单位的单位文字只剩 7.5px（比手机上还小）—— 放开，让它按 1:1 出图 */
+.sim-gauge { width: 100%; max-width: 100%; margin: 0 auto; }
 
 .sim-outputs {
   display: grid;
@@ -670,12 +892,30 @@ b, strong { font-weight: 800; }
 .scene-metric-k { display: block; font-size: 11.5px; color: var(--c-muted); }
 .scene-metric-v { font-size: 17px; font-family: var(--font-mono); color: var(--c-primary); }
 
+/* 被行业筛选成空集时的兜底：跨满整行，给一句解释 + 一个出口按钮，
+   不留一块说不清来由的空白 */
+.scene-empty {
+  grid-column: 1 / -1;
+  padding: var(--space-lg);
+  border: 1px dashed var(--c-border-2);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  text-align: center;
+}
+.scene-empty p { margin-bottom: var(--space); }
+
 /* ---------------- ⑤ 数据来源 ---------------- */
+/* 8 条来源用 1 / 2 / 4 列刚好整除；原来的 auto-fit(minmax(280px)) 在桌面是 3 列，
+   8 条会摆成 3+3+2，末排落单 */
 .source-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-sm) var(--space-lg);
 }
+@media (min-width: 640px)  { .source-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .source-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .source-item {
   display: flex;
   gap: 10px;
@@ -716,14 +956,30 @@ b, strong { font-weight: 800; }
 .ov-name { margin: 6px 0 4px; font-size: 14.5px; }
 .ov-desc { font-size: 12.5px; color: var(--c-text-soft); }
 
-.disclaimer {
-  margin-top: var(--space-lg);
-  padding: var(--space);
-  border-left: 3px solid var(--c-accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), transparent);
-  font-size: 12.5px;
-  color: var(--c-text-soft);
+/* ---------------- 阅读进度条（长页面 14,000px，需要位置感） ----------------
+   贴在吸顶栏下沿：2px 高、纯装饰、不进无障碍树（章节高亮已由 aria-current 表达） */
+.readbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--c-primary);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease);
+}
+.topbar.is-scrolled .readbar { opacity: 1; }
+
+/* ---------------- 触控目标 ----------------
+   桌面 40px、窄屏 44px（WCAG 2.5.8 的 AA 底线是 24px，都过；44px 是移动端推荐值） */
+.viz-btn,
+.sim-preset { min-height: 40px; }
+@media (max-width: 1160px) {
+  .viz-btn,
+  .sim-preset { min-height: 44px; }
+  .nav-link { min-height: 46px; }          /* 抽屉里的导航项 */
 }
 
 /* ---------------- 页脚 / 回顶 ---------------- */
@@ -742,7 +998,7 @@ b, strong { font-weight: 800; }
   right: 20px;
   bottom: 20px;
   z-index: var(--z-nav);
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid var(--c-border-2);
   border-radius: 50%;
@@ -763,6 +1019,7 @@ b, strong { font-weight: 800; }
 @media (prefers-reduced-motion: reduce) {
   .kpi:hover, .force-card:hover, .scene:hover, .ov-card:hover { transform: none; }
   .to-top { transition: none; }
+  .readbar { transition: none; }
 }
 
 /* ---------------- 打印 ---------------- */
@@ -770,5 +1027,8 @@ b, strong { font-weight: 800; }
   .topbar, .to-top, .viz-toolbar, .skip-link { display: none !important; }
   .card, .kpi, .pillar, .force-card, .scene { box-shadow: none; break-inside: avoid; }
   .section { break-inside: avoid-page; }
+  /* 数据表：横向滚动与吸顶表头在纸上没有意义，摊平即可 */
+  .viz-table-wrap { overflow: visible; }
+  .viz-table thead th { position: static; }
 }
 

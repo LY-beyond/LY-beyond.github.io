@@ -8,6 +8,7 @@
  * 优先级：localStorage 手动选择 > 系统 prefers-color-scheme。
  * 未手动选择时自动跟随系统；一旦点过按钮，全站记住偏好。
  * 切换后派发 document 级 'themechange' 事件（知识图谱据此重绘）。
+ * 另监听 i18n.js 的 'langchange'，让按钮 aria-label / title 跟着换语言。
  * ========================================================= */
 (function () {
   'use strict';
@@ -50,6 +51,9 @@
   window.addEventListener('storage', function (e) {
     if (e.key === KEY) { apply(resolveTheme()); syncButton(); }
   });
+
+  /* ③′ 语言切换同步：按钮文案随 <html lang> 变化，i18n.js 会派发 'langchange' */
+  document.addEventListener('langchange', syncButton);
 
   /* ---------- 顶栏按钮（DOM 就绪后注入，HTML 无需逐个改动） ---------- */
 

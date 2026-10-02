@@ -47,6 +47,7 @@
 :root[data-theme="dark"] .theme-toggle__icon--sun { display: block; }
 
 @media (max-width: 720px) {
-  .theme-toggle { width: 28px; height: 28px; }
-  .theme-toggle__icon { width: 14px; height: 14px; }
+  /* 触控目标：圆钮 28px 太小，图标保持 15px */
+  .theme-toggle { width: 34px; height: 34px; }
+  .theme-toggle__icon { width: 15px; height: 15px; }
 }

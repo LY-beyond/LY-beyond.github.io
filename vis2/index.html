@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>人工智能 · 新质生产力｜数据可视化</title>
-  <meta name="description" content="用 11 张可视化看板、8 组可交互图表与 1 台生产力模拟器，讲清人工智能如何成为新质生产力的核心引擎。" />
+  <meta name="description" content="用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。" />
 
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -36,6 +36,7 @@
         <a class="nav-link" href="#power" data-i18n="nav.power">作用力</a>
         <a class="nav-link" href="#scale" data-i18n="nav.scale">产业规模</a>
         <a class="nav-link" href="#industry" data-i18n="nav.industry">行业赋能</a>
+        <a class="nav-link" href="#region" data-i18n="nav.region">区域格局</a>
         <a class="nav-link" href="#global" data-i18n="nav.global">全球格局</a>
         <a class="nav-link" href="#flow" data-i18n="nav.flow">要素重构</a>
         <a class="nav-link" href="#graph" data-i18n="nav.graph">关系图谱</a>
@@ -50,6 +51,9 @@
         <button class="lang-switch-item" type="button" data-lang="zh" aria-pressed="true">中</button>
         <button class="lang-switch-item" type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
+
+      <!-- 阅读进度条：由 app.js 在滚动时写入 scaleX（纯装饰，不进无障碍树） -->
+      <div class="readbar" id="readbar" aria-hidden="true"></div>
     </div>
   </header>
 
@@ -177,14 +181,47 @@
           <div class="viz" id="chart-bubble"></div>
           <div data-mount="bubble-foot"></div>
         </div>
+
+        <div class="card">
+          <div data-mount="heat-head"></div>
+          <div class="viz" id="chart-heat"></div>
+          <div data-mount="heat-foot"></div>
+        </div>
+
+        <div class="card">
+          <div data-mount="multiples-head"></div>
+          <div class="viz" id="chart-multiples"></div>
+          <div data-mount="multiples-foot"></div>
+        </div>
       </div>
     </section>
 
-    <!-- ================= 6 · 全球格局 ================= -->
-    <section class="section" id="global">
+    <!-- ================= 6 · 区域格局（地图） ================= -->
+    <section class="section" id="region">
       <div class="wrap">
         <div class="section-head">
           <span class="section-num">06</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.region.title">区域格局：算力与企业的地理分布</h2>
+            <p class="section-lead" data-i18n="sec.region.lead">把 34 个省级单元按算力规模与企业数量着色，能看出 AI 的「高地」在哪里——以及它和人口、产业分布的错位。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="region-head"></div>
+          <div class="viz" id="chart-region"></div>
+          <div data-mount="region-foot"></div>
+        </div>
+
+        <p class="region-note" data-i18n="sec.region.tip">提示：地图上悬停可看单省数值；工具栏可切换指标与数据表，也能导出 PNG / SVG / CSV。</p>
+      </div>
+    </section>
+
+    <!-- ================= 7 · 全球格局 ================= -->
+    <section class="section" id="global">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">07</span>
           <div>
             <h2 class="section-title" data-i18n="sec.global.title">全球格局：十二个经济体的 AI 指数</h2>
             <p class="section-lead" data-i18n="sec.global.lead">综合算力、人才、论文、专利、投资与企业数量六个维度折算成 0–100 指数。</p>
@@ -199,11 +236,11 @@
       </div>
     </section>
 
-    <!-- ================= 7 · 要素重构 ================= -->
+    <!-- ================= 8 · 要素重构 ================= -->
     <section class="section" id="flow">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">07</span>
+          <span class="section-num">08</span>
           <div>
             <h2 class="section-title" data-i18n="sec.flow.title">要素重构：资源是怎么走的</h2>
             <p class="section-lead" data-i18n="sec.flow.lead">算力、数据、算法与人才，先升级三要素，再汇聚成生产率、新业态与绿色转型——带宽就是权重。</p>
@@ -219,11 +256,11 @@
     </section>
 
 
-    <!-- ================= 8 · 关系图谱 ================= -->
+    <!-- ================= 9 · 关系图谱 ================= -->
     <section class="section" id="graph">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">08</span>
+          <span class="section-num">09</span>
           <div>
             <h2 class="section-title" data-i18n="sec.graph.title">关系图谱：把概念连起来</h2>
             <p class="section-lead" data-i18n="sec.graph.lead">可拖拽、可缩放、可双击释放节点：拖动任何一个球，看看它牵动了谁。</p>
@@ -238,11 +275,11 @@
       </div>
     </section>
 
-    <!-- ================= 9 · 生产力模拟器 ================= -->
+    <!-- ================= 10 · 生产力模拟器 ================= -->
     <section class="section" id="sim">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">09</span>
+          <span class="section-num">10</span>
           <div>
             <h2 class="section-title" data-i18n="sec.sim.title">生产力模拟器：自己调一组参数</h2>
             <p class="section-lead" data-i18n="sec.sim.lead">四个滑块对应四项投入，右侧输出是全要素生产率的相对指数（基准 = 当前水平 100）。这是教学模型，不是预测。</p>
@@ -254,14 +291,26 @@
           <div id="sim-root"></div>
           <div data-mount="sim-foot"></div>
         </div>
+
+        <div class="card">
+          <div data-mount="tornado-head"></div>
+          <div class="viz" id="chart-tornado"></div>
+          <div data-mount="tornado-foot"></div>
+        </div>
+
+        <div class="card">
+          <div data-mount="mc-head"></div>
+          <div class="viz" id="chart-mc"></div>
+          <div data-mount="mc-foot"></div>
+        </div>
       </div>
     </section>
 
-    <!-- ================= 10 · 时间线 ================= -->
+    <!-- ================= 11 · 时间线 ================= -->
     <section class="section" id="timeline">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">10</span>
+          <span class="section-num">11</span>
           <div>
             <h2 class="section-title" data-i18n="sec.timeline.title">时间线：从概念到国策</h2>
             <p class="section-lead" data-i18n="sec.timeline.lead">左边是全球的技术节点，右边是中国的政策节点，两条线在 2023—2025 年加速交汇。</p>
@@ -276,11 +325,11 @@
       </div>
     </section>
 
-    <!-- ================= 11 · 落地场景 ================= -->
+    <!-- ================= 12 · 落地场景 ================= -->
     <section class="section" id="scene">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">11</span>
+          <span class="section-num">12</span>
           <div>
             <h2 class="section-title" data-i18n="sec.scene.title">落地场景：已经发生的事</h2>
             <p class="section-lead" data-i18n="sec.scene.lead">不谈概念，只看六个已经跑起来的场景，以及它们各自的效率与风险。</p>
@@ -293,13 +342,13 @@
       </div>
     </section>
 
-    <!-- ================= 12 · 关于 / 数据来源 ================= -->
+    <!-- ================= 13 · 关于 / 数据来源 ================= -->
     <section class="section" id="about">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-num">12</span>
+          <span class="section-num">13</span>
           <div>
-            <h2 class="section-title" data-i18n="sec.about.title">数据来源与免责声明</h2>
+            <h2 class="section-title" data-i18n="sec.about.title">数据来源</h2>
             <p class="section-lead" data-i18n="sec.about.lead">所有数字都标注了出处；口径不同、年份不同，横向对比请以趋势为准。</p>
           </div>
         </div>
@@ -308,8 +357,6 @@
           <div data-mount="source-head"></div>
           <div class="source-list" id="source-list"></div>
         </div>
-
-        <div id="disclaimer"></div>
       </div>
     </section>
 
@@ -335,6 +382,8 @@
   <script src="vendor/d3-force.min.js"></script>
   <script src="i18n.js"></script>
   <script src="data.js"></script>
+  <!-- 省级边界几何（开发期由 _map.mjs 抽稀生成，运行时零联网） -->
+  <script src="map-china.js"></script>
   <script src="charts.js"></script>
   <script src="app.js"></script>
 </body>
