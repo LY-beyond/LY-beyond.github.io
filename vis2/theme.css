@@ -1,0 +1,52 @@
+/* =========================================================
+ * theme.css —— 亮 / 暗色切换按钮组件（全站共享）
+ * ---------------------------------------------------------
+ * 按钮由 theme.js 在运行时注入到顶栏：
+ *   - 门户 / 章节页：语言切换器左侧
+ *   - 实战页：横向顶栏最右端（.theme-toggle--bar）
+ * 配色 / 圆角 / 动效一律取自 tokens.css，本文件不出现硬编码色值。
+ * ========================================================= */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.theme-toggle:hover {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  border-color: color-mix(in srgb, var(--c-primary) 36%, var(--c-line));
+  color: var(--c-primary);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* 与语言切换器之间留一点气口（实战页无语言切换器，按钮自己贴右端，不留） */
+.course-topbar .theme-toggle:not(.theme-toggle--bar),
+.topbar-inner .theme-toggle {
+  margin-right: 8px;
+}
+
+/* 图标随主题切换：亮底显月亮（去暗色），暗底显太阳（回亮色） */
+.theme-toggle__icon { display: block; }
+.theme-toggle__icon--sun { display: none; }
+:root[data-theme="dark"] .theme-toggle__icon--moon { display: none; }
+:root[data-theme="dark"] .theme-toggle__icon--sun { display: block; }
+
+@media (max-width: 720px) {
+  .theme-toggle { width: 28px; height: 28px; }
+  .theme-toggle__icon { width: 14px; height: 14px; }
+}

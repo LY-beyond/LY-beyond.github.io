@@ -1,2 +1,27 @@
-[build]
-  publish = "vis"
+# ============================================================
+# LY-beyond.github.io —— 同一个仓库里托管两次作业（monorepo 式布局）
+#   vis/    第一次作业
+#   vis2/   第二次作业
+# ============================================================
+#
+# ⚠️ 极其重要：Netlify 的官方规则是「netlify.toml 里的设置会覆盖 UI 里的同名设置」。
+#    所以这里【故意不写 publish】：
+#
+#      · 若这里写 publish = "vis" ，则新站点在 UI 里填 "vis2" 也会被覆盖，
+#        永远只能发布 vis（新作业打开是上一次的页面）；
+#      · 若这里写 publish = "vis2" ，旧站点会被反过来覆盖，旧链接失效。
+#
+#    因此两个站点的 Publish directory 必须分别写在各自的站点设置里：
+#      https://app.netlify.com/sites/<旧站点>/configuration/deploys  → Publish directory = vis
+#      https://app.netlify.com/sites/<新站点>/configuration/deploys  → Publish directory = vis2
+#
+#    完整步骤见 vis2/DEPLOY-NETLIFY.md
+#
+# 本仓库是纯静态站点（没有 package.json）：不需要构建命令、不安装依赖、不需要环境变量。
+# 仅有的共享配置（如有）可以写在下面，例如给静态资源加长缓存头：
+#
+# [[headers]]
+#   for = "/vendor/*"
+#   [headers.values]
+#     cache-control = "public, max-age=31536000, immutable"
+

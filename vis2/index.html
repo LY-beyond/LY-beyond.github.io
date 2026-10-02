@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>人工智能 · 新质生产力｜数据可视化</title>
+  <meta name="description" content="用 11 张可视化看板、8 组可交互图表与 1 台生产力模拟器，讲清人工智能如何成为新质生产力的核心引擎。" />
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="i18n.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="theme.css" />
+  <!-- theme.js 必须在 <head> 里、且不 defer：渲染前写入 data-theme，避免闪白 -->
+  <script src="theme.js"></script>
+</head>
+<body>
+
+  <a class="skip-link" href="#main" data-i18n="skip">跳到正文</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text" data-i18n="site.short">AI · 新质生产力</span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button"
+              aria-expanded="false" aria-controls="site-nav"
+              data-i18n-attr="aria-label:nav.toggle">☰</button>
+
+      <nav class="topnav" id="site-nav" aria-label="站点导航">
+        <a class="nav-link" href="#overview" data-i18n="nav.overview">概览</a>
+        <a class="nav-link" href="#what" data-i18n="nav.what">内涵</a>
+        <a class="nav-link" href="#power" data-i18n="nav.power">作用力</a>
+        <a class="nav-link" href="#scale" data-i18n="nav.scale">产业规模</a>
+        <a class="nav-link" href="#industry" data-i18n="nav.industry">行业赋能</a>
+        <a class="nav-link" href="#global" data-i18n="nav.global">全球格局</a>
+        <a class="nav-link" href="#flow" data-i18n="nav.flow">要素重构</a>
+        <a class="nav-link" href="#graph" data-i18n="nav.graph">关系图谱</a>
+        <a class="nav-link" href="#sim" data-i18n="nav.sim">模拟器</a>
+        <a class="nav-link" href="#timeline" data-i18n="nav.timeline">时间线</a>
+        <a class="nav-link" href="#scene" data-i18n="nav.scene">落地场景</a>
+        <a class="nav-link" href="#about" data-i18n="nav.about">关于</a>
+      </nav>
+
+      <!-- 语言切换器：两种语言同为 <button>，由 i18n.js 原位切换 -->
+      <div class="lang-switch" role="group" aria-label="语言 / Language">
+        <button class="lang-switch-item" type="button" data-lang="zh" aria-pressed="true">中</button>
+        <button class="lang-switch-item" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= 首屏 ================= -->
+    <section class="hero" id="top">
+      <div class="wrap">
+        <p class="hero-tag" data-i18n="hero.tag">AI · NEW QUALITY PRODUCTIVE FORCES</p>
+        <h1 class="hero-title" data-i18n="hero.title">人工智能：新质生产力的核心引擎</h1>
+        <p class="hero-sub" data-i18n="hero.sub">11 张可视化看板 · 8 组可交互图表 · 1 台生产力模拟器</p>
+        <p class="hero-meta" data-i18n="hero.meta">从「三要素升级」到「全要素生产率」，用数据看清 AI 如何重塑生产方式</p>
+        <p class="hero-hint" data-i18n="hero.hint">向下滚动开始 · 图表均可交互</p>
+      </div>
+    </section>
+
+    <!-- ================= 0 · 阅读地图 ================= -->
+    <section class="section" id="overview">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">00</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.overview.title">这张页面讲了什么</h2>
+            <p class="section-lead" data-i18n="sec.overview.lead">十个章节，从「概念」到「产业」再到「人」，每一节都配一张可交互的图。</p>
+          </div>
+        </div>
+        <div class="ov-grid" id="overview-grid"></div>
+      </div>
+    </section>
+
+    <!-- ================= 1 · KPI ================= -->
+    <section class="section" id="kpi">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">01</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.kpi.title">先看四个数字</h2>
+            <p class="section-lead" data-i18n="sec.kpi.lead">规模、增量、份额、算力——四个数字概括了 AI 作为新质生产力的体量。</p>
+          </div>
+        </div>
+        <div class="kpi-row" id="kpi-row"></div>
+      </div>
+    </section>
+
+    <!-- ================= 2 · 内涵：三要素升级 ================= -->
+    <section class="section" id="what">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">02</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.what.title">内涵：AI 把三要素各改了一遍</h2>
+            <p class="section-lead" data-i18n="sec.what.lead">新质生产力的核心，是生产要素从「量的堆叠」转向「质的跃迁」。</p>
+          </div>
+        </div>
+
+        <div id="define-lead"></div>
+        <div class="pillars" id="pillars"></div>
+
+        <div class="card" style="margin-top: var(--space-lg);">
+          <div data-mount="compare-head"></div>
+          <div id="compare-table"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3 · 作用力 ================= -->
+    <section class="section" id="power">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">03</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.power.title">作用力：六维对比 + 五股力量</h2>
+            <p class="section-lead" data-i18n="sec.power.lead">把六项能力指数化，看清 AI 赋能前后差在哪里；再拆成五股可以观察、可以验证的力量。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="radar-head"></div>
+          <div class="viz" id="chart-radar"></div>
+          <div data-mount="radar-foot"></div>
+        </div>
+
+        <div class="force-cards" id="force-cards" style="margin-top: var(--space-lg);"></div>
+      </div>
+    </section>
+
+    <!-- ================= 4 · 产业规模 ================= -->
+    <section class="section" id="scale">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">04</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.scale.title">产业规模：两条曲线</h2>
+            <p class="section-lead" data-i18n="sec.scale.lead">核心产业一路走高，带动相关产业的规模更是它的三倍以上；2025 年用虚线表示预测。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="scale-head"></div>
+          <div class="viz" id="chart-scale"></div>
+          <div data-mount="scale-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5 · 行业赋能 ================= -->
+    <section class="section" id="industry">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">05</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.industry.title">行业赋能：谁先被改写</h2>
+            <p class="section-lead" data-i18n="sec.industry.lead">三次产业里，服务业的渗透率最高；把 15 个行业放到一张矩阵里，就能看出「高渗透 · 高增益」的象限在哪。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="industry-head"></div>
+          <div class="viz" id="chart-industry"></div>
+          <div data-mount="industry-foot"></div>
+        </div>
+
+        <div class="card">
+          <div data-mount="bubble-head"></div>
+          <div class="viz" id="chart-bubble"></div>
+          <div data-mount="bubble-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 6 · 全球格局 ================= -->
+    <section class="section" id="global">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">06</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.global.title">全球格局：十二个经济体的 AI 指数</h2>
+            <p class="section-lead" data-i18n="sec.global.lead">综合算力、人才、论文、专利、投资与企业数量六个维度折算成 0–100 指数。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="global-head"></div>
+          <div class="viz" id="chart-global"></div>
+          <div data-mount="global-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7 · 要素重构 ================= -->
+    <section class="section" id="flow">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">07</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.flow.title">要素重构：资源是怎么走的</h2>
+            <p class="section-lead" data-i18n="sec.flow.lead">算力、数据、算法与人才，先升级三要素，再汇聚成生产率、新业态与绿色转型——带宽就是权重。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="flow-head"></div>
+          <div class="viz" id="chart-flow"></div>
+          <div data-mount="flow-foot"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 8 · 关系图谱 ================= -->
+    <section class="section" id="graph">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">08</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.graph.title">关系图谱：把概念连起来</h2>
+            <p class="section-lead" data-i18n="sec.graph.lead">可拖拽、可缩放、可双击释放节点：拖动任何一个球，看看它牵动了谁。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="graph-head"></div>
+          <div class="viz" id="chart-graph"></div>
+          <div data-mount="graph-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 9 · 生产力模拟器 ================= -->
+    <section class="section" id="sim">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">09</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.sim.title">生产力模拟器：自己调一组参数</h2>
+            <p class="section-lead" data-i18n="sec.sim.lead">四个滑块对应四项投入，右侧输出是全要素生产率的相对指数（基准 = 当前水平 100）。这是教学模型，不是预测。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="sim-head"></div>
+          <div id="sim-root"></div>
+          <div data-mount="sim-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 10 · 时间线 ================= -->
+    <section class="section" id="timeline">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">10</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.timeline.title">时间线：从概念到国策</h2>
+            <p class="section-lead" data-i18n="sec.timeline.lead">左边是全球的技术节点，右边是中国的政策节点，两条线在 2023—2025 年加速交汇。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="timeline-head"></div>
+          <div class="viz" id="chart-timeline"></div>
+          <div data-mount="timeline-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 11 · 落地场景 ================= -->
+    <section class="section" id="scene">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">11</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.scene.title">落地场景：已经发生的事</h2>
+            <p class="section-lead" data-i18n="sec.scene.lead">不谈概念，只看六个已经跑起来的场景，以及它们各自的效率与风险。</p>
+          </div>
+        </div>
+
+        <div data-mount="scene-head"></div>
+        <div class="scene-grid" id="scene-grid"></div>
+        <div data-mount="scene-foot"></div>
+      </div>
+    </section>
+
+    <!-- ================= 12 · 关于 / 数据来源 ================= -->
+    <section class="section" id="about">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-num">12</span>
+          <div>
+            <h2 class="section-title" data-i18n="sec.about.title">数据来源与免责声明</h2>
+            <p class="section-lead" data-i18n="sec.about.lead">所有数字都标注了出处；口径不同、年份不同，横向对比请以趋势为准。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div data-mount="source-head"></div>
+          <div class="source-list" id="source-list"></div>
+        </div>
+
+        <div id="disclaimer"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= 页脚 ================= -->
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p data-i18n="footer.line1">© 2025 · 人工智能与新质生产力 · 数据可视化作业</p>
+      <p data-i18n="footer.line2">数据为公开资料整理，仅用于教学演示，不构成任何投资建议。</p>
+    </div>
+  </footer>
+
+  <button class="to-top" id="to-top" type="button"
+          data-i18n-attr="aria-label:common.top">↑</button>
+
+  <!-- ================= 脚本 ================= -->
+  <!-- 顺序即依赖：d3 模块 → i18n → 数据 → 图表引擎 → 页面装配 -->
+  <script src="vendor/d3-dispatch.min.js"></script>
+  <script src="vendor/d3-selection.min.js"></script>
+  <script src="vendor/d3-quadtree.min.js"></script>
+  <script src="vendor/d3-timer.min.js"></script>
+  <script src="vendor/d3-force.min.js"></script>
+  <script src="i18n.js"></script>
+  <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
