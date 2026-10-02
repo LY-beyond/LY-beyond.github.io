@@ -412,7 +412,7 @@ b, strong { font-weight: 800; }
 .viz-btn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
 .viz-btn.is-ghost { border-style: dashed; color: var(--c-text-soft); }
 .viz-btn.is-ghost[hidden] { display: none; }
-.viz-btn.is-play.is-on { border-color: var(--c-accent); color: var(--c-accent); }
+.viz-btn.is-play.is-on { border-color: var(--c-accent); color: var(--c-accent-ink); }
 
 /* 关系图内部那条（适应窗口 + 操作提示）：贴着画布下沿，用虚线分出层次 */
 .viz-toolbar--inset {
@@ -729,7 +729,8 @@ b, strong { font-weight: 800; }
   padding: 3px 9px;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--c-accent) var(--mix-soft), transparent);
-  color: var(--c-accent);
+  /* 11px 的小徽章：底色是强调色的极浅底，字色必须用压深过的 --c-accent-ink（原 --c-accent 只有 3.35:1） */
+  color: var(--c-accent-ink);
   font-size: 11px;
   font-weight: 800;
 }

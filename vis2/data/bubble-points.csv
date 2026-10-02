@@ -1,0 +1,16 @@
+﻿id:text,name.zh:text,name.en:text,x:number,y:number,size:number,sector:text
+finance,金融,Finance,42,32,900,tertiary
+media,传媒内容,Media,45,38,650,tertiary
+security,安防,Security,40,33,750,tertiary
+retail,零售电商,Retail,35,30,800,tertiary
+automotive,汽车,Automotive,33,31,1100,secondary
+public,政务服务,Public service,30,25,450,tertiary
+logistics,交通物流,Logistics,28,29,520,tertiary
+manufacturing,制造业,Manufacturing,25,28,1200,secondary
+energy,能源电力,Energy,22,24,400,secondary
+healthcare,医疗健康,Healthcare,20,26,600,tertiary
+education,教育,Education,18,22,500,tertiary
+legal,法律,Legal,15,20,150,tertiary
+construction,建筑地产,Construction,12,18,300,secondary
+agriculture,农业,Agriculture,8,12,200,primary
+mining,矿业,Mining,6,14,180,secondary

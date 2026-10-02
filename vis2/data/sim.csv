@@ -1,0 +1,16 @@
+﻿caption.zh:text,caption.en:text,index.zh:text,index.en:text,baseline.zh:text,baseline.en:text,formulaNote.zh:text,formulaNote.en:text,model:text
+生产力模拟器：调节四个旋钮，看看 AI 能把生产力推到多高,Productivity simulator: tune four dials and see how far AI can push productivity,综合新质生产力指数,Composite NQPF index,当前基线,Baseline,模型是一个公开、可复现的线性加权示意模型，用于说明各要素的相对重要性，不代表真实经济预测。,"The model is an open, reproducible linear-weight illustration of relative importance rather than a real economic forecast.","function (v) {
+      var p = (v.penetration || 0) / 100;
+      var d = (v.dataFactor || 0) / 100;
+      var t = (v.talent || 0) / 100;
+      var r = (v.rd || 0) / 100;
+      var tfp = 0.20 + 0.55 * p + 0.30 * d + 0.35 * t + 0.30 * r;
+      return {
+        tfp: tfp,
+        gdp: tfp * 1.5,
+        cost: 3 + 13 * p + 5 * t,
+        green: 2 + 9 * p + 7 * r,
+        jobs: 15 + 120 * p + 60 * t,
+        index: Math.round((0.40 * p + 0.20 * d + 0.20 * t + 0.20 * r) * 100)
+      };
+    }"

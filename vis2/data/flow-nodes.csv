@@ -1,0 +1,11 @@
+﻿id:text,col:number,label.zh:text,label.en:text,weight:number,icon:text
+compute,0,算力基础设施,Compute infrastructure,30,🖥️
+data,0,数据要素,Data elements,26,🗄️
+algo,0,算法与大模型,Algorithms & models,24,🧠
+talent,0,人才与研发,Talent & R&D,20,🎓
+labor,1,劳动者升级,Labour upgrade,28,🧑‍🏭
+tool,1,劳动资料升级,Tool upgrade,40,🧰
+object,1,劳动对象升级,Object upgrade,32,🗂️
+tfp,2,全要素生产率提升,Higher TFP,38,📈
+newbiz,2,新业态新模式,New business forms,34,🧬
+green,2,绿色低碳转型,Green transition,28,🌱

@@ -12,8 +12,11 @@
   --c-primary:      #0f766e;   /* 主色：青绿 */
   --c-primary-2:    #0d9488;   /* 主色亮阶 */
   --c-primary-weak: #d7f2ee;   /* 主色浅底 */
-  --c-accent:       #ea580c;   /* 强调色：橙 */
+  --c-accent:       #ea580c;   /* 强调色：橙（图形 / 描边用，白底 3.56:1） */
   --c-accent-weak:  #ffedd5;
+  /* 强调色「当文字用」的深阶：11px 的小徽章压不进 4.5:1，所以按 --mix-ink 的思路压深当字色。
+     color-mix 让它在两档主题里都自动成立（深色主题的 --c-text 是浅色，混合后仍够亮）。 */
+  --c-accent-ink:   color-mix(in srgb, var(--c-accent) 72%, var(--c-text));
   --c-on-primary:   #ffffff;   /* 主色块上的前景色（对 --c-primary 5.47:1） */
   --c-on-accent:    #2a1405;   /* 强调色块上的前景色：橙底上白字只有 3.56:1 不达标，
                                   改深墨 4.91:1；与深色主题取同一值，语义统一 */
@@ -24,9 +27,12 @@
   --c-surface-2: #f4f2ee;      /* 次级面板 */
 
   /* ---------- 文字 ---------- */
+  /* 三档文字：正文 > 次级 > 说明。三档在「卡片底 / 次级面板底 / 页面底」三种底色上
+     都实测过 WCAG 2.1 对比度（a11y-check.mjs 逐组合断言，注释里的数字与实测一致）：
+       正文 14.7:1 / 次级 7.5:1 / 说明 5.2:1（对卡片底） */
   --c-text:      #1e2a32;
-  --c-text-soft: #5b6b76;
-  --c-muted:     #8a97a0;
+  --c-text-soft: #4a5763;
+  --c-muted:     #626f7b;
 
   /* ---------- 边框 / 分隔 ---------- */
   --c-border:    #e6e2da;
@@ -44,7 +50,9 @@
 
   --c-line:   color-mix(in srgb, var(--c-border) var(--mix-line), transparent);
   --c-line-2: color-mix(in srgb, var(--c-border-2) var(--mix-line), transparent);
-  --c-focus:  color-mix(in srgb, var(--c-primary) 30%, transparent);  /* 键盘焦点环 */
+  /* 键盘焦点环：必须是「实心能看出来」的。30% 时对卡片底只有 1.13:1，
+     远低于 WCAG 1.4.11 的 3:1；提到 72%（与 --mix-ink 同一把尺）后两档主题都 ≥ 3:1。 */
+  --c-focus:  color-mix(in srgb, var(--c-primary) 72%, transparent);
 
   /* ---------- 纯 CSS 背景纹理（零图片请求） ---------- */
   --tex-grid: color-mix(in srgb, var(--c-primary) 8%, transparent);
@@ -139,7 +147,7 @@
 
   --c-text:      #e6edf1;
   --c-text-soft: #a9b6bf;
-  --c-muted:     #74838d;
+  --c-muted:     #7f8f9a;   /* 深底上必须提亮：原 #74838d 对次级面板只有 3.89:1，不达标 */
 
   --c-border:    #263239;
   --c-border-2:  #33424a;

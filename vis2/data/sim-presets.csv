@@ -1,0 +1,4 @@
+﻿id:text,name.zh:text,name.en:text,values.penetration:number,values.dataFactor:number,values.talent:number,values.rd:number
+base,当前基线,Current baseline,18,25,22,20
+mfg,制造强国,Manufacturing leader,45,55,50,45
+full,全面智能化,Full intelligence,80,85,80,70

@@ -1,0 +1,6 @@
+﻿id:text,max:number,decimals:number,unit.zh:text,unit.en:text,colorKey:text,label.zh:text,label.en:text,why.zh:text,why.en:text
+tfp,1.8,2,个百分点 / 年,pp / year,--c-primary,全要素生产率年均提升,Annual TFP growth uplift,新质生产力最核心的指标,The core metric of NQPF
+gdp,3,2,% / 年,% / year,--c-accent,对 GDP 增速的年均拉动,Annual GDP growth boost,从产出端看 AI 的宏观贡献,Macro contribution from the output side
+cost,25,1,%,%,--c-info,综合运营成本下降,Operating cost reduction,自动化与预测优化带来的成本红利,Cost dividend from automation and forecasting
+green,20,1,%,%,--c-success,单位产出能耗下降,Energy per unit output down,绿色低碳转型的直接体现,A direct sign of the green transition
+jobs,200,0,万个 / 年,10k jobs / year,--d5,新增智能相关岗位,New AI-related jobs,结构重塑不只是「替代」,Restructuring is not only about replacement

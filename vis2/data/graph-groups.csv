@@ -1,0 +1,7 @@
+﻿id:text,label.zh:text,label.en:text,colorKey:text
+core,核心概念,Core concept,--c-accent
+tech,技术基础,Technology,--c-info
+factor,生产力要素,Production factor,--c-primary
+effect,产出与意义,Outcome,--c-success
+policy,政策牵引,Policy,--d5
+app,落地场景,Application,--d6

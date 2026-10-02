@@ -78,8 +78,8 @@
     var el = mount(name + '-foot');
     if (!el) return;
     clear(el);
-    if (note) add(el, 'p', 'card-note', T('common.note') + ' ｜ ' + note);
-    if (source) add(el, 'p', 'card-source', T('common.source') + ' ｜ ' + source);
+    if (note) add(el, 'p', 'card-note', T('common.note') + T('common.sep') + note);
+    if (source) add(el, 'p', 'card-source', T('common.source') + T('common.sep') + source);
   }
 
   /* =========================================================
@@ -269,9 +269,14 @@
     var sector = '';
     D.industry.rows.forEach(function (r) { if (r.id === p.sector) sector = P(r.key); });
     var hit = D.scenes.items.filter(function (s) { return s.match === p.id; }).length;
-    return P(p.name) + ' ｜ ' + P({ zh: '所属产业', en: 'Sector' }) + '：' + sector +
-      ' ｜ ' + P(D.bubble.sizeLabel) + ' ' + C.fmt(p.size, 0) +
-      ' ｜ ' + TT('filter.hit', { n: hit, total: D.scenes.items.length });
+    /* 播报文案整句走词表：中文用全角「｜／：」，英文用半角，标点也跟着语言走 */
+    return TT('filter.status', {
+      name: P(p.name),
+      sector: sector,
+      sizeLabel: P(D.bubble.sizeLabel),
+      size: C.fmt(p.size, 0),
+      hit: TT('filter.hit', { n: hit, total: D.scenes.items.length })
+    });
   }
 
   /* 联动的唯一入口：改 STATE.filter，然后重画受影响的「那三张图」——
@@ -458,8 +463,8 @@
           caption: P(D.scale.caption),
           cols: [
             { key: 'year', label: P({ zh: '年份', en: 'Year' }) },
-            { key: 'core', label: P(D.scale.coreLabel) + '（' + P(D.scale.unit) + '）' },
-            { key: 'related', label: P(D.scale.relatedLabel) + '（' + P(D.scale.unit) + '）' },
+            { key: 'core', label: withUnit(P(D.scale.coreLabel), P(D.scale.unit)) },
+            { key: 'related', label: withUnit(P(D.scale.relatedLabel), P(D.scale.unit)) },
             { key: 'type', label: P({ zh: '数据性质', en: 'Data type' }) }
           ],
           rows: D.scale.series.map(function (p, i) {
@@ -540,9 +545,9 @@
           caption: P(D.industry.caption),
           cols: [
             { key: 'sector', label: P({ zh: '产业', en: 'Sector' }) },
-            { key: 'pen', label: P(D.industry.penetration) + '（%）' },
-            { key: 'gain', label: P(D.industry.gain) + '（%）' },
-            { key: 'size', label: P(D.industry.sizeLabel) + '（%）' },
+            { key: 'pen', label: withUnit(P(D.industry.penetration), '%') },
+            { key: 'gain', label: withUnit(P(D.industry.gain), '%') },
+            { key: 'size', label: withUnit(P(D.industry.sizeLabel), '%') },
             /* 这一列是联动算出来的，读者能顺着它去气泡矩阵里数 */
             { key: 'count', label: P({ zh: '矩阵中的行业数', en: 'Industries in matrix' }) },
             { key: 'note', label: P({ zh: '说明', en: 'Note' }) }

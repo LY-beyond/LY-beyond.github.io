@@ -1,0 +1,4 @@
+﻿id:text,key.zh:text,key.en:text,colorKey:text,penetration:json,gain:json
+tertiary,第三产业 · 服务业,Tertiary · Services,--c-accent,"[12,16,19,23,26,31,36]","[14,18,21,25,29,35,40]"
+secondary,第二产业 · 工业,Secondary · Industry,--c-primary,"[7,9,12,15,18,22,27]","[10,13,16,20,23,28,33]"
+primary,第一产业 · 农业,Primary · Agriculture,--c-info,"[2.5,3.2,4,5,6.2,8,10.5]","[3,4,5.5,7,9,12,15]"

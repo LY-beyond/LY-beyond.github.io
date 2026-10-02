@@ -1,0 +1,6 @@
+﻿id:text,label.zh:text,label.en:text,short.zh:text,short.en:text,unit.zh:text,unit.en:text,decimals:number
+pen,AI 渗透率,AI penetration,渗透率,Penetr.,%,%,0
+gain,效率增益,Efficiency gain,效率增益,Gain,%,%,0
+size,市场规模,Market size,市场规模,Market, 亿元, (100M CNY),0
+cagr,市场五年增速,5-year CAGR,五年增速,CAGR,%,%,0
+talent,人才密度指数,Talent density,人才密度,Talent,/100,/100,0

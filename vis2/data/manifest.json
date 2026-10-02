@@ -1,0 +1,1927 @@
+{
+  "note": "本文件由 node data/build.mjs --extract 生成：数据集索引（文件 ↔ 数据路径 ↔ 列与类型）。手写的 note 会被保留。",
+  "datasets": [
+    {
+      "file": "root.csv",
+      "path": "",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "paletteKeys",
+          "type": "json",
+          "raw": "paletteKeys:json"
+        },
+        {
+          "name": "paletteBase",
+          "type": "json",
+          "raw": "paletteBase:json"
+        },
+        {
+          "name": "paletteAccent",
+          "type": "json",
+          "raw": "paletteAccent:json"
+        },
+        {
+          "name": "define.lead.zh",
+          "type": "text",
+          "raw": "define.lead.zh:text"
+        },
+        {
+          "name": "define.lead.en",
+          "type": "text",
+          "raw": "define.lead.en:text"
+        },
+        {
+          "name": "define.pillars",
+          "type": "json",
+          "raw": "define.pillars:json"
+        },
+        {
+          "name": "define.compare.caption.zh",
+          "type": "text",
+          "raw": "define.compare.caption.zh:text"
+        },
+        {
+          "name": "define.compare.caption.en",
+          "type": "text",
+          "raw": "define.compare.caption.en:text"
+        },
+        {
+          "name": "define.compare.colBefore.zh",
+          "type": "text",
+          "raw": "define.compare.colBefore.zh:text"
+        },
+        {
+          "name": "define.compare.colBefore.en",
+          "type": "text",
+          "raw": "define.compare.colBefore.en:text"
+        },
+        {
+          "name": "define.compare.colAfter.zh",
+          "type": "text",
+          "raw": "define.compare.colAfter.zh:text"
+        },
+        {
+          "name": "define.compare.colAfter.en",
+          "type": "text",
+          "raw": "define.compare.colAfter.en:text"
+        },
+        {
+          "name": "define.compare.rows",
+          "type": "json",
+          "raw": "define.compare.rows:json"
+        },
+        {
+          "name": "timeline.caption.zh",
+          "type": "text",
+          "raw": "timeline.caption.zh:text"
+        },
+        {
+          "name": "timeline.caption.en",
+          "type": "text",
+          "raw": "timeline.caption.en:text"
+        },
+        {
+          "name": "timeline.kinds",
+          "type": "json",
+          "raw": "timeline.kinds:json"
+        },
+        {
+          "name": "timeline.items",
+          "type": "json",
+          "raw": "timeline.items:json"
+        },
+        {
+          "name": "scenes.caption.zh",
+          "type": "text",
+          "raw": "scenes.caption.zh:text"
+        },
+        {
+          "name": "scenes.caption.en",
+          "type": "text",
+          "raw": "scenes.caption.en:text"
+        },
+        {
+          "name": "scenes.note.zh",
+          "type": "text",
+          "raw": "scenes.note.zh:text"
+        },
+        {
+          "name": "scenes.note.en",
+          "type": "text",
+          "raw": "scenes.note.en:text"
+        },
+        {
+          "name": "scenes.items",
+          "type": "json",
+          "raw": "scenes.items:json"
+        }
+      ],
+      "note": "调色板键名：charts.js 按这些键去 tokens.css 取当前主题下的真实色值（改配色只需改 tokens.css）"
+    },
+    {
+      "file": "kpis.csv",
+      "path": "kpis",
+      "kind": "array",
+      "rows": 4,
+      "columns": [
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        },
+        {
+          "name": "decimals",
+          "type": "number",
+          "raw": "decimals:number"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "sub.zh",
+          "type": "text",
+          "raw": "sub.zh:text"
+        },
+        {
+          "name": "sub.en",
+          "type": "text",
+          "raw": "sub.en:text"
+        }
+      ],
+      "note": "第 1 节四个数字：核心产业规模 / 2030 全球 GDP 增量 / 中国份额 / 算力年均增速"
+    },
+    {
+      "file": "radar.csv",
+      "path": "radar",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 3 节雷达图：图题、口径说明与来源"
+    },
+    {
+      "file": "radar-axes.csv",
+      "path": "radar.axes",
+      "kind": "pairs",
+      "rows": 6,
+      "columns": [
+        {
+          "name": "zh",
+          "type": "text",
+          "raw": "zh:text"
+        },
+        {
+          "name": "en",
+          "type": "text",
+          "raw": "en:text"
+        }
+      ],
+      "note": "第 3 节雷达图六个能力维度"
+    },
+    {
+      "file": "radar-series.csv",
+      "path": "radar.series",
+      "kind": "array",
+      "rows": 2,
+      "columns": [
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "values",
+          "type": "json",
+          "raw": "values:json"
+        }
+      ],
+      "note": "第 3 节雷达图两条系列（传统生产力 / AI 赋能）的 0–100 指数"
+    },
+    {
+      "file": "forces.csv",
+      "path": "forces",
+      "kind": "array",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "icon",
+          "type": "text",
+          "raw": "icon:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "desc.zh",
+          "type": "text",
+          "raw": "desc.zh:text"
+        },
+        {
+          "name": "desc.en",
+          "type": "text",
+          "raw": "desc.en:text"
+        },
+        {
+          "name": "stat.value",
+          "type": "text",
+          "raw": "stat.value:text"
+        },
+        {
+          "name": "stat.unit.zh",
+          "type": "text",
+          "raw": "stat.unit.zh:text"
+        },
+        {
+          "name": "stat.unit.en",
+          "type": "text",
+          "raw": "stat.unit.en:text"
+        },
+        {
+          "name": "stat.label.zh",
+          "type": "text",
+          "raw": "stat.label.zh:text"
+        },
+        {
+          "name": "stat.label.en",
+          "type": "text",
+          "raw": "stat.label.en:text"
+        },
+        {
+          "name": "tag.zh",
+          "type": "text",
+          "raw": "tag.zh:text"
+        },
+        {
+          "name": "tag.en",
+          "type": "text",
+          "raw": "tag.en:text"
+        }
+      ],
+      "note": "第 3 节五股作用力卡片：图标 / 名称 / 解释 / 一个可验证的数字 / 标签"
+    },
+    {
+      "file": "scale.csv",
+      "path": "scale",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "coreLabel.zh",
+          "type": "text",
+          "raw": "coreLabel.zh:text"
+        },
+        {
+          "name": "coreLabel.en",
+          "type": "text",
+          "raw": "coreLabel.en:text"
+        },
+        {
+          "name": "relatedLabel.zh",
+          "type": "text",
+          "raw": "relatedLabel.zh:text"
+        },
+        {
+          "name": "relatedLabel.en",
+          "type": "text",
+          "raw": "relatedLabel.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 4 节产业规模折线图：图题、单位、两条曲线名与口径"
+    },
+    {
+      "file": "scale-series.csv",
+      "path": "scale.series",
+      "kind": "array",
+      "rows": 7,
+      "columns": [
+        {
+          "name": "year",
+          "type": "number",
+          "raw": "year:number"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        },
+        {
+          "name": "forecast",
+          "type": "boolean",
+          "raw": "forecast:boolean"
+        }
+      ],
+      "note": "第 4 节核心产业规模 2019–2025E（2025 为预测）"
+    },
+    {
+      "file": "scale-related.csv",
+      "path": "scale.related",
+      "kind": "array",
+      "rows": 7,
+      "columns": [
+        {
+          "name": "year",
+          "type": "number",
+          "raw": "year:number"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        },
+        {
+          "name": "forecast",
+          "type": "boolean",
+          "raw": "forecast:boolean"
+        }
+      ],
+      "note": "第 4 节带动相关产业规模 2019–2025E（2025 为预测）"
+    },
+    {
+      "file": "industry.csv",
+      "path": "industry",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "penetration.zh",
+          "type": "text",
+          "raw": "penetration.zh:text"
+        },
+        {
+          "name": "penetration.en",
+          "type": "text",
+          "raw": "penetration.en:text"
+        },
+        {
+          "name": "gain.zh",
+          "type": "text",
+          "raw": "gain.zh:text"
+        },
+        {
+          "name": "gain.en",
+          "type": "text",
+          "raw": "gain.en:text"
+        },
+        {
+          "name": "sizeLabel.zh",
+          "type": "text",
+          "raw": "sizeLabel.zh:text"
+        },
+        {
+          "name": "sizeLabel.en",
+          "type": "text",
+          "raw": "sizeLabel.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 5 节三次产业赋能条形图：图题与两个指标名 / 口径"
+    },
+    {
+      "file": "industry-rows.csv",
+      "path": "industry.rows",
+      "kind": "array",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "key.zh",
+          "type": "text",
+          "raw": "key.zh:text"
+        },
+        {
+          "name": "key.en",
+          "type": "text",
+          "raw": "key.en:text"
+        },
+        {
+          "name": "penetration",
+          "type": "number",
+          "raw": "penetration:number"
+        },
+        {
+          "name": "gain",
+          "type": "number",
+          "raw": "gain:number"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "raw": "size:number"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        }
+      ],
+      "note": "第 5 节三次产业（三产 / 二产 / 一产）的渗透率、效率增益、占 GDP 比重"
+    },
+    {
+      "file": "bubble.csv",
+      "path": "bubble",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "xLabel.zh",
+          "type": "text",
+          "raw": "xLabel.zh:text"
+        },
+        {
+          "name": "xLabel.en",
+          "type": "text",
+          "raw": "xLabel.en:text"
+        },
+        {
+          "name": "yLabel.zh",
+          "type": "text",
+          "raw": "yLabel.zh:text"
+        },
+        {
+          "name": "yLabel.en",
+          "type": "text",
+          "raw": "yLabel.en:text"
+        },
+        {
+          "name": "sizeLabel.zh",
+          "type": "text",
+          "raw": "sizeLabel.zh:text"
+        },
+        {
+          "name": "sizeLabel.en",
+          "type": "text",
+          "raw": "sizeLabel.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 5 节气泡矩阵：坐标轴含义、象限名与来源"
+    },
+    {
+      "file": "bubble-quadrants.csv",
+      "path": "bubble.quadrants",
+      "kind": "pairs",
+      "rows": 4,
+      "columns": [
+        {
+          "name": "zh",
+          "type": "text",
+          "raw": "zh:text"
+        },
+        {
+          "name": "en",
+          "type": "text",
+          "raw": "en:text"
+        }
+      ],
+      "note": "第 5 节气泡矩阵四个象限的名称"
+    },
+    {
+      "file": "bubble-points.csv",
+      "path": "bubble.points",
+      "kind": "array",
+      "rows": 15,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "raw": "x:number"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "raw": "y:number"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "raw": "size:number"
+        },
+        {
+          "name": "sector",
+          "type": "text",
+          "raw": "sector:text"
+        }
+      ],
+      "note": "第 5 节 15 个行业：渗透率 / 效率增益 / 市场规模与所属产业（跨图联动靠 id 匹配）"
+    },
+    {
+      "file": "heatmap.csv",
+      "path": "heatmap",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "legend.zh",
+          "type": "text",
+          "raw": "legend.zh:text"
+        },
+        {
+          "name": "legend.en",
+          "type": "text",
+          "raw": "legend.en:text"
+        },
+        {
+          "name": "legendLow.zh",
+          "type": "text",
+          "raw": "legendLow.zh:text"
+        },
+        {
+          "name": "legendLow.en",
+          "type": "text",
+          "raw": "legendLow.en:text"
+        },
+        {
+          "name": "legendHigh.zh",
+          "type": "text",
+          "raw": "legendHigh.zh:text"
+        },
+        {
+          "name": "legendHigh.en",
+          "type": "text",
+          "raw": "legendHigh.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 5 节热力矩阵：图题、图例与「列内归一化」说明"
+    },
+    {
+      "file": "heatmap-metrics.csv",
+      "path": "heatmap.metrics",
+      "kind": "array",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "short.zh",
+          "type": "text",
+          "raw": "short.zh:text"
+        },
+        {
+          "name": "short.en",
+          "type": "text",
+          "raw": "short.en:text"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "decimals",
+          "type": "number",
+          "raw": "decimals:number"
+        }
+      ],
+      "note": "第 5 节热力矩阵 5 列指标（渗透率 / 效率增益 / 市场规模 / 五年增速 / 人才密度）"
+    },
+    {
+      "file": "heatmap-rows.csv",
+      "path": "heatmap.rows",
+      "kind": "array",
+      "rows": 15,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "pen",
+          "type": "number",
+          "raw": "pen:number"
+        },
+        {
+          "name": "gain",
+          "type": "number",
+          "raw": "gain:number"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "raw": "size:number"
+        },
+        {
+          "name": "cagr",
+          "type": "number",
+          "raw": "cagr:number"
+        },
+        {
+          "name": "talent",
+          "type": "number",
+          "raw": "talent:number"
+        }
+      ],
+      "note": "第 5 节 15 行业 × 5 指标原始值（前三列与气泡矩阵同源）"
+    },
+    {
+      "file": "multiples.csv",
+      "path": "multiples",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "seriesLabels.penetration.zh",
+          "type": "text",
+          "raw": "seriesLabels.penetration.zh:text"
+        },
+        {
+          "name": "seriesLabels.penetration.en",
+          "type": "text",
+          "raw": "seriesLabels.penetration.en:text"
+        },
+        {
+          "name": "seriesLabels.gain.zh",
+          "type": "text",
+          "raw": "seriesLabels.gain.zh:text"
+        },
+        {
+          "name": "seriesLabels.gain.en",
+          "type": "text",
+          "raw": "seriesLabels.gain.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 5 节小倍数图：图题与两条序列名"
+    },
+    {
+      "file": "multiples-series.csv",
+      "path": "multiples.series",
+      "kind": "array",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "key.zh",
+          "type": "text",
+          "raw": "key.zh:text"
+        },
+        {
+          "name": "key.en",
+          "type": "text",
+          "raw": "key.en:text"
+        },
+        {
+          "name": "colorKey",
+          "type": "text",
+          "raw": "colorKey:text"
+        },
+        {
+          "name": "penetration",
+          "type": "json",
+          "raw": "penetration:json"
+        },
+        {
+          "name": "gain",
+          "type": "json",
+          "raw": "gain:json"
+        }
+      ],
+      "note": "第 5 节三次产业 2019–2025E 渗透率与效率增益（2024 端点与 industry.rows 一致，由 check.mjs 断言）"
+    },
+    {
+      "file": "globalRank.csv",
+      "path": "globalRank",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "metric.zh",
+          "type": "text",
+          "raw": "metric.zh:text"
+        },
+        {
+          "name": "metric.en",
+          "type": "text",
+          "raw": "metric.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 7 节全球格局排名：图题、指数口径与来源"
+    },
+    {
+      "file": "globalRank-rows.csv",
+      "path": "globalRank.rows",
+      "kind": "array",
+      "rows": 12,
+      "columns": [
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        },
+        {
+          "name": "flag",
+          "type": "text",
+          "raw": "flag:text"
+        }
+      ],
+      "note": "第 7 节 12 个经济体的 AI 发展指数（按数值降序）"
+    },
+    {
+      "file": "province.csv",
+      "path": "province",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "insetLabel.zh",
+          "type": "text",
+          "raw": "insetLabel.zh:text"
+        },
+        {
+          "name": "insetLabel.en",
+          "type": "text",
+          "raw": "insetLabel.en:text"
+        },
+        {
+          "name": "noData.zh",
+          "type": "text",
+          "raw": "noData.zh:text"
+        },
+        {
+          "name": "noData.en",
+          "type": "text",
+          "raw": "noData.en:text"
+        },
+        {
+          "name": "leaders.zh",
+          "type": "text",
+          "raw": "leaders.zh:text"
+        },
+        {
+          "name": "leaders.en",
+          "type": "text",
+          "raw": "leaders.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 6 节区域格局地图：图题、五档分位说明、前五名与南海诸岛标注文案"
+    },
+    {
+      "file": "province-metrics.csv",
+      "path": "province.metrics",
+      "kind": "array",
+      "rows": 2,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "decimals",
+          "type": "number",
+          "raw": "decimals:number"
+        }
+      ],
+      "note": "第 6 节地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径）"
+    },
+    {
+      "file": "province-rows.csv",
+      "path": "province.rows",
+      "kind": "array",
+      "rows": 34,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "compute",
+          "type": "number",
+          "raw": "compute:number"
+        },
+        {
+          "name": "firms",
+          "type": "number",
+          "raw": "firms:number"
+        }
+      ],
+      "note": "第 6 节 34 个省级单元的算力与企业数量（id 与 map-china.js 的几何 id 双向对齐）"
+    },
+    {
+      "file": "flow.csv",
+      "path": "flow",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 8 节要素重构流向图：图题与分组名"
+    },
+    {
+      "file": "flow-columns.csv",
+      "path": "flow.columns",
+      "kind": "pairs",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "zh",
+          "type": "text",
+          "raw": "zh:text"
+        },
+        {
+          "name": "en",
+          "type": "text",
+          "raw": "en:text"
+        }
+      ],
+      "note": "第 8 节流向图三个纵向分栏（投入 / 要素 / 产出）"
+    },
+    {
+      "file": "flow-nodes.csv",
+      "path": "flow.nodes",
+      "kind": "array",
+      "rows": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "col",
+          "type": "number",
+          "raw": "col:number"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "weight",
+          "type": "number",
+          "raw": "weight:number"
+        },
+        {
+          "name": "icon",
+          "type": "text",
+          "raw": "icon:text"
+        }
+      ],
+      "note": "第 8 节流向图 10 个节点：名称、宽度（权重）与一句话说明"
+    },
+    {
+      "file": "flow-links.csv",
+      "path": "flow.links",
+      "kind": "array",
+      "rows": 16,
+      "columns": [
+        {
+          "name": "from",
+          "type": "text",
+          "raw": "from:text"
+        },
+        {
+          "name": "to",
+          "type": "text",
+          "raw": "to:text"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        }
+      ],
+      "note": "第 8 节流向图 16 条流量关系（源 → 目标，带宽即权重）"
+    },
+    {
+      "file": "graph.csv",
+      "path": "graph",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        }
+      ],
+      "note": "第 9 节关系图谱：图题与「分组 / 关系」两套图例"
+    },
+    {
+      "file": "graph-groups.csv",
+      "path": "graph.groups",
+      "kind": "array",
+      "rows": 6,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "colorKey",
+          "type": "text",
+          "raw": "colorKey:text"
+        }
+      ],
+      "note": "第 9 节图谱 6 个分组（算力 / 算法 / 数据 / 要素 / 效应 / 政策 / 应用）"
+    },
+    {
+      "file": "graph-relations.csv",
+      "path": "graph.relations",
+      "kind": "array",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        }
+      ],
+      "note": "第 9 节图谱 5 种语义关系（支撑 / 组成 / 赋能 / 驱动 / 引导）"
+    },
+    {
+      "file": "graph-nodes.csv",
+      "path": "graph.nodes",
+      "kind": "array",
+      "rows": 21,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "g",
+          "type": "text",
+          "raw": "g:text"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "raw": "size:number"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "desc.zh",
+          "type": "text",
+          "raw": "desc.zh:text"
+        },
+        {
+          "name": "desc.en",
+          "type": "text",
+          "raw": "desc.en:text"
+        }
+      ],
+      "note": "第 9 节图谱 21 个节点：分组、半径、名称与说明"
+    },
+    {
+      "file": "graph-links.csv",
+      "path": "graph.links",
+      "kind": "array",
+      "rows": 36,
+      "columns": [
+        {
+          "name": "s",
+          "type": "text",
+          "raw": "s:text"
+        },
+        {
+          "name": "t",
+          "type": "text",
+          "raw": "t:text"
+        },
+        {
+          "name": "r",
+          "type": "text",
+          "raw": "r:text"
+        }
+      ],
+      "note": "第 9 节图谱 36 条关系（源 / 目标 / 关系类型）"
+    },
+    {
+      "file": "sim.csv",
+      "path": "sim",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "index.zh",
+          "type": "text",
+          "raw": "index.zh:text"
+        },
+        {
+          "name": "index.en",
+          "type": "text",
+          "raw": "index.en:text"
+        },
+        {
+          "name": "baseline.zh",
+          "type": "text",
+          "raw": "baseline.zh:text"
+        },
+        {
+          "name": "baseline.en",
+          "type": "text",
+          "raw": "baseline.en:text"
+        },
+        {
+          "name": "formulaNote.zh",
+          "type": "text",
+          "raw": "formulaNote.zh:text"
+        },
+        {
+          "name": "formulaNote.en",
+          "type": "text",
+          "raw": "formulaNote.en:text"
+        },
+        {
+          "name": "model",
+          "type": "text",
+          "raw": "model:text"
+        }
+      ],
+      "note": "第 10 节模拟器：图题、综合指数名与模型说明"
+    },
+    {
+      "file": "sim-sliders.csv",
+      "path": "sim.sliders",
+      "kind": "array",
+      "rows": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "raw": "value:number"
+        },
+        {
+          "name": "unit",
+          "type": "text",
+          "raw": "unit:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "hint.zh",
+          "type": "text",
+          "raw": "hint.zh:text"
+        },
+        {
+          "name": "hint.en",
+          "type": "text",
+          "raw": "hint.en:text"
+        }
+      ],
+      "note": "第 10 节四个旋钮（渗透率 / 数据要素 / 人才 / 研发）与默认值、单位、提示语"
+    },
+    {
+      "file": "sim-presets.csv",
+      "path": "sim.presets",
+      "kind": "array",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "values.penetration",
+          "type": "number",
+          "raw": "values.penetration:number"
+        },
+        {
+          "name": "values.dataFactor",
+          "type": "number",
+          "raw": "values.dataFactor:number"
+        },
+        {
+          "name": "values.talent",
+          "type": "number",
+          "raw": "values.talent:number"
+        },
+        {
+          "name": "values.rd",
+          "type": "number",
+          "raw": "values.rd:number"
+        }
+      ],
+      "note": "第 10 节三套预设（当前基线 / 制造强国 / 全面智能化）"
+    },
+    {
+      "file": "sim-outputs.csv",
+      "path": "sim.outputs",
+      "kind": "array",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "raw": "max:number"
+        },
+        {
+          "name": "decimals",
+          "type": "number",
+          "raw": "decimals:number"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "colorKey",
+          "type": "text",
+          "raw": "colorKey:text"
+        },
+        {
+          "name": "label.zh",
+          "type": "text",
+          "raw": "label.zh:text"
+        },
+        {
+          "name": "label.en",
+          "type": "text",
+          "raw": "label.en:text"
+        },
+        {
+          "name": "why.zh",
+          "type": "text",
+          "raw": "why.zh:text"
+        },
+        {
+          "name": "why.en",
+          "type": "text",
+          "raw": "why.en:text"
+        }
+      ],
+      "note": "第 10 节五项输出（全要素生产率 / GDP / 成本 / 能耗 / 岗位）与量程、单位、颜色"
+    },
+    {
+      "file": "sim-sensitivity.csv",
+      "path": "sim.sensitivity",
+      "kind": "object",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "target.zh",
+          "type": "text",
+          "raw": "target.zh:text"
+        },
+        {
+          "name": "target.en",
+          "type": "text",
+          "raw": "target.en:text"
+        },
+        {
+          "name": "tornadoTitle.zh",
+          "type": "text",
+          "raw": "tornadoTitle.zh:text"
+        },
+        {
+          "name": "tornadoTitle.en",
+          "type": "text",
+          "raw": "tornadoTitle.en:text"
+        },
+        {
+          "name": "tornadoHint.zh",
+          "type": "text",
+          "raw": "tornadoHint.zh:text"
+        },
+        {
+          "name": "tornadoHint.en",
+          "type": "text",
+          "raw": "tornadoHint.en:text"
+        },
+        {
+          "name": "mcTitle.zh",
+          "type": "text",
+          "raw": "mcTitle.zh:text"
+        },
+        {
+          "name": "mcTitle.en",
+          "type": "text",
+          "raw": "mcTitle.en:text"
+        },
+        {
+          "name": "mcHint.zh",
+          "type": "text",
+          "raw": "mcHint.zh:text"
+        },
+        {
+          "name": "mcHint.en",
+          "type": "text",
+          "raw": "mcHint.en:text"
+        },
+        {
+          "name": "sweepLabel.zh",
+          "type": "text",
+          "raw": "sweepLabel.zh:text"
+        },
+        {
+          "name": "sweepLabel.en",
+          "type": "text",
+          "raw": "sweepLabel.en:text"
+        },
+        {
+          "name": "lowLabel.zh",
+          "type": "text",
+          "raw": "lowLabel.zh:text"
+        },
+        {
+          "name": "lowLabel.en",
+          "type": "text",
+          "raw": "lowLabel.en:text"
+        },
+        {
+          "name": "highLabel.zh",
+          "type": "text",
+          "raw": "highLabel.zh:text"
+        },
+        {
+          "name": "highLabel.en",
+          "type": "text",
+          "raw": "highLabel.en:text"
+        },
+        {
+          "name": "swingLabel.zh",
+          "type": "text",
+          "raw": "swingLabel.zh:text"
+        },
+        {
+          "name": "swingLabel.en",
+          "type": "text",
+          "raw": "swingLabel.en:text"
+        },
+        {
+          "name": "p5Label.zh",
+          "type": "text",
+          "raw": "p5Label.zh:text"
+        },
+        {
+          "name": "p5Label.en",
+          "type": "text",
+          "raw": "p5Label.en:text"
+        },
+        {
+          "name": "p50Label.zh",
+          "type": "text",
+          "raw": "p50Label.zh:text"
+        },
+        {
+          "name": "p50Label.en",
+          "type": "text",
+          "raw": "p50Label.en:text"
+        },
+        {
+          "name": "p95Label.zh",
+          "type": "text",
+          "raw": "p95Label.zh:text"
+        },
+        {
+          "name": "p95Label.en",
+          "type": "text",
+          "raw": "p95Label.en:text"
+        },
+        {
+          "name": "currentLabel.zh",
+          "type": "text",
+          "raw": "currentLabel.zh:text"
+        },
+        {
+          "name": "currentLabel.en",
+          "type": "text",
+          "raw": "currentLabel.en:text"
+        },
+        {
+          "name": "countLabel.zh",
+          "type": "text",
+          "raw": "countLabel.zh:text"
+        },
+        {
+          "name": "countLabel.en",
+          "type": "text",
+          "raw": "countLabel.en:text"
+        },
+        {
+          "name": "lowWord.zh",
+          "type": "text",
+          "raw": "lowWord.zh:text"
+        },
+        {
+          "name": "lowWord.en",
+          "type": "text",
+          "raw": "lowWord.en:text"
+        },
+        {
+          "name": "highWord.zh",
+          "type": "text",
+          "raw": "highWord.zh:text"
+        },
+        {
+          "name": "highWord.en",
+          "type": "text",
+          "raw": "highWord.en:text"
+        },
+        {
+          "name": "perturb",
+          "type": "number",
+          "raw": "perturb:number"
+        },
+        {
+          "name": "draws",
+          "type": "number",
+          "raw": "draws:number"
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "raw": "seed:number"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        }
+      ],
+      "note": "第 10 节龙卷风图与蒙特卡洛的文案与参数（±15% 扰动、500 次抽样、固定随机种子）"
+    },
+    {
+      "file": "sources.csv",
+      "path": "sources",
+      "kind": "array",
+      "rows": 12,
+      "columns": [
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        }
+      ],
+      "note": "第 13 节数据来源 12 条（名称 + 对应口径）"
+    },
+    {
+      "file": "overview.csv",
+      "path": "overview",
+      "kind": "array",
+      "rows": 11,
+      "columns": [
+        {
+          "name": "icon",
+          "type": "text",
+          "raw": "icon:text"
+        },
+        {
+          "name": "name.zh",
+          "type": "text",
+          "raw": "name.zh:text"
+        },
+        {
+          "name": "name.en",
+          "type": "text",
+          "raw": "name.en:text"
+        },
+        {
+          "name": "desc.zh",
+          "type": "text",
+          "raw": "desc.zh:text"
+        },
+        {
+          "name": "desc.en",
+          "type": "text",
+          "raw": "desc.en:text"
+        },
+        {
+          "name": "href",
+          "type": "text",
+          "raw": "href:text"
+        }
+      ],
+      "note": "第 0 节阅读地图 11 张跳转卡片（图标 / 名称 / 说明 / 锚点）"
+    }
+  ],
+  "inline": [
+    {
+      "path": "sim.model",
+      "file": "sim-model.js",
+      "note": "模拟器模型（函数，无法进 CSV）"
+    }
+  ]
+}

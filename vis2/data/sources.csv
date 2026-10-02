@@ -1,0 +1,13 @@
+﻿name.zh:text,name.en:text,note.zh:text,note.en:text
+中国信息通信研究院《人工智能发展报告》,CAICT — AI Development Report,产业规模、算力规模,Industry and compute scale
+工业和信息化部公开统计数据,Ministry of Industry and Information Technology,算力与产业运行,Compute and industry operations
+国家统计局年度统计公报,National Bureau of Statistics of China,三次产业结构,Sector structure
+普华永道《AI 对全球经济的影响》,PwC — Sizing the Prize,2030 年 GDP 增量预测,2030 GDP uplift projection
+麦肯锡《生成式人工智能的经济潜力》,McKinsey — The Economic Potential of Generative AI,生产率与市场价值,Productivity and market value
+IDC《全球人工智能支出指南》,IDC Worldwide AI Spending Guide,市场规模与行业渗透,Market size and penetration
+斯坦福 HAI《人工智能指数报告》,Stanford HAI — AI Index Report,技术与国家比较,Technology and country comparison
+世界经济论坛《未来就业报告》,World Economic Forum — Future of Jobs,就业与技能结构,Jobs and skills
+工业和信息化部与各省「人工智能 +」行动方案,MIIT and provincial AI+ action plans,省级算力规模与企业数量（示意）,Provincial compute and AI firms (indicative)
+阿里云 DataV.GeoAtlas 行政区边界,Aliyun DataV.GeoAtlas administrative boundaries,省级地图底图（抽稀后的示意轮廓，非审图号地图）,"Province outlines, simplified for illustration"
+行业招聘平台与年报数据（人才密度 / 市场增速）,"Hiring platforms and annual reports (talent, CAGR)",热力矩阵后两列指标口径,Definitions for the last two heat-map columns
+本页模拟器的公开线性模型,The open linear model behind this page’s simulator,敏感性分析与蒙特卡洛抽样的计算依据,Basis for the sensitivity and Monte Carlo panels

@@ -1,0 +1,4 @@
+﻿id:text,key.zh:text,key.en:text,penetration:number,gain:number,size:number,note.zh:text,note.en:text
+tertiary,第三产业 · 服务业,Tertiary · Services,31,35,55,金融、零售、内容与专业服务最先被大模型重塑,"Finance, retail, content and professional services lead adoption"
+secondary,第二产业 · 工业,Secondary · Industry,22,28,37,智能制造、机器质检、预测性维护是主战场,"Smart manufacturing, machine inspection and predictive maintenance dominate"
+primary,第一产业 · 农业,Primary · Agriculture,8,12,7,遥感、无人机与智能育种正在打开空间,"Remote sensing, drones and smart breeding open new space"

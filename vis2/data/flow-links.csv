@@ -1,0 +1,17 @@
+﻿from:text,to:text,value:number
+compute,tool,22
+compute,object,8
+data,object,18
+data,tool,8
+algo,tool,10
+algo,labor,14
+talent,labor,14
+talent,object,6
+labor,newbiz,12
+labor,tfp,16
+tool,tfp,22
+tool,green,10
+tool,newbiz,8
+object,newbiz,14
+object,green,10
+object,tfp,8

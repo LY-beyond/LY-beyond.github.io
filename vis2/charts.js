@@ -45,10 +45,17 @@ window.CHARTS = (function () {
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
+  /* 词表兜底：charts.js 排在 i18n.js 之后加载，可以借 window.I18N 取词；
+     万一词表缺失则回退英文（而不是中文），保证英文界面不会冒出中文。
+     （命名用 tk，避免和下面各引擎里 T = readTokens() 的局部变量撞车。） */
+  function tk(key, fallback) {
+    try { return (window.I18N && window.I18N.t) ? window.I18N.t(key) : fallback; } catch (e) { return fallback; }
+  }
+
   /* 从 :root 读取设计令牌，得到当前主题下的真实色值 */
   function readTokens() {
     var cs = getComputedStyle(document.documentElement);
-    var keys = ['--c-primary', '--c-primary-2', '--c-accent', '--c-info', '--c-success', '--c-warn',
+    var keys = ['--c-primary', '--c-primary-2', '--c-accent', '--c-accent-ink', '--c-info', '--c-success', '--c-warn',
       '--c-danger', '--c-anomaly', '--c-text', '--c-text-soft', '--c-muted', '--c-border', '--c-border-2',
       '--c-surface', '--c-surface-2', '--c-bg', '--s-base', '--s-base-alt', '--s-base-warm',
       '--d1', '--d2', '--d3', '--d4', '--d5', '--d6'];
@@ -122,7 +129,9 @@ window.CHARTS = (function () {
       preserveAspectRatio: 'xMidYMid meet',
       /* 上限锁在设计宽度：宽屏不再把整张图（含字号）等比放大 */
       style: cap ? ('max-width:' + cap + 'px;margin:0 auto') : null,
-      role: 'img'
+      /* 可及名由外层容器承载（app.js 给 .viz 挂 role="img" + 图题 aria-label，
+         并配一份「数据表」等价物）；内部 SVG 是纯绘制，对读屏隐藏，避免重复播报无名图形。 */
+      'aria-hidden': 'true'
     });
     container.appendChild(svg);
     var tip = div('viz-tip', container);
@@ -456,7 +465,8 @@ window.CHARTS = (function () {
     series[0].points.forEach(function (p, i) {
       el('text', {
         x: X(i), y: pad.t + ph + 24, 'text-anchor': 'middle',
-        fill: p.forecast ? T['--c-accent'] : T['--c-text-soft'],
+        /* 预测年份的刻度用「强调色当文字」的深阶：浅色主题下 --c-accent 只有 3.35:1，不够小字 */
+        fill: p.forecast ? T['--c-accent-ink'] : T['--c-text-soft'],
         'font-size': narrow ? 11 : 12, 'font-weight': 700
       }, svg).textContent = p.label != null ? p.label : String(p.year != null ? p.year : i + 1);
     });
@@ -754,7 +764,7 @@ window.CHARTS = (function () {
       /* 左侧：对象名（放在条形列左侧，不会与条形重叠） */
       el('text', {
         x: labelW - 16, y: top + 10, 'text-anchor': 'end',
-        fill: hit ? T['--c-accent'] : T['--c-text'], 'font-size': narrow ? 12.5 : 14, 'font-weight': 800
+        fill: hit ? T['--c-accent-ink'] : T['--c-text'], 'font-size': narrow ? 12.5 : 14, 'font-weight': 800
       }, g).textContent = r.key;
 
       r.bars.forEach(function (b, j) {
@@ -1060,7 +1070,7 @@ window.CHARTS = (function () {
           y: n.y + n.h / 2 + 15,
           'text-anchor': right ? 'end' : 'start',
           fill: T['--c-muted'], 'font-size': narrow ? 10 : 10.5, 'pointer-events': 'none'
-        }, gNodes).textContent = (cfg.weightLabel || '权重') + ' ' + fmt(n.weight, 0) + '%';
+        }, gNodes).textContent = (cfg.weightLabel || tk('graph.weight', 'Weight')) + ' ' + fmt(n.weight, 0) + '%';
       }
 
       /* 悬停：只保留该节点相关的流向 */
@@ -1119,7 +1129,8 @@ window.CHARTS = (function () {
       viewBox: '0 0 ' + W + ' ' + H,
       preserveAspectRatio: 'xMidYMid meet',
       style: 'max-width:960px;margin:0 auto',
-      role: 'img'
+      /* 同 stage()：可及名在容器上，画布对读屏隐藏（十字方向的「适应窗口」按钮在容器外，仍可聚焦） */
+      'aria-hidden': 'true'
     });
     container.appendChild(svg);
     var tip = div('viz-tip', container);
@@ -1128,7 +1139,7 @@ window.CHARTS = (function () {
 
     var T = readTokens();
     if (!window.d3 || !window.d3.forceSimulation) {
-      div('viz-error', container, '力导向引擎（d3-force）未加载，请确认 vendor/ 目录完整。');
+      div('viz-error', container, tk('graph.engineMissing', 'Force engine (d3-force) not loaded — please check that the vendor/ folder is complete.'));
       return ctx;
     }
 
@@ -1874,7 +1885,7 @@ window.CHARTS = (function () {
         years.forEach(function (yr, i) {
           el('text', {
             x: X(i).toFixed(1), y: chartH + 13, 'text-anchor': 'middle',
-            fill: i === lastIdx ? T['--c-accent'] : T['--c-muted'],
+            fill: i === lastIdx ? T['--c-accent-ink'] : T['--c-muted'],
             'font-size': wide ? 9 : 10, 'font-weight': 700
           }, g).textContent = String(yr);
         });
@@ -2019,7 +2030,7 @@ window.CHARTS = (function () {
       stroke: T['--c-accent'], 'stroke-width': 1.8, 'stroke-dasharray': '5 4', opacity: 0.9
     }, svg);
     el('text', {
-      x: cx, y: narrow ? 30 : headH - 10, 'text-anchor': 'middle', fill: T['--c-accent'],
+      x: cx, y: narrow ? 30 : headH - 10, 'text-anchor': 'middle', fill: T['--c-accent-ink'],
       'font-size': narrow ? 9.5 : 10.5, 'font-weight': 800
     }, svg).textContent = cfg.currentLabel + ' ' + fmt(cfg.current, cfg.decimals || 0);
 

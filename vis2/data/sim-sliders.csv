@@ -1,0 +1,5 @@
+﻿id:text,value:number,unit:text,label.zh:text,label.en:text,hint.zh:text,hint.en:text
+penetration,35,%,AI 渗透率,AI penetration,有多少企业把 AI 真正用进生产流程,How many firms actually embed AI in operations
+dataFactor,45,%,数据要素投入强度,Data factor intensity,数据能否被采集、流通、复用,"Whether data can be collected, shared and reused"
+talent,40,%,数字人才密度,Digital talent density,劳动者中具备人机协同能力的比例,Share of workers able to collaborate with AI
+rd,30,%,研发投入强度,R&D intensity,持续迭代算法与模型的投入水平,Investment in continuously iterating models

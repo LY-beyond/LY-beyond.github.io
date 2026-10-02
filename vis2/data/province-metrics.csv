@@ -1,0 +1,3 @@
+﻿id:text,label.zh:text,label.en:text,unit.zh:text,unit.en:text,decimals:number
+compute,智能算力规模,Intelligent compute, EFLOPS, EFLOPS,1
+firms,人工智能企业数量,AI firms, 家, firms,0

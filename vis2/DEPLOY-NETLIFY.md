@@ -99,15 +99,18 @@
 
 ## 1. 前置条件：先把 vis2 推上 GitHub
 
-现在 `vis2/` **还没有被提交**（`git status` 显示 `?? vis2/`），Netlify 只能部署仓库里已有的文件，所以这一步必须先做：
+现在 `vis2/` 已随第二次作业提交；若你在别的分支/机器上发现它还没进仓库（`git status` 显示 `?? vis2/`），先按下面步骤提交一次 —— Netlify 只能部署仓库里已有的文件：
 
 ```powershell
 cd D:\Vis\LY-beyond.github.io
 
-# 1) 先在本地体检一遍（零依赖静态自检，应为「✓ 全部通过」）
-node vis2/check.mjs
+# 1) 先在本地体检一遍（静态自检全跑，应为「✓ 全部通过」；要连真机检查就加 --full）
+node vis2/selfcheck.mjs
 
-# 2) 提交 vis2 与本次的 netlify.toml 调整
+# 2) 数据侧动过就先重新构建（CSV → data.js），否则部署出去的还是旧数据
+node vis2/data/build.mjs
+
+# 3) 提交 vis2 与本次的 netlify.toml 调整
 git add vis2 netlify.toml
 git commit -m "第二次作业：AI 新质生产力可视化 + 多站点部署配置"
 git push origin main
@@ -207,7 +210,7 @@ git status --short        # 应该没有未跟踪的 vis2/
 
 ### 4.3 等部署完成
 
-- 大约 **10~30 秒**（本次发布内容很小：20 个文件 / 约 401 KB，无构建步骤，
+- 大约 **10~30 秒**（本次发布内容很小：页面只请求 17 个文件 / 磁盘 366 KB，gzip 116 KB，无构建步骤，
   其中 5 个 d3 脚本累计只有约 30 KB）。
 - 完成后得到形如 `https://sparkly-otter-1a2b3c.netlify.app` 的地址；
   在站点 **Deploys** 页面可以看到这次部署日志，其中会打印发布目录：
@@ -275,14 +278,17 @@ git status --short        # 应该没有未跟踪的 vis2/
 > 每次 `git push origin main` 都会触发一次部署与少量带宽/请求计量，收尾时一起推即可。
 
 ```
-改代码  →  node vis2/check.mjs  →  git add/commit/push  →  Netlify 自动重新部署（约 10 秒）
+改代码  →  node vis2/selfcheck.mjs  →  git add/commit/push  →  Netlify 自动重新部署（约 10 秒）
 ```
+
+> 改了 `vis2/data/*.csv` 就先 `node vis2/data/build.mjs` 重新生成 `data.js`，
+> 否则自检会在「数据链路」一步报「data.js 与 CSV 不一致」。
 
 命令速查：
 
 ```powershell
 cd D:\Vis\LY-beyond.github.io
-node vis2/check.mjs
+node vis2/selfcheck.mjs
 git add vis2
 git commit -m "更新 vis2：xxx"
 git push origin main
