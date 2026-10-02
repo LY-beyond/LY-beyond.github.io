@@ -19,7 +19,8 @@
  *   ⑧ 顶栏 13 个导航项在窄屏是否被裁切（navClipped）
  * 任何一档出现横向溢出或导航裁切，脚本以非零码退出；末尾给统一的 SUMMARY 行。
  *
- * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定。
+ * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定；
+ *   CI 里若需要额外参数（容器/无沙箱环境）用 CHROME_FLAGS，例如 CHROME_FLAGS=--no-sandbox。
  * 说明：仅开发期使用，不被网站加载，不影响静态部署。
  * ========================================================= */
 import { spawn } from 'node:child_process';
@@ -55,6 +56,8 @@ const HERE = fileURLToPath(new URL('.', import.meta.url));
 const ARGS = process.argv.slice(2);
 const WANT_JSON = ARGS.includes('--json');
 const WANT_SHOTS = ARGS.includes('--shots');
+/* 额外浏览器参数：CI（容器 / 无沙箱环境）常需 CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage" */
+const CHROME_FLAGS = (process.env.CHROME_FLAGS || '').split(/\s+/).filter(Boolean);
 const SITE = process.env.SITE_URL || pathToFileURL(join(HERE, 'index.html')).href;
 const TMP = mkdtempSync(join(tmpdir(), 'vis2-audit-'));
 const OUT = WANT_JSON ? join(TMP, 'audit-report.json') : null;
@@ -69,7 +72,7 @@ const VH = 900;
 const profile = TMP;   /* 复用同一个临时目录，退出时一并清掉 */
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
-  '--no-default-browser-check', `--window-size=${WIDTHS[0]},${VH}`,
+  '--no-default-browser-check', `--window-size=${WIDTHS[0]},${VH}`, ...CHROME_FLAGS,
   `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, 'about:blank'
 ], { stdio: 'ignore' });
 

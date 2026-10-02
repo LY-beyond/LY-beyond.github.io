@@ -38,6 +38,23 @@
       'nav.about': '关于',
       'nav.label': '站点导航',
       'common.sep': ' ｜ ',
+      /* 分享 / 无 JS 兜底 / 数据整包导出：给「视图状态可分享」与「关掉 JS 也能读结论」配的词条 */
+      'share.copy': '复制当前视图链接',
+      'share.copied': '链接已复制：筛选、年份、地图指标都在里面',
+      'share.fail': '复制失败，请手动复制地址栏里的地址',
+      'share.hint': '地址栏会跟着筛选、年份与地图指标变化：复制出去，别人打开就是同一个视图。',
+      'noscript.title': '本页的图表需要 JavaScript 才能绘制',
+      'noscript.lead': '打开 JavaScript 即得完整交互（13 张图 + 1 台模拟器）；下面是第 01 节的四个数字，全部数据与 12 条来源也能离线打开。',
+      'noscript.kpi1': '2024 年中国人工智能核心产业规模 6964 亿元',
+      'noscript.kpi2': '2030 年 AI 对全球 GDP 的增量贡献 15.7 万亿美元',
+      'noscript.kpi3': '其中中国预计可获得的份额 26%',
+      'noscript.kpi4': '我国算力总规模近五年年均增速 30%',
+      'noscript.data': '全部数据与 12 条来源都是纯文本，离线可开：data/sources.csv 与 data/ 目录下的 CSV。',
+      'data.all': '打包下载全部数据（CSV）',
+      'data.saved': '已开始下载：一个 CSV，按卡片分节，Excel 可直接打开',
+      'data.section': '表：{name}',
+      'doc.title': '人工智能 · 新质生产力｜数据可视化',
+      'doc.desc': '用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。',
       'hero.tag': 'AI · NEW QUALITY PRODUCTIVE FORCES',
       'hero.title': '人工智能：新质生产力的核心引擎',
       'hero.sub': '14 个章节 · 13 张自绘 SVG 图表 · 1 台带敏感性分析的模拟器',
@@ -69,9 +86,22 @@
       'play.play': '播放年份',
       'play.pause': '暂停播放',
       'play.label': '年份',
+      'play.link': '年份同时驱动「行业赋能」一节的小倍数图（跨图联动）',
+      'viz.band': '预测段 ±10% 示意区间（教学假设）',
+      'viz.bandNote': '虚线预测段带一层 ±10% 示意区间：这是教学假设，不是统计置信区间。',
+      'viz.weak': '弱口径',
+      'viz.weakNote': '「人才密度指数」「市场五年增速」是间接代理指标，只表示相对强弱，不与前三列同口径比较。',
       'viz.value': '数值',
       'viz.rank': '列内排名',
       'viz.geoMissing': '地图几何未加载：缺少 map-china.js（可由 _map.mjs 重新生成）。',
+      /* 口径徽章（P2）：一枚徽章只回答一个问题 —— 这批数据有多「硬」 */
+      'prov.sourced': '公开统计',
+      'prov.modeled': '测算整理',
+      'prov.projected': '含预测',
+      'prov.list': '公开统计 → 测算整理 → 含预测',
+      'prov.rule': '口径取这一组数据里最弱的一环：只要含测算或预测，就按更弱的那类标（{list}）',
+      'timeline.keys': '键盘：Tab 到这里后，左右方向键逐个浏览节点（Home / End 跳到首尾，Esc 退出）',
+      'timeline.node': '第 {i} / {n} 个节点：{year} 年 · {kind} · {title}',
       'graph.weight': '权重',
       'graph.engineMissing': '力导向引擎（d3-force）未加载，请确认 vendor/ 目录完整。',
       'map.metric': '指标',
@@ -127,6 +157,22 @@
       'nav.about': 'About',
       'nav.label': 'Site navigation',
       'common.sep': ' | ',
+      'share.copy': 'Copy link to this view',
+      'share.copied': 'Link copied — filter, year and map metric included',
+      'share.fail': 'Copy failed — please copy the address bar manually',
+      'share.hint': 'The address bar tracks your filter, year and map metric: copy it and others reopen the very same view.',
+      'noscript.title': 'This page needs JavaScript to draw its charts',
+      'noscript.lead': 'With JavaScript you get the full interactive version (13 charts + 1 simulator). Below are four headline numbers from section 01; all data and the 12 sources also open offline.',
+      'noscript.kpi1': 'China AI core industry scale, 2024: CNY 6964 hundred-million',
+      'noscript.kpi2': 'AI incremental contribution to global GDP by 2030: USD 15.7 trillion',
+      'noscript.kpi3': 'Share expected to be captured by China: 26%',
+      'noscript.kpi4': 'China computing capacity: 30% five-year CAGR',
+      'noscript.data': 'All data and the 12 sources are plain text and open offline: data/sources.csv plus the CSVs under data/.',
+      'data.all': 'Download the whole dataset (CSV)',
+      'data.saved': 'Download started: one CSV, sectioned per card, opens straight in Excel',
+      'data.section': 'Table: {name}',
+      'doc.title': 'AI · New Quality Productive Forces | Data Visualization',
+      'doc.desc': '14 sections, 13 hand-drawn SVG charts (map, heat matrix, small multiples) and 1 simulator with sensitivity analysis: how AI becomes the core engine of new quality productive forces.',
       'hero.tag': 'AI · NEW QUALITY PRODUCTIVE FORCES',
       'hero.title': 'AI: The Core Engine of New Quality Productive Forces',
       'hero.sub': '14 sections · 13 hand-drawn SVG charts · 1 simulator with sensitivity analysis',
@@ -157,9 +203,21 @@
       'play.play': 'Play years',
       'play.pause': 'Pause',
       'play.label': 'Year',
+      'play.link': 'The year also drives the small multiples in the Industries section (linked views)',
+      'viz.band': 'forecast segment ±10% band (teaching assumption)',
+      'viz.bandNote': 'The dashed forecast carries an illustrative ±10% band — a teaching assumption, not a statistical interval.',
+      'viz.weak': 'weak proxy',
+      'viz.weakNote': '"Talent density index" and "5-year CAGR" are indirect proxies: read them as relative strength, not on the same footing as the first three columns.',
       'viz.value': 'Value',
       'viz.rank': 'Rank in column',
       'viz.geoMissing': 'Map geometry missing: map-china.js was not found (regenerate it with _map.mjs).',
+      'prov.sourced': 'Reported',
+      'prov.modeled': 'Modeled',
+      'prov.projected': 'Projected',
+      'prov.list': 'reported → modeled → projected',
+      'prov.rule': 'The badge shows the weakest link in that dataset: any modeled or projected value drags the whole group down ({list})',
+      'timeline.keys': 'Keyboard: focus the chart, then use arrow keys to walk the nodes (Home / End jump to the ends, Esc to leave)',
+      'timeline.node': 'Node {i} of {n}: {year} | {kind} | {title}',
       'graph.weight': 'Weight',
       'graph.engineMissing': 'Force engine (d3-force) not loaded — please check that the vendor/ folder is complete.',
       'map.metric': 'Metric',
@@ -250,6 +308,18 @@
     }
   }
 
+  /* 标题与描述跟着语言走：document.title + <meta name="description">
+     以及 og:title / og:description / twitter:title / twitter:description
+     （index.html 里带 data-meta="title|desc" 的就是给它们的挂点）。
+     不这么做的话：英文界面分享出去，卡片和标签页还写着中文标题。 */
+  function applyMeta() {
+    document.title = t('doc.title');
+    var metas = document.querySelectorAll('meta[data-meta]');
+    for (var i = 0; i < metas.length; i++) {
+      metas[i].setAttribute('content', t(metas[i].getAttribute('data-meta') === 'title' ? 'doc.title' : 'doc.desc'));
+    }
+  }
+
   function syncSwitch() {
     var items = document.querySelectorAll('.lang-switch-item');
     for (var i = 0; i < items.length; i++) {
@@ -266,6 +336,7 @@
     store(lang);
     html.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
     applyStatic();
+    applyMeta();
     syncSwitch();
     if (changed && !silent) {
       for (var i = 0; i < listeners.length; i++) listeners[i](lang);
@@ -294,7 +365,7 @@
   /* 渲染前先定语言与 <html lang>，避免中英混杂的闪烁 */
   html.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
 
-  function boot() { applyStatic(); bind(); }
+  function boot() { applyStatic(); applyMeta(); bind(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 }());

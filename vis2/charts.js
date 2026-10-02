@@ -1397,6 +1397,7 @@ window.CHARTS = (function () {
       stroke: T['--c-border-2'], 'stroke-width': 2
     }, svg);
     var nodes = [];
+    var rings = [];   /* 每个节点一枚焦点环，供 app.js 的方向键移动（见文件末尾 ctx.focusIndex） */
 
     items.forEach(function (it, i) {
       var y = top + i * rowH;
@@ -1453,6 +1454,16 @@ window.CHARTS = (function () {
         }, g).textContent = cfg.kindLabel[it.kind] || '';
         wrapText(g, it.desc, cx + 18, y + 4, cardW - 36, 17, 3, T['--c-text-soft']);
       }
+
+      /* 键盘导航的焦点环：默认不可见，方向键移到哪个节点就亮哪一个。
+         用表现属性画（stroke 走 --c-focus，与全站焦点环同一把尺），
+         class 只当选择器用（smoke.mjs 靠它断言「环真的挪了」）——
+         图形本身仍在 aria-hidden 的画布里，读屏靠 app.js 的 role="status" 播报。 */
+      rings.push(el('rect', {
+        class: 'tl-focus',
+        x: cx - 3, y: top0 - 3, width: cardW + 6, height: cardH + 6, rx: 14,
+        fill: 'none', stroke: T['--c-focus'], 'stroke-width': 2, opacity: 0
+      }, g));
     });
 
     animate(900, function (p) {
@@ -1470,6 +1481,29 @@ window.CHARTS = (function () {
         value: String(items.filter(function (i) { return i.kind === k.id; }).length)
       };
     }));
+    /* 键盘导航（P3）：把「第几个节点」变成一个能被方向键移动的光标。
+       10 个节点只有这一个 Tab 停点（容器上的 tabindex），方向键在这里移动 ——
+       不是给 10 个 <g> 各挂一个 tabindex（那会把键盘用户丢进 Tab 里）。
+       按键与播报在 app.js（那里有词表），这里只管把焦点环挪过去、并把这一行点亮。
+       传 null = 焦点离开，环消失；返回值是钳位后的下标，调用方据此播报。 */
+    var activeIdx = -1;
+    ctx.count = items.length;
+    ctx.focusIndex = function (i) {
+      if (i === null || i === undefined) {
+        if (activeIdx > -1) rings[activeIdx].setAttribute('opacity', 0);
+        activeIdx = -1;
+        return -1;
+      }
+      var n = Math.max(0, Math.min(items.length - 1, Number(i) || 0));
+      if (n === activeIdx) return activeIdx;
+      if (activeIdx > -1) rings[activeIdx].setAttribute('opacity', 0);
+      activeIdx = n;
+      rings[n].setAttribute('opacity', 1);
+      /* 动画可能还在跑（900ms），把这一行直接落到位，免得环亮了字还是虚的 */
+      nodes[n].setAttribute('opacity', 1);
+      nodes[n].setAttribute('transform', 'translate(0,0)');
+      return activeIdx;
+    };
     return ctx;
   }
 
@@ -1727,11 +1761,34 @@ window.CHARTS = (function () {
     });
     function norm(v, b) { return b.max === b.min ? 0.5 : (v - b.min) / (b.max - b.min); }
 
+    /* 弱口径列（后两列是间接代理指标，见 app.js 的 WEAK_METRICS）：
+       整列铺一层很浅的底 + 与强口径列之间打一条虚线分隔 + 列头文字后面挂一个小尾巴 ——
+       三重提示，读者就不会把两把不同的尺子并排着比深浅。
+       底色用 rx:0 的矩形，免得被冒烟测试数成「格子」（它按 rx=4 && 高>10 数 75 个格子）。 */
+    var weakIdx = [];
+    metrics.forEach(function (m, j) { if (m.weak) weakIdx.push(j); });
+    if (weakIdx.length) {
+      var bodyTop = headH - 4;
+      var bodyH = rows.length * rowH + 4;
+      weakIdx.forEach(function (j) {
+        el('rect', {
+          x: (labelW + j * cellW).toFixed(1), y: bodyTop.toFixed(1),
+          width: cellW.toFixed(1), height: bodyH.toFixed(1),
+          rx: 0, fill: alpha(T['--c-warn'], 0.07)
+        }, svg);
+      });
+      el('line', {
+        x1: (labelW + weakIdx[0] * cellW).toFixed(1), x2: (labelW + weakIdx[0] * cellW).toFixed(1),
+        y1: 2, y2: (bodyTop + bodyH).toFixed(1),
+        stroke: T['--c-warn'], 'stroke-width': 1, 'stroke-dasharray': '4 4', opacity: 0.55
+      }, svg);
+    }
+
     /* 表头：指标名（窄屏用短名 + 折行）+ 这一列的范围 */
     metrics.forEach(function (m, j) {
       var cx = labelW + j * cellW + cellW / 2;
       var fs = narrow ? 10 : 11.5;
-      var label = narrow && m.short ? m.short : String(m.label);
+      var label = (narrow && m.short ? m.short : String(m.label)) + (m.weak && m.weakLabel ? ' · ' + m.weakLabel : '');
       wrapText(svg, label, cx, 14, cellW - 4, fs + 1.5, 2, T['--c-text-soft'], fs, 'middle');
       /* 窄屏列宽只有 40 多像素，范围只写「最小–最大」，单位留给数据表 */
       el('text', {
@@ -1845,6 +1902,7 @@ window.CHARTS = (function () {
     var Y = function (v) { return pad.t + ph * (1 - Math.min(1, v / yMax)); };
     var ticks = niceTicks(0, yMax, wide ? 4 : 3);
     var seriesLines = [];
+    var focusRecs = [];                      /* 跨图联动的高亮列（每格一条带子 + 每条线一个圆点） */
 
     panels.forEach(function (p, pi) {
       /* 并排时往右挪，摞起来时往下挪 —— 两种排版共用同一套格内坐标 */
@@ -1891,6 +1949,22 @@ window.CHARTS = (function () {
         });
       }
 
+      /* 跨图联动的接收端：把「当前年份」那一列点亮（年份由 ③ 的播放器 / 分享链接驱动）。
+         高亮带先画在方格最底层，线压在上面 —— 带子只当作「一列」的背景色。
+         只用 rect / line / circle，不加 <text>、也不新增带 transform 的 <g>：
+         smoke.mjs 数的是「每格 7 个年份标签 / 总共 3 个带 transform 的格」，
+         多一个元素就会把那两条断言弄红。 */
+      var bandW = m > 1 ? pw / (m - 1) : pw;
+      var band = el('rect', {
+        x: 0, y: (pad.t - 6).toFixed(1), width: bandW.toFixed(1), height: (ph + 12).toFixed(1),
+        rx: 4, 'class': 'viz-focus-band', fill: alpha(T['--c-primary'], 0.14),
+        opacity: 0, 'pointer-events': 'none'
+      }, g);
+      var mark = el('line', {
+        x1: 0, x2: 0, y1: pad.t, y2: pad.t + ph, stroke: T['--c-primary'],
+        'class': 'viz-focus-mark', 'stroke-width': 1.2, opacity: 0, 'pointer-events': 'none'
+      }, g);
+
       /* 两条线：实线 = 到 2024，虚线 = 2025 预测段 */
       p.series.forEach(function (s) {
         var pts = s.values.map(function (v, i) { return [X(i), Y(v)]; });
@@ -1936,6 +2010,21 @@ window.CHARTS = (function () {
       var hit = el('rect', {
         x: pad.l, y: pad.t, width: pw, height: ph, fill: 'transparent', style: 'cursor:crosshair'
       }, g);
+
+      /* 联动高亮的「圆点」放在最后画：要压在折线上面才看得见 */
+      focusRecs.push({
+        band: band, mark: mark, bandW: bandW,
+        dots: p.series.map(function (s) {
+          return {
+            s: s,
+            node: el('circle', {
+              cx: 0, cy: 0, r: 4, fill: s.color, stroke: T['--c-surface'],
+              'class': 'viz-focus-dot', 'stroke-width': 1.6, opacity: 0, 'pointer-events': 'none'
+            }, g)
+          };
+        })
+      });
+
       hit.addEventListener('mousemove', function (e) {
         var box = container.getBoundingClientRect();
         /* 容器的坐标系 = SVG 坐标系（viewBox 与屏幕 1:1），并排时再减去前面几格的宽度 */
@@ -1979,6 +2068,27 @@ window.CHARTS = (function () {
 
     ctx.panels = n;
     ctx.years = years.slice();
+
+    /* 联动入口：外部（年份播放器 / 分享链接）只调这一个函数，不必知道格内坐标。
+       index 是年份在 cfg.years 里的下标，越界会夹住。 */
+    ctx.focusYear = function (index) {
+      var idx = Math.max(0, Math.min(lastIdx, Math.round(Number(index) || 0)));
+      focusRecs.forEach(function (rec) {
+        rec.band.setAttribute('x', (X(idx) - rec.bandW / 2).toFixed(1));
+        rec.band.setAttribute('opacity', '1');
+        rec.mark.setAttribute('x1', X(idx).toFixed(1));
+        rec.mark.setAttribute('x2', X(idx).toFixed(1));
+        rec.mark.setAttribute('opacity', '0.7');
+        rec.dots.forEach(function (d) {
+          d.node.setAttribute('cx', X(idx).toFixed(1));
+          d.node.setAttribute('cy', Y(d.s.values[idx]).toFixed(1));
+          d.node.setAttribute('opacity', '1');
+        });
+      });
+      return idx;
+    };
+    /* 首帧就按 cfg.focusYear（= STATE.year）亮起来：链接里的年份一打开就是对的 */
+    if (cfg.focusYear != null) ctx.focusYear(cfg.focusYear);
     return ctx;
   }
 

@@ -8,7 +8,10 @@
  * 约定：
  *   ① 所有文案写成 { zh: '…', en: '…' }，由 I18N.pick() 取当前语言；
  *   ② 纯数字 / 数组不加包装，图表直接读取；
- *   ③ 每一组数据都带 source（数据来源），页面上必须如实展示。
+ *   ③ 每一组数据都带 source（数据来源），页面上必须如实展示；
+ *   ④ provenance 是每个数据集的「口径」（sourced 公开统计 / modeled 测算整理 /
+ *      projected 含预测），页面按图表显示一枚徽章；口径取这批数据里最弱的一环，
+ *      规则与逐数据集明细见 data/README.md。
  *
  * 数据说明：本页数据为公开资料整理（中国信通院、工信部、国家统计局、
  * 普华永道、IDC、斯坦福 AI Index 等）与合理测算的示意图，
@@ -1233,5 +1236,28 @@ window.AI_DATA = {
       desc: { zh: 'AI 真正进入生产现场的样子', en: 'What AI looks like on the ground' },
       href: '#scene'
     }
-  ]
+  ],
+  provenance: {
+    bubble: 'modeled',
+    define: 'modeled',
+    flow: 'modeled',
+    forces: 'modeled',
+    globalRank: 'sourced',
+    graph: 'modeled',
+    heatmap: 'modeled',
+    industry: 'modeled',
+    kpis: 'projected',
+    multiples: 'projected',
+    overview: 'modeled',
+    paletteAccent: 'modeled',
+    paletteBase: 'modeled',
+    paletteKeys: 'modeled',
+    province: 'modeled',
+    radar: 'modeled',
+    scale: 'projected',
+    scenes: 'modeled',
+    sim: 'modeled',
+    sources: 'sourced',
+    timeline: 'sourced'
+  }
 };

@@ -51,6 +51,9 @@
 > 2. 或者改用 **GitHub Actions 发布**（新增一个 `.github/workflows/pages.yml`，把 `vis/` 与 `vis2/` 目录直接上传，绕开 Jekyll 构建），
 >    再到 Settings → Pages → Source 选 **GitHub Actions**。需要的话说一声，我可以直接帮你加上这个工作流文件。
 >
+> 📌 仓库里已经有 `.github/workflows/selfcheck.yml`（自检 CI：静态检查每次提交跑、真机检查每晚跑），
+> 它只跑测试、不发布站点，和 Pages 发布是两件事，互不影响。
+>
 > 💡 也可以完全不折腾：**交作业用 Netlify 的 URL（见 §4）即可**，预览用本地 ①②。
 
 ### 本地预览的 3 个小提示

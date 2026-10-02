@@ -200,6 +200,13 @@ multiSeries.forEach((s) => {
   ok(s.penetration[5] === row.penetration && s.gain[5] === row.gain,
     `data.js: ${s.id} 的 2024 端点与 industry.rows 不一致（${s.penetration[5]}/${s.gain[5]} ≠ ${row.penetration}/${row.gain}）`);
 });
+/* 跨图联动（P2）：年份播放器用「下标」驱动小倍数图的高亮列，
+   所以两边的年份序列必须等长、逐年一一对应 —— 哪天有一边加/减了一年，这里必须立刻失败。 */
+const scaleSeries = (DATA.scale && DATA.scale.series) || [];
+ok(scaleSeries.length === 7 && scaleSeries[0].year === 2019 && scaleSeries[6].year === 2025,
+  `data.js scale.series 应为 2019–2025 共 7 个点，实际 ${scaleSeries.length}（${scaleSeries[0] && scaleSeries[0].year}–${scaleSeries[scaleSeries.length - 1] && scaleSeries[scaleSeries.length - 1].year}）`);
+ok(multiSeries.every((s) => s.penetration.length === scaleSeries.length),
+  'data.js: 年份播放器（scale.series）与小倍数图必须等长，否则跨图高亮会错位');
 /* 地图：34 个省级单元 + 两个指标（与几何 id 的对齐在上面已查） */
 ok(provinceRows.length === 34, `data.js province.rows 应为 34 行，实际 ${provinceRows.length}`);
 ok(((DATA.province && DATA.province.metrics) || []).length === 2, 'data.js province.metrics 应为 2 个（算力 / 企业数）');
@@ -222,8 +229,35 @@ ok(sliders.length === 4, `data.js sim.sliders 应为 4 个，实际 ${sliders.le
 
 /* app.js 里 T('key') / TT('key') 用到的键都必须存在（手滑打错键名会显示成裸 key） */
 const tKeys = new Set();
-for (const m of app.matchAll(/T{1,2}\('([\w.]+)'/g)) tKeys.add(m[1]);
+/* T('prov.' + prov) 这类拼接键拿不到字面量（那一支在下面单独核对），这里跳过以「.」结尾的残片 */
+for (const m of app.matchAll(/T{1,2}\('([\w.]+)'/g)) if (!m[1].endsWith('.')) tKeys.add(m[1]);
 [...tKeys].forEach((k) => ok(zhKeys.has(k), `app.js: T('${k}') 在 i18n.js 里没有对应键`));
+
+
+/* ---------- ⑨ 口径标注（P2）：每张图一枚徽章，值必须合法且覆盖全部卡片 ---------- */
+/* 徽章文字 = 词表里的 prov.sourced / modeled / projected，取值只有这三种（见 data/README.md）。 */
+const PROV_KINDS = ['sourced', 'modeled', 'projected'];
+const PROV = (DATA.provenance) || {};
+const provBad = Object.keys(PROV).filter((k) => PROV_KINDS.indexOf(PROV[k]) === -1);
+ok(provBad.length === 0, `data.js provenance: ${provBad.length} 处取值不合法（应为 ${PROV_KINDS.join(' / ')}）—— 见 data/manifest.json`);
+/* cardHead(name, caption, provKey) 的第三个参数就是要查的口径键：
+   写错 / 漏登记时页面会静默地少一枚徽章，所以静态就把它拦下来。 */
+const provRefs = [...app.matchAll(/cardHead\('[a-z]+',\s*[^;]*?,\s*'([A-Za-z]+)'\)/g)].map((m) => m[1]);
+const provMiss = [...new Set(provRefs)].filter((k) => !PROV[k]);
+ok(provMiss.length === 0, `app.js: cardHead 引用了没有登记口径的键 '${provMiss.join("', '")}'（在 data/manifest.json 里补 provenance）`);
+ok(provRefs.length >= 17, `app.js: 只有 ${provRefs.length} 处 cardHead 带口径徽章，应覆盖 17 张卡片（13 张图 + 模拟器 + 2 张敏感性 + 时间线 + 场景 + 来源）`);
+/* 徽章文字与悬停说明都从词表取：T('prov.' + prov) 是拼接键，静态脚本拿不到字面量，这里逐条点名 */
+PROV_KINDS.concat(['list', 'rule']).forEach((k) =>
+  ok(zhKeys.has('prov.' + k), `i18n.js: 缺少词条 prov.${k}（口径徽章的文字 / 悬停说明 / 规则列出处的出处）`));
+
+/* ---------- ⑩ 时间线的键盘路径（P3）---------- */
+/* 10 个节点只允许一个 Tab 停点：容器上 tabindex + 方向键，焦点环由 charts.js 的 focusIndex 移动。
+   charts.js 里出现 tabindex 就说明有人又给图元逐个挂了停点（README 里专门解释过为什么不这么做）。 */
+ok(/ctx\.focusIndex\s*=/.test(charts) && /bindTimelineKeys\(host, rail/.test(app),
+  'app.js / charts.js: 时间线的键盘路径不见了（charts.js 的 ctx.focusIndex + app.js 的 bindTimelineKeys）');
+ok(!/setAttribute\('tabindex'|\.tabIndex\s*=/.test(charts), 'charts.js: 图形里不该出现 tabindex —— 键盘停点只留在容器上（见 README「为什么不给每个图元加 tabindex」）');
+ok(/setAttribute\('aria-describedby', hintId\)/.test(app) && /mount\('timeline-head'\)/.test(app),
+  'app.js: 时间线的键盘提示（aria-describedby → 提示段落）不见了，方向键会变成没人知道的隐藏功能');
 
 
 /* ---------- 输出 ---------- */

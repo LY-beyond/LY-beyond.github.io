@@ -20,6 +20,13 @@
  * 冒号后面是这一列的取值类型（text / number / boolean / json）。
  * 这样「看起来像数字的字符串」（如行政区划代码 '110000'）不会被悄悄变成数字。
  *
+ * 口径标注（provenance）：
+ *   每个数据集在 manifest.json 里声明一个口径 —— sourced（公开统计）/ modeled（测算整理）/
+ *   projected（含预测年份）。构建时汇总成 AI_DATA.provenance（顶层数据路径 → 口径），
+ *   页面据此在图表卡片上显示一枚徽章。规则是**保守取最弱一环**：一个数据集里只要含预测值，
+ *   整组就标 projected。复合数据集（root.csv 一个文件供出多组数据）用 { 路径: 口径 } 逐个声明。
+ *   --extract 重新索引时与 note 一样会被保留，新数据集默认 modeled（最保守）。
+ *
  * 自动切表规则（--extract 时）：容器里「元素是对象的数组（≥2 项）」「键数 ≥5 的嵌套对象」
  * 会被切到自己的 CSV；更小的数组作为父行的一个 json 单元，避免碎成一堆两行的文件。
  * ========================================================= */
@@ -33,6 +40,12 @@ const SITE = join(HERE, '..');                                  /* vis2/ */
 const TARGET = join(SITE, 'data.js');
 const MANIFEST = join(HERE, 'manifest.json');
 const INLINE = [{ path: 'sim.model', file: 'sim-model.js', note: '模拟器模型（函数，无法进 CSV）' }];
+/* 口径标注的合法取值（顺序 = 由强到弱，页面的徽章说明按这个顺序讲规则） */
+const PROV_KINDS = ['sourced', 'modeled', 'projected'];
+const PROV_DEFAULT = 'modeled';   /* 新数据集先按最保守的「测算整理」标，等作者核实 */
+const PROV_NAME = { sourced: '公开统计', modeled: '测算整理', projected: '含预测' };
+const MANIFEST_NOTE = '本文件由 node data/build.mjs --extract 生成：数据集索引（文件 ↔ 数据路径 ↔ 列与类型 ↔ 口径标注 provenance）。' +
+  '手写的 note 与 provenance 会被保留；新数据集默认 modeled（最保守）。';
 
 const problems = [];
 const bad = (m) => problems.push(m);
@@ -242,6 +255,20 @@ function buildDataJs() {
   if (!existsSync(MANIFEST)) throw new Error('data/manifest.json 不存在：先跑 node data/build.mjs --extract');
   const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
   const tree = {};
+  /* 口径表：顶层数据路径 → 口径。同一个顶层路径可能由多个数据集拼出来
+     （scale 由 scale.csv + scale-series.csv + scale-related.csv），这时口径必须一致 ——
+     页面徽章只认一个值，不能让三个文件各说各话。 */
+  const provenance = {};
+  const setProv = (key, value, file) => {
+    if (PROV_KINDS.indexOf(value) === -1) {
+      bad(`${file}: provenance 里 '${key}' 的取值 '${value}' 不在 ${PROV_KINDS.join(' / ')} 之内`);
+      return;
+    }
+    if (provenance[key] == null) provenance[key] = value;
+    else if (provenance[key] !== value) {
+      bad(`provenance 冲突：'${key}' 已经被标为 ${provenance[key]}，${file} 又标成 ${value}`);
+    }
+  };
   for (const ds of manifest.datasets) {
     const file = join(HERE, ds.file);
     if (!existsSync(file)) { bad(`manifest 里的 ${ds.file} 不存在`); continue; }
@@ -260,6 +287,20 @@ function buildDataJs() {
       continue;
     }
     setPath(tree, ds.path, built);
+    /* 口径标注：字符串 = 这一组数据集的顶层路径；对象 = 复合文件按顶层键逐个声明 */
+    const prov = ds.provenance;
+    if (prov == null) {
+      bad(`${ds.file}: manifest 里缺 provenance（取值为 ${PROV_KINDS.join(' / ')}；复合文件用 { 路径: 口径 }）`);
+    } else if (typeof prov === 'string') {
+      setProv(ds.path ? ds.path.split('.')[0] : ds.file.replace(/\.csv$/, ''), prov, ds.file);
+    } else if (isPlain(prov)) {
+      for (const k of Object.keys(prov)) {
+        if (!(k in built)) bad(`${ds.file}: provenance 里的 '${k}' 不是这个数据集的顶层键`);
+        setProv(k, prov[k], ds.file);
+      }
+    } else {
+      bad(`${ds.file}: provenance 形状不对（应为字符串或 { 路径: 口径 }）`);
+    }
   }
   /* 函数类字段：从片段文件原样内联 */
   for (const inl of manifest.inline || INLINE) {
@@ -269,6 +310,11 @@ function buildDataJs() {
     if (at === -1) { bad(`${inl.file}: 找不到 \`function (\` 开头，无法内联到 ${inl.path}`); continue; }
     setPath(tree, inl.path, { __raw: frag.slice(at).trim().replace(/\s+$/, '') });
   }
+  /* 口径表按路径排序输出（对象键顺序 = 输出顺序，排序后 data.js 的 diff 才稳定）。
+     页面读的就是 AI_DATA.provenance：顶层数据路径 → sourced / modeled / projected。 */
+  const provOut = {};
+  Object.keys(provenance).sort().forEach((k) => { provOut[k] = provenance[k]; });
+  if (Object.keys(provOut).length) tree.provenance = provOut;
   const body = Object.keys(tree).map((k) => pad(1) + keyName(k) + ': ' + ser(tree[k], 1) + ',').join('\n');
   const header = [
     '/* =========================================================',
@@ -281,7 +327,10 @@ function buildDataJs() {
     ' * 约定：',
     ' *   ① 所有文案写成 { zh: \'…\', en: \'…\' }，由 I18N.pick() 取当前语言；',
     ' *   ② 纯数字 / 数组不加包装，图表直接读取；',
-    ' *   ③ 每一组数据都带 source（数据来源），页面上必须如实展示。',
+    ' *   ③ 每一组数据都带 source（数据来源），页面上必须如实展示；',
+    ' *   ④ provenance 是每个数据集的「口径」（sourced 公开统计 / modeled 测算整理 /',
+    ' *      projected 含预测），页面按图表显示一枚徽章；口径取这批数据里最弱的一环，',
+    ' *      规则与逐数据集明细见 data/README.md。',
     ' *',
     ' * 数据说明：本页数据为公开资料整理（中国信通院、工信部、国家统计局、',
     ' * 普华永道、IDC、斯坦福 AI Index 等）与合理测算的示意图，',
@@ -317,15 +366,20 @@ function loadDataJs(file) {
  * ========================================================= */
 function extract() {
   const data = loadDataJs(TARGET);
-  /* 保留上一份 manifest 里手写的 note（人写的说明不该被机器抹掉） */
-  const oldNotes = {};
+  /* provenance 是 manifest 派生的元数据（不在任何 CSV 里），重新索引时不参与数据集切分 */
+  delete data.provenance;
+  /* 保留上一份 manifest 里手写的 note 与 provenance（人写的说明不该被机器抹掉） */
+  const oldNotes = {}, oldProv = {};
   if (existsSync(MANIFEST)) {
     try {
-      for (const ds of JSON.parse(readFileSync(MANIFEST, 'utf8')).datasets) oldNotes[ds.path] = ds.note;
+      for (const ds of JSON.parse(readFileSync(MANIFEST, 'utf8')).datasets) {
+        oldNotes[ds.path] = ds.note;
+        oldProv[ds.path] = ds.provenance;
+      }
     } catch (e) { /* manifest 坏了就重来 */ }
   }
   const datasets = collectDatasets(data);
-  const manifest = { note: '本文件由 node data/build.mjs --extract 生成：数据集索引（文件 ↔ 数据路径 ↔ 列与类型）。手写的 note 会被保留。', datasets: [], inline: INLINE };
+  const manifest = { note: MANIFEST_NOTE, datasets: [], inline: INLINE };
   let rows = 0, cols = 0;
   for (const ds of datasets) {
     const csv = datasetToCSV(ds);
@@ -337,11 +391,19 @@ function extract() {
       return { name: h.slice(0, i), type: h.slice(i + 1), raw: h };
     });
     const rowCount = ds.kind === 'object' ? 1 : ds.rows.length;
-    manifest.datasets.push({ file, path: ds.path, kind: ds.kind, rows: rowCount, columns, note: oldNotes[ds.path] || '' });
+    manifest.datasets.push({ file, path: ds.path, kind: ds.kind, provenance: oldProv[ds.path] || PROV_DEFAULT, rows: rowCount, columns, note: oldNotes[ds.path] || '' });
     rows += rowCount; cols += columns.length;
     console.log(`  ${file.padEnd(26)} ${ds.kind.padEnd(7)} ${String(rowCount).padStart(3)} 行 × ${String(columns.length).padStart(2)} 列  ← ${ds.path || '(根对象)'}`);
   }
   writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+  /* 口径标注的兜底：AI_DATA 的每个顶层数据组都得有口径，否则页面上那张图的徽章是空的 */
+  const provKeys = new Set();
+  for (const ds of manifest.datasets) {
+    if (ds.provenance && typeof ds.provenance === 'object') Object.keys(ds.provenance).forEach((k) => provKeys.add(k));
+    else if (ds.path) provKeys.add(ds.path.split('.')[0]);
+  }
+  const noProv = Object.keys(data).filter((k) => !provKeys.has(k));
+  if (noProv.length) problems.push(`这些顶层数据组没有口径标注（provenance）：${noProv.join(', ')}`);
   /* 覆盖度自检：AI_DATA 里的每个叶子都必须落在某个数据集里 */
   const covered = new Set();
   const datasetPaths = new Set(datasets.map((d) => d.path).filter(Boolean));
@@ -376,6 +438,11 @@ function extract() {
     problems.push(`${reallyMissed.length} 个叶子没被 CSV 覆盖`);
   }
   console.log(`\n共 ${manifest.datasets.length} 个数据集 / ${rows} 行 / ${cols} 列，覆盖 ${leaves.length} 个叶子${reallyMissed.length ? '' : '（无遗漏）'}`);
+  const defaulted = manifest.datasets.filter((d) => !oldProv[d.path]).map((d) => d.file);
+  if (defaulted.length) {
+    console.log(`⚠ 这些数据集没有历史口径，已按最保守的 ${PROV_DEFAULT} 写入，请核实后改 manifest.json 里的 provenance：`);
+    console.log('   ' + defaulted.join(', '));
+  }
   if (problems.length) { problems.forEach((p) => console.log('✗  ' + p)); process.exit(1); }
   console.log('✓ manifest.json 与 CSV 已更新 —— 接着跑 `node data/build.mjs` 生成 data.js');
 }
@@ -391,6 +458,10 @@ function docs() {
     : t === 'number' ? '数值' : t === 'boolean' ? '真假值'
       : t === 'json' ? '结构化数据（数组 / 对象，CSV 里是 JSON 单元）' : '文本';
   const kindName = { object: '单行对象', array: '记录表', pairs: '双语对照' };
+  /* 口径列：复合数据集（一个 CSV 供出多组数据）把逐个键列出来 */
+  const provText = (p) => (p && typeof p === 'object')
+    ? Object.keys(p).map((k) => k + ' = ' + (PROV_NAME[p[k]] || p[k])).join('、')
+    : (PROV_NAME[p] || '—');
   const lines = [];
   lines.push('# 数据字典 · `vis2/data/`');
   lines.push('');
@@ -418,16 +489,33 @@ function docs() {
   lines.push('这样「看起来像数字的字符串」（如行政区划代码 `110000`）不会被悄悄变成数字，单位与千分位也不会在往返中丢失。');
   lines.push('文案列一律成对出现：`xxx.zh` / `xxx.en`（页面按当前语言取其中一列），`selfcheck` 会核对两侧都在。');
   lines.push('');
+  lines.push('## 口径标注（provenance）');
+  lines.push('');
+  lines.push('每张图表卡片上有一枚来源徽章，取值来自 `data/manifest.json` 里每个数据集的 `provenance`：');
+  lines.push('');
+  lines.push('| 取值 | 徽章 | 含义 |');
+  lines.push('|---|---|---|');
+  lines.push('| `sourced` | 公开统计 | 数值整理自公开报告，能在页面第 13 节的来源清单里对上 |');
+  lines.push('| `modeled` | 测算整理 | 本页按公开资料测算 / 构造的指数与权重（示意口径） |');
+  lines.push('| `projected` | 含预测 | 含未来年份的预测值（如 2025E / 2030E） |');
+  lines.push('');
+  lines.push('规则只有一条，**保守取最弱一环**：一个数据集里只要出现了测算值或预测值，这一组就按更弱的');
+  lines.push('那一类标注（由强到弱：`sourced` > `modeled` > `projected`）。构建时 `data/build.mjs` 把');
+  lines.push('每个数据集的口径汇总成 `AI_DATA.provenance`（顶层数据路径 → 口径），页面据此渲染徽章：');
+  lines.push('`check.mjs` 静态断言取值合法、覆盖全部图表数据路径，`smoke.mjs` 真机核对每张图都有徽章。');
+  lines.push('');
   lines.push('## 数据集一览');
   lines.push('');
-  lines.push('| 文件 | 数据路径（`AI_DATA` 里的位置） | 形态 | 行 × 列 | 说明 |');
-  lines.push('|---|---|---|---|---|');
+  lines.push('| 文件 | 数据路径（`AI_DATA` 里的位置） | 形态 | 行 × 列 | 口径 | 说明 |');
+  lines.push('|---|---|---|---|---|---|');
   for (const ds of manifest.datasets) {
-    lines.push(`| \`${ds.file}\` | \`${ds.path || '(根对象)'}\` | ${kindName[ds.kind]} | ${ds.rows} × ${ds.columns.length} | ${ds.note || ''} |`);
+    lines.push(`| \`${ds.file}\` | \`${ds.path || '(根对象)'}\` | ${kindName[ds.kind]} | ${ds.rows} × ${ds.columns.length} | ${provText(ds.provenance)} | ${ds.note || ''} |`);
   }
   for (const inl of manifest.inline || []) {
-    lines.push(`| \`${inl.file}\` | \`${inl.path}\` | 函数片段 | — | ${inl.note || ''} |`);
+    lines.push(`| \`${inl.file}\` | \`${inl.path}\` | 函数片段 | — | — | ${inl.note || ''} |`);
   }
+  lines.push('');
+  lines.push('> 口径是**人写的数据**：`--extract` 重新索引时与 `note` 一样会被保留，新数据集默认 `modeled`（最保守）。');
   lines.push('');
   lines.push('## 各数据集字段');
   for (const ds of manifest.datasets) {

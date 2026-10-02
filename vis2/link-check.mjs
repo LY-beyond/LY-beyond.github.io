@@ -80,7 +80,13 @@ for (const [name, src] of [['app.js', app], ['charts.js', charts]]) {
 /* ---------------- ④ 资源引用（本地文件必须存在） ---------------- */
 const assets = [];
 for (const m of html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) assets.push({ kind: 'script', href: m[1] });
-for (const m of html.matchAll(/<link[^>]*\shref="([^"]+)"/g)) assets.push({ kind: 'link', href: m[1] });
+/* <link rel="canonical"> 是「自指声明」而不是浏览器要去取的资源（它不会被加载），
+   单独放到 ④b 里查：它必须写成同源的绝对地址，且不许指到别的站点去。 */
+const canonical = (html.match(/<link[^>]*\srel="canonical"[^>]*\shref="([^"]+)"/) || [])[1] || '';
+for (const m of html.matchAll(/<link[^>]*\shref="([^"]+)"/g)) {
+  if (m[0].includes('rel="canonical"')) continue;
+  assets.push({ kind: 'link', href: m[1] });
+}
 for (const m of html.matchAll(/<img[^>]*\ssrc="([^"]+)"/g)) assets.push({ kind: 'img', href: m[1] });
 for (const a of assets) {
   if (/^(https?:)?\/\//i.test(a.href) || a.href.startsWith('data:')) {
@@ -90,6 +96,11 @@ for (const a of assets) {
   }
   ok(existsSync(resolve(HERE, a.href)), `index.html: <${a.kind}> 引用的文件不存在：${a.href}`);
 }
+/* ④b canonical：要么不写，写了就必须是本站地址（写别人的地址等于把权重送出去） */
+ok(!!canonical, 'index.html: 缺 <link rel="canonical">（分享与收录都需要一个规范地址）');
+ok(/^https:\/\/ly-beyond\.github\.io\/vis2\/$/.test(canonical),
+  `index.html: canonical 指向 ${canonical || '(空)'}，应指向本站规范地址 https://ly-beyond.github.io/vis2/`);
+
 
 /* ---------------- ⑤ 外链与安全属性 ---------------- */
 let external = 0;

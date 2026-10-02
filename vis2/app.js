@@ -68,11 +68,29 @@
   }
 
   /* 每张卡片的「标题行」与「注释行」都写在同一处，保证中英一致 */
-  function cardHead(name, caption) {
+  /* 口径徽章（P2）：同卡片标题一起渲染。
+     取值与规则见 data/README.md「口径标注」—— 一个数据集只标一枚，取其中**最弱的一环**
+     （sourced > modeled > projected 由强到弱），所以「含预测」不是谦虚说法，是保守标注。 */
+  var PROV_KINDS = ['sourced', 'modeled', 'projected'];
+  function provBadge(parent, key) {
+    var prov = (D.provenance || {})[key];
+    /* 没登记就什么都不加：宁可缺一枚徽章，也不编一个口径出来（check.mjs 会拦下这种缺登记） */
+    if (PROV_KINDS.indexOf(prov) === -1) return;
+    var b = add(parent, 'span', 'prov-badge', T('prov.' + prov));
+    b.setAttribute('data-prov', prov);          /* 圆点配色靠它（styles.css） */
+    b.setAttribute('data-prov-key', key);       /* 数据集键：smoke.mjs 靠它核对「每个数据集都上了页面」 */
+    b.setAttribute('title', TT('prov.rule', { list: T('prov.list') }));
+  }
+  function cardHead(name, caption, provKey) {
     var el = mount(name + '-head');
     if (!el) return;
     clear(el);
-    if (caption) add(el, 'p', 'card-caption', caption);
+    var wrap = el;
+    if (caption || provKey) {
+      wrap = add(el, 'p', 'card-caption');
+      if (caption) add(wrap, 'span', 'card-caption-text', caption);
+      provBadge(wrap, provKey);
+    }
   }
   function cardFoot(name, note, source) {
     var el = mount(name + '-foot');
@@ -177,6 +195,8 @@
       var t = spec.table();
       return Object.prototype.toString.call(t) === '[object Array]' ? t : [t];
     }
+    /* 登记给「打包下载全部数据」用（见 downloadAllData）：同一张卡片重绘就覆盖，不会重份 */
+    TABLE_SOURCES[spec.name] = tableSpecs;
 
     function setView(v) {
       var isTable = v === 'table';
@@ -286,9 +306,168 @@
     renderBubble();
     renderIndustry();
     renderScenes();
+    syncUrl();   /* 选中的行业进分享链接：别人打开就是你正在看的那个行业 */
   }
 
-  /* ---------------- ① 首页 KPI 数字 ---------------- */
+  /* =========================================================
+   * 视图状态可分享（P1）：把「看得见的选择」写进 location.hash
+   * ---------------------------------------------------------
+   *   #sim=50,60,40,35&f=manufacturing&y=2023&m=firms&top=1
+   *   sim  四个滑块的取值（顺序 = D.sim.sliders 的顺序，各自 0–100）
+   *   f    选中的行业：存稳定 id 而不是中文名，切语言后链接照样有效
+   *   y    年份：存年份本身而不是下标，链接读起来像人话，数据加一年也不会错位
+   *   m    地图指标 id；top=1 表示「只看前五名」
+   * 四条纪律：
+   *   ① 只序列化真正影响画面的东西：滚动位置 / 主题 / 当前是不是在「数据表」视图都不进链接
+   *      （后者由 STATE.view 记着，重绘不丢）；
+   *   ② 用 history.replaceState 写：不往后退键里塞历史 —— 按后退仍应回到上一页，而不是回到上一个筛选；
+   *   ③ file:// 下 Chrome 会拒绝写历史（origin 为 null）→ 整段 try/catch，失败只保留内存里的
+   *      lastHash，分享按钮照样拼得出完整链接；
+   *   ④ 只认自己的参数：地址栏上若是 #region 这类锚点，一律不动它、也不当成状态。
+   * 与 i18n 的 ?lang= 互不干扰：语言在 search、视图在 hash。
+   * ========================================================= */
+  var URL_KEYS = ['sim', 'f', 'y', 'm', 'top'];
+  var lastHash = '';        /* serializeState() 的结果：地址栏写不进去时的「内存副本」 */
+  var writtenHash = null;   /* 上次真正写进地址栏的内容，用来挡掉重复写入 */
+
+  /* 当前状态 → 查询串（不含 '#'）；解析端只按这些键读，别的键一律忽略 */
+  function serializeState() {
+    var parts = [];
+    if (STATE.sim && D.sim && D.sim.sliders) {
+      parts.push('sim=' + D.sim.sliders.map(function (s) {
+        var v = STATE.sim[s.id];
+        if (v == null) v = s.value;
+        return Math.max(0, Math.min(100, Math.round(v)));
+      }).join(','));
+    }
+    var p = pickedPoint();
+    if (p) parts.push('f=' + p.id);
+    if (D.scale && D.scale.series && STATE.year != null && D.scale.series[STATE.year]) {
+      parts.push('y=' + D.scale.series[STATE.year].year);
+    }
+    var met = D.province && D.province.metrics ? D.province.metrics[STATE.regionMetric] : null;
+    if (met) parts.push('m=' + met.id);
+    if (STATE.regionTop) parts.push('top=1');
+    return parts.join('&');
+  }
+
+  /* 地址栏上现在挂的是不是我们的参数（散列锚点不算） */
+  function hashIsOurs(hash) {
+    if (!hash) return true;
+    return URL_KEYS.some(function (k) { return hash.indexOf(k + '=') >= 0; });
+  }
+
+  /* 把当前状态写进地址栏；离散动作（选行业 / 拖年份 / 换指标）每次都会调用它 */
+  function syncUrl() {
+    lastHash = serializeState();
+    if (lastHash === writtenHash) return;
+    writtenHash = lastHash;
+    var cur = location.hash || '';
+    if (!lastHash && !hashIsOurs(cur)) return;   /* 地址栏上是个锚点（#region …），别动它 */
+    /* file:// 直接双击打开时，Chrome 会把 replaceState 判为跨源写入（origin 为 null）而抛
+       SecurityError，所以这里干脆不写：状态仍在内存里，分享按钮拼链接时照样是完整的。
+       （放在前面判断而不是靠 try/catch，是为了让「能不能写」这件事在代码里一眼可见。） */
+    if (location.protocol === 'file:') return;
+    try {
+      history.replaceState(null, '', lastHash ? '#' + lastHash : location.pathname + location.search);
+    } catch (e) { /* 极少数浏览器/权限设置仍会拒绝：不影响页面，只是地址栏不跟着变 */ }
+  }
+
+  /* 地址栏 → STATE。boot 里先跑一遍（首帧就是链接里的那个视图），
+     之后用户把链接粘进已打开的标签页（hashchange）再跑一遍。 */
+  function parseUrl() {
+    var raw = (location.hash || '').replace(/^#/, '');
+    if (!raw) return false;
+    var q = {};
+    raw.split('&').forEach(function (kv) {
+      var i = kv.indexOf('=');
+      if (i > 0) q[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1));
+    });
+    if (!URL_KEYS.some(function (k) { return q[k] != null; })) return false;
+    var applied = false;
+
+    if (q.y != null && D.scale && D.scale.series) {
+      var yi = -1;
+      D.scale.series.forEach(function (s, i) { if (String(s.year) === q.y) yi = i; });
+      if (yi >= 0) { STATE.year = yi; applied = true; }
+    }
+    if (q.f != null) {
+      var fi = -1;
+      (D.bubble.points || []).forEach(function (p, i) { if (p.id === q.f) fi = i; });
+      if (fi >= 0) { STATE.filter = fi; applied = true; }
+    }
+    if (q.m != null) {
+      var mi = -1;
+      ((D.province && D.province.metrics) || []).forEach(function (m, i) { if (m.id === q.m) mi = i; });
+      if (mi >= 0) { STATE.regionMetric = mi; applied = true; }
+    }
+    if (q.top != null) { STATE.regionTop = q.top === '1'; applied = true; }
+    if (q.sim != null && D.sim && D.sim.sliders) {
+      var vals = q.sim.split(',');
+      if (vals.length === D.sim.sliders.length) {
+        if (!STATE.sim) STATE.sim = {};
+        D.sim.sliders.forEach(function (s, i) {
+          var v = Number(vals[i]);
+          if (isFinite(v)) STATE.sim[s.id] = Math.max(0, Math.min(100, Math.round(v)));
+        });
+        applied = true;
+      }
+    }
+    if (applied) writtenHash = raw;   /* 地址栏已经是这个状态了，别再写一遍 */
+    return applied;
+  }
+
+  /* 分享链接 = 当前地址去掉旧 hash + ?lang=当前语言 + 最新状态。
+     带上 lang 是为了「分享出去的那份视图，别人打开长一模一样」。 */
+  function shareLink() {
+    var base = location.href.split('#')[0].split('?')[0];
+    var hash = serializeState();
+    return base + '?lang=' + window.I18N.lang + (hash ? '#' + hash : '');
+  }
+
+  /* 复制到剪贴板：优先 Clipboard API；file:// 等非安全上下文退回 execCommand（都要用户手势） */
+  function copyText(text, done) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', 'readonly');
+    ta.className = 'share-proxy';
+    document.body.appendChild(ta);
+    ta.select();
+    var copyOk = false;
+    try { copyOk = document.execCommand('copy'); } catch (e) { copyOk = false; }
+    document.body.removeChild(ta);
+    done(copyOk);
+  }
+
+  /* 首屏那个「复制当前视图链接」按钮 */
+  function bindShare() {
+    var btn = $('#share-btn');
+    var out = $('#share-status');
+    if (!btn) return;
+    btn.setAttribute('title', T('share.hint'));
+    btn.setAttribute('aria-describedby', 'share-status');
+    btn.addEventListener('click', function () {
+      syncUrl();
+      var link = shareLink();
+      copyText(link, function (copyOk) {
+        if (!out) return;
+        clear(out);
+        /* 链接始终挂在状态区上：复制失败时用户还能手动选中它，自动测试也顺着这里核对参数 */
+        out.setAttribute('data-link', link);
+        out.textContent = copyOk ? T('share.copied') : T('share.fail');
+        if (!copyOk) {
+          /* 失败时把链接本身也印出来（file:// 下没有剪贴板 API，这是唯一能自救的办法） */
+          add(out, 'span', 'share-link', ' ' + link);
+        }
+      });
+    });
+  }
+
+
   function renderKpis() {
     var host = $('#kpi-row');
     if (!host) return;
@@ -349,7 +528,7 @@
     }
 
     /* 传统 vs 新质 对比表 */
-    cardHead('compare', P(D.define.compare.caption));
+    cardHead('compare', P(D.define.compare.caption), 'define');
     var table = $('#compare-table');
     if (table) {
       clear(table);
@@ -377,7 +556,7 @@
     var host = $('#chart-radar');
     if (!host) return;
     var K = palette();
-    cardHead('radar', P(D.radar.caption));
+    cardHead('radar', P(D.radar.caption), 'radar');
     chartTools(host, {
       name: 'radar',
       table: function () {
@@ -431,7 +610,7 @@
     var host = $('#chart-scale');
     if (!host) return;
     var K = palette();
-    cardHead('scale', P(D.scale.caption));
+    cardHead('scale', P(D.scale.caption), 'scale');
     /* 重绘前先收掉上一轮的播放定时器：否则它会继续往已经废弃的 SVG 上写 */
     if (STATE.playTimer) { window.clearInterval(STATE.playTimer); STATE.playTimer = 0; }
     var scaleCtx = C.lineArea(host, {
@@ -447,13 +626,18 @@
         },
         {
           name: P(D.scale.coreLabel), color: K.accent, fill: true, unit: '',
+          /* 预测点的不确定性用「示意区间」表达：数据字典里 2025 是预测值，
+             所以图上给出的 ±10% 不是统计置信区间，而是明写的教学假设（图例 + 表 caption 都写着） */
+          band: 0.1,
           points: D.scale.series.map(function (p) {
             return { year: p.year, label: String(p.year), value: p.value, forecast: !!p.forecast };
           })
         }
       ],
+      bandLabel: T('viz.band'),
       hoverTitle: function (i, p) { return String(p.year); }
     });
+
     /* —— 工具栏 + 年份播放器 ——
        播放器只调 scaleCtx.focus(i) 挪动聚焦线，不重画整张图，所以逐帧播放不会闪。 */
     var scaleTools = chartTools(host, {
@@ -492,6 +676,8 @@
     yearRange.step = '1';
     yearRange.value = String(STATE.year);
     yearRange.setAttribute('aria-label', T('play.label'));
+    /* 原生 range 自带 ←/→/Home/End，键盘用户不必先点播放 */
+    yearRange.setAttribute('title', T('play.link'));
     scaleTools.bar.appendChild(yearRange);
 
     var yearOut = node('span', 'viz-year', '');
@@ -504,6 +690,10 @@
         P(D.scale.coreLabel) + ' ' + C.fmt(D.scale.series[STATE.year].value, 0) + ' / ' +
         P(D.scale.relatedLabel) + ' ' + C.fmt(D.scale.related[STATE.year].value, 0) +
         ' ' + P(D.scale.unit);
+      /* 跨图联动（发送端）：年份不只是这条线的焦点，也是小倍数图的那一列 —— 一起挪 */
+      focusMultiples(STATE.year);
+      /* 年份进了分享链接，所以每挪一格都同步一次地址栏 */
+      syncUrl();
     }
     function stopPlay() {
       if (!STATE.playTimer) return;
@@ -527,6 +717,12 @@
     paintYear(Math.min(STATE.year, scaleCtx.count - 1));
 
     cardFoot('scale', P(D.scale.note), P(D.scale.source));
+    /* 两条「怎么用 + 怎么读」的说明：一条讲年份会联动哪些图，一条讲预测区间不是统计置信区间 */
+    var scaleFoot = mount('scale-foot');
+    if (scaleFoot) {
+      add(scaleFoot, 'p', 'viz-note', T('play.link'));
+      add(scaleFoot, 'p', 'viz-note', T('viz.bandNote'));
+    }
   }
 
   /* ---------------- ⑤ 三次产业：渗透率 / 效率增益 ---------------- */
@@ -534,7 +730,7 @@
     var host = $('#chart-industry');
     if (!host) return;
     var K = palette();
-    cardHead('industry', P(D.industry.caption));
+    cardHead('industry', P(D.industry.caption), 'industry');
 
     /* 跨图联动（接收端）：气泡选中哪个行业，这里就把它的产业那一行点亮、其余行压暗 */
     var dimId = sectorRowId();
@@ -589,7 +785,7 @@
   function renderBubble() {
     var host = $('#chart-bubble');
     if (!host) return;
-    cardHead('bubble', P(D.bubble.caption));
+    cardHead('bubble', P(D.bubble.caption), 'bubble');
 
     var tools = chartTools(host, {
       name: 'bubble',
@@ -669,16 +865,24 @@
   }
 
   /* ---------------- ⑥b 行业 × 指标热力矩阵（B2） ---------------- */
+  /* 弱口径列：前 3 列来自统一口径的统计，后 2 列是间接代理（人才密度指数 / 五年增速），
+     两者不该被并排当成同一把尺子。这里按指标 id 标出来，列头打「弱口径」小标记，
+     卡片底部给一句人话说明；check.mjs 会核对每个 id 都还在 data.js 的 heatmap.metrics 里。 */
+  var WEAK_METRICS = { talent: 1, cagr: 1 };
+
   function renderHeatmap() {
     var host = $('#chart-heat');
     if (!host) return;
     var H = D.heatmap;
-    cardHead('heat', P(H.caption));
+    cardHead('heat', P(H.caption), 'heatmap');
 
     var metrics = H.metrics.map(function (m) {
       return {
         id: m.id, label: P(m.label), short: m.short ? P(m.short) : null,
-        unit: P(m.unit), decimals: m.decimals
+        unit: P(m.unit), decimals: m.decimals,
+        weak: !!WEAK_METRICS[m.id],
+        weakLabel: WEAK_METRICS[m.id] ? T('viz.weak') : null,
+        weakNote: WEAK_METRICS[m.id] ? T('viz.weakNote') : null
       };
     });
 
@@ -688,7 +892,7 @@
         return {
           caption: P(H.caption),
           cols: [{ key: 'name', label: P({ zh: '行业', en: 'Industry' }) }].concat(metrics.map(function (m) {
-            return { key: m.id, label: withUnit(m.label, m.unit) };
+            return { key: m.id, label: withUnit(m.label, m.unit) + (m.weak ? ' · ' + T('viz.weak') : '') };
           })),
           rows: H.rows.map(function (r) {
             var o = { name: P(r.name) };
@@ -711,17 +915,45 @@
       legendLabel: P(H.legend)
     });
     cardFoot('heat', P(H.note), P(H.source));
+    /* 口径提醒：矩阵里有两列是代理指标，不给这一句，读者很容易把颜色深浅横向比较 */
+    var weakCols = H.metrics.filter(function (m) { return WEAK_METRICS[m.id]; });
+    if (weakCols.length) {
+      var heatFoot = mount('heat-foot');
+      if (heatFoot) {
+        add(heatFoot, 'p', 'viz-note', T('viz.weakNote') + ' · ' +
+          weakCols.map(function (m) { return P(m.label); }).join(' / '));
+      }
+    }
   }
 
   /* ---------------- ⑥c 三次产业小倍数图（B3） ---------------- */
+  /* 小倍数图的句柄：③ 的年份播放器每走一帧就要调它一次（跨图联动）。
+     声明在这里而不是 STATE 里 —— 它是一张已废弃的 SVG 的引用，不该被当成「可分享的状态」。 */
+  var multiplesCtx = null;
+  function focusMultiples(i) {
+    /* C.smallMultiples 返回的是 { svg, tip, ... } 这样的普通对象，不是 DOM 节点，
+       所以「还活着吗」要看它画的那张 <svg> 还在不在文档里：
+       切语言 / 换主题会整张重画，旧 ctx 的元素已经脱离宿主，再去改它谁也看不见
+       （新图首次绘制时会自己读 cfg.focusYear = STATE.year，不会漏）。 */
+    if (multiplesCtx && multiplesCtx.focusYear && multiplesCtx.svg && multiplesCtx.svg.parentNode) {
+      multiplesCtx.focusYear(i);
+    }
+  }
+
   function renderMultiples() {
     var host = $('#chart-multiples');
     if (!host) return;
     var M = D.multiples;
     var K = palette();
-    cardHead('multiples', P(M.caption));
+    cardHead('multiples', P(M.caption), 'multiples');
 
-    var years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+    /* 年份轴与 ③ 的年份播放器共用同一串年份：跨图联动的下标必须一一对齐（都是 7 个点）。
+       正常情况下直接用 ③ 的那串；万一哪天两边长度不一致，退回本地常量，
+       宁可少一次联动，也不要让高亮跑到别的年份上去。 */
+    var years = (D.scale && D.scale.series && M.series[0] &&
+      D.scale.series.length === M.series[0].penetration.length)
+      ? D.scale.series.map(function (s) { return s.year; })
+      : [2019, 2020, 2021, 2022, 2023, 2024, 2025];
     var labels = M.seriesLabels;
 
     chartTools(host, {
@@ -755,10 +987,12 @@
       }
     });
 
-    C.smallMultiples(host, {
+    multiplesCtx = C.smallMultiples(host, {
       years: years,
       unit: '%',
       yMax: 45,
+      /* ③ 的年份播放器把当前年份传进来，小倍数图点亮对应那一列（跨图联动） */
+      focusYear: STATE.year,
       panels: M.series.map(function (s) {
         return {
           id: s.id,
@@ -779,7 +1013,7 @@
   function renderGlobal() {
     var host = $('#chart-global');
     if (!host) return;
-    cardHead('global', P(D.globalRank.caption));
+    cardHead('global', P(D.globalRank.caption), 'globalRank');
     chartTools(host, {
       name: 'global',
       table: function () {
@@ -819,7 +1053,7 @@
     var host = $('#chart-region');
     if (!host) return;
     var G = D.province;
-    cardHead('region', P(G.caption));
+    cardHead('region', P(G.caption), 'province');
 
     /* 几何由 map-china.js 提供；万一没加载出来（比如手滑删了文件），
        要给一句人话，而不是一张白屏 */
@@ -877,7 +1111,11 @@
       select.appendChild(o);
     });
     select.value = String(mi);
-    select.addEventListener('change', function () { STATE.regionMetric = Number(this.value); renderRegion(); });
+    select.addEventListener('change', function () {
+      STATE.regionMetric = Number(this.value);
+      syncUrl();          /* 换指标也换分享链接 */
+      renderRegion();
+    });
     field.appendChild(select);
 
     /* 只看前五名：地图上一共有 34 个单元，尾部很容易糊成一片。
@@ -889,6 +1127,7 @@
     topBtn.setAttribute('aria-pressed', STATE.regionTop ? 'true' : 'false');
     topBtn.addEventListener('click', function () {
       STATE.regionTop = !STATE.regionTop;
+      syncUrl();          /* 「只看前五名」也是看得见的选择，一样进分享链接 */
       renderRegion();
     });
     tools.bar.appendChild(topBtn);
@@ -924,7 +1163,7 @@
   function renderFlow() {
     var host = $('#chart-flow');
     if (!host) return;
-    cardHead('flow', P(D.flow.caption));
+    cardHead('flow', P(D.flow.caption), 'flow');
     /* 流向图有两张表：节点（谁）和关系（谁流向谁）。两张一起给，
        否则「数据表」视图只能看见点、看不见边。 */
     chartTools(host, {
@@ -985,7 +1224,7 @@
       return D.graph.links.filter(function (l) { return l.s === id || l.t === id; }).length;
     };
 
-    cardHead('graph', P(D.graph.caption));
+    cardHead('graph', P(D.graph.caption), 'graph');
     /* 和流向图同理：力导向图的点与边都要能落成表，才算「可读的数据」 */
     chartTools(host, {
       name: 'graph',
@@ -1159,7 +1398,7 @@
       });
     });
 
-    cardHead('sim', P(D.sim.caption));
+    cardHead('sim', P(D.sim.caption), 'sim');
     cardFoot('sim', '', '');
     apply(true);
   }
@@ -1262,7 +1501,7 @@
     var st = sensStats();
 
     /* —— ① 龙卷风图：一根条 = 一个因素能影响的区间 —— */
-    cardHead('tornado', P(S.tornadoTitle));
+    cardHead('tornado', P(S.tornadoTitle), 'sim');
     chartTools(hostT, {
       name: 'tornado',
       table: function () {
@@ -1301,7 +1540,7 @@
     cardFoot('tornado', P(S.tornadoHint), '');
 
     /* —— ② 蒙特卡洛：500 次抽样落进 18 个桶 —— */
-    cardHead('mc', P(S.mcTitle));
+    cardHead('mc', P(S.mcTitle), 'sim');
     chartTools(hostM, {
       name: 'mc',
       table: function () {
@@ -1352,7 +1591,7 @@
     var K = { world: C.colorOf('--c-info'), cn: C.colorOf('--c-accent') };
     var kindLabel = {};
     D.timeline.kinds.forEach(function (k) { kindLabel[k.id] = P(k.label); });
-    cardHead('timeline', P(D.timeline.caption));
+    cardHead('timeline', P(D.timeline.caption), 'timeline');
     chartTools(host, {
       name: 'timeline',
       table: function () {
@@ -1373,7 +1612,7 @@
         };
       }
     });
-    C.timeline(host, {
+    var rail = C.timeline(host, {
       colors: K,
       kindLabel: kindLabel,
       kinds: D.timeline.kinds.map(function (k) { return { id: k.id, label: P(k.label) }; }),
@@ -1381,7 +1620,59 @@
         return { year: it.year, kind: it.kind, title: P(it.title), desc: P(it.desc) };
       })
     });
+    bindTimelineKeys(host, rail, kindLabel);
     cardFoot('timeline', '', '');
+  }
+
+  /* ---------------- ⑪b 时间线的键盘路径 ----------------
+     整条时间线只占**一个** Tab 停点（不是 10 个）：Tab 进来 → 左右方向键在节点间移动 →
+     当前节点由 role="status" 播报（SVG 画布在 aria-hidden 里，读屏读不到图形，
+     所以播报必须走 DOM 文本）。Esc / 失焦收起焦点环。
+     数据表仍是完整等价物，这里只是让「扫一眼时间线」不必先切表格。
+     用 onkeydown 属性赋值而不是 addEventListener：这张图会因换语言 / 换主题反复重绘，
+     重新赋值天然覆盖旧闭包，不会一次按键跑好几遍。 */
+  function bindTimelineKeys(host, rail, kindLabel) {
+    if (!host || !rail || typeof rail.focusIndex !== 'function') return;
+    var items = D.timeline.items;
+    if (!items.length) return;
+    var head = mount('timeline-head');
+    var hintId = 'timeline-keys';
+    var live = null;
+    if (head) {
+      var hint = add(head, 'p', 'viz-hint', T('timeline.keys'));
+      hint.id = hintId;
+      live = add(head, 'p', 'viz-live');
+      live.setAttribute('role', 'status');
+    }
+    host.setAttribute('tabindex', '0');
+    host.setAttribute('aria-describedby', hintId);
+
+    var at = -1;
+    function announce(i) {
+      var it = items[i];
+      if (live) {
+        live.textContent = TT('timeline.node', {
+          i: i + 1, n: items.length, year: it.year,
+          kind: kindLabel[it.kind] || it.kind, title: P(it.title)
+        });
+      }
+    }
+    function goto(i) {
+      at = rail.focusIndex(Math.max(0, Math.min(items.length - 1, i)));
+      if (at > -1) announce(at);
+      return at;
+    }
+    host.onkeydown = function (e) {
+      var k = e.key;
+      if (k === 'ArrowRight' || k === 'ArrowDown') { goto(at + 1); }
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') { goto(at - 1); }
+      else if (k === 'Home') { goto(0); }
+      else if (k === 'End') { goto(items.length - 1); }
+      else if (k === 'Escape') { at = -1; rail.focusIndex(null); if (live) live.textContent = ''; return; }
+      else return;                     /* 其它键不拦：翻页、找页内文字都还得用 */
+      e.preventDefault();              /* 只在真的接管了这一键时才 preventDefault */
+    };
+    host.onblur = function () { at = -1; rail.focusIndex(null); if (live) live.textContent = ''; };
   }
 
   /* ---------------- ⑫ 落地场景 ---------------- */
@@ -1389,7 +1680,7 @@
     var host = $('#scene-grid');
     if (!host) return;
     clear(host);
-    cardHead('scene', P(D.scenes.caption));
+    cardHead('scene', P(D.scenes.caption), 'scenes');
 
     /* 跨图联动（接收端）：只留和选中行业对得上的场景。
        match 是 data.js 里的稳定键，不是中文名。 */
@@ -1431,11 +1722,49 @@
   }
 
   /* ---------------- ⑬ 数据来源 ---------------- */
+  /* 全站数据包：chartTools() 每张卡片登记一次自己的取表函数，
+     「打包下载」时按登记顺序逐张生成 CSV —— 导出用的表就是页面上那张表，
+     不存在「图改了、导出没改」的第二份真相。
+     用对象（而不是数组）登记：renderAll 会重跑很多次，同名覆盖天然幂等。 */
+  var TABLE_SOURCES = {};
+
+  /* 把 13 张图的表格 + 12 条来源拼成一个 CSV（节与节之间空一行，节首写明是哪张表） */
+  function downloadAllData() {
+    var sections = [];
+    Object.keys(TABLE_SOURCES).forEach(function (key) {
+      TABLE_SOURCES[key]().forEach(function (spec) {
+        var csv = toCSV(spec);
+        sections.push({
+          cols: csv.cols,
+          rows: [[TT('data.section', { name: spec.caption || key })]].concat(csv.rows)
+        });
+      });
+    });
+    sections.push({
+      cols: [P({ zh: '序号', en: 'No.' }), P({ zh: '资料', en: 'Reference' }), P({ zh: '说明', en: 'Note' })],
+      rows: D.sources.map(function (s, i) { return [i + 1, P(s.name), P(s.note)]; })
+    });
+    C.exportCSV('all-data', sections);
+  }
+
+  /* 「打包下载」按钮写在 index.html 里（静态结构 + data-i18n 换文案），
+     这里只负责绑一次事件：boot 调一次就够，重绘不该叠出第二个监听器。 */
+  function bindDataPack() {
+    var btn = $('#data-all-btn');
+    var out = $('#data-all-status');
+    if (!btn || btn.getAttribute('data-bound')) return;
+    btn.setAttribute('data-bound', '1');
+    btn.addEventListener('click', function () {
+      downloadAllData();
+      if (out) out.textContent = T('data.saved');
+    });
+  }
+
   function renderSources() {
     var host = $('#source-list');
     if (!host) return;
     clear(host);
-    cardHead('source', P({ zh: '本节引用的公开资料', en: 'Public references cited on this page' }));
+    cardHead('source', P({ zh: '本节引用的公开资料', en: 'Public references cited on this page' }), 'sources');
     D.sources.forEach(function (s, i) {
       var li = add(host, 'li', 'source-item');
       add(li, 'span', 'source-idx', String(i + 1).padStart(2, '0'));
@@ -1597,8 +1926,43 @@
   }
 
   /* ---------------- 启动 ---------------- */
+  /* 首帧计时（P2）：地址栏加 ?perf=1 打开，控制台会打印「脚本开跑 → 最后一帧」的耗时。
+     没有这个开关时一行都不写：普通访问不该多一个观察者和一串日志。
+     日志是给开发者看的（不进页面、不跟语言走），所以固定用英文，避免 parity-check 当成裸中文文案。 */
+  var PERF_ON = /(^|[?&])perf=1(&|$)/.test(location.search);
+
+  function perfReport() {
+    if (!PERF_ON || !window.PerformanceObserver || !window.performance || !performance.mark) return;
+    try {
+      performance.mark('vis2-rendered');
+      performance.measure('render-all', 'vis2-boot', 'vis2-rendered');
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          performance.mark('vis2-first-frame');
+          performance.measure('first-frame', 'vis2-boot', 'vis2-first-frame');
+          new PerformanceObserver(function (list) {
+            list.getEntries().forEach(function (m) {
+              console.log('[perf] ' + m.name + ': ' + Math.round(m.duration) + ' ms');
+            });
+          }).observe({ entryTypes: ['measure'] });
+        });
+      });
+    } catch (e) { /* 老浏览器没有 User Timing：忽略，页面照常 */ }
+  }
+
   function boot() {
+    /* 地址栏里的视图状态要在第一次渲染之前读进来：
+       这样「别人分享给你的链接」打开就是同一屏，而不是先画一遍再跳 */
+    parseUrl();
+    /* ?perf=1 时打一个起点标记，用来量「脚本开跑 → 画面就绪」到底花了多久 */
+    if (PERF_ON && window.performance && performance.mark) performance.mark('vis2-boot');
     renderAll();
+    /* 全部图都画完之后再同步一次地址栏：这一步 STATE.sim 才刚被 renderSim 填好，
+       所以链接里不会漏掉四个滑块。 */
+    syncUrl();
+    perfReport();
+    bindShare();
+    bindDataPack();
     bindScrollSpy();
     bindScrollUI();
     bindNavToggle();
@@ -1607,10 +1971,23 @@
     document.addEventListener('langchange', function () {
       renderAll();
       bindScrollSpy();
+      /* 上一次的「已复制」是上一门语言写的，清掉免得中英混排 */
+      var so = $('#share-status');
+      if (so) { clear(so); so.removeAttribute('data-link'); }
+      var dso = $('#data-all-status');
+      if (dso) dso.textContent = '';
     });
 
     /* 换主题：图表颜色全部来自 CSS 变量，重绘一次即可完成换肤 */
     document.addEventListener('themechange', function () { renderAll(); });
+
+    /* 把分享链接粘进已经打开的标签页：重新读一遍地址栏，并把受影响的图重画 */
+    window.addEventListener('hashchange', function () {
+      if (!parseUrl()) return;
+      if (STATE.playTimer) { window.clearInterval(STATE.playTimer); STATE.playTimer = 0; }
+      renderAll();
+      bindScrollSpy();
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

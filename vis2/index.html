@@ -4,7 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>人工智能 · 新质生产力｜数据可视化</title>
-  <meta name="description" content="用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。" />
+  <meta name="description" content="用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。" data-meta="desc" />
+
+  <!-- ================= 分享与爬虫元信息 =================
+       全部「自指」：只有指向本站的 canonical / og:url，没有任何外链资源。
+       og:image 故意留空 —— 部署目录里不放任何位图（budget-check.mjs 会拦 PNG 入库），
+       硬指向 SVG 又会让多数平台的分享卡片显示空白，宁缺毋滥。
+       data-meta 是给 i18n.js 的挂点：切语言时把 title / description 同步刷成当前语言。 -->
+  <link rel="canonical" href="https://ly-beyond.github.io/vis2/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1518" media="(prefers-color-scheme: dark)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="人工智能 · 新质生产力" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:url" content="https://ly-beyond.github.io/vis2/" />
+  <meta property="og:title" content="人工智能 · 新质生产力｜数据可视化" data-meta="title" />
+  <meta property="og:description" content="用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。" data-meta="desc" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="人工智能 · 新质生产力｜数据可视化" data-meta="title" />
+  <meta name="twitter:description" content="用 14 个章节、13 张自绘 SVG 图表（含地图、热力矩阵、小倍数图）与 1 台带敏感性分析的模拟器，讲清人工智能如何成为新质生产力的核心引擎。" data-meta="desc" />
 
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -17,6 +36,30 @@
 <body>
 
   <a class="skip-link" href="#main" data-i18n="skip">跳到正文</a>
+
+  <!-- ================= 无 JS 兜底（关掉 JS 也能读到结论） =================
+       本页 13 张图表与整台模拟器都由脚本现场绘制，禁用 JS 只会剩一个空骨架。
+       所以这里直接给出「一句话 + §01 的四个数字 + 全部数据的纯文本入口」——
+       数字由 check.mjs 与 data.js 的 kpis 逐项核对、来源条数由 data/sources.csv 的实际行数核对，
+       所以这份兜底不会随数据漂移（有断言看着它）。
+       带 data-i18n 是给「JS 开着」的情况留的挂点；禁用 JS 时浏览器解析的是这段静态 HTML。 -->
+  <noscript>
+    <div class="noscript">
+      <p class="noscript-title" data-i18n="noscript.title">本页的图表需要 JavaScript 才能绘制 · This page needs JavaScript to draw its charts</p>
+      <p class="noscript-lead" data-i18n="noscript.lead">打开 JavaScript 即得完整交互（13 张图 + 1 台模拟器）；下面是第 01 节的四个数字与全部数据的纯文本入口。 · With JavaScript you get the full interactive version (13 charts + 1 simulator); below are four headline numbers and plain-text access to all data.</p>
+      <ul class="noscript-kpis">
+        <li data-i18n="noscript.kpi1">2024 年中国人工智能核心产业规模：6964 亿元 · China AI core industry scale (2024): CNY 6964 hundred-million</li>
+        <li data-i18n="noscript.kpi2">2030 年 AI 对全球 GDP 的增量贡献：15.7 万亿美元 · AI's incremental contribution to global GDP by 2030: USD 15.7 trillion</li>
+        <li data-i18n="noscript.kpi3">其中中国预计可获得的份额：26% · Share expected to be captured by China: 26%</li>
+        <li data-i18n="noscript.kpi4">我国算力总规模近五年年均增速：30% · five-year CAGR of China's computing capacity: 30%</li>
+      </ul>
+      <p data-i18n="noscript.data">全部数据与 12 条来源都能离线打开（纯文本，不需要 JS）： · All data and the 12 sources open offline as plain text, no JavaScript required:</p>
+      <p class="noscript-files">
+        <a href="data/sources.csv">data/sources.csv</a>
+        <a href="data/README.md">data/README.md</a>
+      </p>
+    </div>
+  </noscript>
 
   <!-- ================= 顶栏 ================= -->
   <header class="topbar">
@@ -67,6 +110,14 @@
         <p class="hero-sub" data-i18n="hero.sub">11 张可视化看板 · 8 组可交互图表 · 1 台生产力模拟器</p>
         <p class="hero-meta" data-i18n="hero.meta">从「三要素升级」到「全要素生产率」，用数据看清 AI 如何重塑生产方式</p>
         <p class="hero-hint" data-i18n="hero.hint">向下滚动开始 · 图表均可交互</p>
+
+        <!-- 「视图状态可分享」：按钮由 app.js 绑定 —— 把当前筛选 / 年份 / 地图指标写进地址栏并复制。
+             状态用 history.replaceState 写，所以不会往后退键里塞垃圾历史；
+             #share-status 是复制结果的实时播报区（读屏用）。 -->
+        <div class="hero-actions">
+          <button class="hero-btn" id="share-btn" type="button" data-i18n="share.copy">复制当前视图链接</button>
+          <span class="hero-status" id="share-status" role="status"></span>
+        </div>
       </div>
     </section>
 
@@ -356,6 +407,11 @@
         <div class="card">
           <div data-mount="source-head"></div>
           <div class="source-list" id="source-list"></div>
+          <!-- 13 张图的表格 + 12 条来源打包成一份 CSV（按钮文案由 i18n.js 按 data-i18n 换） -->
+          <p class="data-pack">
+            <button class="viz-btn" type="button" id="data-all-btn" data-i18n="data.all">打包下载全部数据（CSV）</button>
+            <span class="data-pack-status" id="data-all-status" role="status"></span>
+          </p>
         </div>
       </div>
     </section>

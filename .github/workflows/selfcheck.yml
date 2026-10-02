@@ -1,0 +1,70 @@
+# ============================================================
+# selfcheck —— vis2 的自检 CI
+# ------------------------------------------------------------
+# 仓库是纯静态站点（没有 package.json、零依赖），所以这里不装依赖、不写构建命令，
+# 直接用 runner 自带的 Node 跑 vis2 里的自检脚本：
+#
+#   static  每次 push / PR（改了 vis2 就触发）：node selfcheck.mjs
+#           静态检查是毫秒级的，且顺带核对 README / FEATURES / HIGHLIGHTS 里写的
+#           「脚本数 / 断言数 / 体积」是否和实测一致 —— 文档数字过期会在这里红。
+#   browser 每天 04:17 UTC + 手动触发：node selfcheck.mjs --full
+#           真机断言（真实 Chrome + CDP，约 1–2 分钟）。之所以不放在每次提交上：
+#           浏览器版本会悄悄变，布局/对比度这类断言偶发受环境影响，更适合当体检跑。
+#
+# 浏览器路径由 workflow 现场解析（runner 上叫 google-chrome），
+# 无沙箱环境用 CHROME_FLAGS 传额外参数（脚本本身默认不加任何沙箱相关参数）。
+# ============================================================
+name: selfcheck
+
+on:
+  push:
+    paths: ['vis2/**', '.github/workflows/selfcheck.yml']
+  pull_request:
+    paths: ['vis2/**', '.github/workflows/selfcheck.yml']
+  schedule:
+    - cron: '17 4 * * *'      # 每天 04:17 UTC —— 真机自检
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: vis2
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: 静态自检（零依赖，毫秒级）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: node selfcheck.mjs
+        run: node selfcheck.mjs
+
+  browser:
+    name: 真机自检（Chrome，约 1–2 分钟）
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 解析浏览器路径
+        working-directory: .
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::error::runner 上找不到 Chrome / Chromium"
+            exit 1
+          fi
+          echo "CHROME=$CHROME" >> "$GITHUB_ENV"
+          echo "用浏览器：$CHROME ($("$CHROME" --version))"
+      - name: node selfcheck.mjs --full
+        env:
+          CHROME_FLAGS: --no-sandbox --disable-dev-shm-usage
+        run: node selfcheck.mjs --full

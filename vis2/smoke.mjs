@@ -15,7 +15,8 @@
  *   ⑨ 键盘焦点顺序、role="status" 播报、19 个 SVG / 14 章节 / 13 导航项
  *   ⑩ 全程无 console 报错、无资源 404、无横向溢出、顶栏导航不被裁切
  * 末尾打印通过/失败计数与非零退出码，并给统一的 SUMMARY 行。
- * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定。
+ * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定；
+ *   CI 里若需要额外参数（容器/无沙箱环境）用 CHROME_FLAGS，例如 CHROME_FLAGS=--no-sandbox。
  * 说明：仅开发期使用，不被网站加载，不影响静态部署。
  * ========================================================= */
 import { spawn } from 'node:child_process';
@@ -47,6 +48,8 @@ if (!CHROME) {
 }
 /* 端口随进程号漂移：上一轮崩掉的 Chrome 常常还占着固定端口，会导致连到「僵尸」调试端口上 */
 const PORT = 9300 + (process.pid % 500);
+/* 额外浏览器参数：CI（容器 / 无沙箱环境）常需 CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage" */
+const CHROME_FLAGS = (process.env.CHROME_FLAGS || '').split(/\s+/).filter(Boolean);
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const URL_PAGE = process.env.SITE_URL || pathToFileURL(join(HERE, 'index.html')).href;
 
@@ -59,7 +62,7 @@ const watchdog = setTimeout(() => {
 const profile = mkdtempSync(join(tmpdir(), 'vis2-smoke-'));
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
-  '--no-default-browser-check', '--window-size=1440,1200',
+  '--no-default-browser-check', '--window-size=1440,1200', ...CHROME_FLAGS,
   `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, 'about:blank'
 ], { stdio: 'ignore' });
 
@@ -111,6 +114,10 @@ const cdp = connect(await targetWs());
 await cdp.ready;
 await cdp.send('Page.enable');
 await cdp.send('Runtime.enable');
+/* 无头模式下页面默认「没有焦点」，Chrome 就不会派发 focus / blur 事件 ——
+   P3 的「失焦收起焦点环」这类断言会假红。setFocusEmulationEnabled 让页面被当作
+   有焦点（Chrome 85+ 的 CDP 开关），事件才照常派发。老版本忽略即可。 */
+try { await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: true }); } catch (e) { /* 忽略 */ }
 
 const ev = async (expr) => {
   const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
@@ -1021,6 +1028,135 @@ check('英文模式下工具栏 aria-label 也跟着换',
 await ev(`document.querySelector('.lang-switch-item[data-lang="zh"]').click()`);
 await sleep(800);
 
+/* =========================================================
+ * [9] 口径徽章（P2）+ 时间线键盘路径（P3）
+ * ---------------------------------------------------------
+ * 徽章：每个数据集一枚，文字必须来自词表，且与 data.js 的 provenance 一一对应 ——
+ *       图换了数据源却忘了改标注、或某张卡漏挂徽章，这里会红。
+ * 键盘：整条时间线只有一个 Tab 停点，方向键移动焦点环（.tl-focus），
+ *       role="status" 播报当下节点 —— 用真键盘事件走一遍，不是读源码猜。
+ *       失焦那一条万一红了，先看证据里的 blurFired：0 = 无头环境没派发事件
+ *       （harness 里的 Emulation.setFocusEmulationEnabled 没生效），
+ *       ≥1 但环没收起 = 真的是 app 的 onblur 没接上。
+ * ========================================================= */
+console.log('\n[9] 口径徽章与时间线键盘路径');
+
+const provRes = await jv(`JSON.stringify((function () {
+  var KIND = ['sourced', 'modeled', 'projected'];
+  var list = [].map.call(document.querySelectorAll('.prov-badge'), function (b) {
+    return { kind: b.getAttribute('data-prov'), key: b.getAttribute('data-prov-key'),
+      text: b.textContent, title: b.getAttribute('title') || '' };
+  });
+  var heads = [].map.call(document.querySelectorAll('[data-mount$="-head"]'), function (h) {
+    return { m: h.getAttribute('data-mount'), n: h.querySelectorAll('.prov-badge').length };
+  });
+  var keys = list.map(function (b) { return b.key; });
+  return {
+    n: list.length,
+    heads: heads.length,
+    registered: Object.keys(window.AI_DATA.provenance).length,
+    /* 徽章上的键必须都在 data.js 里登记过（反向：登记了但没卡片的只有配色表这类元数据） */
+    missing: keys.filter(function (k) { return !window.AI_DATA.provenance[k]; }),
+    unused: Object.keys(window.AI_DATA.provenance).filter(function (k) { return keys.indexOf(k) < 0; }),
+    repeat: keys.filter(function (k, i) { return keys.indexOf(k) !== i; }),
+    wrongKind: list.filter(function (b) { return KIND.indexOf(b.kind) < 0; })
+      .map(function (b) { return b.key + '=' + b.kind; }),
+    wrongText: list.filter(function (b) { return b.text !== window.I18N.t('prov.' + b.kind); })
+      .map(function (b) { return b.kind + ' 显示成 ' + b.text; }),
+    noRule: list.filter(function (b) {
+      return b.title.length < 12 || b.title.indexOf(window.I18N.t('prov.list')) < 0;
+    }).map(function (b) { return b.key; }),
+    dup: heads.filter(function (h) { return h.n > 1; }).map(function (h) { return h.m; }),
+    bare: heads.filter(function (h) { return !h.n; }).map(function (h) { return h.m; }),
+    mix: KIND.map(function (k) { return k + ' ' + list.filter(function (b) { return b.kind === k; }).length; })
+  };
+})())`);
+/* data.js 里登记了口径、但页面上没有「独立图表卡片」的键：只允许这 6 个，别的一律算漏挂徽章。
+   前三个是首屏 KPI 条 / 概览段落 / 作用力列表（数据直接铺在版式里，没有自己的卡），
+   后三个是配色表（渲染用的元数据，不该出现在卡片上）。 */
+const PROV_NO_CARD = ['overview', 'kpis', 'forces', 'paletteBase', 'paletteAccent', 'paletteKeys'];
+check('P2 17 张卡片每张都有且只有一枚口径徽章（徽章上的键都在 data.js 里登记过）',
+  provRes.n === 17 && provRes.n === provRes.heads && provRes.missing.length === 0 &&
+  provRes.dup.length === 0 && provRes.bare.length === 0,
+  JSON.stringify({ n: provRes.n, heads: provRes.heads, missing: provRes.missing,
+    repeat: provRes.repeat, dup: provRes.dup, bare: provRes.bare }));
+check('P2 data.js 里登记的口径键，除 6 个「没有卡片」的之外都上了页面',
+  provRes.unused.slice().sort().join(',') === PROV_NO_CARD.slice().sort().join(','),
+  JSON.stringify({ registered: provRes.registered, unused: provRes.unused }));
+check('P2 徽章文字取自词表、种类合法（写错键名会原样显示 prov.xxx）',
+  provRes.wrongKind.length === 0 && provRes.wrongText.length === 0,
+  JSON.stringify({ kinds: provRes.wrongKind, texts: provRes.wrongText, mix: provRes.mix }));
+check('P2 每枚徽章都带「口径规则」说明（悬停能看见为什么这么标）',
+  provRes.noRule.length === 0, JSON.stringify(provRes.noRule));
+
+const tlKeys = await jv(`JSON.stringify((function () {
+  var host = document.getElementById('chart-timeline');
+  var head = document.querySelector('[data-mount="timeline-head"]');
+  var hint = head ? head.querySelector('.viz-hint') : null;
+  var live = head ? head.querySelector('.viz-live') : null;
+  var items = window.AI_DATA.timeline.items;
+  var rings = host.querySelectorAll('rect.tl-focus');
+  var lit = function () {
+    return [].filter.call(rings, function (r) { return Number(r.getAttribute('opacity')) > 0; }).length;
+  };
+  /* 播报文案：词表模板去掉 {kind} / {title} 之后的固定前缀（中英都成立） */
+  var tpl = window.I18N.t('timeline.node').split('{kind}')[0];
+  var want = function (i) {
+    return tpl.replace('{i}', String(i + 1)).replace('{n}', String(items.length))
+      .replace('{year}', String(items[i].year));
+  };
+  var key = function (k) {
+    host.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  };
+  host.focus();
+  var focused = document.activeElement === host;
+  var atStart = lit();
+  var seq = [];
+  var push = function () { seq.push([lit(), live ? live.textContent : '']); };
+  key('ArrowRight'); push();                       /* → 第 1 个 */
+  key('ArrowRight'); push();                       /* → 第 2 个 */
+  key('End');        push();                       /* → 最后一个 */
+  key('Home');       push();                       /* → 第 1 个 */
+  key('ArrowLeft');  push();                       /* 已在第一个：钳位，仍停在第一个 */
+  key('Escape');     push();                       /* 退出：环收起、播报清空 */
+  key('ArrowDown');  push();                       /* 退出后再按：从第一个重新开始 */
+  /* 模拟 Tab 走出去：焦点移到卡片工具栏里的按钮，容器应收到 blur 并收起焦点环。
+     先自己挂一个监听，好在失败时分辨「事件没派发」还是「处理器没接上」 */
+  var blurFired = 0;
+  host.addEventListener('blur', function () { blurFired++; });
+  var other = host.parentElement.querySelector('.viz-toolbar button') ||
+    document.querySelector('.viz-toolbar button');
+  if (other) other.focus();
+  var blurState = {
+    fired: blurFired, lit: lit(), live: live ? live.textContent : '',
+    hasHandler: typeof host.onblur === 'function',
+    docFocused: document.hasFocus(),
+    moved: !!other && document.activeElement === other && document.activeElement !== host
+  };
+  if (other) other.blur();
+  var wantSeq = [want(0), want(1), want(items.length - 1), want(0), want(0), '', want(0)];
+  return {
+    tabindex: host.getAttribute('tabindex'), describedby: host.getAttribute('aria-describedby'),
+    hintId: hint ? hint.id : '', hintText: hint ? hint.textContent : '',
+    liveRole: live ? live.getAttribute('role') : '', rings: rings.length, nodes: items.length,
+    focused: focused, atStart: atStart,
+    afterBlur: blurState.lit, liveAfterBlur: blurState.live, focusMoved: blurState.moved,
+    blurFired: blurState.fired, blurHandler: blurState.hasHandler, docFocused: blurState.docFocused,
+    litSeq: seq.map(function (s) { return s[0]; }), textSeq: seq.map(function (s) { return s[1]; }),
+    matched: seq.map(function (s, i) { return wantSeq[i] === '' ? s[1] === '' : s[1].indexOf(wantSeq[i]) === 0; })
+  };
+})())`);
+check('P3 时间线只有一个 Tab 停点，配键盘提示与 role="status" 播报区',
+  tlKeys.tabindex === '0' && tlKeys.hintId === 'timeline-keys' && tlKeys.describedby === 'timeline-keys' &&
+  tlKeys.hintText.length > 0 && tlKeys.liveRole === 'status' && tlKeys.rings === tlKeys.nodes && tlKeys.focused,
+  JSON.stringify(tlKeys));
+check('P3 方向键逐个走节点、Home / End 跳到两端、Esc 与失焦都收起焦点环',
+  tlKeys.atStart === 0 && tlKeys.litSeq.join(',') === '1,1,1,1,1,0,1' &&
+  tlKeys.afterBlur === 0 && tlKeys.liveAfterBlur === '' && tlKeys.focusMoved && tlKeys.matched.every(Boolean),
+  JSON.stringify({ lit: tlKeys.litSeq, matched: tlKeys.matched, blurLit: tlKeys.afterBlur,
+    blurLive: tlKeys.liveAfterBlur, blurFired: tlKeys.blurFired, blurHandler: tlKeys.blurHandler,
+    docFocused: tlKeys.docFocused, focusMoved: tlKeys.focusMoved, texts: tlKeys.textSeq }));
+
 /* ---------- 收尾体检：整页无报错、无横向溢出 ---------- */
 const bHealth = await jv(`JSON.stringify({
   errs: window.__errs,
@@ -1037,6 +1173,180 @@ check('整页 19 个 SVG（13 张图 + 6 个仪表）、14 个章节、13 个导
   bHealth.charts === 19 && bHealth.sections === 14 && bHealth.navItems === 13, JSON.stringify(bHealth));
 check('中文模式下顶栏 13 项导航也不被裁切', bHealth.navClipped === 0, String(bHealth.navClipped));
 check('整页仍然没有横向溢出', bHealth.hOverflow === 0, String(bHealth.hOverflow));
+
+/* ================= P2：可分享的地址栏状态 ================= */
+console.log('\n[P2] 地址栏状态 → 分享链接 → 打包下载');
+
+/* 先在页面上拧出一个「非默认视图」：年份 2023（第 4 个点）+ 只看前五 + 换成「企业数」+ 动一个滑块。
+   这几次操作覆盖 URL 里 4 类参数来源（year / top / m / sim）；剩下的一类（行业筛选 f）
+   由下面「拿链接还原」那一步覆盖，正好把 5 个键都走一遍。 */
+const p2Made = await jv(`JSON.stringify((function () {
+  var scaleCard = document.getElementById('chart-scale').parentElement;
+  var range = scaleCard.querySelector(':scope > .viz-toolbar .viz-range');
+  range.value = '4';
+  range.dispatchEvent(new Event('input', { bubbles: true }));
+  /* 「只看前五名」有固定 id：同一根工具栏里还并排放着「图表 / 数据表」两个带 aria-pressed
+     的分段按钮，按类名/属性找会点到它们（那就只是在切换视图，不是拧状态） */
+  document.getElementById('region-top-btn').click();
+  var met = document.getElementById('region-metric');
+  met.value = '1';                       /* 选项的值是「指标下标」：0 = 算力规模，1 = 企业数 */
+  met.dispatchEvent(new Event('change', { bubbles: true }));
+  var sl = document.querySelectorAll('#sim-root .sim-range');
+  sl[0].value = '60';
+  sl[0].dispatchEvent(new Event('input', { bubbles: true }));
+  return { year: range.value, sliders: sl.length };
+})())`);
+check('能通过界面把页面拧成非默认视图（年份/指标/前五/滑块）',
+  p2Made.year === '4' && p2Made.sliders === 4, JSON.stringify(p2Made));
+
+/* 分享按钮：点一下，链接带着「刚才那屏」的参数落到状态区上（file:// 没有剪贴板，走失败分支也要给链接） */
+await ev(`document.getElementById('share-btn').click()`);
+await sleep(600);
+const p2Share = await jv(`JSON.stringify((function () {
+  var s = document.getElementById('share-status');
+  var link = s.getAttribute('data-link') || '';
+  return {
+    link: link,
+    text: (s.textContent || '').trim(),
+    hasProxy: !!document.querySelector('.share-proxy'),
+    params: /sim=\\d+(,\\d+){3}/.test(link) && /\\bm=firms\\b/.test(link) && /\\btop=1\\b/.test(link) &&
+      /\\by=2023\\b/.test(link) && link.indexOf('?lang=zh#') > -1
+  };
+})())`);
+check('分享链接带齐 5 类参数（sim / y / m / top / lang）且语言 = 当前语言',
+  p2Share.params, p2Share.link);
+check('分享后有明确反馈文案（复制成功或失败都给得出话）', p2Share.text.length > 0, p2Share.text);
+check('复制退路的隐藏 textarea 不留在 DOM 里（不污染页面结构）', !p2Share.hasProxy, 'share-proxy=true');
+
+/* 真正的「分享」验证：把链接里的参数灌回一个全新文档，首屏就该是同一屏 */
+const P2_HASH = 'sim=55,50,45,40&f=finance&y=2023&m=firms&top=1';
+await cdp.send('Page.navigate', { url: URL_PAGE + '?perf=1&lang=zh#' + P2_HASH });
+await sleep(2800);
+const p2Linked = await jv(`JSON.stringify((function () {
+  var scaleCard = document.getElementById('chart-scale').parentElement;
+  var svg = document.getElementById('chart-multiples').querySelector('svg.viz-svg');
+  var band = svg.querySelector('rect.viz-focus-band');
+  return {
+    errs: window.__errs,
+    year: scaleCard.querySelector(':scope > .viz-toolbar .viz-range').value,
+    picker: document.getElementById('industry-picker').value,
+    metric: document.getElementById('region-metric').value,
+    top: document.getElementById('region-top-btn').getAttribute('aria-pressed'),
+    sim: [].map.call(document.querySelectorAll('#sim-root .sim-range'), function (i) { return i.value; }).join(','),
+    simText: document.querySelector('#sim-root .sim-slider-value').textContent,
+    bandOpacity: band ? band.getAttribute('opacity') : 'no-band',
+    bandX: band ? Number(band.getAttribute('x')) : -1,
+    dots: svg.querySelectorAll('circle.viz-focus-dot').length,
+    lang: document.title,
+    /* ?perf=1 是首帧计时开关：开了也不该影响画面，这里顺带确认它没把语言参数挤掉 */
+    perfOn: location.search.indexOf('perf=1') > -1
+  };
+})())`);
+check('链接打开即还原：年份 = 2023（第 4 点）', p2Linked.year === '4', p2Linked.year);
+check('链接打开即还原：行业 = 金融、地图指标 = 企业数、只看前五 = 按下',
+  p2Linked.picker === '0' && p2Linked.metric === '1' && p2Linked.top === 'true',
+  JSON.stringify({ picker: p2Linked.picker, metric: p2Linked.metric, top: p2Linked.top }));
+check('链接打开即还原：模拟器四个滑块 = 55/50/45/40（首个读数同步）',
+  p2Linked.sim === '55,50,45,40' && /^55/.test(p2Linked.simText), p2Linked.sim + ' | ' + p2Linked.simText);
+check('链接打开即还原：?lang=zh 与 ?perf=1 共存，标题仍是中文',
+  p2Linked.perfOn && /数据可视化/.test(p2Linked.lang), p2Linked.lang);
+check('首屏无报错（新文档的 __errs 也是空的）', p2Linked.errs.length === 0, JSON.stringify(p2Linked.errs));
+check('年份播放器点亮小倍数图的对应列（三格各一条带 + 每条线一个高亮点）',
+  p2Linked.bandOpacity === '1' && p2Linked.dots === 6,
+  JSON.stringify({ o: p2Linked.bandOpacity, dots: p2Linked.dots }));
+
+/* 把年份拨回第一个点：高亮必须跟着往回走（证明是「联动」而不是画上去的静态装饰） */
+await ev(`(function () {
+  var range = document.getElementById('chart-scale').parentElement.querySelector(':scope > .viz-toolbar .viz-range');
+  range.value = '0';
+  range.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+})()`);
+await sleep(300);
+const p2Band0 = await ev(`(function () {
+  var band = document.getElementById('chart-multiples').querySelector('svg.viz-svg rect.viz-focus-band');
+  return Number(band.getAttribute('x'));
+})()`);
+check('年份改成第 1 点后，小倍数图的高亮列向左移动', p2Band0 < p2Linked.bandX, p2Linked.bandX + ' → ' + p2Band0);
+
+/* 把链接粘进已经打开的标签页：hashchange 也要重绘（不是只有刷新才认） */
+await ev(`location.hash = 'sim=55,50,45,40&y=2025&m=firms&top=1'`);
+await sleep(800);
+const p2Hash = await jv(`JSON.stringify((function () {
+  var range = document.getElementById('chart-scale').parentElement.querySelector(':scope > .viz-toolbar .viz-range');
+  var band = document.getElementById('chart-multiples').querySelector('svg.viz-svg rect.viz-focus-band');
+  return { year: range.value, x: Number(band.getAttribute('x')), errs: window.__errs, hash: location.hash };
+})())`);
+check('在已打开的标签页里改 hash 也能跳年份（hashchange → 重绘）',
+  p2Hash.year === '6' && p2Hash.x > p2Linked.bandX && p2Hash.errs.length === 0,
+  JSON.stringify({ year: p2Hash.year, x: p2Hash.x }));
+
+/* ---------- 第 13 节：打包下载全部数据 ---------- */
+const p2Csv = JSON.parse(await ev(`(async function () {
+  var btn = document.getElementById('data-all-btn');
+  if (!btn) return JSON.stringify({ ok: false, why: 'no-button' });
+  var all = null;
+  var origCreate = URL.createObjectURL;
+  URL.createObjectURL = function (b) { if (!all) all = b; return origCreate.call(URL, b); };
+  btn.click();
+  URL.createObjectURL = origCreate;
+  var text = all ? await all.text() : '';
+  var status = document.getElementById('data-all-status');
+
+  /* 逐张图点一次「导出 CSV」，用单图的 CSV 去核对打包文件：
+     打包不是另写一份数据，所以单图里的每一行都必须原样出现在打包结果里 */
+  var cards = ['chart-radar', 'chart-scale', 'chart-industry', 'chart-bubble', 'chart-global',
+    'chart-region', 'chart-heat', 'chart-multiples', 'chart-flow', 'chart-graph', 'chart-timeline',
+    'chart-tornado', 'chart-mc'];
+  var missing = [];
+  for (var i = 0; i < cards.length; i++) {
+    var host = document.getElementById(cards[i]);
+    if (!host) { missing.push(cards[i] + ':no-card'); continue; }
+    var seen = null;
+    var orig = URL.createObjectURL;
+    URL.createObjectURL = function (b) { seen = b; return orig.call(URL, b); };
+    host.parentElement.querySelectorAll(':scope > .viz-toolbar .viz-acts button')[2].click();
+    URL.createObjectURL = orig;
+    if (!seen) { missing.push(cards[i] + ':no-blob'); continue; }
+    var csv = await seen.text();
+    csv.trim().split(/\\r?\\n/).forEach(function (line) {
+      if (line && text.indexOf(line) < 0) missing.push(cards[i] + ' | ' + line.slice(0, 36));
+    });
+  }
+  /* 数据表是「切过去才建」的（懒构建）：逐张点开「数据表」视图，页面上的 <table> 才真的存在，
+     这样「打包里的表节数」才有东西可对 —— 不是拿一个写死的数字去比 */
+  for (var k = 0; k < cards.length; k++) {
+    var h2 = document.getElementById(cards[k]);
+    if (!h2) continue;
+    h2.parentElement.querySelectorAll(':scope > .viz-toolbar .viz-seg button')[1].click();
+  }
+  var lines = text.split(/\\r?\\n/);
+  var srcAt = -1;
+  for (var j = 0; j < lines.length; j++) if (/^序号,资料,说明/.test(lines[j].trim())) srcAt = j;
+  return JSON.stringify({
+    ok: true,
+    banners: (text.match(/^表：/gm) || []).length,
+    tables: document.querySelectorAll('.viz-table-wrap table').length,
+    lines: lines.length,
+    srcAt: srcAt,
+    srcRows: srcAt < 0 ? -1 : lines.slice(srcAt + 1).filter(function (l) { return l.trim(); }).length,
+    srcLine: srcAt < 0 ? '' : lines[srcAt + 1].slice(0, 36),
+    missing: missing.slice(0, 6),
+    missingN: missing.length,
+    status: (status.textContent || '').trim()
+  });
+})()`));
+check('第 13 节有一颗「打包下载全部数据」按钮，点击后有反馈文案',
+  p2Csv.ok === true && p2Csv.status.length > 0, JSON.stringify(p2Csv));
+check('打包 CSV 为每个表节都写了「表：…」标题（数量与页面上 <table> 一致）',
+  p2Csv.ok === true && p2Csv.banners === p2Csv.tables && p2Csv.banners >= 13,
+  JSON.stringify({ banners: p2Csv.banners, tables: p2Csv.tables }));
+check('打包 CSV 末尾附带 12 条数据来源（序号 / 资料 / 说明）',
+  p2Csv.srcAt > 0 && p2Csv.srcRows === 12,
+  JSON.stringify({ at: p2Csv.srcAt, rows: p2Csv.srcRows, first: p2Csv.srcLine }));
+check('打包 CSV 覆盖 13 张图各自导出里的每一行（没有漏表、没有第二套数据）',
+  p2Csv.missingN === 0, p2Csv.missingN + ' 行缺失：' + JSON.stringify(p2Csv.missing));
+
 
 console.log('\n================ 结果 ================');
 console.log('通过 ' + pass + ' / 失败 ' + fail);
@@ -1055,7 +1365,11 @@ writeFileSync(REPORT,
       sens: sensRes, sensMoved: sensMoved, mcShare: mcShare,
       csvHeader: csvList.map(function (c) { return c.split(/\r?\n/)[0]; }),
       en: enB, health: bHealth
-    } },
+    },
+    /* P2 证据 */
+    p2: { made: p2Made, share: p2Share, linked: p2Linked, band0: p2Band0, hash: p2Hash, csv: p2Csv },
+    /* P3 证据：口径徽章 + 时间线键盘 */
+    p3: { prov: provRes, keys: tlKeys } },
     null, 2), 'utf8');
 console.log('逐项证据已写入 ' + REPORT);
 console.log('SUMMARY script=smoke.mjs checks=' + (pass + fail) + ' failed=' + fail);

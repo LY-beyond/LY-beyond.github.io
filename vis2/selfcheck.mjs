@@ -14,10 +14,12 @@
  *   data/build.mjs --check   data.js 是否与 data/*.csv 一致（数据链路不许手改）
  * 真机（--full）：
  *   audit.mjs        11 档视口下的布局体检（溢出 / 裁切 / 触控目标 / 锚点补偿）
- *   smoke.mjs        124 条真机断言（工具栏 / 联动 / 播放器 / 导出 / 双语文案 / 地图…）
+ *   smoke.mjs        146 条真机断言（工具栏 / 联动 / 播放器 / 导出 / 分享链接 / 双语文案 / 地图…）
  *
  * 每个脚本末尾都会打印 `SUMMARY script=… checks=N failed=M`，本脚本负责汇总，
- * 并顺带核对 README「复杂度清单」里写的「静态断言 / 真机断言」两个数字。
+ * 并顺带核对 README / FEATURES / HIGHLIGHTS 三份文档里写的「脚本数 / 静态断言 / 真机断言 /
+ * 每个脚本各多少条断言 / 对比度组数」—— 这些数字只有本脚本算得出来，也只能由它来对。
+ * （体积、词条、章节、数据集这类数字由 budget-check.mjs 核对，两边不重复。）
  * ========================================================= */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
@@ -61,7 +63,7 @@ function run([script, what, extra]) {
   const failed = m ? Number(m[2]) : 1;
   totalChecks += checks;
   totalFails += failed;
-  rows.push({ script, what, checks, failed, ms: Date.now() - t0 });
+  rows.push({ script, what, checks, failed, ms: Date.now() - t0, out });
   console.log(`\n──────── ${script} ── ${what}  ${failed ? '✗' : '✓'}  ${((Date.now() - t0) / 1000).toFixed(2)}s`);
   if (failed || VERBOSE || !m) {
     console.log(out.trim());
@@ -77,7 +79,8 @@ if (FULL) {
   console.log('\n===== 真机自检（真实 Chrome + CDP） =====');
   for (const s of BROWSER) run(s);
 } else {
-  console.log('\n（真机检查需要 Chrome 与 1–2 分钟，用 `node selfcheck.mjs --full` 一并跑）');
+  console.log('\n（真机检查需要 Chrome 与 1–2 分钟，用 `node selfcheck.mjs --full` 一并跑；');
+  console.log('  CI 里静态检查每次提交都跑，真机检查走 nightly —— 见 .github/workflows/selfcheck.yml）');
 }
 
 /* ---------------- 汇总 + 核对 README 的数字 ---------------- */
@@ -113,6 +116,70 @@ if (FULL) {
 } else {
   console.log('  · README「真机断言」需 `--full` 才能核对（当前跳过）');
 }
+
+/* ---------------- 同一批数字在 FEATURES / HIGHLIGHTS 里也各写了一遍 ---------------- */
+const feats = readFileSync(join(HERE, 'FEATURES.md'), 'utf8');
+const high = readFileSync(join(HERE, 'HIGHLIGHTS.md'), 'utf8');
+const scriptN = STATIC.length + BROWSER.length;
+const measure = (file) => (rows.find((r) => r.script === file) || { checks: NaN }).checks;
+const a11yOut = (rows.find((r) => r.script === 'a11y-check.mjs') || {}).out || '';
+const contrast = Number((a11yOut.match(/对比度 (\d+) 组/) || [])[1]);
+let docFails = 0, docN = 0;
+function docClaim(label, text, re, want) {
+  const m = text.match(re);
+  const got = m ? m.slice(1).map(Number) : [];
+  const pass = !!m && got.length === want.length && got.every((v, i) => v === want[i]);
+  docN++;
+  console.log(`  ${pass ? '✓' : '✗'} ${label}${pass ? '' : `：文档写 ${m ? got.join(' / ') : '（没匹配到）'}，实测 ${want.join(' / ')}`}`);
+  if (!pass) { totalFails++; docFails++; }
+}
+console.log('\nFEATURES / HIGHLIGHTS 的数字核对：');
+docClaim('FEATURES 亮点八：静态脚本数 + 断言数', feats,
+  /静态自检 (\d+) 个[^|]*\|\s*\*\*(\d+) 条断言\*\*/, [STATIC.length, staticTotal]);
+docClaim('HIGHLIGHTS 亮点⑥：「# N 个静态检查」', high, /# (\d+) 个静态检查/, [STATIC.length]);
+docClaim('HIGHLIGHTS 亮点⑥：「# 再跑 N 个真机检查」', high, /# 再跑 (\d+) 个真机检查/, [BROWSER.length]);
+docClaim('HIGHLIGHTS 亮点④：parity 断言数', high,
+  /`parity-check\.mjs` 把「翻译不同步」变成可自动判定的规则（(\d+) 条断言）/, [measure('parity-check.mjs')]);
+/* 每个脚本各多少条断言：写在 HIGHLIGHTS 亮点⑥ 的表格里（多一行「类型 | 断言数」） */
+for (const [file] of STATIC.concat(BROWSER)) {
+  const isBrowser = BROWSER.some((b) => b[0] === file);
+  if (isBrowser && !FULL) continue;
+  const docName = file === 'data/build.mjs' ? 'data/build.mjs --check' : file;
+  const re = new RegExp('^\\|\\s*`' + docName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '`\\s*\\|\\s*(?:静态|真机)\\s*\\|\\s*(\\d+)', 'm');
+  docClaim(`HIGHLIGHTS 脚本表 ${docName}`, high, re, [measure(file)]);
+}
+/* 对比度组数：a11y-check 打印的实测值，三份文档里提到一次就核一次
+   （「亮暗两档各 N 组」是按单档写的，要除以 2） */
+if (!contrast) { console.log('  ✗ 没能从 a11y-check.mjs 的输出里读到对比度组数'); totalFails++; }
+else for (const [doc, text] of [['README.md', readme], ['FEATURES.md', feats], ['HIGHLIGHTS.md', high]]) {
+  text.split('\n').forEach((line, i) => {
+    if (!/对比度|比值/.test(line)) return;
+    const each = line.match(/各 (\d+) 组/);
+    if (each) docClaim(`${doc}:${i + 1} 对比度组数（单档）`, line, /各 (\d+) 组/, [contrast / 2]);
+    else if (/\d+ 组/.test(line)) docClaim(`${doc}:${i + 1} 对比度组数`, line, /(\d+) 组/, [contrast]);
+  });
+}
+if (FULL) {
+  docClaim('FEATURES 数字一览：静态 + 真机断言', feats,
+    /^\|\s*\d+(?:\s*\|\s*\d+){5}\s*\|\s*(\d+) \+ (\d+)\s*\|/m, [staticTotal, browserTotal]);
+  docClaim('FEATURES 亮点八：真机脚本数 + 断言数 + 拆分', feats,
+    /真机自检 (\d+) 个[^|]*\|\s*\*\*(\d+) 条断言\*\*（(\d+) 条交互 \+ (\d+) 档视口）/,
+    [BROWSER.length, browserTotal, measure('smoke.mjs'), measure('audit.mjs')]);
+  docClaim('HIGHLIGHTS 摘要：脚本数 + 静态/真机断言', high,
+    /\*\*(\d+) 个自检脚本（静态 (\d+) \+ 真机 (\d+) 条断言）\*\*/, [scriptN, staticTotal, browserTotal]);
+  docClaim('HIGHLIGHTS 速览「自检」行', high,
+    /\*\*(\d+) 个脚本\*\*（(\d+) 静态 \+ (\d+) 真机）\/ \*\*静态 (\d+) 条断言\*\* \/ \*\*真机 (\d+) 条断言\*\*（(\d+) 条交互 \+ (\d+) 档视口）/,
+    [scriptN, STATIC.length, BROWSER.length, staticTotal, browserTotal, measure('smoke.mjs'), measure('audit.mjs')]);
+  docClaim('HIGHLIGHTS 亮点⑥：真机合计 = smoke + audit（每档一条）', high,
+    /真机断言合计 \*\*(\d+) 条\*\* = `smoke\.mjs` (\d+) \+ `audit\.mjs` (\d+)/,
+    [browserTotal, measure('smoke.mjs'), measure('audit.mjs')]);
+  docClaim('HIGHLIGHTS 速查：--full 真机断言', high,
+    /# 再加真机自检（(\d+) 条：(\d+) 交互 \+ (\d+) 档视口）/,
+    [browserTotal, measure('smoke.mjs'), measure('audit.mjs')]);
+} else {
+  console.log('  · 与真机断言相关的 8 处数字需 `--full` 才能核对（当前跳过；CI 的 nightly 任务会跑 --full）');
+}
+console.log(docFails ? `  ✗ 文档数字有 ${docFails} 处过期` : `  ✓ ${docN} 处文档数字与实测一致`);
 
 console.log(totalFails
   ? `\n✗ 有 ${totalFails} 项失败 —— 见上面各脚本的输出`

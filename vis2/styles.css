@@ -264,11 +264,49 @@ b, strong { font-weight: 800; }
 .card + .card { margin-top: var(--space-lg); }
 
 .card-caption {
+  display: flex;
+  flex-wrap: wrap;            /* 窄屏时徽章换到下一行，而不是把标题挤到两行以外 */
+  align-items: baseline;
+  gap: 4px 10px;
   margin-bottom: var(--space);
   font-size: 15px;
   font-weight: 800;
   color: var(--c-text);
 }
+.card-caption-text { min-width: 0; }
+
+/* ---------------- 口径徽章（provenance） ----------------
+   取值来自 data/manifest.json 的 provenance，规则见 data/README.md：
+   一枚徽章只回答「这批数据有多硬」，取该数据集里最弱的一环。
+   文字用 --c-text-soft 压 --c-surface-2（a11y-check 里已有同一对组合的断言），
+   左边圆点按口径取语义色，只做「图形」用（对比度按 3:1 卡）。 */
+.prov-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  color: var(--c-text-soft);
+  white-space: nowrap;
+  cursor: help;               /* title 里写着标注规则 */
+}
+.prov-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--prov-dot, var(--c-muted));
+}
+.prov-badge[data-prov="sourced"]   { --prov-dot: var(--c-success); }
+.prov-badge[data-prov="modeled"]   { --prov-dot: var(--c-info); }
+.prov-badge[data-prov="projected"] { --prov-dot: var(--c-warn); }
+
 .card-note,
 .card-source {
   margin-top: var(--space-sm);
@@ -1023,7 +1061,83 @@ b, strong { font-weight: 800; }
   .readbar { transition: none; }
 }
 
-/* ---------------- 打印 ---------------- */
+/* ---------------- 无 JS 兜底面板（只有禁用 JS 时才进 DOM） ---------------- */
+.noscript {
+  max-width: var(--maxw);
+  margin: 0 auto var(--space-lg);
+  padding: var(--space) var(--space-lg);
+  border: 1px solid var(--c-border-2);
+  border-left: 4px solid var(--c-accent);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  box-shadow: var(--shadow);
+}
+.noscript-title { font-size: 15px; font-weight: 800; color: var(--c-text); }
+.noscript-lead { margin-top: var(--space-sm); color: var(--c-text-soft); font-size: 13.5px; }
+.noscript-kpis { margin: var(--space-sm) 0 0; padding-left: 1.2em; font-size: 13.5px; color: var(--c-text); }
+.noscript-kpis li { margin-top: var(--space-xs); }
+.noscript-files {
+  display: flex; flex-wrap: wrap; gap: var(--space);
+  margin-top: var(--space-sm);
+  font-family: var(--font-mono); font-size: 12.5px;
+}
+.noscript-files a { color: var(--c-primary); }
+
+/* ---------------- 首屏动作区（复制当前视图链接） ---------------- */
+.hero-actions {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--space-sm) var(--space);
+  margin-top: var(--space);
+}
+.hero-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-primary);
+  font-family: inherit; font-size: 12.5px; font-weight: 800;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+.hero-btn:hover { border-color: var(--c-primary); background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent); }
+.hero-btn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.hero-status { color: var(--c-text-soft); font-size: 12.5px; font-weight: 700; }
+/* 剪贴板 API 不可用时（file://）用隐藏 textarea 走 execCommand 的退路：屏幕上看不见，但可选中 */
+.share-proxy { position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; }
+/* 复制失败时把链接印在状态区里，让用户还能手动选中 */
+.share-link {
+  display: inline-block;
+  max-width: 100%;
+  margin-left: 4px; padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* 第 13 节的「打包下载全部数据」 */
+.data-pack {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-sm);
+  margin-top: var(--space);
+  padding-top: var(--space);
+  border-top: 1px dashed var(--c-border-2);
+}
+.data-pack-status { color: var(--c-text-soft); font-size: 12.5px; font-weight: 700; }
+
+/* 图注里的一句提醒（弱口径 / 预测区间这类「口径自我声明」） */
+.viz-note { margin-top: var(--space-sm); color: var(--c-muted); font-size: 12.5px; }
+.viz-note b { color: var(--c-text-soft); }
+
+/* 图例里的「示意区间」色块：与虚线预测段同一层含义 */
+.viz-legend-swatch.is-band {
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--c-accent) 26%, transparent) 0 4px,
+    transparent 4px 8px) !important;
+  border: 1px dashed var(--c-accent);
+}
+
+
 @media print {
   .topbar, .to-top, .viz-toolbar, .skip-link { display: none !important; }
   .card, .kpi, .pillar, .force-card, .scene { box-shadow: none; break-inside: avoid; }

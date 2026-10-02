@@ -24,51 +24,68 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 这样「看起来像数字的字符串」（如行政区划代码 `110000`）不会被悄悄变成数字，单位与千分位也不会在往返中丢失。
 文案列一律成对出现：`xxx.zh` / `xxx.en`（页面按当前语言取其中一列），`selfcheck` 会核对两侧都在。
 
+## 口径标注（provenance）
+
+每张图表卡片上有一枚来源徽章，取值来自 `data/manifest.json` 里每个数据集的 `provenance`：
+
+| 取值 | 徽章 | 含义 |
+|---|---|---|
+| `sourced` | 公开统计 | 数值整理自公开报告，能在页面第 13 节的来源清单里对上 |
+| `modeled` | 测算整理 | 本页按公开资料测算 / 构造的指数与权重（示意口径） |
+| `projected` | 含预测 | 含未来年份的预测值（如 2025E / 2030E） |
+
+规则只有一条，**保守取最弱一环**：一个数据集里只要出现了测算值或预测值，这一组就按更弱的
+那一类标注（由强到弱：`sourced` > `modeled` > `projected`）。构建时 `data/build.mjs` 把
+每个数据集的口径汇总成 `AI_DATA.provenance`（顶层数据路径 → 口径），页面据此渲染徽章：
+`check.mjs` 静态断言取值合法、覆盖全部图表数据路径，`smoke.mjs` 真机核对每张图都有徽章。
+
 ## 数据集一览
 
-| 文件 | 数据路径（`AI_DATA` 里的位置） | 形态 | 行 × 列 | 说明 |
-|---|---|---|---|---|
-| `root.csv` | `(根对象)` | 单行对象 | 1 × 22 | 调色板键名：charts.js 按这些键去 tokens.css 取当前主题下的真实色值（改配色只需改 tokens.css） |
-| `kpis.csv` | `kpis` | 记录表 | 4 × 8 | 第 1 节四个数字：核心产业规模 / 2030 全球 GDP 增量 / 中国份额 / 算力年均增速 |
-| `radar.csv` | `radar` | 单行对象 | 1 × 6 | 第 3 节雷达图：图题、口径说明与来源 |
-| `radar-axes.csv` | `radar.axes` | 双语对照 | 6 × 2 | 第 3 节雷达图六个能力维度 |
-| `radar-series.csv` | `radar.series` | 记录表 | 2 × 3 | 第 3 节雷达图两条系列（传统生产力 / AI 赋能）的 0–100 指数 |
-| `forces.csv` | `forces` | 记录表 | 5 × 12 | 第 3 节五股作用力卡片：图标 / 名称 / 解释 / 一个可验证的数字 / 标签 |
-| `scale.csv` | `scale` | 单行对象 | 1 × 12 | 第 4 节产业规模折线图：图题、单位、两条曲线名与口径 |
-| `scale-series.csv` | `scale.series` | 记录表 | 7 × 3 | 第 4 节核心产业规模 2019–2025E（2025 为预测） |
-| `scale-related.csv` | `scale.related` | 记录表 | 7 × 3 | 第 4 节带动相关产业规模 2019–2025E（2025 为预测） |
-| `industry.csv` | `industry` | 单行对象 | 1 × 12 | 第 5 节三次产业赋能条形图：图题与两个指标名 / 口径 |
-| `industry-rows.csv` | `industry.rows` | 记录表 | 3 × 8 | 第 5 节三次产业（三产 / 二产 / 一产）的渗透率、效率增益、占 GDP 比重 |
-| `bubble.csv` | `bubble` | 单行对象 | 1 × 12 | 第 5 节气泡矩阵：坐标轴含义、象限名与来源 |
-| `bubble-quadrants.csv` | `bubble.quadrants` | 双语对照 | 4 × 2 | 第 5 节气泡矩阵四个象限的名称 |
-| `bubble-points.csv` | `bubble.points` | 记录表 | 15 × 7 | 第 5 节 15 个行业：渗透率 / 效率增益 / 市场规模与所属产业（跨图联动靠 id 匹配） |
-| `heatmap.csv` | `heatmap` | 单行对象 | 1 × 12 | 第 5 节热力矩阵：图题、图例与「列内归一化」说明 |
-| `heatmap-metrics.csv` | `heatmap.metrics` | 记录表 | 5 × 8 | 第 5 节热力矩阵 5 列指标（渗透率 / 效率增益 / 市场规模 / 五年增速 / 人才密度） |
-| `heatmap-rows.csv` | `heatmap.rows` | 记录表 | 15 × 8 | 第 5 节 15 行业 × 5 指标原始值（前三列与气泡矩阵同源） |
-| `multiples.csv` | `multiples` | 单行对象 | 1 × 10 | 第 5 节小倍数图：图题与两条序列名 |
-| `multiples-series.csv` | `multiples.series` | 记录表 | 3 × 6 | 第 5 节三次产业 2019–2025E 渗透率与效率增益（2024 端点与 industry.rows 一致，由 check.mjs 断言） |
-| `globalRank.csv` | `globalRank` | 单行对象 | 1 × 8 | 第 7 节全球格局排名：图题、指数口径与来源 |
-| `globalRank-rows.csv` | `globalRank.rows` | 记录表 | 12 × 4 | 第 7 节 12 个经济体的 AI 发展指数（按数值降序） |
-| `province.csv` | `province` | 单行对象 | 1 × 12 | 第 6 节区域格局地图：图题、五档分位说明、前五名与南海诸岛标注文案 |
-| `province-metrics.csv` | `province.metrics` | 记录表 | 2 × 6 | 第 6 节地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径） |
-| `province-rows.csv` | `province.rows` | 记录表 | 34 × 5 | 第 6 节 34 个省级单元的算力与企业数量（id 与 map-china.js 的几何 id 双向对齐） |
-| `flow.csv` | `flow` | 单行对象 | 1 × 6 | 第 8 节要素重构流向图：图题与分组名 |
-| `flow-columns.csv` | `flow.columns` | 双语对照 | 3 × 2 | 第 8 节流向图三个纵向分栏（投入 / 要素 / 产出） |
-| `flow-nodes.csv` | `flow.nodes` | 记录表 | 10 × 6 | 第 8 节流向图 10 个节点：名称、宽度（权重）与一句话说明 |
-| `flow-links.csv` | `flow.links` | 记录表 | 16 × 3 | 第 8 节流向图 16 条流量关系（源 → 目标，带宽即权重） |
-| `graph.csv` | `graph` | 单行对象 | 1 × 4 | 第 9 节关系图谱：图题与「分组 / 关系」两套图例 |
-| `graph-groups.csv` | `graph.groups` | 记录表 | 6 × 4 | 第 9 节图谱 6 个分组（算力 / 算法 / 数据 / 要素 / 效应 / 政策 / 应用） |
-| `graph-relations.csv` | `graph.relations` | 记录表 | 5 × 3 | 第 9 节图谱 5 种语义关系（支撑 / 组成 / 赋能 / 驱动 / 引导） |
-| `graph-nodes.csv` | `graph.nodes` | 记录表 | 21 × 7 | 第 9 节图谱 21 个节点：分组、半径、名称与说明 |
-| `graph-links.csv` | `graph.links` | 记录表 | 36 × 3 | 第 9 节图谱 36 条关系（源 / 目标 / 关系类型） |
-| `sim.csv` | `sim` | 单行对象 | 1 × 9 | 第 10 节模拟器：图题、综合指数名与模型说明 |
-| `sim-sliders.csv` | `sim.sliders` | 记录表 | 4 × 7 | 第 10 节四个旋钮（渗透率 / 数据要素 / 人才 / 研发）与默认值、单位、提示语 |
-| `sim-presets.csv` | `sim.presets` | 记录表 | 3 × 7 | 第 10 节三套预设（当前基线 / 制造强国 / 全面智能化） |
-| `sim-outputs.csv` | `sim.outputs` | 记录表 | 5 × 10 | 第 10 节五项输出（全要素生产率 / GDP / 成本 / 能耗 / 岗位）与量程、单位、颜色 |
-| `sim-sensitivity.csv` | `sim.sensitivity` | 单行对象 | 1 × 39 | 第 10 节龙卷风图与蒙特卡洛的文案与参数（±15% 扰动、500 次抽样、固定随机种子） |
-| `sources.csv` | `sources` | 记录表 | 12 × 4 | 第 13 节数据来源 12 条（名称 + 对应口径） |
-| `overview.csv` | `overview` | 记录表 | 11 × 6 | 第 0 节阅读地图 11 张跳转卡片（图标 / 名称 / 说明 / 锚点） |
-| `sim-model.js` | `sim.model` | 函数片段 | — | 模拟器模型（函数，无法进 CSV） |
+| 文件 | 数据路径（`AI_DATA` 里的位置） | 形态 | 行 × 列 | 口径 | 说明 |
+|---|---|---|---|---|---|
+| `root.csv` | `(根对象)` | 单行对象 | 1 × 22 | paletteKeys = 测算整理、paletteBase = 测算整理、paletteAccent = 测算整理、define = 测算整理、timeline = 公开统计、scenes = 测算整理 | 调色板键名：charts.js 按这些键去 tokens.css 取当前主题下的真实色值（改配色只需改 tokens.css） |
+| `kpis.csv` | `kpis` | 记录表 | 4 × 8 | 含预测 | 第 1 节四个数字：核心产业规模 / 2030 全球 GDP 增量 / 中国份额 / 算力年均增速 |
+| `radar.csv` | `radar` | 单行对象 | 1 × 6 | 测算整理 | 第 3 节雷达图：图题、口径说明与来源 |
+| `radar-axes.csv` | `radar.axes` | 双语对照 | 6 × 2 | 测算整理 | 第 3 节雷达图六个能力维度 |
+| `radar-series.csv` | `radar.series` | 记录表 | 2 × 3 | 测算整理 | 第 3 节雷达图两条系列（传统生产力 / AI 赋能）的 0–100 指数 |
+| `forces.csv` | `forces` | 记录表 | 5 × 12 | 测算整理 | 第 3 节五股作用力卡片：图标 / 名称 / 解释 / 一个可验证的数字 / 标签 |
+| `scale.csv` | `scale` | 单行对象 | 1 × 12 | 含预测 | 第 4 节产业规模折线图：图题、单位、两条曲线名与口径 |
+| `scale-series.csv` | `scale.series` | 记录表 | 7 × 3 | 含预测 | 第 4 节核心产业规模 2019–2025E（2025 为预测） |
+| `scale-related.csv` | `scale.related` | 记录表 | 7 × 3 | 含预测 | 第 4 节带动相关产业规模 2019–2025E（2025 为预测） |
+| `industry.csv` | `industry` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节三次产业赋能条形图：图题与两个指标名 / 口径 |
+| `industry-rows.csv` | `industry.rows` | 记录表 | 3 × 8 | 测算整理 | 第 5 节三次产业（三产 / 二产 / 一产）的渗透率、效率增益、占 GDP 比重 |
+| `bubble.csv` | `bubble` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节气泡矩阵：坐标轴含义、象限名与来源 |
+| `bubble-quadrants.csv` | `bubble.quadrants` | 双语对照 | 4 × 2 | 测算整理 | 第 5 节气泡矩阵四个象限的名称 |
+| `bubble-points.csv` | `bubble.points` | 记录表 | 15 × 7 | 测算整理 | 第 5 节 15 个行业：渗透率 / 效率增益 / 市场规模与所属产业（跨图联动靠 id 匹配） |
+| `heatmap.csv` | `heatmap` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节热力矩阵：图题、图例与「列内归一化」说明 |
+| `heatmap-metrics.csv` | `heatmap.metrics` | 记录表 | 5 × 8 | 测算整理 | 第 5 节热力矩阵 5 列指标（渗透率 / 效率增益 / 市场规模 / 五年增速 / 人才密度） |
+| `heatmap-rows.csv` | `heatmap.rows` | 记录表 | 15 × 8 | 测算整理 | 第 5 节 15 行业 × 5 指标原始值（前三列与气泡矩阵同源） |
+| `multiples.csv` | `multiples` | 单行对象 | 1 × 10 | 含预测 | 第 5 节小倍数图：图题与两条序列名 |
+| `multiples-series.csv` | `multiples.series` | 记录表 | 3 × 6 | 含预测 | 第 5 节三次产业 2019–2025E 渗透率与效率增益（2024 端点与 industry.rows 一致，由 check.mjs 断言） |
+| `globalRank.csv` | `globalRank` | 单行对象 | 1 × 8 | 公开统计 | 第 7 节全球格局排名：图题、指数口径与来源 |
+| `globalRank-rows.csv` | `globalRank.rows` | 记录表 | 12 × 4 | 公开统计 | 第 7 节 12 个经济体的 AI 发展指数（按数值降序） |
+| `province.csv` | `province` | 单行对象 | 1 × 12 | 测算整理 | 第 6 节区域格局地图：图题、五档分位说明、前五名与南海诸岛标注文案 |
+| `province-metrics.csv` | `province.metrics` | 记录表 | 2 × 6 | 测算整理 | 第 6 节地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径） |
+| `province-rows.csv` | `province.rows` | 记录表 | 34 × 5 | 测算整理 | 第 6 节 34 个省级单元的算力与企业数量（id 与 map-china.js 的几何 id 双向对齐） |
+| `flow.csv` | `flow` | 单行对象 | 1 × 6 | 测算整理 | 第 8 节要素重构流向图：图题与分组名 |
+| `flow-columns.csv` | `flow.columns` | 双语对照 | 3 × 2 | 测算整理 | 第 8 节流向图三个纵向分栏（投入 / 要素 / 产出） |
+| `flow-nodes.csv` | `flow.nodes` | 记录表 | 10 × 6 | 测算整理 | 第 8 节流向图 10 个节点：名称、宽度（权重）与一句话说明 |
+| `flow-links.csv` | `flow.links` | 记录表 | 16 × 3 | 测算整理 | 第 8 节流向图 16 条流量关系（源 → 目标，带宽即权重） |
+| `graph.csv` | `graph` | 单行对象 | 1 × 4 | 测算整理 | 第 9 节关系图谱：图题与「分组 / 关系」两套图例 |
+| `graph-groups.csv` | `graph.groups` | 记录表 | 6 × 4 | 测算整理 | 第 9 节图谱 6 个分组（算力 / 算法 / 数据 / 要素 / 效应 / 政策 / 应用） |
+| `graph-relations.csv` | `graph.relations` | 记录表 | 5 × 3 | 测算整理 | 第 9 节图谱 5 种语义关系（支撑 / 组成 / 赋能 / 驱动 / 引导） |
+| `graph-nodes.csv` | `graph.nodes` | 记录表 | 21 × 7 | 测算整理 | 第 9 节图谱 21 个节点：分组、半径、名称与说明 |
+| `graph-links.csv` | `graph.links` | 记录表 | 36 × 3 | 测算整理 | 第 9 节图谱 36 条关系（源 / 目标 / 关系类型） |
+| `sim.csv` | `sim` | 单行对象 | 1 × 9 | 测算整理 | 第 10 节模拟器：图题、综合指数名与模型说明 |
+| `sim-sliders.csv` | `sim.sliders` | 记录表 | 4 × 7 | 测算整理 | 第 10 节四个旋钮（渗透率 / 数据要素 / 人才 / 研发）与默认值、单位、提示语 |
+| `sim-presets.csv` | `sim.presets` | 记录表 | 3 × 7 | 测算整理 | 第 10 节三套预设（当前基线 / 制造强国 / 全面智能化） |
+| `sim-outputs.csv` | `sim.outputs` | 记录表 | 5 × 10 | 测算整理 | 第 10 节五项输出（全要素生产率 / GDP / 成本 / 能耗 / 岗位）与量程、单位、颜色 |
+| `sim-sensitivity.csv` | `sim.sensitivity` | 单行对象 | 1 × 39 | 测算整理 | 第 10 节龙卷风图与蒙特卡洛的文案与参数（±15% 扰动、500 次抽样、固定随机种子） |
+| `sources.csv` | `sources` | 记录表 | 12 × 4 | 公开统计 | 第 13 节数据来源 12 条（名称 + 对应口径） |
+| `overview.csv` | `overview` | 记录表 | 11 × 6 | 测算整理 | 第 0 节阅读地图 11 张跳转卡片（图标 / 名称 / 说明 / 锚点） |
+| `sim-model.js` | `sim.model` | 函数片段 | — | — | 模拟器模型（函数，无法进 CSV） |
+
+> 口径是**人写的数据**：`--extract` 重新索引时与 `note` 一样会被保留，新数据集默认 `modeled`（最保守）。
 
 ## 各数据集字段
 

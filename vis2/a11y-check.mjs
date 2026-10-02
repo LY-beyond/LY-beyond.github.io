@@ -120,7 +120,7 @@ const PAIRS = [
   { what: '正文 / 卡片', fg: 'var(--c-text)', bg: 'var(--c-surface)', min: 4.5, where: '卡片、提示气泡' },
   { what: '正文 / 次级面板', fg: 'var(--c-text)', bg: 'var(--c-surface-2)', min: 4.5, where: '对比表头、次级底色' },
   { what: '次级正文 / 卡片', fg: 'var(--c-text-soft)', bg: 'var(--c-surface)', min: 4.5, where: '气泡行、单位说明（12.5px）' },
-  { what: '次级正文 / 次级面板', fg: 'var(--c-text-soft)', bg: 'var(--c-surface-2)', min: 4.5, where: '次级底色上的行内说明' },
+  { what: '次级正文 / 次级面板', fg: 'var(--c-text-soft)', bg: 'var(--c-surface-2)', min: 4.5, where: '次级底色上的行内说明 / 口径徽章（.prov-badge，11.5px）' },
   { what: '说明文字 / 卡片', fg: 'var(--c-muted)', bg: 'var(--c-surface)', min: 4.5, where: '.card-note / .viz-hint（11.5–12.5px）' },
   { what: '说明文字 / 次级面板', fg: 'var(--c-muted)', bg: 'var(--c-surface-2)', min: 4.5, where: '.cmp thead th（12px）' },
   { what: '说明文字 / 页面底', fg: 'var(--c-muted)', bg: 'var(--c-bg)', min: 4.5, where: '.hero-hint（13px）、页脚' },
@@ -142,7 +142,12 @@ const PAIRS = [
   { what: '数据底色 / 轨道', fg: 'var(--s-base)', bg: 'var(--c-surface-2)', min: 1.9, where: '条形 / 面积填充（靠标签读数，基线 1.9:1）' },
   { what: '数据底色 / 轨道（备用色）', fg: 'var(--s-base-alt)', bg: 'var(--c-surface-2)', min: 1.9, where: '第二系列填充' },
   { what: '数据底色 / 轨道（中性）', fg: 'var(--s-base-warm)', bg: 'var(--c-surface-2)', min: 1.9, where: '第三系列填充' },
-  { what: '正文压在数据底色上', fg: 'var(--c-text)', bg: 'var(--s-base)', min: 4.5, where: '条形内的数值标签' }
+  { what: '正文压在数据底色上', fg: 'var(--c-text)', bg: 'var(--s-base)', min: 4.5, where: '条形内的数值标签' },
+  /* 口径徽章左边的圆点：它承载「这批数据有多硬」，不是纯装饰，
+     所以按 WCAG 1.4.11「非文字对比度」卡 3:1（背景是徽章自己的次级底色） */
+  { what: '口径圆点 / 徽章底', fg: 'var(--c-success)', bg: 'var(--c-surface-2)', min: 3, where: '.prov-badge[data-prov="sourced"]::before（非文字）' },
+  { what: '口径圆点 / 徽章底', fg: 'var(--c-info)', bg: 'var(--c-surface-2)', min: 3, where: '.prov-badge[data-prov="modeled"]::before（非文字）' },
+  { what: '口径圆点 / 徽章底', fg: 'var(--c-warn)', bg: 'var(--c-surface-2)', min: 3, where: '.prov-badge[data-prov="projected"]::before（非文字）' }
 ];
 
 const rows = [];
@@ -261,6 +266,15 @@ for (const m of html.matchAll(/tabindex="(-?\d+)"/g)) {
 }
 /* 图形内可点的地方必须有键盘等价物：下拉选择器 + 数据表 */
 ok(/'select'/.test(app), 'app.js: 行业联动的键盘等价物（<select>）不见了 —— 只靠点气泡，键盘与读屏用户无法筛选');
+/* 时间线的键盘路径（P3）：10 个节点共用**一个** Tab 停点（容器上的 tabindex），
+   方向键在 charts.js 的焦点环之间移动，当前节点由 role="status" 播报。
+   注意这里查的是「有没有这条路」，真机按键由 smoke.mjs 走一遍。 */
+ok(/host\.setAttribute\('tabindex',\s*'0'\)/.test(app),
+  'app.js: 时间线容器应设 tabindex="0" —— 否则整条时间线只有鼠标能看（10 个节点各挂一个 tabindex 是更糟的做法，见 README）');
+ok(/aria-describedby',\s*hintId/.test(app) && /timeline\.keys/.test(app),
+  'app.js: 时间线要有一条「方向键怎么用」的提示，并用 aria-describedby 挂到容器上（没人知道的功能等于没有）');
+ok(/role',\s*'status'/.test(app) && /timeline\.node/.test(app),
+  'app.js: 时间线节点切换要有 role="status" 播报（用词表的 timeline.node），图形在 aria-hidden 里读屏读不到');
 
 
 /* ⑦ 每张图：容器可及名 + 数据表等价物 + 内部 SVG 隐藏 */

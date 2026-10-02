@@ -1,10 +1,18 @@
 {
-  "note": "本文件由 node data/build.mjs --extract 生成：数据集索引（文件 ↔ 数据路径 ↔ 列与类型）。手写的 note 会被保留。",
+  "note": "本文件由 node data/build.mjs --extract 生成：数据集索引（文件 ↔ 数据路径 ↔ 列与类型 ↔ 口径标注 provenance）。手写的 note 与 provenance 会被保留；新数据集默认 modeled（最保守）。",
   "datasets": [
     {
       "file": "root.csv",
       "path": "",
       "kind": "object",
+      "provenance": {
+        "paletteKeys": "modeled",
+        "paletteBase": "modeled",
+        "paletteAccent": "modeled",
+        "define": "modeled",
+        "timeline": "sourced",
+        "scenes": "modeled"
+      },
       "rows": 1,
       "columns": [
         {
@@ -124,6 +132,7 @@
       "file": "kpis.csv",
       "path": "kpis",
       "kind": "array",
+      "provenance": "projected",
       "rows": 4,
       "columns": [
         {
@@ -173,6 +182,7 @@
       "file": "radar.csv",
       "path": "radar",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -212,6 +222,7 @@
       "file": "radar-axes.csv",
       "path": "radar.axes",
       "kind": "pairs",
+      "provenance": "modeled",
       "rows": 6,
       "columns": [
         {
@@ -231,6 +242,7 @@
       "file": "radar-series.csv",
       "path": "radar.series",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 2,
       "columns": [
         {
@@ -255,6 +267,7 @@
       "file": "forces.csv",
       "path": "forces",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 5,
       "columns": [
         {
@@ -324,6 +337,7 @@
       "file": "scale.csv",
       "path": "scale",
       "kind": "object",
+      "provenance": "projected",
       "rows": 1,
       "columns": [
         {
@@ -393,6 +407,7 @@
       "file": "scale-series.csv",
       "path": "scale.series",
       "kind": "array",
+      "provenance": "projected",
       "rows": 7,
       "columns": [
         {
@@ -417,6 +432,7 @@
       "file": "scale-related.csv",
       "path": "scale.related",
       "kind": "array",
+      "provenance": "projected",
       "rows": 7,
       "columns": [
         {
@@ -441,6 +457,7 @@
       "file": "industry.csv",
       "path": "industry",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -510,6 +527,7 @@
       "file": "industry-rows.csv",
       "path": "industry.rows",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 3,
       "columns": [
         {
@@ -559,6 +577,7 @@
       "file": "bubble.csv",
       "path": "bubble",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -628,6 +647,7 @@
       "file": "bubble-quadrants.csv",
       "path": "bubble.quadrants",
       "kind": "pairs",
+      "provenance": "modeled",
       "rows": 4,
       "columns": [
         {
@@ -647,6 +667,7 @@
       "file": "bubble-points.csv",
       "path": "bubble.points",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 15,
       "columns": [
         {
@@ -691,6 +712,7 @@
       "file": "heatmap.csv",
       "path": "heatmap",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -760,6 +782,7 @@
       "file": "heatmap-metrics.csv",
       "path": "heatmap.metrics",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 5,
       "columns": [
         {
@@ -809,6 +832,7 @@
       "file": "heatmap-rows.csv",
       "path": "heatmap.rows",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 15,
       "columns": [
         {
@@ -858,6 +882,7 @@
       "file": "multiples.csv",
       "path": "multiples",
       "kind": "object",
+      "provenance": "projected",
       "rows": 1,
       "columns": [
         {
@@ -917,6 +942,7 @@
       "file": "multiples-series.csv",
       "path": "multiples.series",
       "kind": "array",
+      "provenance": "projected",
       "rows": 3,
       "columns": [
         {
@@ -956,6 +982,7 @@
       "file": "globalRank.csv",
       "path": "globalRank",
       "kind": "object",
+      "provenance": "sourced",
       "rows": 1,
       "columns": [
         {
@@ -1005,6 +1032,7 @@
       "file": "globalRank-rows.csv",
       "path": "globalRank.rows",
       "kind": "array",
+      "provenance": "sourced",
       "rows": 12,
       "columns": [
         {
@@ -1034,6 +1062,7 @@
       "file": "province.csv",
       "path": "province",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -1103,6 +1132,7 @@
       "file": "province-metrics.csv",
       "path": "province.metrics",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 2,
       "columns": [
         {
@@ -1142,6 +1172,7 @@
       "file": "province-rows.csv",
       "path": "province.rows",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 34,
       "columns": [
         {
@@ -1176,6 +1207,7 @@
       "file": "flow.csv",
       "path": "flow",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -1215,6 +1247,7 @@
       "file": "flow-columns.csv",
       "path": "flow.columns",
       "kind": "pairs",
+      "provenance": "modeled",
       "rows": 3,
       "columns": [
         {
@@ -1234,6 +1267,7 @@
       "file": "flow-nodes.csv",
       "path": "flow.nodes",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 10,
       "columns": [
         {
@@ -1273,6 +1307,7 @@
       "file": "flow-links.csv",
       "path": "flow.links",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 16,
       "columns": [
         {
@@ -1297,6 +1332,7 @@
       "file": "graph.csv",
       "path": "graph",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -1326,6 +1362,7 @@
       "file": "graph-groups.csv",
       "path": "graph.groups",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 6,
       "columns": [
         {
@@ -1355,6 +1392,7 @@
       "file": "graph-relations.csv",
       "path": "graph.relations",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 5,
       "columns": [
         {
@@ -1379,6 +1417,7 @@
       "file": "graph-nodes.csv",
       "path": "graph.nodes",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 21,
       "columns": [
         {
@@ -1423,6 +1462,7 @@
       "file": "graph-links.csv",
       "path": "graph.links",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 36,
       "columns": [
         {
@@ -1447,6 +1487,7 @@
       "file": "sim.csv",
       "path": "sim",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -1501,6 +1542,7 @@
       "file": "sim-sliders.csv",
       "path": "sim.sliders",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 4,
       "columns": [
         {
@@ -1545,6 +1587,7 @@
       "file": "sim-presets.csv",
       "path": "sim.presets",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 3,
       "columns": [
         {
@@ -1589,6 +1632,7 @@
       "file": "sim-outputs.csv",
       "path": "sim.outputs",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 5,
       "columns": [
         {
@@ -1648,6 +1692,7 @@
       "file": "sim-sensitivity.csv",
       "path": "sim.sensitivity",
       "kind": "object",
+      "provenance": "modeled",
       "rows": 1,
       "columns": [
         {
@@ -1852,6 +1897,7 @@
       "file": "sources.csv",
       "path": "sources",
       "kind": "array",
+      "provenance": "sourced",
       "rows": 12,
       "columns": [
         {
@@ -1881,6 +1927,7 @@
       "file": "overview.csv",
       "path": "overview",
       "kind": "array",
+      "provenance": "modeled",
       "rows": 11,
       "columns": [
         {
