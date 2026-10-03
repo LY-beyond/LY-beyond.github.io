@@ -28,7 +28,7 @@
 | 01 | 先看四个数字 | 核心产业规模 / 2030 全球 GDP 增量 / 中国份额 / 算力规模年均增速 | KPI 数字卡（数字滚动计数） |
 | 02 | 内涵：三要素升级 | 劳动者 · 劳动资料 · 劳动对象 各被 AI 改一遍 | 3 张「升级前后 + 进度条」卡片 + 5 行对比表 |
 | 03 | 作用力 | 效率、创新、协同、绿色、普惠、质量 六维对比 + 五股作用力 | **雷达图**（传统 vs AI 赋能双系列）+ 5 张力量卡片 |
-| 04 | 产业规模 | 2019–2025E 核心产业与带动产业 | **双曲线折线图**（悬停读数、面积渐变、预测段虚线） |
+| 04 | 产业规模 | 2019–2028E 核心产业与带动产业 | **双曲线折线图**（悬停读数、面积渐变、预测段虚线 + 95% 预测区间） |
 | 05 | 行业赋能 | 三次产业的渗透率与效率增益；15 个行业的渗透率 × 效率增益 × 市场规模；15 行业 × 5 指标；三次产业七年轨迹 | **双组条形图** + **气泡矩阵图** + **热力矩阵** + **小倍数图** |
 | 06 | 区域格局 | 34 个省级单元的智能算力规模与 AI 企业数量 | **分级填色地图**（choropleth，含南海诸岛插图 + 前五名高亮） |
 | 07 | 全球格局 | 12 个经济体的 AI 发展指数 | **横向条形排名图**（悬停高亮 + 数值） |
@@ -60,7 +60,7 @@ vis2/
 ├── vendor/             # d3 的 5 个必要子模块，共约 30 KB（见下表）
 │
 ├── data/               # 📊 数据源与数据链路（不参与页面加载）
-│   ├── *.csv           #    40 个数据集（带类型化表头，Excel 可开，一行一个记录）
+│   ├── *.csv           #    41 个数据集（带类型化表头，Excel 可开，一行一个记录）
 │   ├── build.mjs       #    构建：CSV → ../data.js（另有 --check / --docs / --extract / --verify）
 │   ├── sim-model.js    #    模拟器模型函数（函数进不了 CSV，构建时原样内联）
 │   ├── manifest.json   #    数据集索引（文件 ↔ 数据路径 ↔ 列与类型 ↔ 中文说明）
@@ -105,7 +105,7 @@ vis2/
 - **运行时零构建、零依赖**：没有 npm、没有打包器，`index.html` 直接引用相对路径的 `.js` / `.css`；
   唯一的「构建」发生在**开发期的数据侧**（`data/*.csv` → `data.js`），产物就是一个普通静态文件，浏览器不需要任何工具链。
   脚本加载顺序：`d3-dispatch → d3-selection → d3-quadtree → d3-timer → d3-force → i18n → data → map-china → charts → app`。
-- **数据与呈现分离，数据本身也是构建产物**：`data/*.csv`（40 个数据集、带类型化表头、可 diff）→ `node data/build.mjs` → `data.js`；
+- **数据与呈现分离，数据本身也是构建产物**：`data/*.csv`（41 个数据集、带类型化表头、可 diff）→ `node data/build.mjs` → `data.js`；
   `charts.js` 只画图，`app.js` 只做「取数据 → 选容器 → 画图 → 挂交互」。改数字不用碰渲染代码，改渲染不用碰数据，
   而且「手改 `data.js` 忘了同步 CSV」会被 `node data/build.mjs --check` 直接拦下（`selfcheck.mjs` 已包含这一步）。
 - **颜色一律从令牌取**：`charts.js` 通过 `getComputedStyle` 读 `tokens.css` 的 `--c-* / --d1..--d6`，
@@ -245,13 +245,13 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 | 章节 | 14 | 00 阅读地图 → 13 关于（`index.html` 里 `<section class="section" id=…>` 计数） |
 | 图表 | 14 | 13 张自绘 SVG 图表 + 1 台模拟器（`chart-*` 与 `sim-root` 容器计数；模拟器内部还有 6 个环形仪表，整页共 19 个 SVG） |
 | 自检脚本 | 8 | 6 静态 + 2 真机（另有数据构建脚本 `data/build.mjs`） |
-| 静态断言 | 2524 | `node selfcheck.mjs` 汇总：结构 561 / 跳转 47 / 中英对齐 1491 / 对比度与 ARIA 217 / 体积与文档 168 / 数据链路 40 |
-| 真机断言 | 157 | 交互断言 146 条（`smoke.mjs`）+ 11 档视口布局记录（`audit.mjs` 每档一条） |
+| 静态断言 | 2533 | `node selfcheck.mjs` 汇总：结构 569 / 跳转 47 / 中英对齐 1491 / 对比度与 ARIA 217 / 体积与文档 168 / 数据链路 41 |
+| 真机断言 | 163 | 交互断言 152 条（`smoke.mjs`）+ 11 档视口布局记录（`audit.mjs` 每档一条） |
 | i18n 词条 | 114 | `i18n.js` 里 zh / en 两表键数（`parity-check.mjs` 断言两表一致） |
 | 双语文案 | 451 | `data.js` 里 `{ zh, en }` 叶子数（两侧都非空、英文无中文） |
-| 数据记录 | 306 | `data.js` 里各数组元素总数（40 个 CSV 数据集 / 269 行数据表） |
+| 数据记录 | 309 | `data.js` 里各数组元素总数（41 个 CSV 数据集 / 272 行数据表） |
 | 覆盖视口 | 11 | `audit.mjs` 的 360 → 1440px（含 414 / 600 / 768 / 820 / 900 / 1024 / 1100 / 1180 / 1280 / 1440） |
-| 站点体积 | 132 | 页面实际请求的 17 个文件，gzip 第 9 级合计（磁盘 407 KB） |
+| 站点体积 | 135 | 页面实际请求的 17 个文件，gzip 第 9 级合计（磁盘 415 KB） |
 
 > `budget-check.mjs` 核对上表里的 8 个数字（章节 / 图表 / 自检脚本 / i18n 词条 / 双语文案 / 站点体积 / 覆盖视口 / 数据记录），
 > `selfcheck.mjs` 核对「静态断言」；「真机断言」在 `--full` 时核对。
@@ -317,10 +317,10 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 - GitHub Pages：仓库 `main` 分支根目录发布，访问 `https://ly-beyond.github.io/vis2/`；
 - **应急手动部署**：Netlify Drop 拖拽 `vis2` 文件夹，或 `npx netlify-cli deploy --prod --dir=vis2`。
 
-站点体积很小：**页面只请求 17 个文件 / 磁盘 407 KB / gzip 后 132 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
-抽稀后的省级边界 `map-china.js` 28 KB，生成的 `data.js` 62 KB；其余为页面代码与样式）。
-部署目录里另有**不参与页面加载**的东西：8 个自检脚本（190 KB）、`data/` 数据源与构建脚本（148 KB）、
-`README.md` / `HIGHLIGHTS.md` / `FEATURES.md` / `DEPLOY-NETLIFY.md` 等文档（88 KB），整个目录 73 个文件 / 833 KB。
+站点体积很小：**页面只请求 17 个文件 / 磁盘 415 KB / gzip 后 135 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
+抽稀后的省级边界 `map-china.js` 28 KB，生成的 `data.js` 63 KB；其余为页面代码与样式）。
+部署目录里另有**不参与页面加载**的东西：8 个自检脚本（198 KB）、`data/` 数据源与构建脚本（154 KB）、
+`README.md` / `HIGHLIGHTS.md` / `FEATURES.md` / `DEPLOY-NETLIFY.md` 等文档（88 KB），整个目录 74 个文件 / 854 KB。
 
 
 ---
@@ -330,9 +330,9 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 页面上每一个数字、每一句文案都来自 `data/` 下的 CSV —— 它不是手写进 `data.js` 的：
 
 ```text
-data/*.csv         40 个数据集 / 269 行，带类型化表头（列名:text|number|boolean|json），UTF-8 带 BOM，Excel 直接能开
+data/*.csv         41 个数据集 / 272 行，带类型化表头（列名:text|number|boolean|json），UTF-8 带 BOM，Excel 直接能开
 data/sim-model.js  模拟器的模型函数（函数进不了 CSV，构建时原样内联）
-        │  node data/build.mjs              ← 生成（40 个数据集 → 62 KB 的 data.js）
+        │  node data/build.mjs              ← 生成（41 个数据集 → 63 KB 的 data.js）
         ▼
 data.js            页面加载的数据模块（构建产物，顶部写着「请勿手改」）
         ▲  node data/build.mjs --extract    ← 反向：把手改同步回 CSV
@@ -344,6 +344,7 @@ data.js            页面加载的数据模块（构建产物，顶部写着「�
 | 看每个 CSV 有哪些列、什么类型、对应页面哪一节 | [**data/README.md（数据字典）**](data/README.md) —— 由 `node data/build.mjs --docs` 生成 |
 | 看每张卡片的**口径徽章**从哪来 | 同一份 `data/manifest.json` 的 `provenance` 字段（公开统计 / 测算整理 / 含预测），规则见 [data/README.md](data/README.md)「口径标注」 |
 | 改模拟器公式 | 改 `data/sim-model.js`（模拟器 / 龙卷风图 / 蒙特卡洛共用它）→ 重新构建 |
+| 改产业规模的**外推 / 预测区间** | 改 `data/scale-series.csv`、`scale-related.csv` 的 2019–2024 实际值 → `node data/build.mjs --forecast`（重跑线性回归 + 95% 预测区间）→ `node data/build.mjs` → `node selfcheck.mjs`（不放回外推会红） |
 | 确认没人偷改 `data.js` | `node data/build.mjs --check`：断言「仓库里的 data.js 就是这些 CSV 生成的」 |
 | 重构数据结构后确认没丢东西 | `node data/build.mjs --verify <另一个 data.js>` 逐字段比对（含模型在 3 组输入下的输出） |
 
@@ -373,5 +374,5 @@ data.js            页面加载的数据模块（构建产物，顶部写着「�
 | **README.md**（本文） | 使用、文件结构、数据链路、自检清单与复杂度清单 |
 | [HIGHLIGHTS.md](./HIGHLIGHTS.md) | 技术亮点：数据链路、四张硬图的取舍、双语与无障碍的实测数据、工程化做法、性能与体积、踩坑记录 |
 | [FEATURES.md](./FEATURES.md) | 面向访客的亮点介绍（一页看完这个站是什么、有什么） |
-| [data/README.md](./data/README.md) | 数据字典：40 个数据集、每个字段的类型与含义、CSV ↔ 页面章节的对应关系 |
+| [data/README.md](./data/README.md) | 数据字典：41 个数据集、每个字段的类型与含义、CSV ↔ 页面章节的对应关系 |
 | [DEPLOY-NETLIFY.md](./DEPLOY-NETLIFY.md) | 部署：Netlify 双站点、GitHub Pages 404 的实测结论与排查 |

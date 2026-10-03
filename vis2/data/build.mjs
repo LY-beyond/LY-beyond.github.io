@@ -585,6 +585,69 @@ function verify(other) {
 }
 
 /* =========================================================
+ * 九、--forecast：产业规模外推（线性回归 + 95% 预测区间）
+ * ---------------------------------------------------------
+ * 页面侧保持「零依赖、零构建」，但仓库本来就有 Node 构建步骤 ——
+ * 所以把外推当成一次**数据生成**（和 CSV 一样可复核），而不是运行时的隐藏计算。
+ *
+ * 模型：对 2019–2024 的「实际值」做时间线性回归 y = a + b·t（t = 年份 − 2019），
+ *       2026–2028 的点估计 = a + b·t。选线性而不是指数 / 对数线性，是因为这条曲线在
+ *       减速：实测线性 R²=0.98、且能复现给定的 2025E（8362 ≈ 8600）；对数线性会把
+ *       2025 高估到 12860。逻辑回归是分类算法，不适用。
+ * 区间：95% **预测区间**（prediction interval，针对「未来某年的实际值」），
+ *       而不是「回归均值的置信区间」：
+ *         ŷ ± t(0.975, n−2) · s · sqrt(1 + 1/n + (t−t̄)²/Sxx)
+ *       样本只有 6 个点（自由度 4 → t=2.776），所以区间偏宽 —— 这是诚实的代价。
+ *
+ * 生成 data/scale-forecast.csv；check.mjs 会据此重新拟合、断言这份 CSV 没过期
+ * （改了 2019–2024 的实际值却忘了重跑 --forecast，自检会红）。
+ * ========================================================= */
+const FORECAST_FILE = join(HERE, 'scale-forecast.csv');
+const FORECAST_YEARS = [2026, 2027, 2028];
+/* t_{0.975, 4}：n=6、dof=n−2=4 的双侧 95% 临界值 */
+const T95_DOF4 = 2.776;
+
+function olsForecast(actual, aheadIdx) {
+  const n = actual.length;
+  const tbar = (n - 1) / 2;
+  const ybar = actual.reduce((s, y) => s + y, 0) / n;
+  let sxy = 0, sxx = 0;
+  for (let t = 0; t < n; t++) { sxy += (t - tbar) * (actual[t] - ybar); sxx += (t - tbar) ** 2; }
+  const b = sxy / sxx, a = ybar - b * tbar;
+  let sse = 0;
+  for (let t = 0; t < n; t++) sse += (actual[t] - (a + b * t)) ** 2;
+  const s = Math.sqrt(sse / (n - 2));
+  return aheadIdx.map((t) => {
+    const hat = a + b * t;
+    const half = T95_DOF4 * s * Math.sqrt(1 + 1 / n + (t - tbar) ** 2 / sxx);
+    return { point: Math.round(hat), lo: Math.round(hat - half), hi: Math.round(hat + half) };
+  });
+}
+
+function forecast() {
+  const series = (file) => readFileSync(join(HERE, file), 'utf8').replace(/^\ufeff/, '').trim()
+    .split(/\r?\n/).slice(1).map((l) => l.split(','))
+    .map((c) => ({ year: Number(c[0]), value: Number(c[1]) }));
+  const actual = (rows) => rows.filter((r) => r.year <= 2024).map((r) => r.value);
+  const core = actual(series('scale-series.csv'));
+  const related = actual(series('scale-related.csv'));
+  if (core.length !== 6 || related.length !== 6) {
+    throw new Error(`--forecast 需要 2019–2024 共 6 个实际值，实际拿到 core=${core.length} / related=${related.length}`);
+  }
+  const idx = FORECAST_YEARS.map((y) => y - 2019);
+  const cf = olsForecast(core, idx);
+  const rf = olsForecast(related, idx);
+  const header = 'year:number,core:number,coreLo:number,coreHi:number,related:number,relatedLo:number,relatedHi:number';
+  const lines = [header].concat(FORECAST_YEARS.map((y, i) =>
+    [y, cf[i].point, cf[i].lo, cf[i].hi, rf[i].point, rf[i].lo, rf[i].hi].join(',')));
+  writeFileSync(FORECAST_FILE, lines.join('\n') + '\n');
+  console.log('✓ 已生成 data/scale-forecast.csv（线性回归 + 95% 预测区间，拟合样本 2019–2024）');
+  FORECAST_YEARS.forEach((y, i) => console.log(
+    `  ${y}E  核心 ${cf[i].point} [${cf[i].lo}, ${cf[i].hi}]   带动 ${rf[i].point} [${rf[i].lo}, ${rf[i].hi}]`));
+  console.log('  → 别忘了重跑 `node data/build.mjs`（把 CSV 编进 data.js）与 `--docs`');
+}
+
+/* =========================================================
  * 八、入口
  * ========================================================= */
 const argv = process.argv.slice(2);
@@ -597,6 +660,8 @@ try {
     const other = argv[argv.indexOf('--verify') + 1];
     if (!other || !existsSync(other)) { console.error('用法：node data/build.mjs --verify <另一个 data.js>'); process.exit(2); }
     verify(other);
+  } else if (argv.includes('--forecast')) {
+    forecast();
   } else if (argv.includes('--check')) {
     const built = buildDataJs();
     const onDisk = existsSync(TARGET) ? readFileSync(TARGET, 'utf8') : '';

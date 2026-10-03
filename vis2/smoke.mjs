@@ -280,7 +280,7 @@ check('反复联动重绘不叠加控件（1 个下拉 / 每卡 1 条工具栏�
 console.log('\n[3] 数据表视图');
 const tableRes = await jv(`JSON.stringify((function () {
   var out = {};
-  var cases = [['chart-radar', 6], ['chart-scale', 7], ['chart-industry', 3], ['chart-bubble', 15],
+  var cases = [['chart-radar', 6], ['chart-scale', 10], ['chart-industry', 3], ['chart-bubble', 15],
     ['chart-global', 12], ['chart-timeline', 10]];
   cases.forEach(function (pair) {
     var host = document.getElementById(pair[0]);
@@ -305,7 +305,7 @@ const tableRes = await jv(`JSON.stringify((function () {
   return out;
 })())`);
 const rowsOk = Object.keys(tableRes).every((k) => tableRes[k].rows === tableRes[k].want && tableRes[k].tables === 1);
-check('六张单表的行数与数据源完全一致（6/7/3/15/12/10）', rowsOk,
+check('六张单表的行数与数据源完全一致（6/10/3/15/12/10）', rowsOk,
   JSON.stringify(Object.keys(tableRes).map((k) => k + ':' + tableRes[k].rows + '/' + tableRes[k].want)));
 check('切到数据表时画布隐藏、面板显示，切回复原',
   Object.keys(tableRes).every((k) => tableRes[k].hostHidden && tableRes[k].wrapShown && !tableRes[k].backHidden && tableRes[k].backWrap),
@@ -618,6 +618,75 @@ check('右上角出现年份徽标且文字 = 2023',
 check('两条曲线路径 + 高亮点都还在（聚焦没破坏图形）',
   focusProbe.paths >= 4 && focusProbe.dots >= 14, JSON.stringify(focusProbe));
 check('工具栏年份文字同步', /2023/.test(focusProbe.year), focusProbe.year);
+
+/* 预测段：实线必须在最后一个「实际」点收住，预测段只用虚线画。
+   之前的 bug 是实线一路画到 2025，同色虚线压在它身上，间隙露出实线 → 看着仍是实线。 */
+const fcProbe = await jv(`JSON.stringify((function () {
+  var host = document.getElementById('chart-scale');
+  var svg = host.querySelector('svg.viz-svg');
+  var paths = [].slice.call(svg.querySelectorAll('path'));
+  var dashes = paths.filter(function (p) { return p.getAttribute('stroke-dasharray') === '7 6'; });
+  var visDashes = dashes.filter(function (p) { return Number(p.getAttribute('opacity')) === 1; });
+  var solids = paths.filter(function (p) {
+    return p.getAttribute('fill') === 'none' && p.getAttribute('stroke-dasharray') === null;
+  });
+  var bands = paths.filter(function (p) { return (p.getAttribute('fill') || '').indexOf('url(#viz-fcband-') === 0; });
+  /* 顺着每条锥形的 fill → <pattern> → 里面 rect 的颜色，验证"锥形用的是本线颜色" */
+  var bandColors = bands.map(function (p) {
+    var u = p.getAttribute('fill') || '';   /* 'url(#viz-fcband-N)' → 'viz-fcband-N' */
+    var id = u.slice(5, u.length - 1);
+    var rect = svg.querySelector('defs pattern[id="' + id + '"] rect');
+    return rect ? rect.getAttribute('fill') : null;
+  }).filter(Boolean);
+  var uniqColors = bandColors.filter(function (c, i) { return bandColors.indexOf(c) === i; });
+  var right = function (p) { var b = p.getBBox(); return b.x + b.width; };
+  var legBands = [].filter.call(host.parentElement.querySelectorAll('.viz-legend .viz-legend-item'), function (it) {
+    return it.querySelector('.viz-legend-swatch.is-band');
+  });
+  return {
+    dashes: dashes.length, visDashes: visDashes.length, solids: solids.length,
+    bands: bands.length, bandColors: uniqColors,
+    bandVisible: bands.filter(function (p) { return Number(p.getAttribute('opacity')) === 1; }).length,
+    maxSolid: Math.round(Math.max.apply(null, solids.map(right))),
+    maxDash: Math.round(Math.max.apply(null, visDashes.map(right))),
+    legBands: legBands.length,
+    legBandText: legBands[0] ? legBands[0].querySelector('.viz-legend-label').textContent : null,
+    defs: svg.querySelectorAll('defs pattern').length
+  };
+})())`);
+check('产业规模图画了 2 段预测虚线（核心 + 带动），动画结束后都可见',
+  fcProbe.dashes === 2 && fcProbe.visDashes === 2, JSON.stringify(fcProbe));
+check('实线在最后一个实际点收住：不再穿过预测段（实线右端 < 虚线右端）',
+  fcProbe.solids >= 2 && fcProbe.maxSolid < fcProbe.maxDash - 1,
+  JSON.stringify({ solid: fcProbe.maxSolid, dash: fcProbe.maxDash }));
+check('两条线各有一层 95% 预测区间底纹并可见（2 层 <pattern> 填充）',
+  fcProbe.bands === 2 && fcProbe.bandVisible === 2 && fcProbe.defs >= 2, JSON.stringify(fcProbe));
+check('两条锥形各用自己那条线的颜色（2 种不同底纹色，非共用一色）',
+  fcProbe.bandColors.length === 2, JSON.stringify(fcProbe.bandColors));
+check('图例只有一枚中性「预测区间」色块（.is-band），文案写明覆盖两条线',
+  fcProbe.legBands === 1 && /两条线|both lines/i.test(fcProbe.legBandText || ''),
+  JSON.stringify({ n: fcProbe.legBands, t: fcProbe.legBandText }));
+
+/* 外推段要能「说到做到」：数据表里必须有 2026–2028E 三行、标明是模型预测、并带上区间 */
+const fcTableProbe = await jv(`JSON.stringify((function () {
+  var card = document.getElementById('chart-scale').parentElement;
+  var seg = card.querySelectorAll(':scope > .viz-toolbar .viz-seg button');
+  seg[1].click();
+  var wrap = card.querySelector(':scope > .viz-table-wrap');
+  var rows = [].slice.call(wrap.querySelectorAll('tbody tr'));
+  var last = rows.slice(-3).map(function (tr) {
+    return [].map.call(tr.children, function (td) { return td.textContent; });
+  });
+  var out = { rows: rows.length, head: wrap.querySelectorAll('thead th').length, last: last };
+  seg[0].click();
+  return out;
+})())`);
+check('产业规模数据表 = 10 行 × 6 列，末三行是 2026–2028E「模型预测」且两条线都带 95% 预测区间',
+  fcTableProbe.rows === 10 && fcTableProbe.head === 6 &&
+  fcTableProbe.last.every(function (r) {
+    return /模型预测|Model forecast/.test(r[5] || '') && /\d/.test(r[3] || '') && /\d/.test(r[4] || '');
+  }),
+  JSON.stringify(fcTableProbe));
 
 /* 打印样式：file:// 下读不到 document.styleSheets[].cssRules（SecurityError），
    所以直接在 Node 侧读样式文件本身。 */

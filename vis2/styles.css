@@ -1129,12 +1129,14 @@ b, strong { font-weight: 800; }
 .viz-note { margin-top: var(--space-sm); color: var(--c-muted); font-size: 12.5px; }
 .viz-note b { color: var(--c-text-soft); }
 
-/* 图例里的「示意区间」色块：与虚线预测段同一层含义 */
+/* 图例里的「预测区间」色块：这是**符号**含义（斜纹 = 95% 预测区间），
+   刻意用中性灰、不绑定某条线的颜色 —— 图上两条锥形各用自己的线色，
+   读者靠颜色把锥形和折线对上，靠这枚中性色块记住"斜纹就是区间"。 */
 .viz-legend-swatch.is-band {
   background: repeating-linear-gradient(135deg,
-    color-mix(in srgb, var(--c-accent) 26%, transparent) 0 4px,
+    color-mix(in srgb, var(--c-text-soft) 45%, transparent) 0 4px,
     transparent 4px 8px) !important;
-  border: 1px dashed var(--c-accent);
+  border: 1px dashed var(--c-text-soft);
 }
 
 

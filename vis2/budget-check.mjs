@@ -58,18 +58,24 @@ const assets = [HTML, ...css, ...js, ...vendor, 'favicon.svg'];
 /* 预算：定在「当前值上浮一成」上下 —— 既拦得住意外膨胀，也不会天天报警。
    charts.js 于 P2 上调 30 → 32 KB：新增「跨图年份高亮带（band + 3 个高亮点 + focusYear 接口）」
    与「弱口径列标记」（热力矩阵的列底纹 + 虚线分隔），是 14 个引擎里最大的一份；实测 31.0 KB。
+   charts.js 于「预测段修复」再上调 32 → 33 KB：原先实线一路画到 2025、同色虚线又压在它身上，
+   虚线间隙露出实线 —— 预测段形同虚设；这次拆成「实线止于最后一个实际点 + 虚线画预测段」，
+   并按页面早已写下的承诺补上预测区间（<pattern> 底纹）与区间图例。
+   charts.js 于「产业规模外推」再上调 33 → 34 KB：预测区间从「±10% 比例」升级为按点带 lo/hi 的
+   真实 95% 预测区间（2026–2028E 由构建期线性回归写入），并新增 playerMax（曲线画到 2028E、
+   年份播放器仍停在 2025E），gzip 实测 32.8 KB。
    全站合计于 P2/P3 上调 130 → 136 KB：口径徽章（app + CSS + 词表）、时间线键盘导航
-   （app 的 bindTimelineKeys + CSS 焦点环 + 提示）合计约 +3.7 KB，实测 131.8 KB；
+   （app 的 bindTimelineKeys + CSS 焦点环 + 提示）合计约 +3.7 KB，实测 134.4 KB；
    只留约 3% 余量是有意的 —— 再加功能应当先减别处，而不是顺手把这行数字往上推。 */
 const BUDGET = [
-  { what: '全站合计（gzip）', files: assets, max: 136 * 1024, why: '17 个文件全部下载完成的总字节（P2/P3 后实测 131.8 KB）' },
+  { what: '全站合计（gzip）', files: assets, max: 136 * 1024, why: '17 个文件全部下载完成的总字节（P2/P3 后实测 134.4 KB）' },
   { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 95 * 1024, why: 'app / charts / data / i18n / theme' },
-  { what: 'charts.js（gzip）', files: ['charts.js'], max: 32 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带与弱口径列标记）' },
+  { what: 'charts.js（gzip）', files: ['charts.js'], max: 34 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记与预测段 95% 预测区间）' },
   { what: 'data.js（gzip）', files: ['data.js'], max: 22 * 1024, why: '全站数据与双语文案' },
   { what: 'map-china.js（gzip）', files: ['map-china.js'], max: 14 * 1024, why: '省级边界（抽稀后的静态几何）' },
   { what: 'CSS 合计（gzip）', files: css, max: 16 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调' },
   { what: 'vendor 合计（gzip）', files: vendor, max: 12 * 1024, why: '5 个 d3 子模块（力导向图用）' },
-  { what: '单文件最大（gzip）', files: assets, max: 32 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是 charts.js 31.0 KB）' }
+  { what: '单文件最大（gzip）', files: assets, max: 34 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是 charts.js 32.8 KB）' }
 ];
 
 console.log('体积预算（gzip，第 9 级压缩）：');

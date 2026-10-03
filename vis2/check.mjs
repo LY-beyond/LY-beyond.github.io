@@ -207,6 +207,42 @@ ok(scaleSeries.length === 7 && scaleSeries[0].year === 2019 && scaleSeries[6].ye
   `data.js scale.series 应为 2019–2025 共 7 个点，实际 ${scaleSeries.length}（${scaleSeries[0] && scaleSeries[0].year}–${scaleSeries[scaleSeries.length - 1] && scaleSeries[scaleSeries.length - 1].year}）`);
 ok(multiSeries.every((s) => s.penetration.length === scaleSeries.length),
   'data.js: 年份播放器（scale.series）与小倍数图必须等长，否则跨图高亮会错位');
+/* 产业规模外推（scale.forecast，2026–2028E）：
+   ① 形状正确、点估计落在 95% 预测区间内；
+   ② 关键 —— 它必须真的是「由 2019–2024 线性回归算出来的」：这里独立重拟合一遍，
+      断言与 CSV 里的数逐位一致。改了实际值却忘了跑 `node data/build.mjs --forecast` 就会红。 */
+const fcRows = (DATA.scale && DATA.scale.forecast) || [];
+const relSeries = (DATA.scale && DATA.scale.related) || [];
+ok(fcRows.length === 3 && fcRows[0].year === 2026 && fcRows[2].year === 2028,
+  `data.js scale.forecast 应为 2026–2028 共 3 行，实际 ${fcRows.length}`);
+ok(fcRows.every((r) => r.coreLo <= r.core && r.core <= r.coreHi),
+  'data.js scale.forecast：核心产业点估计必须落在 95% 预测区间内');
+if (scaleSeries.length >= 6 && fcRows.length === 3) {
+  const T95 = 2.776;                        /* t_{0.975, 4}：n=6、dof=n−2=4 */
+  const fit = (ys) => {
+    const n = ys.length, tbar = (n - 1) / 2, ybar = ys.reduce((s, y) => s + y, 0) / n;
+    let sxy = 0, sxx = 0;
+    for (let t = 0; t < n; t++) { sxy += (t - tbar) * (ys[t] - ybar); sxx += (t - tbar) ** 2; }
+    const b = sxy / sxx, a = ybar - b * tbar;
+    let sse = 0;
+    for (let t = 0; t < n; t++) sse += (ys[t] - (a + b * t)) ** 2;
+    const s = Math.sqrt(sse / (n - 2));
+    return (year) => {
+      const t = year - 2019, hat = a + b * t;
+      const half = T95 * s * Math.sqrt(1 + 1 / n + (t - tbar) ** 2 / sxx);
+      return { point: Math.round(hat), lo: Math.round(hat - half), hi: Math.round(hat + half) };
+    };
+  };
+  const coreF = fit(scaleSeries.slice(0, 6).map((r) => r.value));
+  const relF = fit(relSeries.slice(0, 6).map((r) => r.value));
+  fcRows.forEach((r) => {
+    const c = coreF(r.year), l = relF(r.year);
+    ok(r.core === c.point && r.coreLo === c.lo && r.coreHi === c.hi,
+      `data.js scale.forecast ${r.year} 核心产业与线性回归重算不符（${r.core}[${r.coreLo},${r.coreHi}] vs ${c.point}[${c.lo},${c.hi}]）—— 改过 2019–2024 实际值？请重跑 node data/build.mjs --forecast`);
+    ok(r.related === l.point && r.relatedLo === l.lo && r.relatedHi === l.hi,
+      `data.js scale.forecast ${r.year} 带动产业与线性回归重算不符（${r.related}[${r.relatedLo},${r.relatedHi}] vs ${l.point}[${l.lo},${l.hi}]）`);
+  });
+}
 /* 地图：34 个省级单元 + 两个指标（与几何 id 的对齐在上面已查） */
 ok(provinceRows.length === 34, `data.js province.rows 应为 34 行，实际 ${provinceRows.length}`);
 ok(((DATA.province && DATA.province.metrics) || []).length === 2, 'data.js province.metrics 应为 2 个（算力 / 企业数）');

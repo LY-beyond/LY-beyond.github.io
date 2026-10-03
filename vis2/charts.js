@@ -20,6 +20,9 @@ window.CHARTS = (function () {
 
   var REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+  /* 每张图里的 <pattern> id 要唯一：同一个页面可能同时存在多张带预测区间的折线图 */
+  var PAT_SEQ = 0;
+
   /* ---------------- 基础工具 ---------------- */
 
   function el(tag, attrs, parent) {
@@ -286,8 +289,10 @@ window.CHARTS = (function () {
       var row = div('viz-legend-item', wrap);
       var swatch = div('viz-legend-swatch', row);
       if (it.shape === 'line') swatch.classList.add('is-line');
-      if (it.shape === 'dash') swatch.classList.add('is-dash');
-      swatch.style.background = it.color;
+      else if (it.shape === 'dash') swatch.classList.add('is-dash');
+      else if (it.shape === 'band') swatch.classList.add('is-band');
+      /* 区间色块的对角细纹由 CSS（.is-band）给出，别用单色把它盖掉 */
+      if (it.shape !== 'band') swatch.style.background = it.color;
       div('viz-legend-label', row, it.label);
       if (it.value != null) div('viz-legend-value', row, it.value);
     }
@@ -440,8 +445,14 @@ window.CHARTS = (function () {
     var series = cfg.series;
     var n = series[0].points.length;
     var yMax = cfg.yMax || (function () {
+      /* 预测区间的上界也要算进纵轴，否则锥形会顶出画布上沿 */
       var m = 0;
-      series.forEach(function (s) { s.points.forEach(function (p) { if (p.value > m) m = p.value; }); });
+      series.forEach(function (s) {
+        s.points.forEach(function (p) {
+          if (p.value > m) m = p.value;
+          if (p.hi != null && p.hi > m) m = p.hi;
+        });
+      });
       return m * 1.14;
     }());
 
@@ -490,37 +501,102 @@ window.CHARTS = (function () {
       return d;
     }
 
+    /* 预测段的起点 = 第一个 forecast=true 的下标。实线只画到它前面一个点，
+       从它开始的预测点全部交给虚线 —— 否则同色虚线正好压在实线上，虚线的
+       间隙露出底下的实线，整段看着仍是一条实线（这条曾经就是这么错的）。 */
+    function firstForecast(s) {
+      for (var i = 0; i < n; i++) if (s.points[i].forecast) return i;
+      return n;
+    }
+    /* 预测区间的底纹：每个系列各建一条 <pattern>，颜色 = 该线自己的颜色，
+       这样「蓝色折线的锥形也是蓝色」，不会被误读成另一条线的区间。
+       分层绘制：所有面积 → 所有预测区间 → 所有实线 → 所有虚线，底纹不盖任何线。 */
+    var areaG = el('g', { class: 'viz-layer-area' }, svg);
+    var bandG = el('g', { class: 'viz-layer-band' }, svg);
+    var lineG = el('g', { class: 'viz-layer-line' }, svg);
+    var dashG = el('g', { class: 'viz-layer-dash' }, svg);
+    var defs = null;
+    function makeBandFill(color, alphaV) {
+      if (!defs) defs = el('defs', null, svg);
+      var patId = 'viz-fcband-' + (PAT_SEQ++);
+      var pat = el('pattern', {
+        id: patId, width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'
+      }, defs);
+      el('rect', { width: 4, height: 8, fill: alpha(color, alphaV) }, pat);
+      return 'url(#' + patId + ')';
+    }
+
     var recs = series.map(function (s) {
+      /* 区间段的几何：第一个/最后一个带 lo·hi 的点；锚点取其前一个点（宽度收成 0）。
+         没有 lo/hi 时退回 s.band（比例张开）的旧行为。 */
+      var bFirst = -1, bLast = -1;
+      for (var bi = 0; bi < n; bi++) {
+        if (s.points[bi].lo != null && s.points[bi].hi != null) { if (bFirst < 0) bFirst = bi; bLast = bi; }
+      }
+      var bandFill = (bFirst > 0 || s.band)
+        ? makeBandFill(s.color, s.bandAlpha != null ? s.bandAlpha : 0.26) : null;
       var area = s.fill ? el('path', {
         fill: alpha(s.color, s.fillAlpha != null ? s.fillAlpha : 0.14), stroke: 'none'
-      }, svg) : null;
+      }, areaG) : null;
+      var band = bandFill ? el('path', {
+        fill: bandFill, stroke: alpha(s.color, 0.45), 'stroke-width': 1, opacity: 0
+      }, bandG) : null;
       var line = el('path', {
         fill: 'none', stroke: s.color, 'stroke-width': 2.6,
         'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-      }, svg);
+      }, lineG);
       var dash = el('path', {
         fill: 'none', stroke: s.color, 'stroke-width': 2.6, 'stroke-dasharray': '7 6',
         'stroke-linecap': 'round', opacity: 0
-      }, svg);
-      return { s: s, area: area, line: line, dash: dash };
+      }, dashG);
+      return { s: s, area: area, band: band, line: line, dash: dash, fc: firstForecast(s), bFirst: bFirst, bLast: bLast };
     });
+
+    function polyPath(pts) {
+      return 'M' + pts.map(function (p) {
+        return p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+      }).join('L') + 'Z';
+    }
 
     function render(ratio) {
       var upto = Math.max(1, Math.round((n - 1) * ratio));
       recs.forEach(function (rec) {
-        var pts = [];
-        for (var i = 0; i <= upto && i < n; i++) pts.push([X(i), Y(rec.s.points[i].value)]);
+        var fc = rec.fc;
+        /* 实线：只画到最后一个「实际」点；动画前半段照常逐点生长 */
+        var stop = Math.max(0, Math.min(upto, fc - 1)), pts = [];
+        for (var i = 0; i <= stop && i < n; i++) {
+          pts.push([X(i), Y(rec.s.points[i].value)]);
+        }
         rec.line.setAttribute('d', smooth(pts));
-        if (rec.area) {
+        if (rec.area && pts.length > 1) {
           var d = smooth(pts) + 'L' + pts[pts.length - 1][0].toFixed(1) + ' ' + Y(0).toFixed(1) +
             'L' + pts[0][0].toFixed(1) + ' ' + Y(0).toFixed(1) + 'Z';
           rec.area.setAttribute('d', d);
         }
-        if (rec.s.points[n - 1].forecast && upto >= n - 1) {
-          rec.dash.setAttribute('d',
-            'M' + X(n - 2) + ' ' + Y(rec.s.points[n - 2].value) +
-            'L' + X(n - 1) + ' ' + Y(rec.s.points[n - 1].value));
-          rec.dash.setAttribute('opacity', 1);
+        if (fc < 1 || fc >= n || upto < fc) return;
+        /* 虚线：从最后一个实际点接出去，穿过已展开的预测点 */
+        var fpts = [[X(fc - 1), Y(rec.s.points[fc - 1].value)]];
+        for (var j = fc; j <= upto && j < n; j++) fpts.push([X(j), Y(rec.s.points[j].value)]);
+        rec.dash.setAttribute('d', smooth(fpts));
+        rec.dash.setAttribute('opacity', 1);
+        /* 预测区间：点自带 lo/hi 就用真实上下界（95% 预测区间），
+           否则退回按 s.band 比例张开的旧行为。锚点 = 第一个区间点的前一个点（宽度收成 0）。 */
+        if (rec.band) {
+          var first = rec.bFirst > 0 ? rec.bFirst : fc;
+          var last = rec.bFirst > 0 ? rec.bLast : n - 1;
+          var span = (n - 1) - (first - 1) || 1;
+          var up = [[X(first - 1), Y(rec.s.points[first - 1].value)]];
+          var lo = [[X(first - 1), Y(rec.s.points[first - 1].value)]];
+          for (var k = first; k <= upto && k <= last; k++) {
+            var pt = rec.s.points[k];
+            var t = (k - (first - 1)) / span;
+            up.push([X(k), Y(pt.hi != null ? pt.hi : pt.value * (1 + rec.s.band * t))]);
+            lo.push([X(k), Y(pt.lo != null ? pt.lo : pt.value * (1 - rec.s.band * t))]);
+          }
+          if (up.length > 1) {
+            rec.band.setAttribute('d', polyPath(up.concat(lo.reverse())));
+            rec.band.setAttribute('opacity', 1);
+          }
         }
       });
     }
@@ -603,6 +679,10 @@ window.CHARTS = (function () {
     var years = series[0].points.map(function (p, i) {
       return p.label != null ? p.label : String(p.year != null ? p.year : i + 1);
     });
+    /* 播放器/跨图联动的「可停年份」上限。曲线可以画到更远的预测年，
+       但年份轴只走到这里（产业规模图：停在有公开口径的 2025E，不把外推年份
+       混进「逐年回放」——小倍数图那边也只有 7 年，下标必须一一对齐）。 */
+    var playMax = cfg.playerMax != null ? Math.max(0, Math.min(cfg.playerMax, n - 1)) : n - 1;
 
     function focus(idx) {
       if (idx == null || idx < 0) {
@@ -612,7 +692,7 @@ window.CHARTS = (function () {
         ctx.focusIndex = -1;
         return -1;
       }
-      idx = Math.max(0, Math.min(n - 1, idx));
+      idx = Math.max(0, Math.min(playMax, idx));
       focusLine.setAttribute('x1', X(idx));
       focusLine.setAttribute('x2', X(idx));
       focusLine.setAttribute('opacity', 0.9);
@@ -630,15 +710,20 @@ window.CHARTS = (function () {
 
     ctx.focus = focus;
     ctx.years = years;
-    ctx.count = n;
+    ctx.count = playMax + 1;
     ctx.focusIndex = -1;
 
-    legend(container, series.map(function (s) {
+    var legendItems = series.map(function (s) {
       return {
         label: s.name, color: s.color, shape: 'line',
         value: fmt(s.points[n - 1].value, s.decimals || 0) + (s.unit || '')
       };
-    }));
+    });
+    /* 预测区间单独挂一枚图例：让「虚线 + 底纹」两种记号和底下那条说明对得上 */
+    if (recs.some(function (r) { return r.band; }) && cfg.bandLabel) {
+      legendItems.push({ label: cfg.bandLabel, shape: 'band' });
+    }
+    legend(container, legendItems);
     return ctx;
   }
 

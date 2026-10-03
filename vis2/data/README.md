@@ -52,6 +52,7 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `scale.csv` | `scale` | 单行对象 | 1 × 12 | 含预测 | 第 4 节产业规模折线图：图题、单位、两条曲线名与口径 |
 | `scale-series.csv` | `scale.series` | 记录表 | 7 × 3 | 含预测 | 第 4 节核心产业规模 2019–2025E（2025 为预测） |
 | `scale-related.csv` | `scale.related` | 记录表 | 7 × 3 | 含预测 | 第 4 节带动相关产业规模 2019–2025E（2025 为预测） |
+| `scale-forecast.csv` | `scale.forecast` | 记录表 | 3 × 7 | 含预测 | 第 4 节产业规模 2026–2028E：由 2019–2024 实际值线性回归外推的点估计与 95% 预测区间（生成：node data/build.mjs --forecast） |
 | `industry.csv` | `industry` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节三次产业赋能条形图：图题与两个指标名 / 口径 |
 | `industry-rows.csv` | `industry.rows` | 记录表 | 3 × 8 | 测算整理 | 第 5 节三次产业（三产 / 二产 / 一产）的渗透率、效率增益、占 GDP 比重 |
 | `bubble.csv` | `bubble` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节气泡矩阵：坐标轴含义、象限名与来源 |
@@ -204,6 +205,18 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `year` | number | 数值 |
 | `value` | number | 数值 |
 | `forecast` | boolean | 真假值 |
+
+### `scale-forecast.csv` → `scale.forecast`（3 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `year` | number | 数值 |
+| `core` | number | 数值 |
+| `coreLo` | number | 数值 |
+| `coreHi` | number | 数值 |
+| `related` | number | 数值 |
+| `relatedLo` | number | 数值 |
+| `relatedHi` | number | 数值 |
 
 ### `industry.csv` → `industry`（1 行）
 
@@ -602,4 +615,4 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 
 ---
 
-共 40 个数据集、269 行、311 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。
+共 41 个数据集、272 行、318 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。

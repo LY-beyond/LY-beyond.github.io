@@ -454,6 +454,51 @@
       "note": "第 4 节带动相关产业规模 2019–2025E（2025 为预测）"
     },
     {
+      "file": "scale-forecast.csv",
+      "path": "scale.forecast",
+      "kind": "array",
+      "provenance": "projected",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "year",
+          "type": "number",
+          "raw": "year:number"
+        },
+        {
+          "name": "core",
+          "type": "number",
+          "raw": "core:number"
+        },
+        {
+          "name": "coreLo",
+          "type": "number",
+          "raw": "coreLo:number"
+        },
+        {
+          "name": "coreHi",
+          "type": "number",
+          "raw": "coreHi:number"
+        },
+        {
+          "name": "related",
+          "type": "number",
+          "raw": "related:number"
+        },
+        {
+          "name": "relatedLo",
+          "type": "number",
+          "raw": "relatedLo:number"
+        },
+        {
+          "name": "relatedHi",
+          "type": "number",
+          "raw": "relatedHi:number"
+        }
+      ],
+      "note": "第 4 节产业规模 2026–2028E：由 2019–2024 实际值线性回归外推的点估计与 95% 预测区间（生成：node data/build.mjs --forecast）"
+    },
+    {
       "file": "industry.csv",
       "path": "industry",
       "kind": "object",

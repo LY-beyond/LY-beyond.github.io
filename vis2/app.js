@@ -613,25 +613,36 @@
     cardHead('scale', P(D.scale.caption), 'scale');
     /* 重绘前先收掉上一轮的播放定时器：否则它会继续往已经废弃的 SVG 上写 */
     if (STATE.playTimer) { window.clearInterval(STATE.playTimer); STATE.playTimer = 0; }
+    /* 曲线点 = 历史 / 给定序列 + 外推段（scale.forecast，2026–2028E）。
+       外推段只加给「画出来的线」；年份播放器被 playerMax 卡在 2025E，
+       所以「逐年回放」与跨图联动仍只走公开口径的 7 年。
+       两条线都挂 95% 预测区间（lo/hi 由构建期线性回归写入），
+       锥形用各自折线的颜色，避免「蓝线的锥形是橙色」这种误读。 */
+    function scalePoints(hist, key, loKey, hiKey) {
+      var out = hist.map(function (p) {
+        return { year: p.year, label: String(p.year), value: p.value, forecast: !!p.forecast };
+      });
+      (D.scale.forecast || []).forEach(function (f) {
+        var pt = { year: f.year, label: String(f.year), value: f[key], forecast: true };
+        if (loKey) { pt.lo = f[loKey]; pt.hi = f[hiKey]; }
+        out.push(pt);
+      });
+      return out;
+    }
     var scaleCtx = C.lineArea(host, {
       yUnit: P(D.scale.unit),
-      yMax: 24000,
+      /* 不再写死 yMax：曲线现在画到 2028E，让引擎按数据自动定纵轴 */
+      playerMax: D.scale.series.length - 1,
       series: [
         {
           /* 带动产业是「底」：只描边不填面积，把大面积淡彩留给要强调的核心产业 */
           name: P(D.scale.relatedLabel), color: K.info, fill: false, unit: '',
-          points: D.scale.related.map(function (p) {
-            return { year: p.year, label: String(p.year), value: p.value, forecast: !!p.forecast };
-          })
+          points: scalePoints(D.scale.related, 'related', 'relatedLo', 'relatedHi')
         },
         {
+          /* 核心：填面积 + 预测段锥形 = 由 2019–2024 线性回归得到的 95% 预测区间 */
           name: P(D.scale.coreLabel), color: K.accent, fill: true, unit: '',
-          /* 预测点的不确定性用「示意区间」表达：数据字典里 2025 是预测值，
-             所以图上给出的 ±10% 不是统计置信区间，而是明写的教学假设（图例 + 表 caption 都写着） */
-          band: 0.1,
-          points: D.scale.series.map(function (p) {
-            return { year: p.year, label: String(p.year), value: p.value, forecast: !!p.forecast };
-          })
+          points: scalePoints(D.scale.series, 'core', 'coreLo', 'coreHi')
         }
       ],
       bandLabel: T('viz.band'),
@@ -649,17 +660,35 @@
             { key: 'year', label: P({ zh: '年份', en: 'Year' }) },
             { key: 'core', label: withUnit(P(D.scale.coreLabel), P(D.scale.unit)) },
             { key: 'related', label: withUnit(P(D.scale.relatedLabel), P(D.scale.unit)) },
+            { key: 'coreRange', label: P({ zh: '核心 95% 预测区间', en: 'Core 95% PI' }) },
+            { key: 'relatedRange', label: P({ zh: '带动 95% 预测区间', en: 'Related 95% PI' }) },
             { key: 'type', label: P({ zh: '数据性质', en: 'Data type' }) }
           ],
-          rows: D.scale.series.map(function (p, i) {
-            var rel = D.scale.related[i] || {};
-            return {
-              year: p.year,
-              core: p.value,
-              related: rel.value,
-              type: p.forecast ? P({ zh: '预测', en: 'Forecast' }) : P({ zh: '实际', en: 'Actual' })
-            };
-          })
+          rows: (function () {
+            var rng = function (lo, hi) { return C.fmt(lo, 0) + '–' + C.fmt(hi, 0); };
+            var out = D.scale.series.map(function (p, i) {
+              var rel = D.scale.related[i] || {};
+              return {
+                year: p.year,
+                core: p.value,
+                related: rel.value,
+                coreRange: '—',
+                relatedRange: '—',
+                type: p.forecast ? P({ zh: '预测', en: 'Forecast' }) : P({ zh: '实际', en: 'Actual' })
+              };
+            });
+            (D.scale.forecast || []).forEach(function (f) {
+              out.push({
+                year: f.year,
+                core: f.core,
+                related: f.related,
+                coreRange: rng(f.coreLo, f.coreHi),
+                relatedRange: rng(f.relatedLo, f.relatedHi),
+                type: P({ zh: '模型预测', en: 'Model forecast' })
+              });
+            });
+            return out;
+          })()
         };
       }
     });

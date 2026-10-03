@@ -363,11 +363,11 @@ window.AI_DATA = {
     }
   ],
   scale: {
-    caption: { zh: '中国人工智能核心产业规模（2019–2025E）', en: 'China AI core industry scale (2019–2025E)' },
+    caption: { zh: '中国人工智能核心产业规模（2019–2028E）', en: 'China AI core industry scale (2019–2028E)' },
     unit: { zh: '亿元', en: '×100M CNY' },
     coreLabel: { zh: '人工智能核心产业规模', en: 'AI core industry' },
     relatedLabel: { zh: '带动相关产业规模', en: 'Related industries enabled' },
-    note: { zh: '2025 年为预测值（虚线部分）；不同机构口径不一，此处按公开报道整理', en: '2025 is a forecast (dashed part); institutions differ in scope, figures follow public reports' },
+    note: { zh: '2019–2024 为公开数据整理；2025 为公开口径预测值，2026–2028E 为两条线各自的线性回归外推（95% 预测区间）。不同机构口径不一，此处按公开报道整理', en: '2019–2024 compiled from public reports; 2025 is a public forecast; 2026–2028E are extrapolated by linear regression for both series (95% prediction intervals). Institutions differ in scope.' },
     source: { zh: '中国信通院《人工智能发展报告》、工信部公开数据整理', en: 'CAICT AI Development Report; MIIT public data' },
     series: [
       { year: 2019, value: 1050 },
@@ -386,6 +386,35 @@ window.AI_DATA = {
       { year: 2023, value: 16100 },
       { year: 2024, value: 19500 },
       { year: 2025, value: 23000, forecast: true }
+    ],
+    forecast: [
+      {
+        year: 2026,
+        core: 9627,
+        coreLo: 7915,
+        coreHi: 11338,
+        related: 26176,
+        relatedLo: 22887,
+        relatedHi: 29465
+      },
+      {
+        year: 2027,
+        core: 10892,
+        coreLo: 8981,
+        coreHi: 12802,
+        related: 29519,
+        relatedLo: 25848,
+        relatedHi: 33190
+      },
+      {
+        year: 2028,
+        core: 12157,
+        coreLo: 10032,
+        coreHi: 14281,
+        related: 32862,
+        relatedLo: 28779,
+        relatedHi: 36945
+      }
     ]
   },
   industry: {
