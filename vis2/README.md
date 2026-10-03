@@ -15,7 +15,7 @@
   连省级地图的边界都是**构建期**抽稀好的静态几何（`map-china.js`，28 KB），运行时一次网络请求都不发。
 
 > 配套自检：`node selfcheck.mjs` —— 一条命令跑完全部**静态**自检（结构 / 跳转 / 中英对齐 / 无障碍与对比度 / 体积预算 / 数据链路），毫秒级返回；
-> 加上 `--full` 会连**真机**自检（`audit.mjs` 11 档视口布局体检 + `smoke.mjs` 146 项交互断言）一起跑。
+> 加上 `--full` 会连**真机**自检（`audit.mjs` 11 档视口布局体检 + `smoke.mjs` 152 项交互断言）一起跑。
 > 数据不是手写的：`data/*.csv`（可 diff 的数据源）→ `node data/build.mjs` → `data.js`，见 [data/README.md](data/README.md) 数据字典。
 
 ---
@@ -73,9 +73,10 @@ vis2/
 ├── a11y-check.mjs      #    无障碍：对比度（WCAG 2.1，含 color-mix 计算）+ ARIA + 结构
 ├── budget-check.mjs    #    体积预算 / 请求数 / 零联网承诺 / README 数字不许过期
 ├── audit.mjs           # 🖥 真机：11 档视口布局体检（溢出 / 裁切 / 触控目标 / 锚点补偿）
-├── smoke.mjs           # 🖥 真机：146 项交互断言（工具栏 / 联动 / 播放器 / 导出 / 分享链接 / 双语…）
+├── smoke.mjs           # 🖥 真机：152 项交互断言（工具栏 / 联动 / 播放器 / 导出 / 分享链接 / 双语…）
 │
-├── HIGHLIGHTS.md       # 面向开发者的技术亮点（含实测数据与自检清单）
+├── KEY-HIGHLIGHTS.md   # 面向课程评阅人的关键亮点（评测视角对照 + 建议评阅动线）
+├── HIGHLIGHTS.md       # 作者自述的网页亮点（结构 / 配色 / 内容连续性 / 功能 / 美观 + 实测数据）
 ├── FEATURES.md         # 面向访客的亮点介绍
 └── DEPLOY-NETLIFY.md   # 部署与额度说明（含 GitHub Pages 404 的实测结论）
 ```
@@ -227,7 +228,7 @@ node selfcheck.mjs --full   # 连真机自检一起跑（需要本机 Chrome，�
 | `a11y-check.mjs` | 静态 | 无障碍：**60 组前景/背景对比度实测**（亮暗两档，含 `color-mix` 的预乘混合与 WCAG 公式）、`tokens.css` 注释里写的比值必须与实测一致、id 唯一、ARIA 引用完整、控件可及名、标题层级、landmark、焦点顺序、role 白名单 |
 | `budget-check.mjs` | 静态 | 体积与承诺：8 条 gzip 预算（全站 / 各文件 / vendor / CSS）、请求数上限、**零联网**（禁止 `fetch` / `XHR` / 动态 `import` / `@import` / 外链资源）、无 `type="module"`、数据摊销，并核对本 README 的「复杂度清单」数字 |
 | `audit.mjs` | 真机 | 11 档视口（360 → 1440px）布局体检：横向溢出与超出的元素、章节高度节奏、网格孤儿行、图表缩放比、< 44px 触控目标、首屏折线、锚点跳转被吸顶栏遮挡、顶栏导航是否被裁切 |
-| `smoke.mjs` | 真机 | 146 项交互断言：13 张图工具栏与按钮、气泡→产业/场景跨图联动（含空集兜底）、数据表开合与行数、年份播放器、PNG/SVG/CSV 导出（文件名 + CSV 表头）、地图换指标 / 前五名 / 悬停、热力 15×5、小倍数两种排版、拖动滑块后两张敏感性图重算、英文模式无中文残留、19 个 SVG / 14 章节 / 13 导航项、**分享链接与地址栏还原（含 `hashchange` 重绘、跨图高亮列随年份移动）**、**第 13 节打包 CSV 逐行核对**、**17 张卡片的口径徽章（`data.js` 登记键双向核对）**、**时间线键盘路径（一个 Tab 停点 + 方向键 / Home / End / Esc 与失焦）**、全程零报错零溢出 |
+| `smoke.mjs` | 真机 | 152 项交互断言：13 张图工具栏与按钮、气泡→产业/场景跨图联动（含空集兜底）、数据表开合与行数、年份播放器、PNG/SVG/CSV 导出（文件名 + CSV 表头）、地图换指标 / 前五名 / 悬停、热力 15×5、小倍数两种排版、拖动滑块后两张敏感性图重算、英文模式无中文残留、19 个 SVG / 14 章节 / 13 导航项、**分享链接与地址栏还原（含 `hashchange` 重绘、跨图高亮列随年份移动）**、**第 13 节打包 CSV 逐行核对**、**17 张卡片的口径徽章（`data.js` 登记键双向核对）**、**时间线键盘路径（一个 Tab 停点 + 方向键 / Home / End / Esc 与失焦）**、全程零报错零溢出 |
 
 每个脚本末尾都会打印 `SUMMARY script=… checks=N failed=M`，`selfcheck.mjs` 靠这一行汇总；
 **任何一个脚本失败都以非零码退出**，可以放心挂到 CI 或提交钩子上。
@@ -320,7 +321,7 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 站点体积很小：**页面只请求 17 个文件 / 磁盘 415 KB / gzip 后 135 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
 抽稀后的省级边界 `map-china.js` 28 KB，生成的 `data.js` 63 KB；其余为页面代码与样式）。
 部署目录里另有**不参与页面加载**的东西：8 个自检脚本（198 KB）、`data/` 数据源与构建脚本（154 KB）、
-`README.md` / `HIGHLIGHTS.md` / `FEATURES.md` / `DEPLOY-NETLIFY.md` 等文档（88 KB），整个目录 74 个文件 / 854 KB。
+`README.md` / `HIGHLIGHTS.md` / `KEY-HIGHLIGHTS.md` 等 5 份文档（91 KB），整个目录 75 个文件 / 858 KB。
 
 
 ---
@@ -372,7 +373,8 @@ data.js            页面加载的数据模块（构建产物，顶部写着「�
 | 文档 | 内容 |
 |---|---|
 | **README.md**（本文） | 使用、文件结构、数据链路、自检清单与复杂度清单 |
-| [HIGHLIGHTS.md](./HIGHLIGHTS.md) | 技术亮点：数据链路、四张硬图的取舍、双语与无障碍的实测数据、工程化做法、性能与体积、踩坑记录 |
+| [KEY-HIGHLIGHTS.md](./KEY-HIGHLIGHTS.md) | 面向课程评阅人：关键亮点、与常见做法的对照、建议评阅动线（约 5 分钟）与已知边界 |
+| [HIGHLIGHTS.md](./HIGHLIGHTS.md) | 第一人称亮点自述：结构布局、配色选择、内容连续性、功能多样性、可视化美观，以及数据链路、双语、无障碍与工程质量的实测数据 |
 | [FEATURES.md](./FEATURES.md) | 面向访客的亮点介绍（一页看完这个站是什么、有什么） |
 | [data/README.md](./data/README.md) | 数据字典：41 个数据集、每个字段的类型与含义、CSV ↔ 页面章节的对应关系 |
 | [DEPLOY-NETLIFY.md](./DEPLOY-NETLIFY.md) | 部署：Netlify 双站点、GitHub Pages 404 的实测结论与排查 |

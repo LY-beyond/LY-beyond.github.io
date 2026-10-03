@@ -14,7 +14,7 @@
  *   data/build.mjs --check   data.js 是否与 data/*.csv 一致（数据链路不许手改）
  * 真机（--full）：
  *   audit.mjs        11 档视口下的布局体检（溢出 / 裁切 / 触控目标 / 锚点补偿）
- *   smoke.mjs        146 条真机断言（工具栏 / 联动 / 播放器 / 导出 / 分享链接 / 双语文案 / 地图…）
+ *   smoke.mjs        152 条真机断言（工具栏 / 联动 / 播放器 / 导出 / 分享链接 / 双语文案 / 地图…）
  *
  * 每个脚本末尾都会打印 `SUMMARY script=… checks=N failed=M`，本脚本负责汇总，
  * 并顺带核对 README / FEATURES / HIGHLIGHTS 三份文档里写的「脚本数 / 静态断言 / 真机断言 /

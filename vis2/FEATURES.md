@@ -136,4 +136,4 @@ CI 里挂在 `.github/workflows/selfcheck.yml`：静态检查每次提交都跑�
 
 ---
 
-*本文面向访客与展示；开发细节、取舍记录与实测数据见 [HIGHLIGHTS.md](./HIGHLIGHTS.md)，使用与维护见 [README.md](./README.md)。*
+*本文为面向访客与展示的亮点介绍；课程评阅用的关键亮点说明见 [KEY-HIGHLIGHTS.md](./KEY-HIGHLIGHTS.md)，作者自述的网页亮点（结构 / 配色 / 内容连续性 / 功能 / 美观）与全部实测数据见 [HIGHLIGHTS.md](./HIGHLIGHTS.md)，使用与维护说明见 [README.md](./README.md)。*

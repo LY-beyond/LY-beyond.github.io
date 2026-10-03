@@ -227,7 +227,7 @@ const gaugeCount = DATA.sim.outputs.length + 1;
 /* README「部署目录里另有…」那一段：自检脚本 / data/ / 文档 / 整个目录的实测值 */
 const scriptsKB = scripts.reduce((s, f) => s + bytes(f), 0) / 1024;
 const dataDir = dirStat('data');
-const docFiles = ['README.md', 'HIGHLIGHTS.md', 'FEATURES.md', 'DEPLOY-NETLIFY.md'];
+const docFiles = ['README.md', 'HIGHLIGHTS.md', 'KEY-HIGHLIGHTS.md', 'FEATURES.md', 'DEPLOY-NETLIFY.md'];
 const docKB = docFiles.reduce((s, f) => s + bytes(f), 0) / 1024;
 const siteAll = dirStat('.');
 const svgCount = chartCount + gaugeCount;
