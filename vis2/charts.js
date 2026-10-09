@@ -7,7 +7,8 @@
  *   ①′ 颜色分两档（见 tokens.css「图表两档系列色」）：
  *      · 大面积填充（条形 / 面积 / 节点默认态）用 --s-base* —— 低彩度、安静；
  *      · 线条、数据点、悬停高亮、异常点用 --c-accent / --c-primary / --c-anomaly
- *        —— 高彩度、抢眼。不要在 fill 上直接用强调色铺大面积。
+ *        —— 高彩度、抢眼。不要在 fill 上直接用强调色铺大面积
+ *        （例外：③ 排名图按名次走「暖 → 冷」顺序色阶、⑦ 流向图）。
  *   ② 每张图都用 viewBox + preserveAspectRatio 自适应容器宽度；
  *   ③ 每张图内部自建一个 tooltip 节点，悬停显示数值；
  *   ④ 动画统一走 rAF + easeOutCubic，并在
@@ -58,7 +59,8 @@ window.CHARTS = (function () {
   /* 从 :root 读取设计令牌，得到当前主题下的真实色值 */
   function readTokens() {
     var cs = getComputedStyle(document.documentElement);
-    var keys = ['--c-primary', '--c-primary-2', '--c-accent', '--c-accent-ink', '--c-info', '--c-success', '--c-warn',
+    var keys = ['--c-primary', '--c-primary-2', '--c-accent', '--c-accent-ink',
+      '--c-on-primary', '--c-on-accent', '--c-info', '--c-success', '--c-warn',
       '--c-danger', '--c-anomaly', '--c-text', '--c-text-soft', '--c-muted', '--c-border', '--c-border-2',
       '--c-surface', '--c-surface-2', '--c-bg', '--s-base', '--s-base-alt', '--s-base-warm',
       '--d1', '--d2', '--d3', '--d4', '--d5', '--d6'];
@@ -81,6 +83,39 @@ window.CHARTS = (function () {
       return 'rgba(' + parseInt(s[0] + s[0], 16) + ',' + parseInt(s[1] + s[1], 16) + ',' + parseInt(s[2] + s[2], 16) + ',' + a + ')';
     }
     return c;   /* 已是 rgb()/颜色关键字时原样返回 */
+  }
+
+  /* #rgb / #rrggbb → [r, g, b]（拿不到就返回 null，调用方自行兜底） */
+  function rgbOf(color) {
+    var c = String(color).trim();
+    var m = /^#([0-9a-f]{3})$/i.exec(c);
+    if (m) c = '#' + m[1].replace(/./g, function (ch) { return ch + ch; });
+    m = /^#([0-9a-f]{6})$/i.exec(c);
+    if (!m) return null;
+    var n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  /* 两个色值之间按比例 t 线性插值（sRGB），返回 #rrggbb。
+     用途：排名条的「顺序色阶」——相邻名次只差一点点色，读起来才是一条连续色带 */
+  function mixColor(a, b, t) {
+    var A = rgbOf(a), B = rgbOf(b);
+    if (!A || !B) return a;
+    var hex = '#';
+    for (var i = 0; i < 3; i++) {
+      var v = Math.round(A[i] + (B[i] - A[i]) * t);
+      hex += (v < 16 ? '0' : '') + v.toString(16);
+    }
+    return hex;
+  }
+
+  /* 顺序色阶：把 0–1 的位置折到一条多段色带上（段与段的交界处平滑过渡） */
+  function scaleColor(stops, t) {
+    var segs = stops.length - 1;
+    if (segs < 1) return stops[0];
+    var x = Math.max(0, Math.min(1, t)) * segs;
+    var i = Math.min(segs - 1, Math.floor(x));
+    return mixColor(stops[i], stops[i + 1], x - i);
   }
 
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -746,12 +781,18 @@ window.CHARTS = (function () {
     var max = cfg.max || Math.max.apply(null, rows.map(function (r) { return r.value; }));
     var unit = cfg.unit || '';
 
+    /* 条形长度已经把「大小」说清楚了，颜色改为按名次走一条「暖 → 冷」的顺序色阶：
+       榜首最暖、榜尾最冷，12 根条的色相 / 深浅随名次连续变化 —— 比原来「前 2 名橙 +
+       其余同一根青绿」只有两色要丰富，而且颜色仍在编码名次（不是随机上色）。
+       色带每一档都取自 tokens.css 的令牌，所以亮 / 暗主题各自成立、导出也不掉色。 */
+    var rankScale = [T['--c-accent'], T['--d6'], T['--d5'], T['--d1'], T['--d2']];
+    var lastIdx = Math.max(1, rows.length - 1);
+
     rows.forEach(function (r, i) {
       var y = 16 + i * (rowH + gap);
       var isTop = i < (cfg.highlight || 2);
-      /* 重点条（默认前 2 名）= 高饱和强调橙；其余 = 低彩度底色系列，
-         不再用「同一个主色 + opacity .82」的廉价做法 */
-      var color = r.color || (isTop ? T['--c-accent'] : T['--s-base']);
+      /* 重点条（默认前 2 名）= 最饱和的强调橙，把「谁领先」继续定住；其余按名次取色阶 */
+      var color = r.color || (isTop ? T['--c-accent'] : scaleColor(rankScale, i / lastIdx));
 
       el('text', {
         x: labelW - 12, y: y + rowH / 2 + 5, 'text-anchor': 'end',
@@ -794,8 +835,9 @@ window.CHARTS = (function () {
         fill: 'transparent', style: 'cursor:pointer'
       }, hot);
       rect.addEventListener('mouseenter', function () {
-        /* 悬停 = 高饱和强调：底色条翻成强调橙 + 主色描边，与「底色」拉开距离 */
-        r._bar.setAttribute('fill', T['--c-accent']);
+        /* 悬停 = 在本色上再压一档 + 主色描边：往 --c-text 靠，浅色主题压深、深色主题提亮，
+           两档主题都更「跳」。不再统一翻成强调橙 —— 彩色条一悬停全变成同一个颜色会丢身份。 */
+        r._bar.setAttribute('fill', mixColor(r._color, T['--c-text'], 0.2));
         r._bar.setAttribute('stroke', T['--c-primary']);
         r._bar.setAttribute('stroke-width', 2);
         showTip(ctx, '<b>' + r.name + '</b><span class="viz-tip-row">' + (cfg.metric || '') +
@@ -910,10 +952,11 @@ window.CHARTS = (function () {
     function X(v) { return pad.l + pw * (v / xMax); }
     function Y(v) { return pad.t + ph * (1 - v / yMax); }
 
-    /* 四象限底色 */
-    el('rect', { x: pad.l, y: pad.t, width: pw / 2, height: ph / 2, fill: alpha(T['--c-primary'], 0.05) }, svg);
-    el('rect', { x: pad.l + pw / 2, y: pad.t, width: pw / 2, height: ph / 2, fill: alpha(T['--c-accent'], 0.06) }, svg);
-    el('rect', { x: pad.l + pw / 2, y: pad.t + ph / 2, width: pw / 2, height: ph / 2, fill: alpha(T['--c-primary'], 0.03) }, svg);
+    /* 四象限底色：右上（高渗透·高增益）最暖，其余三格各给一点冷色 */
+    el('rect', { x: pad.l, y: pad.t, width: pw / 2, height: ph / 2, fill: alpha(T['--c-info'], 0.05) }, svg);
+    el('rect', { x: pad.l + pw / 2, y: pad.t, width: pw / 2, height: ph / 2, fill: alpha(T['--c-accent'], 0.07) }, svg);
+    el('rect', { x: pad.l, y: pad.t + ph / 2, width: pw / 2, height: ph / 2, fill: alpha(T['--c-text'], 0.03) }, svg);
+    el('rect', { x: pad.l + pw / 2, y: pad.t + ph / 2, width: pw / 2, height: ph / 2, fill: alpha(T['--c-primary'], 0.05) }, svg);
 
     /* 网格与刻度 */
     niceTicks(0, xMax, narrow ? 4 : 5).forEach(function (v) {
@@ -958,10 +1001,11 @@ window.CHARTS = (function () {
     var recs = cfg.points.map(function (p) {
       var t = sMax === sMin ? 0.5 : (p.size - sMin) / (sMax - sMin);
       var r = rMin + (rMax - rMin) * Math.sqrt(t);
-      var color = p.color || (p.x >= xMax / 2 ? T['--c-accent'] : T['--c-primary']);
+      /* 颜色由 app.js 按「所属产业」给（与下方小倍数图同一套色） */
+      var color = p.color || T['--c-primary'];
       var c = el('circle', {
         cx: X(p.x), cy: Y(p.y), r: 0,
-        fill: alpha(color, 0.32), stroke: color, 'stroke-width': 2, style: 'cursor:pointer'
+        fill: alpha(color, 0.42), stroke: color, 'stroke-width': 2, style: 'cursor:pointer'
       }, svg);
       return { p: p, node: c, r: r, color: color };
     });
@@ -994,7 +1038,7 @@ window.CHARTS = (function () {
           rec.node.setAttribute('stroke', T['--c-accent']);
           rec.node.setAttribute('stroke-width', 3.4);
         } else {
-          rec.node.setAttribute('fill', alpha(rec.color, 0.32));
+          rec.node.setAttribute('fill', alpha(rec.color, 0.42));
           rec.node.setAttribute('stroke', rec.color);
           rec.node.setAttribute('stroke-width', 2);
         }
@@ -1017,6 +1061,7 @@ window.CHARTS = (function () {
           '<span class="viz-tip-row">' + cfg.xLabel + '<b>' + rec.p.x + '%</b></span>' +
           '<span class="viz-tip-row">' + cfg.yLabel + '<b>' + rec.p.y + '%</b></span>' +
           '<span class="viz-tip-row">' + cfg.sizeLabel + '<b>' + fmt(rec.p.size, 0) + '</b></span>' +
+          (rec.p.sector ? '<span class="viz-tip-row">' + cfg.sectorLabel + '<b>' + rec.p.sector + '</b></span>' : '') +
           (cfg.pickHint ? '<span class="viz-tip-note">' + cfg.pickHint + '</span>' : ''),
           (X(rec.p.x) / W) * container.clientWidth, (Y(rec.p.y) / H) * container.clientHeight);
       });
@@ -1121,9 +1166,9 @@ window.CHARTS = (function () {
       rec.path = el('path', {
         d: 'M' + rec.x1 + ' ' + rec.ay + 'C' + mx + ' ' + rec.ay + ' ' + mx + ' ' + rec.by + ' ' + rec.x2 + ' ' + rec.by,
         fill: 'none',
-        stroke: rec.a.col === 0 ? T['--c-info'] : T['--c-primary'],
+        stroke: rec.a.col === 0 ? T['--d1'] : T['--d5'],
         'stroke-width': 0.4,
-        'stroke-opacity': 0.3,
+        'stroke-opacity': 0.6,
         'stroke-linecap': 'butt'
       }, gLinks);
     });
@@ -1134,10 +1179,10 @@ window.CHARTS = (function () {
 
     var gNodes = el('g', null, svg);
     cfg.nodes.forEach(function (n) {
-      /* 节点是纵向大色块：默认填低彩度「底色系列」+ 高饱和描边表达分组，
-         悬停时再升温为高饱和填充 —— 大面积要安静、交互才高饱和 */
-      var color = n.col === 0 ? T['--c-info'] : (n.col === 1 ? T['--c-primary'] : T['--c-success']);
-      var base = n.col === 0 ? T['--s-base-alt'] : (n.col === 1 ? T['--s-base'] : T['--s-base-warm']);
+      /* 节点是纵向大色块：这一节故意「鲜艳」——三列各用一种鲜亮色
+         （投入=粉 / 升级=紫 / 产出=琥珀）；流带另用蓝 / 紫，与端口刻意区分 */
+      var color = n.col === 0 ? T['--d6'] : (n.col === 1 ? T['--d5'] : T['--d3']);
+      var base = alpha(color, 0.65);
       var right = n.col === 2;
       var rect = el('rect', {
         x: colX[n.col], y: n.y, width: nodeW, height: n.h, rx: 5,
@@ -1165,13 +1210,13 @@ window.CHARTS = (function () {
           rec.path.setAttribute('stroke-opacity', on ? 0.85 : 0.06);
           rec.path.setAttribute('stroke-width', (on ? rec.w * 1.25 : rec.w).toFixed(2));
         });
-        rect.setAttribute('fill', alpha(color, 0.62));
+        rect.setAttribute('fill', alpha(color, 0.85));
         rect.setAttribute('stroke', T['--c-accent']);
         rect.setAttribute('stroke-width', 2.4);
       });
       rect.addEventListener('mouseleave', function () {
         linkEls.forEach(function (rec) {
-          rec.path.setAttribute('stroke-opacity', 0.3);
+          rec.path.setAttribute('stroke-opacity', 0.6);
           rec.path.setAttribute('stroke-width', rec.w.toFixed(2));
         });
         rect.setAttribute('fill', base);
@@ -1622,8 +1667,8 @@ window.CHARTS = (function () {
    * ---------------------------------------------------------
    * 几何来自 window.CN_MAP（开发期由 D:/Vis/_map.mjs 抽稀生成，见该文件头注释），
    * 这里只做三件事：等比缩放、按分位数分五档填色、悬停读数。
-   * 颜色用「主色的五个透明度档」而不是五个色相：单色顺序色阶的深浅与数值同序，
-   * 切主题时也自动跟着换（浅色主题叠在白底、深色主题叠在深底）。
+   * 颜色是一条多色相顺序色阶（青 → 蓝 → 靛 → 洋红）：令牌色 + 逐档抬高的透明度，
+   * 浅底越深、深底越亮，两套主题共用，仍与数值同序。
    * ========================================================= */
   function choropleth(container, cfg) {
     var geo = cfg.geo;
@@ -1672,11 +1717,12 @@ window.CHARTS = (function () {
       for (var i = 0; i < cuts.length; i++) if (v <= cuts[i]) return i;
       return cuts.length;
     }
-    var ALPHA = [0.14, 0.3, 0.46, 0.64, 0.86];
+    var RAMP = [[T['--c-primary'], 0.14], [T['--c-primary'], 0.28], [T['--d1'], 0.48],
+      [T['--d5'], 0.78], [T['--d6'], 0.94]];    /* 低 → 高：[令牌色, 透明度]，色相 青→蓝→靛→洋红 */
     var ramp = null;
     function fillFor(v) {
       if (v == null) return T['--c-surface-2'];
-      if (!ramp) ramp = ALPHA.map(function (a) { return alpha(T['--c-primary'], a); });
+      if (!ramp) ramp = RAMP.map(function (r) { return alpha(r[0], r[1]); });
       return ramp[classOf(v)];
     }
 
@@ -1800,15 +1846,15 @@ window.CHARTS = (function () {
     /* —— 图例：五档色带 + 低/高 —— */
     if (!narrow) {
       var lx = pad.l + 2, ly = H - pad.b - 14, sw = 18, sh = 9;
-      ALPHA.forEach(function (a, i) {
+      RAMP.forEach(function (r, i) {                     /* 图例与地图共用同一份色带，不各画一套 */
         el('rect', {
           x: (lx + i * sw).toFixed(1), y: ly, width: sw - 1.5, height: sh, rx: 2,
-          fill: alpha(T['--c-primary'], a), stroke: T['--c-border'], 'stroke-width': 0.6
+          fill: alpha(r[0], r[1]), stroke: T['--c-border'], 'stroke-width': 0.6
         }, svg);
       });
       el('text', { x: lx, y: ly - 4, fill: T['--c-muted'], 'font-size': 10, 'font-weight': 700 }, svg)
         .textContent = cfg.legendLabel || '';
-      el('text', { x: lx + ALPHA.length * sw + 4, y: ly + 8, fill: T['--c-muted'], 'font-size': 10 }, svg)
+      el('text', { x: lx + RAMP.length * sw + 4, y: ly + 8, fill: T['--c-muted'], 'font-size': 10 }, svg)
         .textContent = cfg.legendHigh || '';
     }
 
@@ -1845,6 +1891,26 @@ window.CHARTS = (function () {
       return { min: Math.min.apply(null, vs), max: Math.max.apply(null, vs) };
     });
     function norm(v, b) { return b.max === b.min ? 0.5 : (v - b.min) / (b.max - b.min); }
+
+    /* 连续色带：与省级地图同一条多色相顺序色阶（青 → 蓝 → 靛 → 洋红），按 t 插值；
+       格子里的数字按格底亮度，在 --c-text / --c-on-primary 里挑对比更高的那枚
+       （色带跨了色相，只看 t 会糊字）。 */
+    var HOT = [[T['--c-primary'], 0.1], [T['--c-primary'], 0.34], [T['--d1'], 0.6], [T['--d5'], 0.86], [T['--d6'], 1]];
+    var INK = [T['--c-text'], T['--c-on-primary']];
+    var surfRgb = rgbOf(T['--c-surface']) || [255, 255, 255];
+    function relLum(c) {
+      var s = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+      return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+    }
+    function cont(a, b) { return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); }
+    function tone(t) {
+      var pos = Math.max(0, Math.min(1, t)) * (HOT.length - 1);
+      var i = Math.min(HOT.length - 2, Math.floor(pos)), f = pos - i;
+      var c = mixColor(HOT[i][0], HOT[i + 1][0], f), a = HOT[i][1] + (HOT[i + 1][1] - HOT[i][1]) * f;
+      var L = relLum((rgbOf(c) || [0, 0, 0]).map(function (v, k) { return v * a + surfRgb[k] * (1 - a); }));
+      var lit = relLum(rgbOf(INK[0]) || [0, 0, 0]);
+      return { fill: alpha(c, a), ink: cont(L, lit) >= cont(L, relLum(rgbOf(INK[1]) || [0, 0, 0])) ? INK[0] : INK[1] };
+    }
 
     /* 弱口径列（后两列是间接代理指标，见 app.js 的 WEAK_METRICS）：
        整列铺一层很浅的底 + 与强口径列之间打一条虚线分隔 + 列头文字后面挂一个小尾巴 ——
@@ -1896,15 +1962,15 @@ window.CHARTS = (function () {
       }, svg).textContent = String(r.name);
 
       metrics.forEach(function (m, j) {
-        var t = norm(r[m.id], bounds[j]);
+        var cellStyle = tone(norm(r[m.id], bounds[j]));
         var cx = labelW + j * cellW + cellW / 2;
         var rect = el('rect', {
           x: (labelW + j * cellW + 1).toFixed(1), y: y + 1, width: (cellW - 2).toFixed(1), height: rowH - 3,
-          rx: 4, fill: alpha(T['--c-primary'], 0.07 + 0.78 * t), opacity: 0, style: 'cursor:pointer'
+          rx: 4, fill: cellStyle.fill, opacity: 0, style: 'cursor:pointer'
         }, svg);
         var txt = el('text', {
           x: cx, y: y + rowH / 2 + 4, 'text-anchor': 'middle',
-          fill: t > 0.55 ? T['--c-on-primary'] : T['--c-text'],
+          fill: cellStyle.ink,
           'font-size': narrow ? 10 : 11, 'font-weight': 800, opacity: 0, 'pointer-events': 'none'
         }, svg);
         txt.textContent = fmt(r[m.id], m.decimals);
@@ -1942,7 +2008,7 @@ window.CHARTS = (function () {
     [0, 0.25, 0.5, 0.75, 1].forEach(function (t, i) {
       el('rect', {
         x: (lx + i * sw).toFixed(1), y: ly - 8, width: sw - 1.5, height: 8, rx: 2,
-        fill: alpha(T['--c-primary'], 0.07 + 0.78 * t), stroke: T['--c-border'], 'stroke-width': 0.6
+        fill: tone(t).fill, stroke: T['--c-border'], 'stroke-width': 0.6
       }, svg);
     });
     el('text', {

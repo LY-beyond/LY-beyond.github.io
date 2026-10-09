@@ -53,6 +53,10 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `scale-series.csv` | `scale.series` | 记录表 | 7 × 3 | 含预测 | 第 4 节核心产业规模 2019–2025E（2025 为预测） |
 | `scale-related.csv` | `scale.related` | 记录表 | 7 × 3 | 含预测 | 第 4 节带动相关产业规模 2019–2025E（2025 为预测） |
 | `scale-forecast.csv` | `scale.forecast` | 记录表 | 3 × 7 | 含预测 | 第 4 节产业规模 2026–2028E：由 2019–2024 实际值线性回归外推的点估计与 95% 预测区间（生成：node data/build.mjs --forecast） |
+| `growth.csv` | `growth` | 单行对象 | 1 × 14 | 测算整理 | 第 13 节增长对比折线图：图题、单位、三条曲线名与口径 |
+| `growth-points.csv` | `growth.points` | 记录表 | 5 × 4 | 测算整理 | 第 13 节增长对比：AI 相关产业 / GDP 实际 / 全要素生产率的年度增速（%），AI 一列由 scale.related 逐年推导，check.mjs 会重算核对 |
+| `drivers.csv` | `drivers` | 单行对象 | 1 × 12 | 测算整理 | 第 13 节驱动力对比条形图：图题、单位、两个时段标签与口径 |
+| `drivers-rows.csv` | `drivers.rows` | 记录表 | 5 × 7 | 测算整理 | 第 13 节各驱动力对 GDP 增长的贡献（百分点）：2015–19 与 2020–24 两个时段 |
 | `industry.csv` | `industry` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节三次产业赋能条形图：图题与两个指标名 / 口径 |
 | `industry-rows.csv` | `industry.rows` | 记录表 | 3 × 8 | 测算整理 | 第 5 节三次产业（三产 / 二产 / 一产）的渗透率、效率增益、占 GDP 比重 |
 | `bubble.csv` | `bubble` | 单行对象 | 1 × 12 | 测算整理 | 第 5 节气泡矩阵：坐标轴含义、象限名与来源 |
@@ -83,7 +87,7 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `sim-outputs.csv` | `sim.outputs` | 记录表 | 5 × 10 | 测算整理 | 第 10 节五项输出（全要素生产率 / GDP / 成本 / 能耗 / 岗位）与量程、单位、颜色 |
 | `sim-sensitivity.csv` | `sim.sensitivity` | 单行对象 | 1 × 39 | 测算整理 | 第 10 节龙卷风图与蒙特卡洛的文案与参数（±15% 扰动、500 次抽样、固定随机种子） |
 | `sources.csv` | `sources` | 记录表 | 12 × 4 | 公开统计 | 第 13 节数据来源 12 条（名称 + 对应口径） |
-| `overview.csv` | `overview` | 记录表 | 11 × 6 | 测算整理 | 第 0 节阅读地图 11 张跳转卡片（图标 / 名称 / 说明 / 锚点） |
+| `overview.csv` | `overview` | 记录表 | 12 × 6 | 测算整理 | 第 0 节阅读地图 11 张跳转卡片（图标 / 名称 / 说明 / 锚点） |
 | `sim-model.js` | `sim.model` | 函数片段 | — | — | 模拟器模型（函数，无法进 CSV） |
 
 > 口径是**人写的数据**：`--extract` 重新索引时与 `note` 一样会被保留，新数据集默认 `modeled`（最保守）。
@@ -217,6 +221,63 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `related` | number | 数值 |
 | `relatedLo` | number | 数值 |
 | `relatedHi` | number | 数值 |
+
+### `growth.csv` → `growth`（1 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `caption.zh` | text | 中文文案 |
+| `caption.en` | text | 英文文案 |
+| `unit.zh` | text | 中文文案 |
+| `unit.en` | text | 英文文案 |
+| `aiLabel.zh` | text | 中文文案 |
+| `aiLabel.en` | text | 英文文案 |
+| `gdpLabel.zh` | text | 中文文案 |
+| `gdpLabel.en` | text | 英文文案 |
+| `tfpLabel.zh` | text | 中文文案 |
+| `tfpLabel.en` | text | 英文文案 |
+| `note.zh` | text | 中文文案 |
+| `note.en` | text | 英文文案 |
+| `source.zh` | text | 中文文案 |
+| `source.en` | text | 英文文案 |
+
+### `growth-points.csv` → `growth.points`（5 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `year` | number | 数值 |
+| `ai` | number | 数值 |
+| `gdp` | number | 数值 |
+| `tfp` | number | 数值 |
+
+### `drivers.csv` → `drivers`（1 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `caption.zh` | text | 中文文案 |
+| `caption.en` | text | 英文文案 |
+| `unit.zh` | text | 中文文案 |
+| `unit.en` | text | 英文文案 |
+| `v1Label.zh` | text | 中文文案 |
+| `v1Label.en` | text | 英文文案 |
+| `v2Label.zh` | text | 中文文案 |
+| `v2Label.en` | text | 英文文案 |
+| `note.zh` | text | 中文文案 |
+| `note.en` | text | 英文文案 |
+| `source.zh` | text | 中文文案 |
+| `source.en` | text | 英文文案 |
+
+### `drivers-rows.csv` → `drivers.rows`（5 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `id` | text | 文本 |
+| `key.zh` | text | 中文文案 |
+| `key.en` | text | 英文文案 |
+| `v1` | number | 数值 |
+| `v2` | number | 数值 |
+| `note.zh` | text | 中文文案 |
+| `note.en` | text | 英文文案 |
 
 ### `industry.csv` → `industry`（1 行）
 
@@ -602,7 +663,7 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `note.zh` | text | 中文文案 |
 | `note.en` | text | 英文文案 |
 
-### `overview.csv` → `overview`（11 行）
+### `overview.csv` → `overview`（12 行）
 
 | 列 | 类型 | 含义 |
 |---|---|---|
@@ -615,4 +676,4 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 
 ---
 
-共 41 个数据集、272 行、318 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。
+共 45 个数据集、285 行、355 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。

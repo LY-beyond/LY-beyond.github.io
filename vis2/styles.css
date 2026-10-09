@@ -111,7 +111,7 @@ b, strong { font-weight: 800; }
 .topnav {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   margin-left: auto;
   overflow-x: auto;
   scrollbar-width: none;
@@ -120,7 +120,7 @@ b, strong { font-weight: 800; }
 
 .nav-link {
   flex: 0 0 auto;
-  padding: 6px 9px;
+  padding: 6px 7px;
   border-radius: var(--radius-pill);
   color: var(--c-text-soft);
   font-size: 13px;
@@ -153,7 +153,10 @@ b, strong { font-weight: 800; }
    而 .topnav 隐藏了滚动条，用户根本不知道还能横滑），所以折叠成抽屉。
    注：导航内边距从 10px 收到 9px —— 加上第 13 项「区域格局」后，
    1180px 以上的宽屏也会差 19px（.topbar-inner 有 max-width，不是窗口宽度决定），
-   收 1px 正好留出余量，中英文都不会被裁。 */
+   收 1px 正好留出余量，中英文都不会被裁。
+   注：加上第 14 项「结论」后，9px 又不够了（1440px 下中文差 36px、英文差 59px），
+   于是内边距再收到 7px（英文 6px）、项间距 2 → 1px；这是**压缩**间距而不是提前塌成抽屉，
+   因为 1180px 以上本来就还有空间，只是被内边距吃掉。 */
 @media (max-width: 1160px) {
   .nav-toggle { display: block; margin-left: auto; order: 3; }
   .topnav {

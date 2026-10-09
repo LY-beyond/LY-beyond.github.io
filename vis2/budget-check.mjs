@@ -11,7 +11,7 @@
  *   ④ 无构建承诺：不得出现 type="module"（file:// 下会被 CORS 拦掉）
  *   ⑤ 数据摊销：每条数据记录 / 每个几何点平均占多少传输字节
  *   ⑥ README「复杂度清单」里的数字必须与实测一致（数字会过期，脚本会拦下来）
- *   ⑦ 文档副本：README / FEATURES / HIGHLIGHTS 里同一批数字（章节 / 图表 / SVG / 词条 /
+ *   ⑦ 文档副本：README / FEATURES / HIGHLIGHTS 里同一批数字（节 / 图表 / SVG / 词条 /
  *      文案 / 数据集与行列 / 体积 / 代码量）逐个核对 —— 三份文档各写一遍，最容易各自漂移；
  *      断言条数不在这儿对：那是 selfcheck.mjs 算出来的，也由它核对（本文件自己也在被统计的名单里）。
  *
@@ -66,16 +66,25 @@ const assets = [HTML, ...css, ...js, ...vendor, 'favicon.svg'];
    年份播放器仍停在 2025E），gzip 实测 32.8 KB。
    全站合计于 P2/P3 上调 130 → 136 KB：口径徽章（app + CSS + 词表）、时间线键盘导航
    （app 的 bindTimelineKeys + CSS 焦点环 + 提示）合计约 +3.7 KB，实测 134.4 KB；
-   只留约 3% 余量是有意的 —— 再加功能应当先减别处，而不是顺手把这行数字往上推。 */
+   全站合计于「§13 结论节」再上调 136 → 140 KB：新增两张图（增速对比折线图 + 驱动力对比条形图）
+   带来的 data 行、词表与渲染代码，实测 137.6 KB。
+   data.js 于「去书面化改写」上调 22 → 23 KB：全站中文文案从报告腔改成大白话（新质生产力、驱动力、
+   行业案例、图谱节点等 65 条改写），同样的信息用人话讲更长——中文部分普遍加长一两成，
+   英文同步改写又添了一些字节，实测 22.1 KB；数据集与行列数没变（45 集 / 285 行），
+   这是纯文案代价，不做数据删减来迁就预算。
+   手写 JS 于「排名条形配色」上调 95 → 98 KB、charts.js 34 → 35 KB：横向排名图原来是「前 2 名橙 +
+   其余同一根青绿」两色，这轮改成按名次取色的顺序色阶（暖→冷），charts.js 新增 rgbOf / mixColor /
+   scaleColor 三个插值小函数与「悬停压本色」逻辑，实测 95.8 KB（charts.js 33.8 KB）。
+   只留约 2% 余量是有意的 —— 再加功能应当先减别处，而不是顺手把这行数字往上推。 */
 const BUDGET = [
-  { what: '全站合计（gzip）', files: assets, max: 136 * 1024, why: '17 个文件全部下载完成的总字节（P2/P3 后实测 134.4 KB）' },
-  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 95 * 1024, why: 'app / charts / data / i18n / theme' },
-  { what: 'charts.js（gzip）', files: ['charts.js'], max: 34 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记与预测段 95% 预测区间）' },
-  { what: 'data.js（gzip）', files: ['data.js'], max: 22 * 1024, why: '全站数据与双语文案' },
+  { what: '全站合计（gzip）', files: assets, max: 140 * 1024, why: '17 个文件全部下载完成的总字节（§13 结论节 + 排名色阶后实测 139.1 KB）' },
+  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 98 * 1024, why: 'app / charts / data / i18n / theme' },
+  { what: 'charts.js（gzip）', files: ['charts.js'], max: 35 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记与预测段 95% 预测区间）' },
+  { what: 'data.js（gzip）', files: ['data.js'], max: 23 * 1024, why: '全站数据与双语文案（去书面化改写后实测 22.1 KB）' },
   { what: 'map-china.js（gzip）', files: ['map-china.js'], max: 14 * 1024, why: '省级边界（抽稀后的静态几何）' },
   { what: 'CSS 合计（gzip）', files: css, max: 16 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调' },
   { what: 'vendor 合计（gzip）', files: vendor, max: 12 * 1024, why: '5 个 d3 子模块（力导向图用）' },
-  { what: '单文件最大（gzip）', files: assets, max: 34 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是 charts.js 32.8 KB）' }
+  { what: '单文件最大（gzip）', files: assets, max: 35 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是 charts.js 33.8 KB）' }
 ];
 
 console.log('体积预算（gzip，第 9 级压缩）：');
@@ -184,7 +193,7 @@ const scripts = ['check.mjs', 'link-check.mjs', 'parity-check.mjs', 'a11y-check.
   'budget-check.mjs', 'audit.mjs', 'smoke.mjs', 'selfcheck.mjs'];
 
 const CLAIMS = [
-  ['章节', sections],
+  ['节', sections],
   ['图表', chartHosts],
   ['自检脚本', scripts.filter((f) => existsSync(join(HERE, f))).length],
   ['i18n 词条', zhKeys],
@@ -268,9 +277,9 @@ const DOC_CLAIMS = [
     names: ['自检脚本数', '自检脚本 KB', 'data KB', '文档 KB', '目录文件数', '目录 KB'] },
   { doc: 'README', label: '双语文案条数',
     re: /(\d+) 个双语文案两侧都在/, want: [biLeaves], names: ['双语文案'] },
-  { doc: 'README', label: 'SVG / 章节 / 导航项',
-    re: /(\d+) 个 SVG \/ (\d+) 章节 \/ (\d+) 导航项/,
-    want: [svgCount, sections, navCount], names: ['SVG 总数', '章节', '导航项'] },
+  { doc: 'README', label: 'SVG / 节 / 导航项',
+    re: /(\d+) 个 SVG \/ (\d+) 节 \/ (\d+) 导航项/,
+    want: [svgCount, sections, navCount], names: ['SVG 总数', '节', '导航项'] },
   { doc: 'FEATURES', label: '数字一览表',
     re: /^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|[^|]*\|\s*(\d+) KB\s*\|/m,
     want: [sections, chartCount, svgCount, zhKeys, biLeaves, manifest.datasets.length, Math.round(gzTotalKB)],
@@ -285,8 +294,8 @@ const DOC_CLAIMS = [
   { doc: 'HIGHLIGHTS', label: '摘要 数据源',
     re: /数据由 \*\*(\d+) 个 CSV 构建而来\*\*/, want: [manifest.datasets.length], names: ['CSV 数据集'] },
   { doc: 'HIGHLIGHTS', label: '数据速览 页面行',
-    re: /^\|\s*页面\s*\|\s*\*\*(\d+) 个\*\*（`index\.html`，(\d+) 个章节/m,
-    want: [1, sections], names: ['页面', '章节'] },
+    re: /^\|\s*页面\s*\|\s*\*\*(\d+) 个\*\*（`index\.html`，(\d+) 节/m,
+    want: [1, sections], names: ['页面', '节'] },
   { doc: 'HIGHLIGHTS', label: '数据速览 图表行',
     re: /\*\*(\d+) 张自绘 SVG\*\*.*?\*\*(\d+) 个 SVG\*\*（含模拟器内 (\d+) 个环形仪表）/,
     want: [chartCount, svgCount, gaugeCount], names: ['自绘图表', 'SVG 总数', '仪表'] },

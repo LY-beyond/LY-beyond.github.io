@@ -54,9 +54,10 @@
 /* ---------- 英文下的顶栏导航 ----------
    英文导航是「单词 + 空格」，比中文两字标签宽 40px 左右，
    13 项在 1440px 宽屏上刚好差一截。这里把英文导航的字号与内边距各收一点，
-   中文档不受影响（选择器限定 html[lang="en"]）。 */
+   中文档不受影响（选择器限定 html[lang="en"]）。
+   第 14 项「Conclusion」进来后内边距再收 8 → 6px，配合 styles.css 里的 7px / 1px。 */
 html[lang="en"] .nav-link {
   font-size: 12.5px;
-  padding: 6px 8px;
+  padding: 6px 6px;
   letter-spacing: -0.01em;
 }

@@ -499,6 +499,231 @@
       "note": "第 4 节产业规模 2026–2028E：由 2019–2024 实际值线性回归外推的点估计与 95% 预测区间（生成：node data/build.mjs --forecast）"
     },
     {
+      "file": "growth.csv",
+      "path": "growth",
+      "kind": "object",
+      "provenance": "modeled",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "aiLabel.zh",
+          "type": "text",
+          "raw": "aiLabel.zh:text"
+        },
+        {
+          "name": "aiLabel.en",
+          "type": "text",
+          "raw": "aiLabel.en:text"
+        },
+        {
+          "name": "gdpLabel.zh",
+          "type": "text",
+          "raw": "gdpLabel.zh:text"
+        },
+        {
+          "name": "gdpLabel.en",
+          "type": "text",
+          "raw": "gdpLabel.en:text"
+        },
+        {
+          "name": "tfpLabel.zh",
+          "type": "text",
+          "raw": "tfpLabel.zh:text"
+        },
+        {
+          "name": "tfpLabel.en",
+          "type": "text",
+          "raw": "tfpLabel.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 13 节增长对比折线图：图题、单位、三条曲线名与口径"
+    },
+    {
+      "file": "growth-points.csv",
+      "path": "growth.points",
+      "kind": "array",
+      "provenance": "modeled",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "year",
+          "type": "number",
+          "raw": "year:number"
+        },
+        {
+          "name": "ai",
+          "type": "number",
+          "raw": "ai:number"
+        },
+        {
+          "name": "gdp",
+          "type": "number",
+          "raw": "gdp:number"
+        },
+        {
+          "name": "tfp",
+          "type": "number",
+          "raw": "tfp:number"
+        }
+      ],
+      "note": "第 13 节增长对比：AI 相关产业 / GDP 实际 / 全要素生产率的年度增速（%），AI 一列由 scale.related 逐年推导，check.mjs 会重算核对"
+    },
+    {
+      "file": "drivers.csv",
+      "path": "drivers",
+      "kind": "object",
+      "provenance": "modeled",
+      "rows": 1,
+      "columns": [
+        {
+          "name": "caption.zh",
+          "type": "text",
+          "raw": "caption.zh:text"
+        },
+        {
+          "name": "caption.en",
+          "type": "text",
+          "raw": "caption.en:text"
+        },
+        {
+          "name": "unit.zh",
+          "type": "text",
+          "raw": "unit.zh:text"
+        },
+        {
+          "name": "unit.en",
+          "type": "text",
+          "raw": "unit.en:text"
+        },
+        {
+          "name": "v1Label.zh",
+          "type": "text",
+          "raw": "v1Label.zh:text"
+        },
+        {
+          "name": "v1Label.en",
+          "type": "text",
+          "raw": "v1Label.en:text"
+        },
+        {
+          "name": "v2Label.zh",
+          "type": "text",
+          "raw": "v2Label.zh:text"
+        },
+        {
+          "name": "v2Label.en",
+          "type": "text",
+          "raw": "v2Label.en:text"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        },
+        {
+          "name": "source.zh",
+          "type": "text",
+          "raw": "source.zh:text"
+        },
+        {
+          "name": "source.en",
+          "type": "text",
+          "raw": "source.en:text"
+        }
+      ],
+      "note": "第 13 节驱动力对比条形图：图题、单位、两个时段标签与口径"
+    },
+    {
+      "file": "drivers-rows.csv",
+      "path": "drivers.rows",
+      "kind": "array",
+      "provenance": "modeled",
+      "rows": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "raw": "id:text"
+        },
+        {
+          "name": "key.zh",
+          "type": "text",
+          "raw": "key.zh:text"
+        },
+        {
+          "name": "key.en",
+          "type": "text",
+          "raw": "key.en:text"
+        },
+        {
+          "name": "v1",
+          "type": "number",
+          "raw": "v1:number"
+        },
+        {
+          "name": "v2",
+          "type": "number",
+          "raw": "v2:number"
+        },
+        {
+          "name": "note.zh",
+          "type": "text",
+          "raw": "note.zh:text"
+        },
+        {
+          "name": "note.en",
+          "type": "text",
+          "raw": "note.en:text"
+        }
+      ],
+      "note": "第 13 节各驱动力对 GDP 增长的贡献（百分点）：2015–19 与 2020–24 两个时段"
+    },
+    {
       "file": "industry.csv",
       "path": "industry",
       "kind": "object",
@@ -1973,7 +2198,7 @@
       "path": "overview",
       "kind": "array",
       "provenance": "modeled",
-      "rows": 11,
+      "rows": 12,
       "columns": [
         {
           "name": "icon",

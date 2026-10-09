@@ -754,6 +754,93 @@
     }
   }
 
+  /* ---------------- ⑬ 结论 · 增长对比（AI vs GDP vs TFP） ----------------
+     这张图回答「它为什么是引擎」：把三条增速曲线放在同一根纵轴上。
+     数据来自 data/growth-points.csv（见 data/README.md），其中 AI 一列由
+     §04 的带动产业规模逐年推导 —— check.mjs 会重算核对，改一边忘另一边会红。 */
+  function renderGrowth() {
+    var host = $('#chart-growth');
+    if (!host) return;
+    var K = palette();
+    cardHead('growth', P(D.growth.caption), 'growth');
+    function pts(key) {
+      return D.growth.points.map(function (p) {
+        return { year: p.year, label: String(p.year), value: p[key], forecast: false };
+      });
+    }
+    C.lineArea(host, {
+      yUnit: P(D.growth.unit),
+      series: [
+        /* AI 走强调色 + 填面积：一眼看出它离另外两条线有多远 */
+        { name: P(D.growth.aiLabel), color: K.accent, fill: true, unit: '', decimals: 1, points: pts('ai') },
+        { name: P(D.growth.gdpLabel), color: K.primary, fill: false, unit: '', decimals: 1, points: pts('gdp') },
+        { name: P(D.growth.tfpLabel), color: K.info, fill: false, unit: '', decimals: 1, points: pts('tfp') }
+      ],
+      hoverTitle: function (i, p) { return String(p.year); }
+    });
+    chartTools(host, {
+      name: 'growth',
+      table: function () {
+        return {
+          caption: P(D.growth.caption),
+          cols: [
+            { key: 'year', label: P({ zh: '年份', en: 'Year' }) },
+            { key: 'ai', label: withUnit(P(D.growth.aiLabel), P(D.growth.unit)) },
+            { key: 'gdp', label: withUnit(P(D.growth.gdpLabel), P(D.growth.unit)) },
+            { key: 'tfp', label: withUnit(P(D.growth.tfpLabel), P(D.growth.unit)) }
+          ],
+          rows: D.growth.points.map(function (p) {
+            return { year: p.year, ai: p.ai, gdp: p.gdp, tfp: p.tfp };
+          })
+        };
+      }
+    });
+    cardFoot('growth', P(D.growth.note), P(D.growth.source));
+  }
+
+  /* ---------------- ⑬b 结论 · 驱动力对比 ----------------
+     回答「为什么是 AI 而不是别的」：每个驱动力给两根条形（2015–19 / 2020–24）。
+     只有人工智能那一行在上升，所以它的第二根用强调色单独点亮。 */
+  function renderDrivers() {
+    var host = $('#chart-drivers');
+    if (!host) return;
+    var K = palette();
+    cardHead('drivers', P(D.drivers.caption), 'drivers');
+    C.dualBars(host, {
+      max: 3.2, decimals: 1, unit: P(D.drivers.unit), labelWidth: 150,
+      rows: D.drivers.rows.map(function (r) {
+        var isAI = r.id === 'ai';
+        return {
+          key: P(r.key), note: P(r.note),
+          bars: [
+            /* 条形短时标签会落到浅色轨道上，所以两种主题下都用取自令牌的前景色：
+               浅条用 --c-text（亮色深 / 暗色浅），强调橙条用 --c-on-accent（两套主题下都是深墨）。 */
+            { label: P(D.drivers.v1Label), value: r.v1, color: K.baseWarm, onColor: K.text },
+            { label: P(D.drivers.v2Label), value: r.v2, color: isAI ? K.accent : K.baseAlt, onColor: isAI ? K.onAccent : K.text }
+          ]
+        };
+      })
+    });
+    chartTools(host, {
+      name: 'drivers',
+      table: function () {
+        return {
+          caption: P(D.drivers.caption),
+          cols: [
+            { key: 'driver', label: P({ zh: '驱动力', en: 'Driver' }) },
+            { key: 'v1', label: withUnit(P(D.drivers.v1Label), P(D.drivers.unit)) },
+            { key: 'v2', label: withUnit(P(D.drivers.v2Label), P(D.drivers.unit)) },
+            { key: 'note', label: P({ zh: '说明', en: 'Note' }) }
+          ],
+          rows: D.drivers.rows.map(function (r) {
+            return { driver: P(r.key), v1: r.v1, v2: r.v2, note: P(r.note) };
+          })
+        };
+      }
+    });
+    cardFoot('drivers', P(D.drivers.note), P(D.drivers.source));
+  }
+
   /* ---------------- ⑤ 三次产业：渗透率 / 效率增益 ---------------- */
   function renderIndustry() {
     var host = $('#chart-industry');
@@ -879,15 +966,25 @@
     var live = add(tools.bar, 'span', 'viz-live', filterStatus());
     live.setAttribute('role', 'status');
 
+    /* 气泡按「所属产业」上色：色值取自 data.js 的 colorKey，与下方小倍数图同一套 */
+    var K = palette();
+    var secColor = {}, secName = {};
+    (D.multiples.series || []).forEach(function (s) { secColor[s.id] = C.colorOf(s.colorKey, K.primary); });
+    D.industry.rows.forEach(function (r) { secName[r.id] = P(r.key); });
+
     C.bubble(host, {
       xMax: 50, yMax: 42,
       xLabel: P(D.bubble.xLabel), yLabel: P(D.bubble.yLabel), sizeLabel: P(D.bubble.sizeLabel),
+      sectorLabel: P({ zh: '所属产业', en: 'Sector' }),
       quadrants: D.bubble.quadrants.map(P),
       picked: STATE.filter,
       onPick: setFilter,
       pickHint: T('filter.pickHint'),
       points: D.bubble.points.map(function (p) {
-        return { name: P(p.name), x: p.x, y: p.y, size: p.size };
+        return {
+          name: P(p.name), x: p.x, y: p.y, size: p.size,
+          color: secColor[p.sector], sector: secName[p.sector]
+        };
       })
     });
     cardFoot('bubble', P(D.bubble.note), P(D.bubble.source));
@@ -1840,6 +1937,8 @@
     renderSensitivity();
     renderTimeline();
     renderScenes();
+    renderGrowth();
+    renderDrivers();
     renderSources();
     renderOverview();
     describeCharts();
@@ -1861,7 +1960,9 @@
       ['sim-root', D.sim.caption],
       ['chart-tornado', D.sim.sensitivity.tornadoTitle],
       ['chart-mc', D.sim.sensitivity.mcTitle],
-      ['chart-timeline', D.timeline.caption]
+      ['chart-timeline', D.timeline.caption],
+      ['chart-growth', D.growth.caption],
+      ['chart-drivers', D.drivers.caption]
     ].forEach(function (pair) {
       var host = document.getElementById(pair[0]);
       if (!host || !pair[1]) return;

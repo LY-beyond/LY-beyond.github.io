@@ -4,7 +4,7 @@
  * 跑法：node smoke.mjs                 （默认打开本地 index.html，file:// 即可）
  *       SITE_URL=http://127.0.0.1:8099/ node smoke.mjs   （改测本地服务器）
  * 用真实 Chrome（CDP）加载页面，逐项断言「只有运行时才可能对/错」的东西：
- *   ① 13 张图各生成一条工具栏，按钮齐全、aria 齐全
+ *   ① 15 张图各生成一条工具栏，按钮齐全、aria 齐全
  *   ② 气泡 → 产业 / 场景 的跨图联动（含空集兜底）
  *   ③ 数据表视图能开能关、行数与数据源一致（图 ⇄ 表的等价性）
  *   ④ 年份播放器：播放会推进、暂停会停下
@@ -12,7 +12,7 @@
  *   ⑥ 切英文后工具栏与图表文案跟着变、无中文残留
  *   ⑦ 地图换指标 / 前五名高亮 / 悬停读数；热力矩阵 15×5；小倍数宽窄两档
  *   ⑧ 拖动模拟器滑块后龙卷风与蒙特卡洛重算
- *   ⑨ 键盘焦点顺序、role="status" 播报、19 个 SVG / 14 章节 / 13 导航项
+ *   ⑨ 键盘焦点顺序、role="status" 播报、21 个 SVG / 15 节 / 14 导航项
  *   ⑩ 全程无 console 报错、无资源 404、无横向溢出、顶栏导航不被裁切
  * 末尾打印通过/失败计数与非零退出码，并给统一的 SUMMARY 行。
  * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定；
@@ -273,15 +273,15 @@ const dupRes = await jv(`JSON.stringify({
   sceneLives: document.querySelectorAll('[data-mount="scene-head"] .viz-live').length
 })`);
 check('反复联动重绘不叠加控件（1 个下拉 / 每卡 1 条工具栏）',
-  dupRes.ids === 1 && dupRes.toolbars === 14 && dupRes.bubbleBars === 1 && dupRes.bubblePanels === 1 &&
+  dupRes.ids === 1 && dupRes.toolbars === 16 && dupRes.bubbleBars === 1 && dupRes.bubblePanels === 1 &&
   dupRes.indBars === 1 && dupRes.sceneLives === 1, JSON.stringify(dupRes));
-/* 14 = 13 张图各 1 条（A 档 8 张 + B 档 5 张）+ 关系图内部那条 viz-toolbar--inset */
+/* 16 = 15 张图各 1 条（A 档 8 张 + B 档 7 张）+ 关系图内部那条 viz-toolbar--inset */
 
 console.log('\n[3] 数据表视图');
 const tableRes = await jv(`JSON.stringify((function () {
   var out = {};
   var cases = [['chart-radar', 6], ['chart-scale', 10], ['chart-industry', 3], ['chart-bubble', 15],
-    ['chart-global', 12], ['chart-timeline', 10]];
+    ['chart-global', 12], ['chart-timeline', 10], ['chart-growth', 5], ['chart-drivers', 5]];
   cases.forEach(function (pair) {
     var host = document.getElementById(pair[0]);
     var card = host.parentElement;
@@ -305,7 +305,7 @@ const tableRes = await jv(`JSON.stringify((function () {
   return out;
 })())`);
 const rowsOk = Object.keys(tableRes).every((k) => tableRes[k].rows === tableRes[k].want && tableRes[k].tables === 1);
-check('六张单表的行数与数据源完全一致（6/10/3/15/12/10）', rowsOk,
+check('八张单表的行数与数据源完全一致（6/10/3/15/12/10/5/5）', rowsOk,
   JSON.stringify(Object.keys(tableRes).map((k) => k + ':' + tableRes[k].rows + '/' + tableRes[k].want)));
 check('切到数据表时画布隐藏、面板显示，切回复原',
   Object.keys(tableRes).every((k) => tableRes[k].hostHidden && tableRes[k].wrapShown && !tableRes[k].backHidden && tableRes[k].backWrap),
@@ -563,7 +563,7 @@ await sleep(700);
 console.log('\n[7] 整页健康度 / 无障碍 / 回归');
 const health = await jv(`JSON.stringify((function () {
   var alive = ['chart-radar','chart-scale','chart-industry','chart-bubble','chart-global',
-    'chart-flow','chart-graph','chart-timeline','sim-root']
+    'chart-flow','chart-graph','chart-timeline','chart-growth','chart-drivers','sim-root']
     .filter(function (id) { var h = document.getElementById(id); return !h || !h.querySelector('svg'); });
   var bar = document.getElementById('chart-scale').parentElement.querySelector(':scope > .viz-toolbar');
   if (bar.querySelector('.is-play').classList.contains('is-on')) bar.querySelector('.is-play').click();
@@ -584,8 +584,8 @@ const health = await jv(`JSON.stringify((function () {
 })())`);
 check('全程零 JS 报错', health.errs.length === 0, JSON.stringify(health.errs));
 check('无横向溢出（工具栏没有撑破卡片）', health.hOverflow === 0, String(health.hOverflow));
-check('工具栏共 14 条 （13 张图 + 关系图 inset）、行业下拉只有 1 个（重绘不叠加）',
-  health.toolbars === 14 && health.pickerIds === 1, JSON.stringify([health.toolbars, health.pickerIds]));
+check('工具栏共 16 条 （15 张图 + 关系图 inset）、行业下拉只有 1 个（重绘不叠加）',
+  health.toolbars === 16 && health.pickerIds === 1, JSON.stringify([health.toolbars, health.pickerIds]));
 check('全部画布仍在渲染（联动 / 切表后没有空图）', health.alive.length === 0, JSON.stringify(health.alive));
 check('收尾时没有残留的可见数据表或隐藏画布',
   health.visibleTables === 0 && health.hiddenCharts === 0, JSON.stringify([health.visibleTables, health.hiddenCharts]));
@@ -1090,8 +1090,8 @@ check('英文模式下 5 张新图的 SVG 文字没有中文残留', enB.cjk ===
 check('英文模式下工具栏、指标下拉、单位括号都是英文写法',
   enB.btns.indexOf('Export CSV') > -1 && /Intelligent compute \(EFLOPS\)/.test(enB.metricOpts) &&
   !/[\u4e00-\u9fa5]/.test(enB.metricOpts), JSON.stringify({ btns: enB.btns, opt: enB.metricOpts }));
-/* 英文标签更长：13 项导航在宽屏上最容易挤爆 .topnav（i18n.css 里专门收过字号与内边距） */
-check('英文模式下顶栏 13 项导航不被裁切', enB.navClipped === 0, String(enB.navClipped));
+/* 英文标签更长：14 项导航在宽屏上最容易挤爆 .topnav（i18n.css 里专门收过字号与内边距） */
+check('英文模式下顶栏 14 项导航不被裁切', enB.navClipped === 0, String(enB.navClipped));
 check('英文模式下工具栏 aria-label 也跟着换',
   enB.toolbarLabel === 'View and export', enB.toolbarLabel);
 await ev(`document.querySelector('.lang-switch-item[data-lang="zh"]').click()`);
@@ -1144,8 +1144,8 @@ const provRes = await jv(`JSON.stringify((function () {
    前三个是首屏 KPI 条 / 概览段落 / 作用力列表（数据直接铺在版式里，没有自己的卡），
    后三个是配色表（渲染用的元数据，不该出现在卡片上）。 */
 const PROV_NO_CARD = ['overview', 'kpis', 'forces', 'paletteBase', 'paletteAccent', 'paletteKeys'];
-check('P2 17 张卡片每张都有且只有一枚口径徽章（徽章上的键都在 data.js 里登记过）',
-  provRes.n === 17 && provRes.n === provRes.heads && provRes.missing.length === 0 &&
+check('P2 19 张卡片每张都有且只有一枚口径徽章（徽章上的键都在 data.js 里登记过）',
+  provRes.n === 19 && provRes.n === provRes.heads && provRes.missing.length === 0 &&
   provRes.dup.length === 0 && provRes.bare.length === 0,
   JSON.stringify({ n: provRes.n, heads: provRes.heads, missing: provRes.missing,
     repeat: provRes.repeat, dup: provRes.dup, bare: provRes.bare }));
@@ -1237,10 +1237,10 @@ const bHealth = await jv(`JSON.stringify({
   navClipped: (function () { var n = document.getElementById('site-nav'); return n.scrollWidth - n.clientWidth; }())
 })`);
 check('B 档全过程没有 JS 报错', bHealth.errs.length === 0, JSON.stringify(bHealth.errs));
-/* 13 张自绘图 + 模拟器里的 6 个环形仪表 = 19 个 SVG */
-check('整页 19 个 SVG（13 张图 + 6 个仪表）、14 个章节、13 个导航项',
-  bHealth.charts === 19 && bHealth.sections === 14 && bHealth.navItems === 13, JSON.stringify(bHealth));
-check('中文模式下顶栏 13 项导航也不被裁切', bHealth.navClipped === 0, String(bHealth.navClipped));
+/* 15 张自绘图 + 模拟器里的 6 个环形仪表 = 21 个 SVG */
+check('整页 21 个 SVG（15 张图 + 6 个仪表）、15 节、14 个导航项',
+  bHealth.charts === 21 && bHealth.sections === 15 && bHealth.navItems === 14, JSON.stringify(bHealth));
+check('中文模式下顶栏 14 项导航也不被裁切', bHealth.navClipped === 0, String(bHealth.navClipped));
 check('整页仍然没有横向溢出', bHealth.hOverflow === 0, String(bHealth.hOverflow));
 
 /* ================= P2：可分享的地址栏状态 ================= */
@@ -1350,7 +1350,7 @@ check('在已打开的标签页里改 hash 也能跳年份（hashchange → 重�
   p2Hash.year === '6' && p2Hash.x > p2Linked.bandX && p2Hash.errs.length === 0,
   JSON.stringify({ year: p2Hash.year, x: p2Hash.x }));
 
-/* ---------- 第 13 节：打包下载全部数据 ---------- */
+/* ---------- 第 14 节：打包下载全部数据 ---------- */
 const p2Csv = JSON.parse(await ev(`(async function () {
   var btn = document.getElementById('data-all-btn');
   if (!btn) return JSON.stringify({ ok: false, why: 'no-button' });
@@ -1366,7 +1366,7 @@ const p2Csv = JSON.parse(await ev(`(async function () {
      打包不是另写一份数据，所以单图里的每一行都必须原样出现在打包结果里 */
   var cards = ['chart-radar', 'chart-scale', 'chart-industry', 'chart-bubble', 'chart-global',
     'chart-region', 'chart-heat', 'chart-multiples', 'chart-flow', 'chart-graph', 'chart-timeline',
-    'chart-tornado', 'chart-mc'];
+    'chart-tornado', 'chart-mc', 'chart-growth', 'chart-drivers'];
   var missing = [];
   for (var i = 0; i < cards.length; i++) {
     var host = document.getElementById(cards[i]);
@@ -1405,15 +1405,15 @@ const p2Csv = JSON.parse(await ev(`(async function () {
     status: (status.textContent || '').trim()
   });
 })()`));
-check('第 13 节有一颗「打包下载全部数据」按钮，点击后有反馈文案',
+check('第 14 节有一颗「打包下载全部数据」按钮，点击后有反馈文案',
   p2Csv.ok === true && p2Csv.status.length > 0, JSON.stringify(p2Csv));
 check('打包 CSV 为每个表节都写了「表：…」标题（数量与页面上 <table> 一致）',
-  p2Csv.ok === true && p2Csv.banners === p2Csv.tables && p2Csv.banners >= 13,
+  p2Csv.ok === true && p2Csv.banners === p2Csv.tables && p2Csv.banners >= 15,
   JSON.stringify({ banners: p2Csv.banners, tables: p2Csv.tables }));
 check('打包 CSV 末尾附带 12 条数据来源（序号 / 资料 / 说明）',
   p2Csv.srcAt > 0 && p2Csv.srcRows === 12,
   JSON.stringify({ at: p2Csv.srcAt, rows: p2Csv.srcRows, first: p2Csv.srcLine }));
-check('打包 CSV 覆盖 13 张图各自导出里的每一行（没有漏表、没有第二套数据）',
+check('打包 CSV 覆盖 15 张图各自导出里的每一行（没有漏表、没有第二套数据）',
   p2Csv.missingN === 0, p2Csv.missingN + ' 行缺失：' + JSON.stringify(p2Csv.missing));
 
 

@@ -34,15 +34,15 @@ window.AI_DATA = {
   paletteBase: ['--s-base', '--s-base-alt', '--s-base-warm'],
   paletteAccent: ['--c-accent', '--c-danger', '--c-info', '--c-primary', '--d5', '--d6', '--d3', '--d4'],
   define: {
-    lead: { zh: '新质生产力由技术革命性突破、生产要素创新性配置、产业深度转型升级而催生。它的核心，是生产要素从「量的堆叠」转向「质的跃迁」——而人工智能，恰好同时改写了生产力的三个基本要素。', en: 'New quality productive forces arise from revolutionary technological breakthroughs, innovative allocation of production factors and deep industrial transformation. Their essence is a shift from quantitative stacking to qualitative leaps — and AI rewrites all three basic factors of productivity at once.' },
+    lead: { zh: '官方定义说，新质生产力由技术革命性突破、生产要素创新性配置、产业深度转型升级而来。翻成白话：它不靠多投人、多投钱，而是把要素用得更聪明。而 AI 恰好把生产力的三个基本要素一起改了。', en: 'The official definition: new quality productive forces come from revolutionary technological breakthroughs, innovative allocation of production factors and deep industrial transformation. In plain words, progress no longer comes from adding more people and money, but from using the same factors more cleverly. And AI happens to rewrite all three basic factors at once.' },
     pillars: [
       {
         key: 'labor',
         icon: '🧑‍🏭',
         name: { zh: '劳动者', en: 'Labour force' },
-        before: { zh: '以体力与单一技能为主的传统劳动者', en: 'Traditional workers relying on physical labour and a single skill' },
-        after: { zh: '具备数据素养、善于人机协同的「新劳动者」', en: 'Data-literate "new workers" who collaborate with AI' },
-        metric: { zh: '单位劳动生产率提升', en: 'Labour productivity gain' },
+        before: { zh: '靠体力、靠一门手艺吃饭的普通工人', en: 'Workers who live by physical effort and one trade' },
+        after: { zh: '会看数据、能和 AI 搭班干活的新工人', en: 'New workers who read data and team up with AI' },
+        metric: { zh: '人均产出提升', en: 'Output per worker' },
         value: 35,
         max: 60,
         source: { zh: '综合世界经济论坛《未来就业报告》与国内调研测算', en: 'Based on WEF Future of Jobs and domestic survey estimates' }
@@ -52,22 +52,22 @@ window.AI_DATA = {
         icon: '🧰',
         name: { zh: '劳动资料', en: 'Means of production' },
         before: { zh: '机械化、自动化的工业设备与流水线', en: 'Mechanized, automated machinery and assembly lines' },
-        after: { zh: '「算力 + 算法 + 大模型」构成的新型生产工具', en: 'Compute + algorithms + large models as new production tools' },
-        metric: { zh: '生产工具迭代周期缩短', en: 'Shorter tool renewal cycle' },
+        after: { zh: '算力 + 算法 + 大模型，成了新一代生产工具', en: 'Compute plus algorithms plus large models as the new tools of the trade' },
+        metric: { zh: '换一代工具的周期变短', en: 'Tools are replaced sooner' },
         value: 60,
         max: 80,
-        source: { zh: '依据大模型能力代际更迭节奏（约 6–12 个月）测算', en: 'Estimated from 6–12 month model generation cycles' }
+        source: { zh: '按大模型换代节奏（约 6–12 个月）估算', en: 'Estimated from 6–12 month model generations' }
       },
       {
         key: 'object',
         icon: '🗂️',
         name: { zh: '劳动对象', en: 'Objects of labour' },
         before: { zh: '土地、矿产等一次性消耗的实体原材料', en: 'Land, minerals and other consumable physical materials' },
-        after: { zh: '数据、知识与场景，可无限复用且越用越增值', en: 'Data, knowledge and scenarios — reusable and value-adding' },
-        metric: { zh: '数据要素对增长的贡献占比', en: 'Share of data factor in growth' },
+        after: { zh: '数据、知识和场景，能反复用，还越用越值钱', en: 'Data, knowledge and scenarios: reuse them and they gain value' },
+        metric: { zh: '数据在增长里占多少', en: 'Share of growth coming from data' },
         value: 45,
         max: 60,
-        source: { zh: '依据「数据要素 ×」行动与数据要素市场测算', en: 'Based on the Data Elements × initiative and market estimates' }
+        source: { zh: '按「数据要素 ×」行动和市场情况估算', en: 'Based on the Data Elements initiative and market figures' }
       }
     ],
     compare: {
@@ -77,28 +77,28 @@ window.AI_DATA = {
       rows: [
         {
           dim: { zh: '增长动能', en: 'Growth driver' },
-          before: { zh: '要素投入驱动，靠人力与资本堆叠', en: 'Input-driven, stacking labour and capital' },
-          after: { zh: '创新驱动，靠技术与数据迭代', en: 'Innovation-driven, iterating on technology and data' }
+          before: { zh: '靠多投人力、多投钱', en: 'Add more people and money' },
+          after: { zh: '靠技术和数据不停换代', en: 'Iterate on technology and data' }
         },
         {
           dim: { zh: '要素结构', en: 'Factor mix' },
-          before: { zh: '土地、劳动力、资本为主导', en: 'Land, labour and capital dominate' },
+          before: { zh: '土地、劳动力、资本说了算', en: 'Land, labour and capital rule' },
           after: { zh: '数据成为第五大生产要素', en: 'Data becomes a fifth production factor' }
         },
         {
           dim: { zh: '效率来源', en: 'Efficiency source' },
-          before: { zh: '规模经济与流程优化', en: 'Economies of scale and process optimization' },
-          after: { zh: '全要素生产率持续提升', en: 'Continuous growth in total factor productivity' }
+          before: { zh: '靠规模大、流程顺', en: 'Bigger scale, smoother process' },
+          after: { zh: '靠全要素生产率往上走', en: 'Total factor productivity climbing' }
         },
         {
           dim: { zh: '产业形态', en: 'Industrial form' },
-          before: { zh: '边界清晰的传统产业分工', en: 'Clearly bounded traditional division of labour' },
-          after: { zh: '数实融合、跨界融合的新业态', en: 'Blended digital-physical, cross-sector new business forms' }
+          before: { zh: '行业边界清楚，各干各的', en: 'Clear industry borders, each on its own' },
+          after: { zh: '线上线下、跨行业搅在一起的新业态', en: 'Online and offline, industries mixed together' }
         },
         {
           dim: { zh: '环境代价', en: 'Environmental cost' },
-          before: { zh: '高投入、高消耗、高排放', en: 'High input, high consumption, high emission' },
-          after: { zh: '绿色低碳，算力效率持续优化', en: 'Green and low-carbon with improving compute efficiency' }
+          before: { zh: '投入多、耗能高、排放大', en: 'Heavy inputs, heavy energy, heavy emissions' },
+          after: { zh: '绿电更多，算力更省', en: 'More clean power, thriftier compute' }
         }
       ]
     }
@@ -114,55 +114,55 @@ window.AI_DATA = {
         year: 1956,
         kind: 'world',
         title: { zh: '达特茅斯会议', en: 'Dartmouth Conference' },
-        desc: { zh: '「人工智能」一词首次被提出，学科诞生。', en: 'The term artificial intelligence is coined and the field begins.' }
+        desc: { zh: '「人工智能」这个词第一次出现，一门新学科就此起步。', en: 'The term artificial intelligence is coined and a new field begins.' }
       },
       {
         year: 1997,
         kind: 'world',
         title: { zh: '深蓝战胜国际象棋冠军', en: 'Deep Blue beats the chess champion' },
-        desc: { zh: '机器在规则明确的智力游戏中首次超越人类顶尖水平。', en: 'Machines first surpass top humans in a rule-bounded intellectual game.' }
+        desc: { zh: '在规则清楚的棋类游戏里，机器第一次赢了人类顶尖高手。', en: 'In a game with clear rules, a machine beats the best human for the first time.' }
       },
       {
         year: 2012,
         kind: 'world',
         title: { zh: 'AlexNet 引爆深度学习', en: 'AlexNet ignites deep learning' },
-        desc: { zh: '图像识别错误率断崖式下降，AI 从实验室走向产业。', en: 'Image-recognition error rates plummet and AI moves from lab to industry.' }
+        desc: { zh: '图像识别错误率一路下降，AI 从实验室走进工厂和产品。', en: 'Image recognition errors fall sharply and AI leaves the lab for real products.' }
       },
       {
         year: 2016,
         kind: 'world',
         title: { zh: 'AlphaGo 战胜李世石', en: 'AlphaGo defeats Lee Sedol' },
-        desc: { zh: '强化学习展示出在超复杂空间中的决策潜力。', en: 'Reinforcement learning reveals decision-making power in vast spaces.' }
+        desc: { zh: '强化学习证明：局面复杂到人算不过来时，机器也能自己做决策。', en: 'Reinforcement learning shows a machine can decide when the space is too complex to calculate.' }
       },
       {
         year: 2017,
         kind: 'world',
         title: { zh: 'Transformer 架构提出', en: 'The Transformer architecture' },
-        desc: { zh: '统一的注意力架构奠定大模型时代的技术底座。', en: 'A unified attention architecture becomes the foundation of the LLM era.' }
+        desc: { zh: '一套统一的注意力架构，成了后来所有大模型的底座。', en: 'One common attention architecture becomes the base of every later large model.' }
       },
       {
         year: 2020,
         kind: 'world',
         title: { zh: 'GPT-3 展示涌现能力', en: 'GPT-3 shows emergent ability' },
-        desc: { zh: '参数量跃升带来「规模即能力」的新范式。', en: 'Scale itself becomes capability.' }
+        desc: { zh: '参数越堆越多，能力跟着涨——「大就是强」成了新共识。', en: 'More parameters, more capability: bigger is stronger becomes the new consensus.' }
       },
       {
         year: 2022,
         kind: 'world',
         title: { zh: 'ChatGPT 走向大众', en: 'ChatGPT reaches the public' },
-        desc: { zh: '生成式 AI 在两个月内获得上亿用户，AI 成为通用工具。', en: 'Generative AI gains 100M users in two months and becomes a general tool.' }
+        desc: { zh: '两个月上亿人用上生成式 AI，AI 从此变成随手可用的工具。', en: 'Generative AI reaches 100 million users in two months and becomes an everyday tool.' }
       },
       {
         year: 2023,
         kind: 'cn',
         title: { zh: '「新质生产力」明确提出', en: '"New quality productive forces" proposed' },
-        desc: { zh: '中国提出加快发展新质生产力，AI 被确立为核心驱动力。', en: 'China calls for faster development of NQPF, positioning AI as a core driver.' }
+        desc: { zh: '中国提出加快发展新质生产力，AI 被点名为核心驱动力。', en: 'China calls for faster development of NQPF and names AI as the core driver.' }
       },
       {
         year: 2024,
         kind: 'cn',
         title: { zh: '「人工智能+」行动', en: 'The AI+ Initiative' },
-        desc: { zh: '首次写入政府工作报告，推动 AI 与千行百业深度融合。', en: 'Written into the government work report to deepen AI integration across industries.' }
+        desc: { zh: '「人工智能+」第一次写进政府工作报告，各行各业开始上 AI。', en: 'AI Plus enters the government work report for the first time; industries start adopting AI.' }
       },
       {
         year: 2025,
@@ -174,13 +174,13 @@ window.AI_DATA = {
   },
   scenes: {
     caption: { zh: 'AI 走进生产现场的八个场景', en: 'Eight scenarios where AI reaches the shop floor' },
-    note: { zh: '以下数字为公开案例报道中的典型值区间，用于说明量级', en: 'Figures below are typical ranges reported in public case studies' },
+    note: { zh: '下面的数字来自公开案例报道，是典型区间，只看量级', en: 'Figures come from public case reports as typical ranges: read them for scale only' },
     items: [
       {
         icon: '🏭',
         match: 'manufacturing',
         name: { zh: '智能制造', en: 'Smart manufacturing' },
-        desc: { zh: '机器视觉替代人工目检，预测性维护把非计划停机压到最低。', en: 'Machine vision replaces manual inspection; predictive maintenance minimizes unplanned downtime.' },
+        desc: { zh: '机器视觉替掉人工目检，设备提前报故障，意外停机压到最低。', en: 'Machine vision replaces manual inspection and early warnings keep unplanned downtime minimal.' },
         metrics: [
           { k: { zh: '质检效率', en: 'Inspection efficiency' }, v: '+30%' },
           { k: { zh: '非计划停机', en: 'Unplanned downtime' }, v: '-25%' }
@@ -190,7 +190,7 @@ window.AI_DATA = {
         icon: '🩺',
         match: 'healthcare',
         name: { zh: '智慧医疗', en: 'Smart healthcare' },
-        desc: { zh: '影像辅助诊断把初筛时间压到分钟级，并让优质诊断能力下沉到基层。', en: 'AI-assisted imaging shortens triage to minutes and brings quality diagnosis to grassroots clinics.' },
+        desc: { zh: 'AI 先看片子，初筛只要几分钟，基层医院也能有专家级的诊断水平。', en: 'AI reads the scans first: triage takes minutes and grassroots clinics get expert-level reading.' },
         metrics: [
           { k: { zh: '阅片时间', en: 'Reading time' }, v: '-40%' },
           { k: { zh: '基层覆盖率', en: 'Grassroots coverage' }, v: '60%' }
@@ -200,7 +200,7 @@ window.AI_DATA = {
         icon: '🌾',
         match: 'agriculture',
         name: { zh: '智慧农业', en: 'Smart agriculture' },
-        desc: { zh: '遥感巡田与无人机植保按需施药，育种周期被算法显著压缩。', en: 'Remote sensing and drone spraying apply inputs on demand; breeding cycles shrink.' },
+        desc: { zh: '卫星遥感加无人机植保，该打药时才打药；育种周期也被算法缩短了。', en: 'Satellite and drone scouting spray only when needed, and algorithms shorten breeding cycles.' },
         metrics: [
           { k: { zh: '农药用量', en: 'Pesticide use' }, v: '-20%' },
           { k: { zh: '亩均产量', en: 'Yield per mu' }, v: '+12%' }
@@ -210,7 +210,7 @@ window.AI_DATA = {
         icon: '🎓',
         match: 'education',
         name: { zh: '智慧教育', en: 'Smart education' },
-        desc: { zh: 'AI 助教批改与备课，教师把时间还给学生；个性化路径让因材施教可规模复制。', en: 'AI assistants grade and prepare lessons, returning time to students; personalization scales.' },
+        desc: { zh: 'AI 批作业、帮备课，老师把时间还给课堂；一个班几十人也能各学各的进度。', en: 'AI marks homework and drafts lessons, giving teachers time back; a class can move at many speeds.' },
         metrics: [
           { k: { zh: '备课时间', en: 'Lesson prep time' }, v: '-50%' },
           { k: { zh: '个性化学习覆盖', en: 'Personalized coverage' }, v: '45%' }
@@ -220,7 +220,7 @@ window.AI_DATA = {
         icon: '💳',
         match: 'finance',
         name: { zh: '金融科技', en: 'Fintech' },
-        desc: { zh: '风控模型实时识别异常交易，智能客服承接大部分重复咨询。', en: 'Risk models flag anomalies in real time; AI service desks absorb repetitive enquiries.' },
+        desc: { zh: '风控模型盯着异常交易，重复的咨询交给 AI 客服。', en: 'Risk models watch transactions in real time and AI desks take the repetitive questions.' },
         metrics: [
           { k: { zh: '欺诈识别率', en: 'Fraud detection' }, v: '+35%' },
           { k: { zh: '客服成本', en: 'Service cost' }, v: '-30%' }
@@ -230,7 +230,7 @@ window.AI_DATA = {
         icon: '⚡',
         match: 'energy',
         name: { zh: '智慧能源', en: 'Smart energy' },
-        desc: { zh: '功率预测与电网调度协同，让更多绿电被消纳、更少电能被浪费。', en: 'Forecasting and dispatch work together so more renewables are absorbed and less power wasted.' },
+        desc: { zh: '先算准风电光伏能发多少，电网照着调，绿电多用一点、浪费少一点。', en: 'Forecast the wind and sun first, dispatch to match: more renewables used, less power wasted.' },
         metrics: [
           { k: { zh: '风光预测准确率', en: 'Renewable forecast accuracy' }, v: '+15%' },
           { k: { zh: '综合线损', en: 'Grid losses' }, v: '-8%' }
@@ -240,7 +240,7 @@ window.AI_DATA = {
         icon: '🚦',
         match: 'logistics',
         name: { zh: '智慧交通', en: 'Smart mobility' },
-        desc: { zh: '信号配时随车流自适应，轨迹预测让安全预警提前几秒。', en: 'Adaptive signal timing follows traffic; trajectory prediction buys seconds of warning.' },
+        desc: { zh: '红绿灯跟着车流变，风险提前几秒预警。', en: 'Lights follow the traffic, and predictions give a few seconds of warning.' },
         metrics: [
           { k: { zh: '路口通行效率', en: 'Intersection throughput' }, v: '+20%' },
           { k: { zh: '事故率', en: 'Accident rate' }, v: '-15%' }
@@ -250,7 +250,7 @@ window.AI_DATA = {
         icon: '🏛️',
         match: 'public',
         name: { zh: '数字政务', en: 'Digital government' },
-        desc: { zh: '智能预审与材料复用让「最多跑一次」落到实处。', en: 'Smart pre-review and document reuse make one-visit service real.' },
+        desc: { zh: '材料先机审、还能复用，「最多跑一次」不再只是口号。', en: 'Documents are pre-checked and reused, so one visit really is enough.' },
         metrics: [
           { k: { zh: '平均审批时长', en: 'Approval time' }, v: '-60%' },
           { k: { zh: '群众满意度', en: 'Citizen satisfaction' }, v: '+18%' }
@@ -264,7 +264,7 @@ window.AI_DATA = {
       decimals: 0,
       unit: { zh: '亿元', en: '×100M CNY' },
       label: { zh: '2024 年中国人工智能核心产业规模', en: 'China AI core industry scale, 2024' },
-      sub: { zh: '连续多年保持约 20% 的高速增长', en: 'Sustained ~20% annual growth' }
+      sub: { zh: '连续多年保持在 20% 左右', en: 'Around 20% for several years running' }
     },
     {
       value: 15.7,
@@ -285,12 +285,12 @@ window.AI_DATA = {
       decimals: 0,
       unit: { zh: '%', en: '%' },
       label: { zh: '我国算力总规模近五年年均增速', en: 'Five-year CAGR of China computing capacity' },
-      sub: { zh: '算力被视为新质生产力的「基础能源」', en: 'Compute is the "energy" of new quality productive forces' }
+      sub: { zh: '算力被当成新质生产力的「基础能源」', en: 'Compute is treated as the basic energy of NQPF' }
     }
   ],
   radar: {
-    caption: { zh: '传统生产力 与 AI 赋能新质生产力 的六维对比', en: 'Six-dimension comparison: traditional vs. AI-enabled' },
-    note: { zh: '指数化评分（0–100），依据公开研究与产业调研整理，仅用于对比示意', en: 'Index score (0–100) compiled from public research and industry surveys for illustration' },
+    caption: { zh: '六个维度：传统生产力 vs AI 赋能的新质生产力', en: 'Six dimensions: traditional productivity vs AI-enabled NQPF' },
+    note: { zh: '评分是 0–100 的指数，按公开研究和产业调研整理，只用来对比，不代表绝对水平', en: 'Scores are 0–100 indices compiled from public research and industry surveys: for comparison only, not absolute levels' },
     source: { zh: '综合中国信通院、麦肯锡《生成式 AI 的经济潜力》等研究整理', en: 'Compiled from CAICT, McKinsey generative-AI research and others' },
     axes: [
       { zh: '全要素生产率', en: 'Total factor productivity' },
@@ -313,7 +313,7 @@ window.AI_DATA = {
       stat: {
         value: '0.5–1.5',
         unit: { zh: '个百分点 / 年', en: 'pp per year' },
-        label: { zh: '研究估计 AI 对全要素生产率年均增速的拉动', en: 'Estimated annual TFP growth uplift from AI' }
+        label: { zh: '研究估算的 AI 对全要素生产率的年均拉动', en: 'Estimated yearly boost AI gives total factor productivity' }
       },
       tag: { zh: '效率革命', en: 'Efficiency' }
     },
@@ -335,7 +335,7 @@ window.AI_DATA = {
       stat: {
         value: '7.5',
         unit: { zh: '%', en: '%' },
-        label: { zh: 'AI 应用成熟企业报告的物流与库存成本下降幅度', en: 'Logistics and inventory cost reduction reported by mature adopters' }
+        label: { zh: 'AI 用得比较熟的企业，报出来的物流与库存成本降幅', en: 'Logistics and inventory cost cuts reported by firms that use AI well' }
       },
       tag: { zh: '资源配置', en: 'Allocation' }
     },
@@ -346,18 +346,18 @@ window.AI_DATA = {
       stat: {
         value: '8–10',
         unit: { zh: '%', en: '%' },
-        label: { zh: 'AI 优化带来的数据中心能耗下降区间（示意）', en: 'Indicative data-centre energy savings from AI optimization' }
+        label: { zh: 'AI 优化后数据中心能耗的降幅区间（示意）', en: 'Fall in data-centre energy use after AI optimisation (illustrative)' }
       },
       tag: { zh: '绿色发展', en: 'Green' }
     },
     {
       icon: '🤝',
       name: { zh: '促进人的全面发展', en: 'Advancing human development' },
-      desc: { zh: 'AI 把重复劳动交还机器，把创造力、判断力与情感连接还给人；优质医疗、教育与政务资源通过 AI 下沉到县域与乡村，让发展成果更可及。', en: 'AI hands repetitive work to machines and gives creativity, judgement and empathy back to people; quality healthcare, education and public services reach smaller counties and villages.' },
+      desc: { zh: 'AI 把重复劳动交给机器，把创造力、判断力和人与人的连接还给人；好医院、好学校、好服务也能下沉到县城和乡村。', en: 'AI hands repetitive work to machines and gives back creativity, judgement and human contact; good hospitals, schools and services reach counties and villages too.' },
       stat: {
         value: '60',
         unit: { zh: '%+', en: '%+' },
-        label: { zh: 'AI 辅助诊断在基层医疗机构中的覆盖率示意', en: 'Indicative coverage of AI-assisted diagnosis in grassroots clinics' }
+        label: { zh: '基层医疗机构用上 AI 辅助诊断的比例（示意）', en: 'Share of grassroots clinics using AI-assisted diagnosis (illustrative)' }
       },
       tag: { zh: '普惠共享', en: 'Inclusion' }
     }
@@ -367,7 +367,7 @@ window.AI_DATA = {
     unit: { zh: '亿元', en: '×100M CNY' },
     coreLabel: { zh: '人工智能核心产业规模', en: 'AI core industry' },
     relatedLabel: { zh: '带动相关产业规模', en: 'Related industries enabled' },
-    note: { zh: '2019–2024 为公开数据整理；2025 为公开口径预测值，2026–2028E 为两条线各自的线性回归外推（95% 预测区间）。不同机构口径不一，此处按公开报道整理', en: '2019–2024 compiled from public reports; 2025 is a public forecast; 2026–2028E are extrapolated by linear regression for both series (95% prediction intervals). Institutions differ in scope.' },
+    note: { zh: '2019–2024 是公开数据；2025 是公开预测值；2026–2028E 是本页用 2019–2024 数据做的线性回归外推（95% 预测区间）。各家机构口径不一样，这里按公开报道整理', en: '2019–2024 are public figures, 2025 is a published projection, and 2026–2028E are our own linear-regression extrapolations from the 2019–2024 actuals (95% prediction interval). Definitions differ between institutions; this follows public reporting.' },
     source: { zh: '中国信通院《人工智能发展报告》、工信部公开数据整理', en: 'CAICT AI Development Report; MIIT public data' },
     series: [
       { year: 2019, value: 1050 },
@@ -417,6 +417,67 @@ window.AI_DATA = {
       }
     ]
   },
+  growth: {
+    caption: { zh: '增长对比：AI 相关产业 vs GDP vs 全要素生产率', en: 'Growth: AI-related industry vs GDP vs TFP' },
+    unit: { zh: '%／年', en: '%/yr' },
+    aiLabel: { zh: '人工智能相关产业规模', en: 'AI-related industry scale' },
+    gdpLabel: { zh: '中国 GDP（实际）', en: 'China real GDP' },
+    tfpLabel: { zh: '全要素生产率（估算）', en: 'Total factor productivity (est.)' },
+    note: { zh: 'GDP 增速为国家统计局公开数据；AI 相关产业增速由本页产业规模数据推导；全要素生产率为公开研究整理测算；2021 年 AI 增速偏高源于低基数与统计口径调整', en: 'GDP growth is from the National Bureau of Statistics; AI-related industry growth is derived from this page\'s scale data; TFP is compiled from public research; the 2021 AI spike reflects a low base and a definition change' },
+    source: { zh: '国家统计局年度统计公报 + 中国信通院产业规模数据整理', en: 'NBS annual communiqués plus CAICT industry-scale data' },
+    points: [
+      { year: 2020, ai: 41.7, gdp: 2.2, tfp: 0.7 },
+      { year: 2021, ai: 76.5, gdp: 8.4, tfp: 1.5 },
+      { year: 2022, ai: 50, gdp: 3, tfp: 0.9 },
+      { year: 2023, ai: 19.3, gdp: 5.2, tfp: 1.1 },
+      { year: 2024, ai: 21.1, gdp: 5, tfp: 1 }
+    ]
+  },
+  drivers: {
+    caption: { zh: '谁在拉动增长：AI 与其他驱动力', en: 'Who drives growth: AI versus other drivers' },
+    unit: { zh: '个百分点', en: 'percentage points' },
+    v1Label: { zh: '2015–19 年均', en: '2015–19 avg' },
+    v2Label: { zh: '2020–24 年均', en: '2020–24 avg' },
+    note: { zh: '各驱动力对 GDP 增长的贡献（百分点）为公开研究整理测算；资本积累体量最大但在回落 — 人工智能是唯一持续上升的驱动力', en: 'Contributions to GDP growth in percentage points are compiled from public research; capital formation is the largest but declining — AI is the only driver still rising' },
+    source: { zh: '依据世界银行、麦肯锡与国内公开研究整理测算', en: 'Compiled from the World Bank · McKinsey and domestic public research' },
+    rows: [
+      {
+        id: 'ai',
+        key: { zh: '人工智能', en: 'Artificial intelligence' },
+        v1: 0.2,
+        v2: 0.9,
+        note: { zh: '唯一持续上升的驱动力 — 贡献提高到约 4 倍', en: 'The only driver still rising — contribution up about 4x' }
+      },
+      {
+        id: 'digital',
+        key: { zh: '大数据与云计算', en: 'Big data and cloud' },
+        v1: 0.5,
+        v2: 0.8,
+        note: { zh: '数字化的底座 — 增长平稳', en: 'The digital base — steady growth' }
+      },
+      {
+        id: 'tech',
+        key: { zh: '传统技术进步', en: 'Conventional technology' },
+        v1: 0.9,
+        v2: 0.7,
+        note: { zh: '成熟技术 — 贡献见顶', en: 'Mature technologies — contribution peaking' }
+      },
+      {
+        id: 'capital',
+        key: { zh: '资本深化', en: 'Capital deepening' },
+        v1: 3.1,
+        v2: 2.7,
+        note: { zh: '体量最大 — 但越往后越使不上劲', en: 'Biggest slice — but it pulls less each year' }
+      },
+      {
+        id: 'labor',
+        key: { zh: '劳动投入', en: 'Labour input' },
+        v1: 0.6,
+        v2: 0.3,
+        note: { zh: '人少了，贡献跟着降', en: 'Fewer workers, less contribution' }
+      }
+    ]
+  },
   industry: {
     caption: { zh: 'AI 在三次产业中的渗透率与效率增益', en: 'AI penetration and efficiency gain across three sectors' },
     penetration: { zh: 'AI 渗透率', en: 'AI penetration' },
@@ -431,7 +492,7 @@ window.AI_DATA = {
         penetration: 31,
         gain: 35,
         size: 55,
-        note: { zh: '金融、零售、内容与专业服务最先被大模型重塑', en: 'Finance, retail, content and professional services lead adoption' }
+        note: { zh: '金融、零售、内容、专业服务最先被大模型改写', en: 'Finance, retail, content and professional services are rewritten first' }
       },
       {
         id: 'secondary',
@@ -522,7 +583,7 @@ window.AI_DATA = {
     legend: { zh: '同列内相对高低', en: 'Relative within a column' },
     legendLow: { zh: '低', en: 'low' },
     legendHigh: { zh: '高', en: 'high' },
-    note: { zh: '每列各自按最小值→最大值着色（列内归一化，不是全局），所以颜色深浅只表示「在这一列里排第几」；渗透率 / 效率增益 / 市场规模与上方的气泡矩阵同源。', en: 'Each column is normalised on its own min–max scale, so darker only means higher within that column; penetration, gain and market size share the same source as the bubble matrix above.' },
+    note: { zh: '每列自己从最小值排到最大值上色（不是全局统一），颜色深浅只说明「在这一列里排第几」；前三条指标和上方的气泡矩阵是同一份数据。', en: 'Each column is coloured from its own minimum to its own maximum (not globally), so shade only says where a row ranks inside that column. The first three metrics come from the same data as the bubble matrix above.' },
     source: { zh: '综合 IDC、艾瑞咨询、行业年报与招聘平台数据整理测算', en: 'Compiled from IDC, iResearch, industry annual reports and hiring platforms' },
     metrics: [
       {
@@ -705,7 +766,7 @@ window.AI_DATA = {
     insetLabel: { zh: '南海诸岛', en: 'South China Sea Is.' },
     noData: { zh: '暂无数据', en: 'No data' },
     leaders: { zh: '前五名', en: 'Top five' },
-    note: { zh: '省级算力与企业数没有统一权威口径，此处按公开报道与各省「人工智能 +」方案目标折算成示意值（全国合计约 32 EFLOPS、2.2 万家企业），用于比较结构而非绝对水平；地图为抽稀后的示意轮廓。', en: 'There is no single authoritative provincial breakdown, so these are indicative values converted from public reports and provincial AI action plans (about 32 EFLOPS and 22,000 firms nationwide) — read the structure, not absolute levels. Boundaries are simplified for illustration.' },
+    note: { zh: '省级算力和企业数没有统一的权威口径，这里按公开报道和各省「人工智能 +」方案的目标折算成示意值（全国合计约 32 EFLOPS、2.2 万家企业），只看各省之间的相对结构，不看绝对水平；地图是抽稀后的示意轮廓。', en: 'Provincial compute and firm counts have no single authoritative definition, so these are indicative values converted from public reporting and provincial AI Plus targets (about 32 EFLOPS and 22,000 firms nationwide). Read the structure between provinces, not absolute levels. The map is a simplified, thinned outline.' },
     source: { zh: '工信部与各省「人工智能 +」行动方案公开数据整理；底图几何：阿里云 DataV.GeoAtlas 省级边界（抽稀后使用）', en: 'MIIT and provincial AI action plans; boundaries: DataV.GeoAtlas province outlines, simplified' },
     metrics: [
       {
@@ -828,14 +889,14 @@ window.AI_DATA = {
         g: 'core',
         size: 26,
         label: { zh: '人工智能', en: 'Artificial Intelligence' },
-        desc: { zh: '以数据、算力、算法为核心的新一代通用目的技术', en: 'A general-purpose technology built on data, compute and algorithms' }
+        desc: { zh: '靠数据、算力、算法跑起来的新一代通用技术', en: 'A general-purpose technology built on data, compute and algorithms' }
       },
       {
         id: 'nqpf',
         g: 'core',
         size: 26,
         label: { zh: '新质生产力', en: 'New Quality Productive Forces' },
-        desc: { zh: '由技术革命性突破与要素创新性配置催生的先进生产力质态', en: 'An advanced form of productivity born from breakthroughs and innovative factor allocation' }
+        desc: { zh: '技术有大突破、要素配得更合理，才会长出来的新生产力形态', en: 'A new form of productivity that appears only when technology breaks through and factors are allocated better' }
       },
       {
         id: 'dataf',
@@ -891,7 +952,7 @@ window.AI_DATA = {
         g: 'effect',
         size: 22,
         label: { zh: '全要素生产率提升', en: 'Higher TFP' },
-        desc: { zh: '同样的投入产出更多，是衡量新质生产力的核心指标', en: 'More output from the same input — the core metric of NQPF' }
+        desc: { zh: '同样的投入能产出更多——看新质生产力主要就看它', en: 'More output from the same input: the main measure of NQPF' }
       },
       {
         id: 'newbiz',
@@ -905,7 +966,7 @@ window.AI_DATA = {
         g: 'effect',
         size: 20,
         label: { zh: '绿色低碳转型', en: 'Green transition' },
-        desc: { zh: '用算法优化能源与排放曲线，降低单位产出代价', en: 'Algorithms flatten energy and emission curves per unit of output' }
+        desc: { zh: '用算法把能耗和排放压下来，同样的产出少花代价', en: 'Algorithms push energy use and emissions down, so each unit of output costs less' }
       },
       {
         id: 'jobs',
@@ -919,14 +980,14 @@ window.AI_DATA = {
         g: 'policy',
         size: 15,
         label: { zh: '「人工智能+」行动', en: 'AI+ Initiative' },
-        desc: { zh: '推动 AI 与千行百业深度融合的国家行动', en: 'A national initiative to integrate AI into every industry' }
+        desc: { zh: '国家级行动：把 AI 装进各行各业', en: 'A national initiative: put AI into every industry' }
       },
       {
         id: 'datax',
         g: 'policy',
         size: 15,
         label: { zh: '「数据要素×」行动', en: 'Data Elements × Initiative' },
-        desc: { zh: '让数据在更多场景中流通、复用与增值', en: 'Letting data flow, be reused and multiply value' }
+        desc: { zh: '让数据在更多场景里流动、反复用、越用越值钱', en: 'Let data flow, be reused and gain value in more settings' }
       },
       {
         id: 'mfg',
@@ -1014,7 +1075,7 @@ window.AI_DATA = {
     caption: { zh: '生产力模拟器：调节四个旋钮，看看 AI 能把生产力推到多高', en: 'Productivity simulator: tune four dials and see how far AI can push productivity' },
     index: { zh: '综合新质生产力指数', en: 'Composite NQPF index' },
     baseline: { zh: '当前基线', en: 'Baseline' },
-    formulaNote: { zh: '模型是一个公开、可复现的线性加权示意模型，用于说明各要素的相对重要性，不代表真实经济预测。', en: 'The model is an open, reproducible linear-weight illustration of relative importance rather than a real economic forecast.' },
+    formulaNote: { zh: '模型就是一个公开的线性加权公式，谁都能重算一遍；它只说明各要素的相对轻重，不是真实经济预测。', en: 'The model is an open, reproducible weighted-sum formula anyone can recompute. It shows which factors matter more, and is not a real economic forecast.' },
     model: function (v) {
   var p = (v.penetration || 0) / 100;
   var d = (v.dataFactor || 0) / 100;
@@ -1085,7 +1146,7 @@ window.AI_DATA = {
         unit: { zh: '个百分点 / 年', en: 'pp / year' },
         colorKey: '--c-primary',
         label: { zh: '全要素生产率年均提升', en: 'Annual TFP growth uplift' },
-        why: { zh: '新质生产力最核心的指标', en: 'The core metric of NQPF' }
+        why: { zh: '看新质生产力，主要就看这一项', en: 'The headline measure of NQPF' }
       },
       {
         id: 'gdp',
@@ -1094,7 +1155,7 @@ window.AI_DATA = {
         unit: { zh: '% / 年', en: '% / year' },
         colorKey: '--c-accent',
         label: { zh: '对 GDP 增速的年均拉动', en: 'Annual GDP growth boost' },
-        why: { zh: '从产出端看 AI 的宏观贡献', en: 'Macro contribution from the output side' }
+        why: { zh: '从产出端看 AI 给经济添了多少', en: 'What AI adds to the economy, seen from the output side' }
       },
       {
         id: 'cost',
@@ -1103,7 +1164,7 @@ window.AI_DATA = {
         unit: { zh: '%', en: '%' },
         colorKey: '--c-info',
         label: { zh: '综合运营成本下降', en: 'Operating cost reduction' },
-        why: { zh: '自动化与预测优化带来的成本红利', en: 'Cost dividend from automation and forecasting' }
+        why: { zh: '自动化加上预测更准，省下来的成本', en: 'Costs saved by automation and better forecasting' }
       },
       {
         id: 'green',
@@ -1112,7 +1173,7 @@ window.AI_DATA = {
         unit: { zh: '%', en: '%' },
         colorKey: '--c-success',
         label: { zh: '单位产出能耗下降', en: 'Energy per unit output down' },
-        why: { zh: '绿色低碳转型的直接体现', en: 'A direct sign of the green transition' }
+        why: { zh: '绿色低碳转型最直接的一个读数', en: 'The most direct reading of the green transition' }
       },
       {
         id: 'jobs',
@@ -1121,7 +1182,7 @@ window.AI_DATA = {
         unit: { zh: '万个 / 年', en: '10k jobs / year' },
         colorKey: '--d5',
         label: { zh: '新增智能相关岗位', en: 'New AI-related jobs' },
-        why: { zh: '结构重塑不只是「替代」', en: 'Restructuring is not only about replacement' }
+        why: { zh: '有人被替代，也有新岗位冒出来', en: 'Jobs are replaced, and new ones appear too' }
       }
     ],
     sensitivity: {
@@ -1264,15 +1325,23 @@ window.AI_DATA = {
       name: { zh: '落地场景：八个现场', en: 'Use cases: eight sites' },
       desc: { zh: 'AI 真正进入生产现场的样子', en: 'What AI looks like on the ground' },
       href: '#scene'
+    },
+    {
+      icon: '🏁',
+      name: { zh: '结论：为什么是引擎', en: 'Conclusion: why an engine' },
+      desc: { zh: '增速对比 + 驱动力排名，用两条硬数据收口', en: 'Growth comparison and a driver ranking to close' },
+      href: '#conclusion'
     }
   ],
   provenance: {
     bubble: 'modeled',
     define: 'modeled',
+    drivers: 'modeled',
     flow: 'modeled',
     forces: 'modeled',
     globalRank: 'sourced',
     graph: 'modeled',
+    growth: 'modeled',
     heatmap: 'modeled',
     industry: 'modeled',
     kpis: 'projected',

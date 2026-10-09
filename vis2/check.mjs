@@ -207,6 +207,25 @@ ok(scaleSeries.length === 7 && scaleSeries[0].year === 2019 && scaleSeries[6].ye
   `data.js scale.series 应为 2019–2025 共 7 个点，实际 ${scaleSeries.length}（${scaleSeries[0] && scaleSeries[0].year}–${scaleSeries[scaleSeries.length - 1] && scaleSeries[scaleSeries.length - 1].year}）`);
 ok(multiSeries.every((s) => s.penetration.length === scaleSeries.length),
   'data.js: 年份播放器（scale.series）与小倍数图必须等长，否则跨图高亮会错位');
+/* 结论节（§13）：增长对比里「AI 相关产业」那一列必须真的由 §04 的带动产业规模逐年算出来 ——
+   更新了产业规模却忘了重算增速（或反过来）会在这里立刻失败，避免两节数据各说各话。 */
+const gp = (DATA.growth && DATA.growth.points) || [];
+ok(gp.length === 5 && gp[0].year === 2020 && gp[4].year === 2024,
+  `data.js growth.points 应为 2020–2024 共 5 个点，实际 ${gp.length}（${gp[0] && gp[0].year}–${gp[4] && gp[4].year}）`);
+const gaugeRelated = (DATA.scale && DATA.scale.related) || [];
+if (gp.length === 5 && gaugeRelated.length >= 6) {
+  gp.forEach((row, i) => {
+    const want = Math.round((gaugeRelated[i + 1].value / gaugeRelated[i].value - 1) * 1000) / 10;
+    ok(Math.abs(row.ai - want) < 0.051,
+      `data.js growth.points[${i}]（${row.year}）AI 增速 ${row.ai} 与 scale.related 逐年重算的 ${want} 不符 —— 改了产业规模就要同步这张表`);
+  });
+}
+/* 结论节（§13）：驱动力对比五个驱动力、每个都要有 v1 / v2 两个数值（缺一个条形就画不出来） */
+const drv = (DATA.drivers && DATA.drivers.rows) || [];
+ok(drv.length === 5 && drv[0].id === 'ai',
+  `data.js drivers.rows 应为 5 行且首行为 ai，实际 ${drv.length} / ${drv[0] && drv[0].id}`);
+ok(drv.every((r) => typeof r.v1 === 'number' && typeof r.v2 === 'number'),
+  'data.js drivers.rows: 每一行都要有 v1 / v2 两个数值（两个时段的贡献，单位：百分点）');
 /* 产业规模外推（scale.forecast，2026–2028E）：
    ① 形状正确、点估计落在 95% 预测区间内；
    ② 关键 —— 它必须真的是「由 2019–2024 线性回归算出来的」：这里独立重拟合一遍，
@@ -281,7 +300,7 @@ ok(provBad.length === 0, `data.js provenance: ${provBad.length} 处取值不合�
 const provRefs = [...app.matchAll(/cardHead\('[a-z]+',\s*[^;]*?,\s*'([A-Za-z]+)'\)/g)].map((m) => m[1]);
 const provMiss = [...new Set(provRefs)].filter((k) => !PROV[k]);
 ok(provMiss.length === 0, `app.js: cardHead 引用了没有登记口径的键 '${provMiss.join("', '")}'（在 data/manifest.json 里补 provenance）`);
-ok(provRefs.length >= 17, `app.js: 只有 ${provRefs.length} 处 cardHead 带口径徽章，应覆盖 17 张卡片（13 张图 + 模拟器 + 2 张敏感性 + 时间线 + 场景 + 来源）`);
+ok(provRefs.length >= 19, `app.js: 只有 ${provRefs.length} 处 cardHead 带口径徽章，应覆盖 19 张卡片（15 张图 + 模拟器 + 2 张敏感性 + 时间线 + 场景 + 来源）`);
 /* 徽章文字与悬停说明都从词表取：T('prov.' + prov) 是拼接键，静态脚本拿不到字面量，这里逐条点名 */
 PROV_KINDS.concat(['list', 'rule']).forEach((k) =>
   ok(zhKeys.has('prov.' + k), `i18n.js: 缺少词条 prov.${k}（口径徽章的文字 / 悬停说明 / 规则列出处的出处）`));
