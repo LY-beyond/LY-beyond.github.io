@@ -761,6 +761,46 @@ window.AI_DATA = {
       { name: { zh: '阿联酋', en: 'UAE' }, value: 40, flag: '🇦🇪' }
     ]
   },
+  world: {
+    caption: { zh: '主要国家人工智能算力与企业的地理分布（示意）', en: 'Where AI compute and firms sit across major economies (indicative)' },
+    noData: { zh: '暂无数据', en: 'No data' },
+    note: { zh: '各国算力与企业数没有统一的权威口径，这里按公开报道与各国 AI 战略折算成示意值（只看国家之间的相对结构，不看绝对水平）；底图只留陆地轮廓与代表国家，抽稀后仅作示意。', en: 'Country-level compute and firm counts have no single authoritative definition, so these are indicative values converted from public reporting and national AI strategies (read the structure between countries, not absolute levels). The basemap keeps only a land outline and the highlighted economies, simplified for illustration.' },
+    source: { zh: '各国 AI 战略与产业报告公开数据整理；底图几何：Natural Earth 110m（经 world-atlas 发布，抽稀后使用）', en: 'National AI strategies and industry reports; basemap: Natural Earth 110m (via world-atlas, simplified)' },
+    metrics: [
+      {
+        id: 'compute',
+        label: { zh: '智能算力规模', en: 'Intelligent compute' },
+        unit: { zh: ' EFLOPS', en: ' EFLOPS' },
+        decimals: 1
+      },
+      {
+        id: 'firms',
+        label: { zh: '人工智能企业数量', en: 'AI firms' },
+        unit: { zh: ' 家', en: ' firms' },
+        decimals: 0
+      }
+    ],
+    rows: [
+      { id: '840', name: { zh: '美国', en: 'United States' }, compute: 45, firms: 12000 },
+      { id: '156', name: { zh: '中国', en: 'China' }, compute: 32, firms: 22000 },
+      { id: '392', name: { zh: '日本', en: 'Japan' }, compute: 6, firms: 2400 },
+      { id: '276', name: { zh: '德国', en: 'Germany' }, compute: 5.5, firms: 2000 },
+      { id: '826', name: { zh: '英国', en: 'United Kingdom' }, compute: 5, firms: 3200 },
+      { id: '250', name: { zh: '法国', en: 'France' }, compute: 4.5, firms: 1600 },
+      { id: '702', name: { zh: '新加坡', en: 'Singapore' }, compute: 4, firms: 1100 },
+      { id: '356', name: { zh: '印度', en: 'India' }, compute: 4, firms: 2400 },
+      { id: '376', name: { zh: '以色列', en: 'Israel' }, compute: 3.5, firms: 2200 },
+      { id: '124', name: { zh: '加拿大', en: 'Canada' }, compute: 3.5, firms: 1300 },
+      { id: '410', name: { zh: '韩国', en: 'South Korea' }, compute: 3, firms: 1500 },
+      { id: '784', name: { zh: '阿联酋', en: 'UAE' }, compute: 3, firms: 700 },
+      { id: '528', name: { zh: '荷兰', en: 'Netherlands' }, compute: 2.5, firms: 800 },
+      { id: '643', name: { zh: '俄罗斯', en: 'Russia' }, compute: 2, firms: 600 },
+      { id: '036', name: { zh: '澳大利亚', en: 'Australia' }, compute: 2, firms: 700 },
+      { id: '756', name: { zh: '瑞士', en: 'Switzerland' }, compute: 1.8, firms: 600 },
+      { id: '752', name: { zh: '瑞典', en: 'Sweden' }, compute: 1.5, firms: 500 },
+      { id: '076', name: { zh: '巴西', en: 'Brazil' }, compute: 1.5, firms: 700 }
+    ]
+  },
   province: {
     caption: { zh: '中国人工智能算力与企业的地理分布（示意）', en: 'Where AI compute and firms sit in China (indicative)' },
     insetLabel: { zh: '南海诸岛', en: 'South China Sea Is.' },
@@ -1356,6 +1396,7 @@ window.AI_DATA = {
     scenes: 'modeled',
     sim: 'modeled',
     sources: 'sourced',
-    timeline: 'sourced'
+    timeline: 'sourced',
+    world: 'modeled'
   }
 };

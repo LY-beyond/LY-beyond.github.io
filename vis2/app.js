@@ -33,6 +33,7 @@
     playTimer: 0,   /* 年份播放器的 setInterval 句柄（重绘前必须清掉，否则定时器会打向已经废弃的 SVG） */
     regionMetric: 0,  /* 地图当前看的是第几个指标 */
     regionTop: false, /* 地图是否只高亮前五名 */
+    worldMetric: 0,   /* 世界地图当前看的是第几个指标 */
     sensReady: false, /* 敏感性图表是否已经画过一轮（决定滑块是否要触发重算） */
     sensTimer: 0      /* 敏感性重算的防抖句柄 */
   };
@@ -326,7 +327,7 @@
    *   ④ 只认自己的参数：地址栏上若是 #region 这类锚点，一律不动它、也不当成状态。
    * 与 i18n 的 ?lang= 互不干扰：语言在 search、视图在 hash。
    * ========================================================= */
-  var URL_KEYS = ['sim', 'f', 'y', 'm', 'top'];
+  var URL_KEYS = ['sim', 'f', 'y', 'm', 'top', 'wm'];
   var lastHash = '';        /* serializeState() 的结果：地址栏写不进去时的「内存副本」 */
   var writtenHash = null;   /* 上次真正写进地址栏的内容，用来挡掉重复写入 */
 
@@ -363,6 +364,8 @@
     var met = D.province && D.province.metrics ? D.province.metrics[STATE.regionMetric] : null;
     if (met) parts.push('m=' + met.id);
     if (STATE.regionTop) parts.push('top=1');
+    var wmet = D.world && D.world.metrics ? D.world.metrics[STATE.worldMetric] : null;
+    if (wmet) parts.push('wm=' + wmet.id);
     return parts.join('&');
   }
 
@@ -417,6 +420,11 @@
       if (mi >= 0) { STATE.regionMetric = mi; applied = true; }
     }
     if (q.top != null) { STATE.regionTop = q.top === '1'; applied = true; }
+    if (q.wm != null) {
+      var wi = -1;
+      ((D.world && D.world.metrics) || []).forEach(function (m, i) { if (m.id === q.wm) wi = i; });
+      if (wi >= 0) { STATE.worldMetric = wi; applied = true; }
+    }
     if (q.sim != null && D.sim && D.sim.sliders) {
       var vals = q.sim.split(',');
       if (vals.length === D.sim.sliders.length) {
@@ -1321,6 +1329,97 @@
     return null;
   }
 
+  /* ---------------- ⑦c 世界地图：代表国家的算力与企业（B2） ---------------- */
+  function renderWorld() {
+    var host = $('#chart-world');
+    if (!host) return;
+    var G = D.world;
+    cardHead('world', P(G.caption), 'world');
+
+    /* 几何同样由静态脚本提供：缺文件时给人话，不给白屏 */
+    if (!window.WORLD_MAP) {
+      var err = add(host, 'p', 'viz-hint', T('viz.geoMissingWorld'));
+      host.classList.add('viz');
+      cardFoot('world', P(G.note), P(G.source));
+      return err;
+    }
+
+    if (STATE.worldMetric == null || !G.metrics[STATE.worldMetric]) STATE.worldMetric = 0;
+    var mi = STATE.worldMetric;
+    var metric = G.metrics[mi];
+    var unit = P(metric.unit);
+
+    var ordered = G.rows.slice().sort(function (a, b) { return b[metric.id] - a[metric.id]; });
+
+    var tools = chartTools(host, {
+      name: 'world',
+      table: function () {
+        return {
+          caption: P(G.caption) + ' · ' + P(metric.label),
+          cols: [
+            { key: 'rank', label: P({ zh: '排名', en: 'Rank' }) },
+            { key: 'name', label: P({ zh: '经济体', en: 'Economy' }) },
+            { key: 'value', label: withUnit(P(metric.label), unit) },
+            { key: 'other', label: withUnit(P(G.metrics[1 - mi].label), P(G.metrics[1 - mi].unit)) }
+          ],
+          rows: ordered.map(function (r, i) {
+            return {
+              rank: i + 1,
+              name: P(r.name),
+              value: C.fmt(r[metric.id], metric.decimals),
+              other: C.fmt(r[G.metrics[1 - mi].id], G.metrics[1 - mi].decimals)
+            };
+          })
+        };
+      }
+    });
+
+    /* 指标切换：和省级地图同一套做法（原生 <select>，键盘与读屏都能用） */
+    var field = add(tools.bar, 'span', 'viz-filter');
+    var label = add(field, 'label', 'viz-filter-label', T('map.metric'));
+    label.setAttribute('for', 'world-metric');
+    var select = document.createElement('select');
+    select.className = 'viz-select';
+    select.id = 'world-metric';
+    G.metrics.forEach(function (m, i) {
+      var o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = withUnit(P(m.label), P(m.unit));
+      select.appendChild(o);
+    });
+    select.value = String(mi);
+    select.addEventListener('change', function () {
+      STATE.worldMetric = Number(this.value);
+      syncUrl();          /* 换指标也换分享链接 */
+      renderWorld();
+    });
+    field.appendChild(select);
+
+    var live = add(tools.bar, 'span', 'viz-live',
+      TT('map.summary', { list: ordered.slice(0, 5).map(function (r) { return P(r.name); }).join(' · ') }));
+    live.setAttribute('role', 'status');
+
+    var names = {}, values = {};
+    G.rows.forEach(function (r) {
+      names[r.id] = P(r.name);
+      values[r.id] = r[metric.id];
+    });
+    C.worldMap(host, {
+      geo: window.WORLD_MAP,
+      names: names,
+      values: values,
+      metricLabel: P(metric.label),
+      unit: unit,
+      decimals: metric.decimals,
+      noData: P(G.noData),
+      rankLabel: T('map.globalRank'),
+      legendLabel: P({ zh: '低 ← 分位五档 → 高', en: 'low ← 5 quantiles → high' }),
+      legendHigh: P({ zh: '高', en: 'high' })
+    });
+    cardFoot('world', P(G.note), P(G.source));
+    return null;
+  }
+
   /* ---------------- ⑧ 要素重构流向图 ---------------- */
   function renderFlow() {
     var host = $('#chart-flow');
@@ -2114,6 +2213,7 @@
     renderHeatmap();
     renderMultiples();
     renderGlobal();
+    renderWorld();
     renderRegion();
     renderFlow();
     renderGraph();
@@ -2139,6 +2239,7 @@
       ['chart-heat', D.heatmap.caption],
       ['chart-multiples', D.multiples.caption],
       ['chart-global', D.globalRank.caption],
+      ['chart-world', D.world.caption],
       ['chart-region', D.province.caption],
       ['chart-flow', D.flow.caption],
       ['chart-graph', D.graph.caption],

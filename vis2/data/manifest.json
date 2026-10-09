@@ -1329,6 +1329,55 @@
       "note": "第 7 节 12 个经济体的 AI 发展指数（按数值降序）"
     },
     {
+      "file": "world.csv",
+      "path": "world",
+      "kind": "object",
+      "provenance": "modeled",
+      "rows": 1,
+      "columns": [
+        { "name": "caption.zh", "type": "text", "raw": "caption.zh:text" },
+        { "name": "caption.en", "type": "text", "raw": "caption.en:text" },
+        { "name": "noData.zh", "type": "text", "raw": "noData.zh:text" },
+        { "name": "noData.en", "type": "text", "raw": "noData.en:text" },
+        { "name": "note.zh", "type": "text", "raw": "note.zh:text" },
+        { "name": "note.en", "type": "text", "raw": "note.en:text" },
+        { "name": "source.zh", "type": "text", "raw": "source.zh:text" },
+        { "name": "source.en", "type": "text", "raw": "source.en:text" }
+      ],
+      "note": "第 7 节世界地图：图题、无数据文案与来源"
+    },
+    {
+      "file": "world-metrics.csv",
+      "path": "world.metrics",
+      "kind": "array",
+      "provenance": "modeled",
+      "rows": 2,
+      "columns": [
+        { "name": "id", "type": "text", "raw": "id:text" },
+        { "name": "label.zh", "type": "text", "raw": "label.zh:text" },
+        { "name": "label.en", "type": "text", "raw": "label.en:text" },
+        { "name": "unit.zh", "type": "text", "raw": "unit.zh:text" },
+        { "name": "unit.en", "type": "text", "raw": "unit.en:text" },
+        { "name": "decimals", "type": "number", "raw": "decimals:number" }
+      ],
+      "note": "第 7 节世界地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径）"
+    },
+    {
+      "file": "world-rows.csv",
+      "path": "world.rows",
+      "kind": "array",
+      "provenance": "modeled",
+      "rows": 18,
+      "columns": [
+        { "name": "id", "type": "text", "raw": "id:text" },
+        { "name": "name.zh", "type": "text", "raw": "name.zh:text" },
+        { "name": "name.en", "type": "text", "raw": "name.en:text" },
+        { "name": "compute", "type": "number", "raw": "compute:number" },
+        { "name": "firms", "type": "number", "raw": "firms:number" }
+      ],
+      "note": "第 7 节 18 个代表国家的算力与企业数量（id 与 map-world.js 的国界 id 双向对齐）"
+    },
+    {
       "file": "province.csv",
       "path": "province",
       "kind": "object",

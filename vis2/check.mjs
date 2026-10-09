@@ -171,8 +171,33 @@ if (CN_MAP) {
   [...dataIds].forEach((id) => ok(geoIds.has(id), `map-china.js 缺少 data.js 里的 id ${id}`));
 }
 
-/* 五个新引擎必须真的导出（app.js 会直接调用） */
-['choropleth', 'heatmap', 'smallMultiples', 'tornado', 'monteCarlo'].forEach((fn) => {
+/* 世界地图几何：坐标里出现 NaN 会让整幅地图消失；几何 id 要和 world.rows 双向对齐
+   （小国锚点 marks 也算几何 —— 110m 底图没收录新加坡） */
+let WORLD_MAP = null;
+const worldFile = new URL('./map-world.js', import.meta.url);
+ok(existsSync(worldFile), 'map-world.js 不存在（跑 node ../_worldmap.mjs 生成）');
+if (existsSync(worldFile)) {
+  const ctx = createContext({ window: {} });
+  runInContext(readFileSync(worldFile, 'utf8'), ctx);
+  WORLD_MAP = ctx.window.WORLD_MAP;
+}
+ok(!!WORLD_MAP, 'map-world.js: 没有导出 window.WORLD_MAP');
+if (WORLD_MAP) {
+  ok((WORLD_MAP.land || []).length > 0, 'map-world.js: 缺少陆地轮廓几何');
+  const flat = [];
+  (WORLD_MAP.land || []).forEach((r) => flat.push(r));
+  (WORLD_MAP.countries || []).forEach((c) => (c.polys || []).forEach((r) => flat.push(r)));
+  const badPts = flat.filter((r) => r.length < 6 || r.length % 2 || r.some((v) => !isFinite(v)));
+  ok(badPts.length === 0, `map-world.js: ${badPts.length} 个环点数不足或含 NaN（重新跑 _worldmap.mjs）`);
+  const wRows = (DATA.world && DATA.world.rows) || [];
+  const wDataIds = new Set(wRows.map((r) => r.id));
+  const wGeoIds = new Set((WORLD_MAP.countries || []).map((c) => c.id).concat(Object.keys(WORLD_MAP.marks || {})));
+  [...wGeoIds].forEach((id) => ok(wDataIds.has(id), `data.js world.rows 缺少几何 id ${id}`));
+  [...wDataIds].forEach((id) => ok(wGeoIds.has(id), `map-world.js 缺少 data.js 里的 id ${id}`));
+}
+
+/* 六个新引擎必须真的导出（app.js 会直接调用） */
+['choropleth', 'worldMap', 'heatmap', 'smallMultiples', 'tornado', 'monteCarlo'].forEach((fn) => {
   ok(new RegExp('\\b' + fn + ':\\s*' + fn + ',').test(charts), `charts.js: 未导出 ${fn}（app.js 会调用）`);
 });
 
@@ -267,6 +292,10 @@ if (scaleSeries.length >= 6 && fcRows.length === 3) {
 /* 地图：34 个省级单元 + 两个指标（与几何 id 的对齐在上面已查） */
 ok(provinceRows.length === 34, `data.js province.rows 应为 34 行，实际 ${provinceRows.length}`);
 ok(((DATA.province && DATA.province.metrics) || []).length === 2, 'data.js province.metrics 应为 2 个（算力 / 企业数）');
+/* 世界地图：18 个代表国家 + 两个指标（与几何 id 的对齐在上面已查） */
+const worldRows = (DATA.world && DATA.world.rows) || [];
+ok(worldRows.length === 18, `data.js world.rows 应为 18 行，实际 ${worldRows.length}`);
+ok(((DATA.world && DATA.world.metrics) || []).length === 2, 'data.js world.metrics 应为 2 个（算力 / 企业数）');
 /* 全球排名：12 个经济体，数值降序（页面承诺「排名」） */
 const gRows = (DATA.globalRank && DATA.globalRank.rows) || [];
 ok(gRows.length === 12, `data.js globalRank.rows 应为 12 行，实际 ${gRows.length}`);

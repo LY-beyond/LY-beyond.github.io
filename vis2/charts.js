@@ -1900,6 +1900,154 @@ window.CHARTS = (function () {
   }
 
   /* =========================================================
+   * ⑫ 世界地图：代表国家的算力与企业分布
+   * ---------------------------------------------------------
+   * 几何来自 window.WORLD_MAP（开发期由 D:/Vis/_worldmap.mjs 抽稀生成）：
+   * 只有「陆地轮廓 + 代表国家国界 + 小国锚点」，其余国家留白。
+   * 填色按分位数五档（与省级地图同一套色带）；标签放在各国外轮廓的重心，
+   * 撞在一起时上下找位置、实在放不下就跳过（免得欧洲糊成一团）。
+   * ========================================================= */
+  function worldMap(container, cfg) {
+    var geo = cfg.geo;
+    var W = canvasW(container, 900, 300);
+    var H = Math.round(W * 0.5);
+    var ctx = stage(container, [W, H], 900);
+    var T = readTokens();
+    var svg = ctx.svg;
+    var narrow = W < 560;
+    var pad = { t: narrow ? 10 : 14, r: narrow ? 10 : 18, b: narrow ? 30 : 34, l: narrow ? 10 : 18 };
+    var pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+
+    var s = Math.min(pw / geo.w, ph / geo.h);
+    var ox = pad.l + (pw - geo.w * s) / 2;
+    var oy = pad.t + (ph - geo.h * s) / 2;
+    var PX = function (x) { return (ox + x * s).toFixed(2); };
+    var PY = function (y) { return (oy + y * s).toFixed(2); };
+    function pathOf(polys) {
+      var d = '';
+      polys.forEach(function (flat) {
+        for (var i = 0; i < flat.length; i += 2) {
+          d += (i ? 'L' : 'M') + PX(flat[i]) + ' ' + PY(flat[i + 1]);
+        }
+        d += 'Z';
+      });
+      return d;
+    }
+    function centerOf(polys) {                           /* 最大环的顶点均值当标签锚 */
+      var big = polys[0], best = -1;
+      polys.forEach(function (flat) { if (flat.length > best) { best = flat.length; big = flat; } });
+      var x = 0, y = 0, n = big.length / 2;
+      for (var i = 0; i < big.length; i += 2) { x += big[i]; y += big[i + 1]; }
+      return [(x / n) * s + ox, (y / n) * s + oy];
+    }
+
+    /* —— 五档分位数（与省级地图同一套色带）—— */
+    var vals = [];
+    geo.countries.forEach(function (p) { if (cfg.values[p.id] != null) vals.push(cfg.values[p.id]); });
+    Object.keys(geo.marks || {}).forEach(function (id) { if (cfg.values[id] != null) vals.push(cfg.values[id]); });
+    vals.sort(function (a, b) { return a - b; });
+    var cuts = [];
+    for (var q = 1; q <= 4; q++) cuts.push(vals[Math.min(vals.length - 1, Math.floor((vals.length * q) / 5))]);
+    function classOf(v) { for (var i = 0; i < cuts.length; i++) if (v <= cuts[i]) return i; return cuts.length; }
+    var RAMP = [[T['--c-primary'], 0.14], [T['--c-primary'], 0.28], [T['--d1'], 0.48],
+      [T['--d5'], 0.78], [T['--d6'], 0.94]];
+    var ramp = RAMP.map(function (r) { return alpha(r[0], r[1]); });
+    function fillFor(v) { return v == null ? T['--c-surface-2'] : ramp[classOf(v)]; }
+    var rank = {};
+    vals.slice().sort(function (a, b) { return b - a; }).forEach(function (v, i) { if (rank[v] == null) rank[v] = i + 1; });
+
+    /* —— 底图：陆地轮廓（安静的中性灰，不抢代表国家的颜色）—— */
+    geo.land.forEach(function (flat) {
+      el('path', { d: pathOf([flat]), fill: T['--c-surface-2'],
+        stroke: T['--c-border'], 'stroke-width': 0.7, 'stroke-linejoin': 'round' }, svg);
+    });
+
+    /* —— 悬停读数：国名 + 指标值 + 名次 —— */
+    function tipFor(id, v, x, y) {
+      var rows = '<b>' + (cfg.names[id] || id) + '</b>';
+      if (v == null) rows += '<span class="viz-tip-row">' + cfg.noData + '</span>';
+      else rows += '<span class="viz-tip-row">' + cfg.metricLabel +
+        '<b>' + fmt(v, cfg.decimals) + cfg.unit + '</b></span>' +
+        '<span class="viz-tip-row">' + cfg.rankLabel + '<b>' + rank[v] + ' / ' + vals.length + '</b></span>';
+      var box = container.getBoundingClientRect();
+      showTip(ctx, rows, x - box.left, y - box.top);
+    }
+
+    /* —— 面：一个有数据的国家一个 <path> —— */
+    var labels = [];
+    geo.countries.forEach(function (p) {
+      var v = cfg.values[p.id];
+      if (v == null) return;                    /* 只画「有数据」的代表国家 */
+      var path = el('path', { d: pathOf(p.polys), fill: fillFor(v),
+        stroke: T['--c-surface'], 'stroke-width': 1, style: 'cursor:pointer' }, svg);
+      path.addEventListener('mousemove', function (e) {
+        path.setAttribute('stroke', T['--c-accent']);
+        tipFor(p.id, v, e.clientX, e.clientY);
+      });
+      path.addEventListener('mouseleave', function () {
+        path.setAttribute('stroke', T['--c-surface']);
+        hideTip(ctx);
+      });
+      labels.push({ id: p.id, v: v, c: centerOf(p.polys) });
+    });
+    /* —— 小国锚点（110m 底图没收录，如新加坡）：画成圆点 —— */
+    Object.keys(geo.marks || {}).forEach(function (id) {
+      var v = cfg.values[id];
+      if (v == null) return;
+      var m = geo.marks[id];
+      var c = [m[0] * s + ox, m[1] * s + oy];
+      var dot = el('circle', { cx: c[0].toFixed(2), cy: c[1].toFixed(2),
+        r: narrow ? 2.6 : 3.4, fill: fillFor(v), stroke: T['--c-surface'],
+        'stroke-width': 1, style: 'cursor:pointer' }, svg);
+      dot.addEventListener('mousemove', function (e) { tipFor(id, v, e.clientX, e.clientY); });
+      dot.addEventListener('mouseleave', function () { hideTip(ctx); });
+      labels.push({ id: id, v: v, c: c });
+    });
+
+    /* —— 标签：数值大的先放，撞车就上下找位置 —— */
+    var boxes = [];
+    var lsize = narrow ? 8.5 : 10;
+    labels.sort(function (a, b) { return b.v - a.v; });
+    labels.forEach(function (L) {
+      var name = cfg.names[L.id] || '';
+      if (!name) return;
+      var tw = name.length * lsize * 0.72 + 6, th = lsize + 3;
+      var offs = [0, -lsize - 2, lsize + 5, -2 * lsize - 4, 2 * lsize + 8];
+      for (var i = 0; i < offs.length; i++) {
+        var bx = L.c[0] - tw / 2, by = L.c[1] + offs[i] - th / 2;
+        var hit = boxes.some(function (b) {
+          return bx < b[0] + b[2] && bx + tw > b[0] && by < b[1] + b[3] && by + th > b[1];
+        });
+        if (hit) continue;
+        boxes.push([bx, by, tw, th]);
+        var ty = L.c[1] + offs[i] + lsize * 0.34;
+        el('text', { x: L.c[0].toFixed(1), y: ty.toFixed(1), 'text-anchor': 'middle',
+          fill: 'none', stroke: T['--c-surface'], 'stroke-width': 2.4, 'font-size': lsize, 'font-weight': 800 }, svg)
+          .textContent = name;
+        el('text', { x: L.c[0].toFixed(1), y: ty.toFixed(1), 'text-anchor': 'middle',
+          fill: T['--c-text'], 'font-size': lsize, 'font-weight': 800 }, svg).textContent = name;
+        break;
+      }
+    });
+
+    /* —— 图例：五档色带 + 低/高 —— */
+    if (!narrow) {
+      var lx = pad.l + 2, ly = H - 16, sw = 18, sh = 9;
+      RAMP.forEach(function (r, i) {
+        el('rect', { x: (lx + i * sw).toFixed(1), y: ly, width: sw - 1.5, height: sh, rx: 2,
+          fill: alpha(r[0], r[1]), stroke: T['--c-border'], 'stroke-width': 0.6 }, svg);
+      });
+      el('text', { x: lx, y: ly - 4, fill: T['--c-muted'], 'font-size': 10, 'font-weight': 700 }, svg)
+        .textContent = cfg.legendLabel || '';
+      el('text', { x: lx + RAMP.length * sw + 4, y: ly + 8, fill: T['--c-muted'], 'font-size': 10 }, svg)
+        .textContent = cfg.legendHigh || '';
+    }
+
+    ctx.count = vals.length;
+    return ctx;
+  }
+
+  /* =========================================================
    * 导出
    * ========================================================= */
   /* =========================================================
@@ -2531,6 +2679,7 @@ window.CHARTS = (function () {
     timeline: timelineRail,
     /* 第二次作业新增的四种图型：地图 / 热力矩阵 / 小倍数 / 敏感性 */
     choropleth: choropleth,
+    worldMap: worldMap,
     heatmap: heatmap,
     smallMultiples: smallMultiples,
     tornado: tornado,

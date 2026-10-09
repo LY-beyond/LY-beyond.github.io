@@ -301,6 +301,14 @@
           <div class="viz" id="chart-global"></div>
           <div data-mount="global-foot"></div>
         </div>
+
+        <div class="card">
+          <div data-mount="world-head"></div>
+          <div class="viz" id="chart-world"></div>
+          <div data-mount="world-foot"></div>
+        </div>
+
+        <p class="region-note" data-i18n="sec.global.tip">提示：世界地图上悬停可看单个国家的数值；工具栏可切换指标与数据表，也能导出 PNG / SVG / CSV。</p>
       </div>
     </section>
 
@@ -482,6 +490,8 @@
   <script src="data.js"></script>
   <!-- 省级边界几何（开发期由 _map.mjs 抽稀生成，运行时零联网） -->
   <script src="map-china.js"></script>
+  <!-- 世界陆地轮廓与代表国家几何（开发期由 _worldmap.mjs 抽稀生成） -->
+  <script src="map-world.js"></script>
   <script src="charts.js"></script>
   <script src="app.js"></script>
 </body>

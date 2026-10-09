@@ -50,7 +50,7 @@ const dirStat = (rel) => {
 /* ---------------- 站点文件（部署目录里真正会被下载的东西） ---------------- */
 const HTML = 'index.html';
 const css = ['tokens.css', 'styles.css', 'theme.css', 'i18n.css'];
-const js = ['theme.js', 'i18n.js', 'data.js', 'map-china.js', 'charts.js', 'app.js'];
+const js = ['theme.js', 'i18n.js', 'data.js', 'map-china.js', 'map-world.js', 'charts.js', 'app.js'];
 const vendor = ['vendor/d3-dispatch.min.js', 'vendor/d3-selection.min.js', 'vendor/d3-quadtree.min.js',
   'vendor/d3-timer.min.js', 'vendor/d3-force.min.js'];
 /* 位图只有一张：首屏背景图（由来见下方 BUDGET 上方注释）。它是全站唯一的二进制资源，
@@ -142,12 +142,13 @@ const assets = [HTML, ...css, ...js, ...vendor, 'favicon.svg', ...images];
    改成一只只浅底小方框（.source-item），无 JS 兜底面板与「筛选空集」兜底面板也补上同一条底。
    实测 CSS 合计 22.6 KB、全站合计 313.6 KB（仍在 330 KB 内）。 */
 const BUDGET = [
-  { what: '全站合计（gzip）', files: assets, max: 330 * 1024, why: '18 个文件全部下载完成的总字节（首屏背景图 + 章节路径带后实测 306.5 KB；330 KB 这一档的由来见上方注释）' },
-  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 104 * 1024, why: 'app / charts / data / i18n / theme（含时间线渐变底与场景色表，实测 102.7 KB）' },
-  { what: 'charts.js（gzip）', files: ['charts.js'], max: 36 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记、预测段 95% 预测区间与热力矩阵 jet 配色）' },
-  { what: 'data.js（gzip）', files: ['data.js'], max: 23 * 1024, why: '全站数据与双语文案（去书面化改写后实测 22.1 KB）' },
+  { what: '全站合计（gzip）', files: assets, max: 330 * 1024, why: '19 个文件全部下载完成的总字节（世界地图后实测 327.5 KB；330 KB 这一档的由来见上方注释）' },
+  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js' && f !== 'map-world.js'), max: 106 * 1024, why: 'app / charts / data / i18n / theme（含世界地图引擎与 §07 卡片，实测 104.6 KB）' },
+  { what: 'charts.js（gzip）', files: ['charts.js'], max: 38 * 1024, why: '15 个自绘 SVG 引擎（含新增的 ⑫ 世界地图：陆地底图 + 分位填色 + 标签避让，实测 36.8 KB）' },
+  { what: 'data.js（gzip）', files: ['data.js'], max: 23 * 1024, why: '全站数据与双语文案（新增 world 三张表后实测 22.9 KB）' },
   { what: 'map-china.js（gzip）', files: ['map-china.js'], max: 14 * 1024, why: '省级边界（抽稀后的静态几何）' },
-  { what: 'CSS 合计（gzip）', files: css, max: 23 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调（含首屏背景图、章节路径带、全站方框柔光底、§12 场景顶条与 §14 来源小方框，实测 22.6 KB）' },
+  { what: 'map-world.js（gzip）', files: ['map-world.js'], max: 13 * 1024, why: '世界陆地轮廓 + 18 个代表国家国界（抽稀后的静态几何，实测 11.3 KB）' },
+  { what: 'CSS 合计（gzip）', files: css, max: 23 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调（含首屏背景图、章节路径带、全站方框柔光底、§12 场景顶条与 §14 来源小方框，实测 22.5 KB）' },
   { what: 'vendor 合计（gzip）', files: vendor, max: 12 * 1024, why: '5 个 d3 子模块（力导向图用）' },
   { what: '单文件最大（gzip）', files: assets, max: 180 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是首屏背景图 background.webp 160.5 KB，其次 charts.js 33.8 KB）' }
 ];
@@ -297,11 +298,11 @@ const colsInManifest = manifest.datasets.reduce((s, d) => s + d.columns.length, 
 const csvFiles = readdirSync(join(HERE, 'data')).filter((f) => f.endsWith('.csv'));
 const csvLines = csvFiles.reduce((s, f) => s + read(join('data', f)).split('\n').filter((l) => l.trim()).length, 0);
 const nLines = (f) => read(f).replace(/\n$/, '').split('\n').length;
-const dataLines = nLines('data.js'), mapLines = nLines('map-china.js');
+const dataLines = nLines('data.js'), mapLines = nLines('map-china.js'), worldLines = nLines('map-world.js');
 /* 位图是二进制，没有「行」的概念 —— 当文本数换行符只会把行数统计带偏 */
 const textAssets = assets.filter((f) => !images.includes(f));
 const pageLines = textAssets.reduce((s, f) => s + nLines(f), 0);
-const handLines = pageLines - dataLines - mapLines;
+const handLines = pageLines - dataLines - mapLines - worldLines;
 const scriptLines = [...scripts, 'data/build.mjs'].reduce((s, f) => s + nLines(f), 0);
 const chartCount = (html.match(/id="chart-[\w-]+"/g) || []).length;
 const gaugeCount = DATA.sim.outputs.length + 1;
@@ -328,10 +329,11 @@ const volTable = [
   ['`app.js`', bytes('app.js') / 1024, gz('app.js') / 1024],
   ['`data.js`', dataKB, gz('data.js') / 1024],
   ['`map-china.js`', bytes('map-china.js') / 1024, gz('map-china.js') / 1024],
+  ['`map-world.js`', bytes('map-world.js') / 1024, gz('map-world.js') / 1024],
   ['`i18n.js`', bytes('i18n.js') / 1024, gz('i18n.js') / 1024],
   ['5 个 d3 子模块', vendorKB, vendorGzKB],
   ['`background.webp`', bytes('background.webp') / 1024, gz('background.webp') / 1024],
-  ['**合计（页面请求 18 个文件）**', diskTotalKB, gzTotalKB]
+  ['**合计（页面请求 19 个文件）**', diskTotalKB, gzTotalKB]
 ];
 const DOC_CLAIMS = [
   { doc: 'README', label: '页面只请求…磁盘…gzip 后',
@@ -380,9 +382,9 @@ const DOC_CLAIMS = [
     re: /\*\*(\d+) 键\*\*（zh \/ en 两表逐键一致），双语文案 \*\*(\d+) 条\*\*/,
     want: [zhKeys, biLeaves], names: ['中英词条', '双语文案'] },
   { doc: 'HIGHLIGHTS', label: '数据速览 代码量行',
-    re: /页面侧 \*\*(\d+) 行\*\*（其中 `data\.js` (\d+) 行、`map-china\.js` (\d+) 行是构建产物，手写约 (\d+) 行）；自检与构建脚本 \*\*(\d+) 行\*\*/,
-    want: [pageLines, dataLines, mapLines, handLines, scriptLines],
-    names: ['页面行数', 'data.js 行', 'map-china.js 行', '手写行数', '脚本行数'] },
+    re: /页面侧 \*\*(\d+) 行\*\*（其中 `data\.js` (\d+) 行、`map-china\.js` (\d+) 行、`map-world\.js` (\d+) 行是构建产物，手写约 (\d+) 行）；自检与构建脚本 \*\*(\d+) 行\*\*/,
+    want: [pageLines, dataLines, mapLines, worldLines, handLines, scriptLines],
+    names: ['页面行数', 'data.js 行', 'map-china.js 行', 'map-world.js 行', '手写行数', '脚本行数'] },
   { doc: 'HIGHLIGHTS', label: '数据速览 依赖行',
     re: /\*\*(\d+) 个 d3 子模块\*\*/, want: [vendor.length], names: ['d3 子模块数'] },
   { doc: 'HIGHLIGHTS', label: '数据速览 传输体积行',

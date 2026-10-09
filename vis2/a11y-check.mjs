@@ -283,7 +283,7 @@ ok(/role',\s*'status'/.test(app) && /timeline\.node/.test(app),
 const hostIds = [...html.matchAll(/id="(chart-[\w-]+|sim-root)"/g)].map((m) => m[1]);
 const labelled = new Set([...app.matchAll(/\['([\w-]+)',\s*D\./g)].map((m) => m[1]));
 const toolNames = new Set([...app.matchAll(/name:\s*'([\w-]+)'/g)].map((m) => m[1]));
-ok(hostIds.length >= 16, `index.html: 图表容器应有 16 个（15 张图 + 模拟器），实际 ${hostIds.length}`);
+ok(hostIds.length >= 17, `index.html: 图表容器应有 17 个（16 张图 + 模拟器），实际 ${hostIds.length}`);
 for (const id of hostIds) {
   ok(labelled.has(id), `app.js: 容器 #${id} 没有进「role=img + aria-label」配对表 → 读屏只会念「图片」`);
   if (id === 'sim-root') continue;   /* 模拟器是一组控件，不是单张图，没有「数据表」视图 */

@@ -69,6 +69,9 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `multiples-series.csv` | `multiples.series` | 记录表 | 3 × 6 | 含预测 | 第 5 节三次产业 2019–2025E 渗透率与效率增益（2024 端点与 industry.rows 一致，由 check.mjs 断言） |
 | `globalRank.csv` | `globalRank` | 单行对象 | 1 × 8 | 公开统计 | 第 7 节全球格局排名：图题、指数口径与来源 |
 | `globalRank-rows.csv` | `globalRank.rows` | 记录表 | 12 × 4 | 公开统计 | 第 7 节 12 个经济体的 AI 发展指数（按数值降序） |
+| `world.csv` | `world` | 单行对象 | 1 × 8 | 测算整理 | 第 7 节世界地图：图题、无数据文案与来源 |
+| `world-metrics.csv` | `world.metrics` | 记录表 | 2 × 6 | 测算整理 | 第 7 节世界地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径） |
+| `world-rows.csv` | `world.rows` | 记录表 | 18 × 5 | 测算整理 | 第 7 节 18 个代表国家的算力与企业数量（id 与 map-world.js 的国界 id 双向对齐） |
 | `province.csv` | `province` | 单行对象 | 1 × 12 | 测算整理 | 第 6 节区域格局地图：图题、五档分位说明、前五名与南海诸岛标注文案 |
 | `province-metrics.csv` | `province.metrics` | 记录表 | 2 × 6 | 测算整理 | 第 6 节地图可切换的两个指标：智能算力规模 / AI 企业数量（示意口径） |
 | `province-rows.csv` | `province.rows` | 记录表 | 34 × 5 | 测算整理 | 第 6 节 34 个省级单元的算力与企业数量（id 与 map-china.js 的几何 id 双向对齐） |
@@ -436,6 +439,40 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 | `value` | number | 数值 |
 | `flag` | text | 文本 |
 
+### `world.csv` → `world`（1 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `caption.zh` | text | 中文文案 |
+| `caption.en` | text | 英文文案 |
+| `noData.zh` | text | 中文文案 |
+| `noData.en` | text | 英文文案 |
+| `note.zh` | text | 中文文案 |
+| `note.en` | text | 英文文案 |
+| `source.zh` | text | 中文文案 |
+| `source.en` | text | 英文文案 |
+
+### `world-metrics.csv` → `world.metrics`（2 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `id` | text | 文本 |
+| `label.zh` | text | 中文文案 |
+| `label.en` | text | 英文文案 |
+| `unit.zh` | text | 中文文案 |
+| `unit.en` | text | 英文文案 |
+| `decimals` | number | 数值 |
+
+### `world-rows.csv` → `world.rows`（18 行）
+
+| 列 | 类型 | 含义 |
+|---|---|---|
+| `id` | text | 文本 |
+| `name.zh` | text | 中文文案 |
+| `name.en` | text | 英文文案 |
+| `compute` | number | 数值 |
+| `firms` | number | 数值 |
+
 ### `province.csv` → `province`（1 行）
 
 | 列 | 类型 | 含义 |
@@ -676,4 +713,4 @@ CSV 第一行每一列写成 `列名:类型`，类型有 `text` / `number` / `bo
 
 ---
 
-共 45 个数据集、285 行、355 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。
+共 48 个数据集、306 行、374 列。数据来源与口径说明见页面第 13 节与 `README.md` 的「数据说明」。

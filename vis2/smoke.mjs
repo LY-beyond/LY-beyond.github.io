@@ -4,7 +4,7 @@
  * 跑法：node smoke.mjs                 （默认打开本地 index.html，file:// 即可）
  *       SITE_URL=http://127.0.0.1:8099/ node smoke.mjs   （改测本地服务器）
  * 用真实 Chrome（CDP）加载页面，逐项断言「只有运行时才可能对/错」的东西：
- *   ① 15 张图各生成一条工具栏，按钮齐全、aria 齐全
+ *   ① 16 张图各生成一条工具栏，按钮齐全、aria 齐全
  *   ② 气泡 → 产业 / 场景 的跨图联动（含空集兜底）
  *   ③ 数据表视图能开能关、行数与数据源一致（图 ⇄ 表的等价性）
  *   ④ 年份播放器：播放会推进、暂停会停下
@@ -12,7 +12,7 @@
  *   ⑥ 切英文后工具栏与图表文案跟着变、无中文残留
  *   ⑦ 地图换指标 / 前五名高亮 / 悬停读数；热力矩阵 15×5；小倍数宽窄两档
  *   ⑧ 拖动模拟器滑块后龙卷风与蒙特卡洛重算
- *   ⑨ 键盘焦点顺序、role="status" 播报、21 个 SVG / 15 节 / 14 导航项
+ *   ⑨ 键盘焦点顺序、role="status" 播报、22 个 SVG / 15 节 / 14 导航项
  *   ⑩ 全程无 console 报错、无资源 404、无横向溢出、顶栏导航不被裁切
  * 末尾打印通过/失败计数与非零退出码，并给统一的 SUMMARY 行。
  * 浏览器：默认自动探测 Chrome / Edge / Chromium，可用 CHROME 环境变量指定；
@@ -273,9 +273,9 @@ const dupRes = await jv(`JSON.stringify({
   sceneLives: document.querySelectorAll('[data-mount="scene-head"] .viz-live').length
 })`);
 check('反复联动重绘不叠加控件（1 个下拉 / 每卡 1 条工具栏）',
-  dupRes.ids === 1 && dupRes.toolbars === 16 && dupRes.bubbleBars === 1 && dupRes.bubblePanels === 1 &&
+  dupRes.ids === 1 && dupRes.toolbars === 17 && dupRes.bubbleBars === 1 && dupRes.bubblePanels === 1 &&
   dupRes.indBars === 1 && dupRes.sceneLives === 1, JSON.stringify(dupRes));
-/* 16 = 15 张图各 1 条（A 档 8 张 + B 档 7 张）+ 关系图内部那条 viz-toolbar--inset */
+/* 17 = 16 张图各 1 条（A 档 8 张 + B 档 8 张）+ 关系图内部那条 viz-toolbar--inset */
 
 console.log('\n[3] 数据表视图');
 const tableRes = await jv(`JSON.stringify((function () {
@@ -562,7 +562,7 @@ await sleep(700);
 
 console.log('\n[7] 整页健康度 / 无障碍 / 回归');
 const health = await jv(`JSON.stringify((function () {
-  var alive = ['chart-radar','chart-scale','chart-industry','chart-bubble','chart-global',
+  var alive = ['chart-radar','chart-scale','chart-industry','chart-bubble','chart-global','chart-world',
     'chart-flow','chart-graph','chart-timeline','chart-growth','chart-drivers','sim-root']
     .filter(function (id) { var h = document.getElementById(id); return !h || !h.querySelector('svg'); });
   var bar = document.getElementById('chart-scale').parentElement.querySelector(':scope > .viz-toolbar');
@@ -584,8 +584,8 @@ const health = await jv(`JSON.stringify((function () {
 })())`);
 check('全程零 JS 报错', health.errs.length === 0, JSON.stringify(health.errs));
 check('无横向溢出（工具栏没有撑破卡片）', health.hOverflow === 0, String(health.hOverflow));
-check('工具栏共 16 条 （15 张图 + 关系图 inset）、行业下拉只有 1 个（重绘不叠加）',
-  health.toolbars === 16 && health.pickerIds === 1, JSON.stringify([health.toolbars, health.pickerIds]));
+check('工具栏共 17 条 （16 张图 + 关系图 inset）、行业下拉只有 1 个（重绘不叠加）',
+  health.toolbars === 17 && health.pickerIds === 1, JSON.stringify([health.toolbars, health.pickerIds]));
 check('全部画布仍在渲染（联动 / 切表后没有空图）', health.alive.length === 0, JSON.stringify(health.alive));
 check('收尾时没有残留的可见数据表或隐藏画布',
   health.visibleTables === 0 && health.hiddenCharts === 0, JSON.stringify([health.visibleTables, health.hiddenCharts]));
@@ -729,7 +729,7 @@ await sleep(400);
  * ========================================================= */
 console.log('\n[8] B 档新增图型：地图 / 热力矩阵 / 小倍数 / 敏感性');
 
-const bIds = ['chart-region', 'chart-heat', 'chart-multiples', 'chart-tornado', 'chart-mc'];
+const bIds = ['chart-region', 'chart-world', 'chart-heat', 'chart-multiples', 'chart-tornado', 'chart-mc'];
 const bTools = await jv(`JSON.stringify((function () {
   return ${JSON.stringify(bIds)}.map(function (id) {
     var host = document.getElementById(id);
@@ -742,12 +742,12 @@ const bTools = await jv(`JSON.stringify((function () {
     };
   });
 })())`);
-check('B 档 5 张新图都有工具栏 + 数据表面板',
-  bTools.length === 5 && bTools.every((t) => t.hasBar && t.hasPanel),
+check('B 档 6 张新图都有工具栏 + 数据表面板',
+  bTools.length === 6 && bTools.every((t) => t.hasBar && t.hasPanel),
   JSON.stringify(bTools.filter((t) => !t.hasBar || !t.hasPanel)));
-check('B 档 5 张新图都具备 图表/数据表 + PNG/SVG/CSV 五枚按钮',
+check('B 档 6 张新图都具备 图表/数据表 + PNG/SVG/CSV 五枚按钮',
   bTools.every((t) => t.btns.length === 5), JSON.stringify(bTools[0].btns));
-check('B 档 5 张新图都有 role="img" + aria-label',
+check('B 档 6 张新图都有 role="img" + aria-label',
   bTools.every((t) => t.role === 'img' && !!t.aria), JSON.stringify(bTools.map((t) => t.aria)));
 
 /* ---------- B1 分级填色地图 ---------- */
@@ -847,6 +847,77 @@ check('「前五名」开关只留 5 个省高亮、其余 29 个压暗',
   mapTopOn.bright === 5 && mapTopOn.dim === 29 && mapTopOn.pressed === 'true', JSON.stringify(mapTopOn));
 check('再点一次恢复全亮 34 个',
   mapTopOff.bright === 34 && mapTopOff.dim === 0 && mapTopOff.pressed === 'false', JSON.stringify(mapTopOff));
+
+
+/* ---------- B1′ 世界地图（代表国家的算力与企业） ---------- */
+const worldRes = await jv(`JSON.stringify((function () {
+  var host = document.getElementById('chart-world');
+  var svg = host.querySelector('svg.viz-svg');
+  var paths = [].slice.call(svg.querySelectorAll('path'));
+  var circles = [].slice.call(svg.querySelectorAll('circle'));
+  var fills = {};
+  paths.forEach(function (p) { fills[p.getAttribute('fill')] = 1; });
+  var bad = [].filter.call(svg.querySelectorAll('path, circle, text'), function (el) {
+    return [].some.call(el.attributes, function (a) { return /NaN|Infinity/.test(a.value); });
+  }).length;
+  return {
+    geo: !!window.WORLD_MAP,
+    countries: window.WORLD_MAP.countries.length,
+    land: window.WORLD_MAP.land.length,
+    paths: paths.length, circles: circles.length, bad: bad,
+    distinctFills: Object.keys(fills).length,
+    options: document.getElementById('world-metric').options.length,
+    texts: [].map.call(svg.querySelectorAll('text'), function (t) { return t.textContent; })
+  };
+})())`);
+check('世界地图几何已加载（陆地轮廓 + 17 个代表国家）',
+  worldRes.geo && worldRes.countries === 17 && worldRes.land >= 1,
+  JSON.stringify({ c: worldRes.countries, l: worldRes.land }));
+check('世界地图画出国界 + 陆地轮廓 + 1 个新加坡锚点',
+  worldRes.paths === worldRes.countries + worldRes.land && worldRes.circles === 1, JSON.stringify(worldRes));
+check('世界地图元素没有 NaN / Infinity 坐标', worldRes.bad === 0, String(worldRes.bad));
+check('世界地图按分位数至少分 5 档填色', worldRes.distinctFills >= 5, String(worldRes.distinctFills));
+check('世界地图有 2 项指标下拉', worldRes.options === 2, String(worldRes.options));
+check('世界地图标出国名（含美国 / 中国）',
+  worldRes.texts.some(function (t) { return /美国|United States/.test(t); }) &&
+  worldRes.texts.some(function (t) { return /中国|China/.test(t); }), JSON.stringify(worldRes.texts.slice(0, 6)));
+
+const worldHover = await jv(`JSON.stringify((function () {
+  var host = document.getElementById('chart-world');
+  var svg = host.querySelector('svg.viz-svg');
+  var biggest = [].slice.call(svg.querySelectorAll('path[style*="pointer"]')).sort(function (a, b) {
+    return b.getBBox().width - a.getBBox().width;
+  })[0];
+  var box = biggest.getBoundingClientRect();
+  biggest.dispatchEvent(new MouseEvent('mousemove', { bubbles: true,
+    clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }));
+  var tip = host.querySelector('.viz-tip');
+  return { shown: !tip.hidden, text: tip.textContent, hasRank: /\\//.test(tip.textContent) };
+})())`);
+check('世界地图悬停有读数（国名 + 数值 + 全球排名）',
+  worldHover.shown && worldHover.text.length > 3 && worldHover.hasRank, JSON.stringify(worldHover));
+
+const worldMetric = await jv(`JSON.stringify((function () {
+  var host = document.getElementById('chart-world');
+  var card = host.parentElement;
+  var seg = card.querySelectorAll(':scope > .viz-toolbar .viz-seg button');
+  seg[1].click();                                    /* 切到数据表视图 */
+  var rowValue = function () {
+    var tr = card.querySelector(':scope > .viz-table-wrap .viz-table tbody tr');
+    return tr ? tr.children[2].textContent : '';
+  };
+  var before = rowValue();
+  var sel = document.getElementById('world-metric');
+  sel.value = '1';
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
+  var after = rowValue();
+  var tbl = card.querySelectorAll(':scope > .viz-table-wrap .viz-table tbody tr').length;
+  seg[0].click();                                    /* 切回图表视图 */
+  return { before: before, after: after, tblRows: tbl };
+})())`);
+check('世界地图切换指标后数据表数值真的换了（45 EFLOPS → 22,000 家）',
+  /45/.test(worldMetric.before) && /22,000/.test(worldMetric.after), JSON.stringify(worldMetric));
+check('世界地图数据表有 18 行（每个代表国家一行）', worldMetric.tblRows === 18, String(worldMetric.tblRows));
 
 
 /* ---------- B2 热力矩阵 ---------- */
@@ -1067,7 +1138,7 @@ check('小倍数 CSV 有表头 + 21 行（3 产业 × 7 年）',
 await ev(`document.querySelector('.lang-switch-item[data-lang="en"]').click()`);
 await sleep(800);
 const enB = await jv(`JSON.stringify((function () {
-  var ids = ['chart-region', 'chart-heat', 'chart-multiples', 'chart-tornado', 'chart-mc'];
+  var ids = ['chart-region', 'chart-world', 'chart-heat', 'chart-multiples', 'chart-tornado', 'chart-mc'];
   var cjk = 0, total = 0, btns = null, cjkSamples = [];
   ids.forEach(function (id) {
     var card = document.getElementById(id).parentElement;
@@ -1086,7 +1157,7 @@ const enB = await jv(`JSON.stringify((function () {
       .querySelector(':scope > .viz-toolbar').getAttribute('aria-label')
   };
 })())`);
-check('英文模式下 5 张新图的 SVG 文字没有中文残留', enB.cjk === 0, JSON.stringify(enB.samples));
+check('英文模式下 6 张新图的 SVG 文字没有中文残留', enB.cjk === 0, JSON.stringify(enB.samples));
 check('英文模式下工具栏、指标下拉、单位括号都是英文写法',
   enB.btns.indexOf('Export CSV') > -1 && /Intelligent compute \(EFLOPS\)/.test(enB.metricOpts) &&
   !/[\u4e00-\u9fa5]/.test(enB.metricOpts), JSON.stringify({ btns: enB.btns, opt: enB.metricOpts }));
@@ -1144,8 +1215,8 @@ const provRes = await jv(`JSON.stringify((function () {
    前三个是首屏 KPI 条 / 概览段落 / 作用力列表（数据直接铺在版式里，没有自己的卡），
    后三个是配色表（渲染用的元数据，不该出现在卡片上）。 */
 const PROV_NO_CARD = ['overview', 'kpis', 'forces', 'paletteBase', 'paletteAccent', 'paletteKeys'];
-check('P2 19 张卡片每张都有且只有一枚口径徽章（徽章上的键都在 data.js 里登记过）',
-  provRes.n === 19 && provRes.n === provRes.heads && provRes.missing.length === 0 &&
+check('P2 20 张卡片每张都有且只有一枚口径徽章（徽章上的键都在 data.js 里登记过）',
+  provRes.n === 20 && provRes.n === provRes.heads && provRes.missing.length === 0 &&
   provRes.dup.length === 0 && provRes.bare.length === 0,
   JSON.stringify({ n: provRes.n, heads: provRes.heads, missing: provRes.missing,
     repeat: provRes.repeat, dup: provRes.dup, bare: provRes.bare }));
@@ -1273,9 +1344,9 @@ const bHealth = await jv(`JSON.stringify({
   navClipped: (function () { var n = document.getElementById('site-nav'); return n.scrollWidth - n.clientWidth; }())
 })`);
 check('B 档全过程没有 JS 报错', bHealth.errs.length === 0, JSON.stringify(bHealth.errs));
-/* 15 张自绘图 + 模拟器里的 6 个环形仪表 = 21 个 SVG */
-check('整页 21 个 SVG（15 张图 + 6 个仪表）、15 节、14 个导航项',
-  bHealth.charts === 21 && bHealth.sections === 15 && bHealth.navItems === 14, JSON.stringify(bHealth));
+/* 16 张自绘图 + 模拟器里的 6 个环形仪表 = 22 个 SVG */
+check('整页 22 个 SVG（16 张图 + 6 个仪表）、15 节、14 个导航项',
+  bHealth.charts === 22 && bHealth.sections === 15 && bHealth.navItems === 14, JSON.stringify(bHealth));
 check('中文模式下顶栏 14 项导航也不被裁切', bHealth.navClipped === 0, String(bHealth.navClipped));
 check('整页仍然没有横向溢出', bHealth.hOverflow === 0, String(bHealth.hOverflow));
 
@@ -1400,7 +1471,7 @@ const p2Csv = JSON.parse(await ev(`(async function () {
 
   /* 逐张图点一次「导出 CSV」，用单图的 CSV 去核对打包文件：
      打包不是另写一份数据，所以单图里的每一行都必须原样出现在打包结果里 */
-  var cards = ['chart-radar', 'chart-scale', 'chart-industry', 'chart-bubble', 'chart-global',
+  var cards = ['chart-radar', 'chart-scale', 'chart-industry', 'chart-bubble', 'chart-global', 'chart-world',
     'chart-region', 'chart-heat', 'chart-multiples', 'chart-flow', 'chart-graph', 'chart-timeline',
     'chart-tornado', 'chart-mc', 'chart-growth', 'chart-drivers'];
   var missing = [];
@@ -1449,7 +1520,7 @@ check('打包 CSV 为每个表节都写了「表：…」标题（数量与页�
 check('打包 CSV 末尾附带 12 条数据来源（序号 / 资料 / 说明）',
   p2Csv.srcAt > 0 && p2Csv.srcRows === 12,
   JSON.stringify({ at: p2Csv.srcAt, rows: p2Csv.srcRows, first: p2Csv.srcLine }));
-check('打包 CSV 覆盖 15 张图各自导出里的每一行（没有漏表、没有第二套数据）',
+check('打包 CSV 覆盖 16 张图各自导出里的每一行（没有漏表、没有第二套数据）',
   p2Csv.missingN === 0, p2Csv.missingN + ' 行缺失：' + JSON.stringify(p2Csv.missing));
 
 
