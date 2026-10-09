@@ -34,7 +34,7 @@ window.AI_DATA = {
   paletteBase: ['--s-base', '--s-base-alt', '--s-base-warm'],
   paletteAccent: ['--c-accent', '--c-danger', '--c-info', '--c-primary', '--d5', '--d6', '--d3', '--d4'],
   define: {
-    lead: { zh: '官方定义说，新质生产力由技术革命性突破、生产要素创新性配置、产业深度转型升级而来。翻成白话：它不靠多投人、多投钱，而是把要素用得更聪明。而 AI 恰好把生产力的三个基本要素一起改了。', en: 'The official definition: new quality productive forces come from revolutionary technological breakthroughs, innovative allocation of production factors and deep industrial transformation. In plain words, progress no longer comes from adding more people and money, but from using the same factors more cleverly. And AI happens to rewrite all three basic factors at once.' },
+    lead: { zh: '官方给出的三个来源是技术革命性突破、生产要素创新性配置、产业深度转型升级。落到实处，就是不靠多投人、多投钱，让同样的要素用得更聪明。AI 动手的地方也在这三处：下面三张卡片，就是它们各自的前后对比。', en: 'The official definition names three sources: revolutionary technological breakthroughs, innovative allocation of production factors, and deep industrial transformation. In practice that means getting more out of the same factors rather than pouring in more people and money. AI works on all three fronts: the three cards below show each of them, before and after.' },
     pillars: [
       {
         key: 'labor',
