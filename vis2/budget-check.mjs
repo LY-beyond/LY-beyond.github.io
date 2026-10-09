@@ -116,14 +116,38 @@ const assets = [HTML, ...css, ...js, ...vendor, 'favicon.svg', ...images];
    数据表等价物；打印时两面摊开印出来。方框沿用 .kpi / .pillar / .force-card 同一条画法，没有新色阶。
    实测 styles.css 53.9 KB / 15.0 KB gzip、app.js 96.4 KB / 31.1 KB、全站合计 310.1 KB（仍在 330 KB 内）；
    CSS 合计 20.3 → 21.0 KB：删掉旧表那 70 行 CSS 基本抵掉新增的翻面与按钮样式，21 KB 这条线只剩 49 B ——
-   以后再动 CSS 得先从这一块删，别再往上调。真机断言 152 → 156（smoke.mjs 新增 4 条见下）。 */
+   以后再动 CSS 得先从这一块删，别再往上调。真机断言 152 → 156（smoke.mjs 新增 4 条见下）。
+   charts.js 于「排名图 / 热力矩阵 jet 配色」上调 35 → 36 KB：横向排名图原来按名次走「暖 → 冷」
+   令牌色阶（榜首先用强调橙突出前 2 名），热力矩阵原来是「青 → 蓝 → 靛 → 洋红」的令牌色带；
+   这轮两张整片铺色的图都换成科学可视化的经典 jet 彩虹色阶 —— 新增 jet()（三个通道各一段
+   分段线性，穿过深蓝 / 蓝 / 青 / 绿 / 黄 / 橙 / 红 / 深红九个锚点，返回不透明 #rrggbb），
+   排名图按名次取 t（榜首红、榜尾蓝）、热力矩阵按列内归一化取 t（格内数字改按格底真实亮度在
+   --c-text / --c-on-primary 里二选一）；同时删掉不再有调用方的 scaleColor。其余 7 条分项一律
+   不动。实测 charts.js 113.9 KB / 34.7 KB gzip，全站合计 310.2 KB（仍在 330 KB 内）。
+   styles.css 于「§10 模拟器美化底纹」上调 CSS 合计 21 → 22 KB：三张卡加 .card--glow
+   （与 .ov-card 同一套柔光 + 斜向淡蓝底），四个旋钮收进 .sim-controls 面板、滑块轨道按
+   --sim-fill 填主色进度，综合指数面板改成主色渐变的重心，五项产出卡按 --out-accent
+   （app.js 写入，= 卡内仪表弧线色）加一道 3px 标签条并悬停抬起。配色全部沿用既有令牌与
+   .kpi / .pillar 那条 158deg 画法，没有新色阶；文字仍落在浅色区，a11y-check 的对比度组合
+   不变（236 条照旧全过）。实测 CSS 合计 21.9 KB、全站合计 311.5 KB（仍在 330 KB 内）。
+   §11 时间线 + §12 落地场景「美化」（CSS 合计 22 → 23 KB、手写 JS 102 → 104 KB）：
+   时间线卡加 .card--glow、图表里给卡片 / 中轴各铺一条 <linearGradient>（卡片白面 → 本类色相
+   极浅底、中轴灰蓝 → 主色）并给节点加一圈光晕；落地场景八张卡按场景稳定键 match 取「场景色」
+   （--scene-accent 写成 var(--x) 链），派生渐变底 / 描边 / 顶部标签条 / 图标底。
+   颜色一律取自既有令牌，无新色阶。实测 CSS 合计 22.3 KB、charts.js 116.2 KB、app.js 98.5 KB
+   （手写 JS 102.7 KB）、全站合计 626.4 KB（仍在 330 KB 内）。
+   「全站方框统一柔光底」（CSS 合计不变，仍 ≤ 23 KB）：把 §10 那次加的 .card--glow 折进
+   .card 本身 —— 17 张章节卡于是全部走同一条「两枚柔光 + 斜向淡蓝」画法（4 处 HTML 的
+   class 随之删掉，少一个只在四张卡上有意义的修饰类）；§14 的 12 条来源从「一列虚线」
+   改成一只只浅底小方框（.source-item），无 JS 兜底面板与「筛选空集」兜底面板也补上同一条底。
+   实测 CSS 合计 22.6 KB、全站合计 313.6 KB（仍在 330 KB 内）。 */
 const BUDGET = [
   { what: '全站合计（gzip）', files: assets, max: 330 * 1024, why: '18 个文件全部下载完成的总字节（首屏背景图 + 章节路径带后实测 306.5 KB；330 KB 这一档的由来见上方注释）' },
-  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 102 * 1024, why: 'app / charts / data / i18n / theme（含章节路径带渲染，实测 99.7 KB）' },
-  { what: 'charts.js（gzip）', files: ['charts.js'], max: 35 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记与预测段 95% 预测区间）' },
+  { what: '手写 JS（gzip）', files: js.filter((f) => f !== 'map-china.js'), max: 104 * 1024, why: 'app / charts / data / i18n / theme（含时间线渐变底与场景色表，实测 102.7 KB）' },
+  { what: 'charts.js（gzip）', files: ['charts.js'], max: 36 * 1024, why: '14 个自绘 SVG 引擎（含年份高亮带、弱口径列标记、预测段 95% 预测区间与热力矩阵 jet 配色）' },
   { what: 'data.js（gzip）', files: ['data.js'], max: 23 * 1024, why: '全站数据与双语文案（去书面化改写后实测 22.1 KB）' },
   { what: 'map-china.js（gzip）', files: ['map-china.js'], max: 14 * 1024, why: '省级边界（抽稀后的静态几何）' },
-  { what: 'CSS 合计（gzip）', files: css, max: 21 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调（含首屏背景图、章节路径带、三 / 五股方框渐变底与标签配色，实测 20.3 KB）' },
+  { what: 'CSS 合计（gzip）', files: css, max: 23 * 1024, why: '设计令牌 + 布局 + 主题 + 语言微调（含首屏背景图、章节路径带、全站方框柔光底、§12 场景顶条与 §14 来源小方框，实测 22.6 KB）' },
   { what: 'vendor 合计（gzip）', files: vendor, max: 12 * 1024, why: '5 个 d3 子模块（力导向图用）' },
   { what: '单文件最大（gzip）', files: assets, max: 180 * 1024, mode: 'max', why: '任何单个文件都不该拖慢首屏（当前最大是首屏背景图 background.webp 160.5 KB，其次 charts.js 33.8 KB）' }
 ];

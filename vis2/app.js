@@ -1194,7 +1194,7 @@
     });
     C.hRankBars(host, {
       metric: P(D.globalRank.metric),
-      max: 100, decimals: 0, labelWidth: 170, highlight: 2,
+      max: 100, decimals: 0, labelWidth: 170,
       rows: D.globalRank.rows.map(function (r) {
         return { name: P(r.name), value: r.value, flag: r.flag, note: '' };
       })
@@ -1472,6 +1472,9 @@
       input.min = '0'; input.max = '100'; input.step = '1';
       input.value = String(STATE.sim[s.id]);
       input.className = 'sim-range';
+      /* 已拖出的那一段用主色渐变填满（CSS 侧读 --sim-fill，滚动时只改这一个变量，
+         不重排 DOM）：滑块的「进度」一眼可见，控制台不再是一排灰线。 */
+      input.style.setProperty('--sim-fill', STATE.sim[s.id] + '%');
       input.setAttribute('aria-label', P(s.label));
       row.appendChild(input);
       add(row, 'p', 'sim-slider-hint', P(s.hint));
@@ -1486,6 +1489,7 @@
         STATE.sim[k] = v[k];
         if (sliders[k]) {
           sliders[k].input.value = String(v[k]);
+          sliders[k].input.style.setProperty('--sim-fill', v[k] + '%');
           sliders[k].out.textContent = v[k] + sliders[k].unit;
         }
       });
@@ -1513,20 +1517,26 @@
 
     /* —— 右：综合指数 + 五个产出 —— */
     var gaugeColors = { tfp: K.primary, gdp: K.accent, cost: K.info, green: K.success, jobs: K.d5 };
+    /* 先按当前旋钮算一遍读数：把真值 seed 进仪表，入场动画才从 0 长到真值
+       （传 0 的话动画落点就是 0，首屏六个仪表会全显示 0 —— 见 charts.js gauge() 注释）。 */
+    var initial = D.sim.model(STATE.sim);
 
     var indexBox = add(right, 'div', 'sim-index');
     add(indexBox, 'p', 'sim-index-label', P(D.sim.index));
     var indexHost = add(indexBox, 'div', 'sim-gauge');
-    var indexGauge = C.gauge(indexHost, { max: 100, value: 0, unit: '/ 100', color: K.primary });
+    var indexGauge = C.gauge(indexHost, { max: 100, value: initial.index, unit: '/ 100', color: K.primary });
 
     var grid = add(right, 'div', 'sim-outputs');
     var cards = {};
     D.sim.outputs.forEach(function (o) {
       var card = add(grid, 'div', 'sim-out');
+      /* 每张产出卡的「指标色」= 卡内仪表的弧线色：CSS 用 --out-accent 派生顶部标签条
+         （只作图形，对卡底 ≥ 3:1），五项产出一眼能和自己的仪表对上号。 */
+      card.style.setProperty('--out-accent', gaugeColors[o.id] || K.primary);
       add(card, 'p', 'sim-out-label', P(o.label));
       var gh = add(card, 'div', 'sim-gauge');
       var g = C.gauge(gh, {
-        max: o.max, decimals: o.decimals, value: 0, unit: '', color: gaugeColors[o.id] || K.primary
+        max: o.max, decimals: o.decimals, value: initial[o.id], unit: '', color: gaugeColors[o.id] || K.primary
       });
       var delta = add(card, 'p', 'sim-out-delta');
       add(card, 'p', 'sim-out-why', P(o.why));
@@ -1538,10 +1548,12 @@
 
     function apply(init) {
       var r = D.sim.model(STATE.sim);
-      indexGauge.update(r.index);
+      /* 首屏不推读数：仪表自己会从 0 长到上面 seed 进去的真值（留住入场动画）；
+         之后的每次调用（拖旋钮 / 选预设 / 复位）才把新读数推给仪表。 */
+      if (!init) indexGauge.update(r.index);
       D.sim.outputs.forEach(function (o) {
         var rec = cards[o.id];
-        rec.gauge.update(r[o.id]);
+        if (!init) rec.gauge.update(r[o.id]);
         var diff = r[o.id] - baseline[o.id];
         rec.delta.textContent = P(D.sim.baseline) + ' ' + (diff >= 0 ? '+' : '') +
           C.fmt(diff, o.decimals) + ' ' + P(o.unit);
@@ -1556,6 +1568,7 @@
       sliders[s.id].input.addEventListener('input', function () {
         STATE.sim[s.id] = Number(this.value);
         sliders[s.id].out.textContent = this.value + s.unit;
+        this.style.setProperty('--sim-fill', this.value + '%');
         apply();
       });
     });
@@ -1844,6 +1857,15 @@
     clear(host);
     cardHead('scene', P(D.scenes.caption), 'scenes');
 
+    /* 场景色表：稳定键 match → 令牌名（值写成 var(--x) 链，主题切换自动跟随，图表无需重绘）。
+       色相按含义选：制造=主色蓝 / 医疗=红 / 农业=绿 / 教育=紫 / 金融=钢蓝 / 能源=琥珀 /
+       交通=橙 / 政务=粉 —— 八个色在两档主题下对卡片底都 ≥ 3:1（CSS 侧派生顶条 / 描边 / 图标底）。 */
+    var SCENE_HUE = {
+      manufacturing: '--c-primary', healthcare: '--c-danger', agriculture: '--c-success',
+      education: '--d5', finance: '--c-info', energy: '--c-warn',
+      logistics: '--c-accent', public: '--d6'
+    };
+
     /* 跨图联动（接收端）：只留和选中行业对得上的场景。
        match 是 data.js 里的稳定键，不是中文名。 */
     var p = pickedPoint();
@@ -1869,6 +1891,8 @@
 
     shown.forEach(function (s) {
       var card = add(host, 'article', 'scene');
+      /* 场景色写在卡片上（值是 var(--x) 链）—— CSS 拿它派生渐变底 / 描边 / 顶部标签条 / 图标底 */
+      if (SCENE_HUE[s.match]) card.style.setProperty('--scene-accent', 'var(' + SCENE_HUE[s.match] + ')');
       var top = add(card, 'div', 'scene-top');
       add(top, 'span', 'scene-icon', s.icon);
       add(top, 'h3', 'scene-name', P(s.name));

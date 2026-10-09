@@ -307,10 +307,20 @@ b, strong { font-weight: 800; }
 }
 .section-head > div { min-width: 0; }
 
-/* ---------------- 卡片与图表容器 ---------------- */
+/* ---------------- 卡片与图表容器 ----------------
+   全站方框统一走同一条「柔光底」画法（.card / .kpi / .pillar / .cmp-card / .force-card /
+   .ov-card / .scene / .sim-out 一致）：白面斜向右下过渡到极浅蓝，再叠两枚柔光
+   （--tex-glow / --tex-cool 是全局纹理令牌，亮暗两档自动跟随）——
+   卡片不再是一整块死白。最深处只有主色 8%（比 .ov-card 的 9% 还浅），
+   卡内 12.5px 的 --c-text-soft 仍 ≥ 4.5:1，a11y-check 的组合不变。 */
 .card {
   padding: var(--space-lg);
-  background: var(--c-surface);
+  background:
+    radial-gradient(120% 86% at 0% 0%, var(--tex-glow), transparent 58%),
+    radial-gradient(110% 86% at 100% 100%, var(--tex-cool), transparent 60%),
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--c-primary) 8%, var(--c-surface)) 0%,
+      var(--c-surface) 54%);
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -931,7 +941,19 @@ b, strong { font-weight: 800; }
 @media (max-width: 900px) { .sim { grid-template-columns: 1fr; gap: var(--space-lg); } }
 
 .sim-slider { margin-bottom: var(--space-lg); }
-.sim-controls { min-width: 0; }
+/* 控制台：把四个旋钮收进一块白面面板里，与右栏读数区分开 ——
+   底 / 边沿用 .kpi 那条 158deg 画法（白面斜向右下过渡到极浅蓝），
+   面板压在 .card 的柔光底上，靠一层浅阴影「立」起来。 */
+.sim-controls {
+  min-width: 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 64%,
+    color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 100%);
+  box-shadow: var(--shadow-xs);
+}
 .sim-readout > * { min-width: 0; }
 .sim-slider-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .sim-slider-label { font-size: 14px; font-weight: 800; }
@@ -950,7 +972,12 @@ b, strong { font-weight: 800; }
 .sim-range::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: var(--radius-pill);
-  background: var(--c-surface-2);
+  /* 已拖出的那一段（0 → --sim-fill，由 app.js 写入）填主色 → 亮蓝渐变，
+     右侧留轨道底色：滑块不再是一条纯灰线，「已经调到哪儿」一眼可见。 */
+  background: linear-gradient(90deg,
+    var(--c-primary),
+    var(--c-primary-2) var(--sim-fill, 50%),
+    var(--c-surface-2) var(--sim-fill, 50%));
   box-shadow: inset 0 0 0 1px var(--c-line);
 }
 .sim-range::-webkit-slider-thumb {
@@ -961,12 +988,21 @@ b, strong { font-weight: 800; }
   border-radius: 50%;
   background: var(--c-primary);
   border: 3px solid var(--c-surface);
-  box-shadow: var(--shadow-sm);
+  /* 两层影：一层贴边的落地影（--shadow-sm），一层主色柔光（--mix-soft），
+     让旋钮像一颗被按住的按钮，而不是飘在轨道上的圆点。 */
+  box-shadow: var(--shadow-sm),
+    0 0 0 4px color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
 }
+/* Firefox 原生就有「已划过」的进度段，直接给它上同一支渐变（不靠 --sim-fill） */
 .sim-range::-moz-range-track {
   height: 6px;
   border-radius: var(--radius-pill);
   background: var(--c-surface-2);
+}
+.sim-range::-moz-range-progress {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2));
 }
 .sim-range::-moz-range-thumb {
   width: 14px; height: 14px;
@@ -1005,11 +1041,19 @@ b, strong { font-weight: 800; }
 }
 @media (max-width: 700px) { .sim-readout { grid-template-columns: 1fr; } }
 
+/* 综合指数：整块右栏的视觉重心 —— 主色斜向渐变（浅 → 稍深）+ 顶上一枚柔光，
+   加一圈主色描边，让它从 .card 的底上「浮」出来。 */
 .sim-index {
-  padding: var(--space);
+  padding: var(--space-lg) var(--space);
   text-align: center;
-  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  border: 1px solid color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-line));
   border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 80% at 50% -12%, var(--tex-glow), transparent 62%),
+    linear-gradient(158deg,
+      color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface)) 0%,
+      color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 100%);
+  box-shadow: var(--shadow-xs);
 }
 .sim-index-label { font-size: 13px; font-weight: 800; color: var(--c-primary); }
 /* 模拟器仪表：原来 max-width:190px 会把 200×200 的 viewBox 压到 125px 渲染，
@@ -1021,11 +1065,34 @@ b, strong { font-weight: 800; }
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--space);
 }
+/* 五项产出：底 / 边沿用 .kpi 那条 158deg 画法（白面斜向右下过渡到极浅蓝），
+   顶上再加一道 3px 的「指标色标签条」—— 颜色 = 卡内仪表弧线的颜色，
+   由 app.js 写进 --out-accent：五项产出不再是一模一样的五个白盒。
+   标签条只作图形（对卡底 ≥ 3:1），不承载文字；文字仍落在浅色区，保住对比度。 */
 .sim-out {
+  --out-accent: var(--c-primary);
+  position: relative;
   padding: var(--space);
   border: 1px solid var(--c-line);
   border-radius: var(--radius);
-  background: var(--c-surface);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 46%,
+    color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface)) 100%);
+  box-shadow: var(--shadow-xs);
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
+}
+.sim-out::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--out-accent);
+}
+.sim-out:hover {
+  transform: translateY(-2px);
+  border-color: var(--out-accent);
+  box-shadow: var(--shadow-hover);
 }
 .sim-out-label { font-size: 12.5px; font-weight: 800; min-height: 2.6em; }
 .sim-out-delta { font-size: 11.5px; color: var(--c-muted); font-variant-numeric: tabular-nums; }
@@ -1042,17 +1109,51 @@ b, strong { font-weight: 800; }
   gap: var(--space);
   margin-top: var(--space-lg);
 }
+/* 每张场景卡一个「场景色」（--scene-accent，app.js 按场景的稳定键 match 写入一个令牌名）：
+   底 / 边 / 顶部标签条 / 图标底全部由它派生 —— 与 .sim-out 同一条画法，
+   八张白盒不再一模一样；用稳定键而不是下标，筛选之后颜色不会重新洗牌。 */
 .scene {
+  --scene-accent: var(--c-primary);
+  --scene-soft: color-mix(in srgb, var(--scene-accent) var(--mix-halo), var(--c-surface));
+  --scene-line: color-mix(in srgb, var(--scene-accent) var(--mix-halo), var(--c-border));
+  position: relative;
   padding: var(--space-lg);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 44%, var(--scene-soft) 100%);
+  border: 1px solid var(--scene-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
-.scene:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+/* 顶部一道 3px 的场景色标签条：只作装饰 / 分组用（信息都在卡面文字里）。
+   八个场景色对卡片底在两档主题下都 ≥ 3:1（与 .sim-out / 口径圆点同一档「非文字」标准）。 */
+.scene::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--scene-accent);
+}
+.scene:hover {
+  transform: translateY(-3px);
+  border-color: var(--scene-accent);
+  box-shadow: var(--shadow-hover);
+}
 .scene-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.scene-icon { font-size: 22px; }
+/* 图标底：与 .pillar-icon / .ov-icon 同一套「场景色浅底 + 圆角」画法，
+   让 emoji 从渐变底上「立」起来，而不是直接躺在卡面上 */
+.scene-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--scene-accent) 14%, var(--c-surface));
+  font-size: 20px;
+  line-height: 1;
+}
 .scene-name { font-size: 15.5px; }
 .scene-desc { font-size: 13.5px; color: var(--c-text-soft); }
 .scene-metrics {
@@ -1073,7 +1174,10 @@ b, strong { font-weight: 800; }
   padding: var(--space-lg);
   border: 1px dashed var(--c-border-2);
   border-radius: var(--radius-lg);
-  background: var(--c-surface-2);
+  /* 空集也是一只方框：同一条柔光底；虚线描边保留「这里暂时没内容」的语义 */
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 46%,
+    color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 100%);
   color: var(--c-text-soft);
   font-size: 13.5px;
   text-align: center;
@@ -1086,16 +1190,25 @@ b, strong { font-weight: 800; }
 .source-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-sm) var(--space-lg);
+  gap: var(--space);
 }
 @media (min-width: 640px)  { .source-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1040px) { .source-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* 每条来源都是一只浅底小方框（与全站方框同一条 158deg 画法）：
+   8 条来源各自成块，不再是一列虚线；悬停压一道主色描边，与卡片组呼应 */
 .source-item {
   display: flex;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px dashed var(--c-line);
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 46%,
+    color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 100%);
+  box-shadow: var(--shadow-xs);
+  transition: var(--t-control);
 }
+.source-item:hover { border-color: var(--c-primary); box-shadow: var(--shadow-sm); }
 .source-idx {
   flex: 0 0 auto;
   font-family: var(--font-mono);
@@ -1409,7 +1522,12 @@ b, strong { font-weight: 800; }
   border: 1px solid var(--c-border-2);
   border-left: 4px solid var(--c-accent);
   border-radius: var(--radius);
-  background: var(--c-surface);
+  /* 与全站方框同一条柔光底（左边那道强调色竖条保留，它是「这是兜底提示」的信号） */
+  background:
+    radial-gradient(120% 86% at 0% 0%, var(--tex-glow), transparent 58%),
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--c-primary) 8%, var(--c-surface)) 0%,
+      var(--c-surface) 54%);
   box-shadow: var(--shadow);
 }
 .noscript-title { font-size: 15px; font-weight: 800; color: var(--c-text); }

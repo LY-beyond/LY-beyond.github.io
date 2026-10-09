@@ -8,7 +8,7 @@
  *      · 大面积填充（条形 / 面积 / 节点默认态）用 --s-base* —— 低彩度、安静；
  *      · 线条、数据点、悬停高亮、异常点用 --c-accent / --c-primary / --c-anomaly
  *        —— 高彩度、抢眼。不要在 fill 上直接用强调色铺大面积
- *        （例外：③ 排名图按名次走「暖 → 冷」顺序色阶、⑦ 流向图）。
+ *        （例外：③ 排名图按名次、⑤ 热力矩阵按列内高低走 jet 彩虹色阶，⑦ 流向图）。
  *   ② 每张图都用 viewBox + preserveAspectRatio 自适应容器宽度；
  *   ③ 每张图内部自建一个 tooltip 节点，悬停显示数值；
  *   ④ 动画统一走 rAF + easeOutCubic，并在
@@ -23,6 +23,9 @@ window.CHARTS = (function () {
 
   /* 每张图里的 <pattern> id 要唯一：同一个页面可能同时存在多张带预测区间的折线图 */
   var PAT_SEQ = 0;
+
+  /* 同理，<linearGradient> 的 id 也要每张图各一批（时间线的卡片底 / 中轴用得上） */
+  var GRAD_SEQ = 0;
 
   /* ---------------- 基础工具 ---------------- */
 
@@ -97,7 +100,7 @@ window.CHARTS = (function () {
   }
 
   /* 两个色值之间按比例 t 线性插值（sRGB），返回 #rrggbb。
-     用途：排名条的「顺序色阶」——相邻名次只差一点点色，读起来才是一条连续色带 */
+     用途：颜色微调 —— 如条形的悬停态把本色往 --c-text 压一档 */
   function mixColor(a, b, t) {
     var A = rgbOf(a), B = rgbOf(b);
     if (!A || !B) return a;
@@ -109,13 +112,20 @@ window.CHARTS = (function () {
     return hex;
   }
 
-  /* 顺序色阶：把 0–1 的位置折到一条多段色带上（段与段的交界处平滑过渡） */
-  function scaleColor(stops, t) {
-    var segs = stops.length - 1;
-    if (segs < 1) return stops[0];
-    var x = Math.max(0, Math.min(1, t)) * segs;
-    var i = Math.min(segs - 1, Math.floor(x));
-    return mixColor(stops[i], stops[i + 1], x - i);
+  /* 经典「jet」彩虹色阶（MATLAB / matplotlib 自带的那条）：
+     深蓝 → 蓝 → 青 → 绿 → 黄 → 橙 → 红 → 深红，t=0 最低、t=1 最高。
+     三个通道各是一段「先升后降」的分段线性，拼起来正好穿过 jet 的九个锚点；
+     返回不透明 #rrggbb（jet 是一张有眼光的科学配色，不掺 alpha 才能保住它的冷暖对比）。
+     用途：热力矩阵整片铺色 —— 冷暖一眼可辨，比单色相色带更能读出「列内高低」。 */
+  function jet(t) {
+    var x = Math.max(0, Math.min(1, t));
+    function ch(v) {
+      var n = Math.round(Math.max(0, Math.min(1, v)) * 255);
+      return (n < 16 ? '0' : '') + n.toString(16);
+    }
+    return '#' + ch(Math.min(4 * x - 1.5, -4 * x + 4.5)) +
+                 ch(Math.min(4 * x - 0.5, -4 * x + 3.5)) +
+                 ch(Math.min(4 * x + 0.5, -4 * x + 2.5));
   }
 
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -781,18 +791,15 @@ window.CHARTS = (function () {
     var max = cfg.max || Math.max.apply(null, rows.map(function (r) { return r.value; }));
     var unit = cfg.unit || '';
 
-    /* 条形长度已经把「大小」说清楚了，颜色改为按名次走一条「暖 → 冷」的顺序色阶：
-       榜首最暖、榜尾最冷，12 根条的色相 / 深浅随名次连续变化 —— 比原来「前 2 名橙 +
+    /* 条形长度已经把「大小」说清楚了，颜色改为按名次走科学可视化的经典 jet 彩虹色阶：
+       榜首最热（红）、榜尾最冷（蓝），色相 / 深浅随名次连续变化 —— 比原来「前 2 名橙 +
        其余同一根青绿」只有两色要丰富，而且颜色仍在编码名次（不是随机上色）。
-       色带每一档都取自 tokens.css 的令牌，所以亮 / 暗主题各自成立、导出也不掉色。 */
-    var rankScale = [T['--c-accent'], T['--d6'], T['--d5'], T['--d1'], T['--d2']];
+       整条不透明铺色（jet 自带冷暖对比），条上再叠一层白色微光做高光。 */
     var lastIdx = Math.max(1, rows.length - 1);
 
     rows.forEach(function (r, i) {
       var y = 16 + i * (rowH + gap);
-      var isTop = i < (cfg.highlight || 2);
-      /* 重点条（默认前 2 名）= 最饱和的强调橙，把「谁领先」继续定住；其余按名次取色阶 */
-      var color = r.color || (isTop ? T['--c-accent'] : scaleColor(rankScale, i / lastIdx));
+      var color = r.color || jet(1 - i / lastIdx);
 
       el('text', {
         x: labelW - 12, y: y + rowH / 2 + 5, 'text-anchor': 'end',
@@ -1109,8 +1116,13 @@ window.CHARTS = (function () {
       val.textContent = fmt(v, cfg.decimals || 0);
     }
     set(0);
-    animate(700, function (p) { set(p * (cfg.value || 0)); });
-    ctx.update = set;
+    /* 入场动画：从 0 长到 cfg.value。调用方传进来的必须是「当前真实读数」——
+       早先统一传 0，动画也就从 0 长到 0，把 apply() 刚写进去的读数又顶回 0，
+       于是首屏六个仪表全显示 0，要等用户碰一下旋钮才跳到真值。
+       另外：外部 update() 一旦被调用（调旋钮 / 选预设）就停掉入场，免得动画把新值拉回去。 */
+    var intro = true;
+    animate(700, function (p) { if (intro) set((cfg.value || 0) * p); });
+    ctx.update = function (v) { intro = false; set(v); };
     return ctx;
   }
 
@@ -1522,9 +1534,31 @@ window.CHARTS = (function () {
     var axis = narrow ? 24 : W / 2;
     var cardW = narrow ? W - axis - 16 : W / 2 - 78;
 
+    /* 卡片与中轴都走「柔光渐变」：卡片从白面斜向右下过渡到本类色相的极浅底，
+       中轴从灰蓝渐到主色 —— 整条时间线不再是一排纯白方块 + 一条灰线。
+       渐变按 kind 预建在 <defs> 里（颜色仍取自令牌 → 换主题重绘即换肤）。 */
+    var defs = el('defs', null, svg);
+    var cardFill = {};
+    cfg.kinds.forEach(function (k) {
+      var base = cfg.colors[k.id] || T['--c-primary'];
+      var gid = 'viz-tl-card-' + (GRAD_SEQ++);
+      var g = el('linearGradient', { id: gid, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+      el('stop', { offset: '0%', 'stop-color': T['--c-surface'] }, g);
+      el('stop', { offset: '52%', 'stop-color': T['--c-surface'] }, g);
+      el('stop', { offset: '100%', 'stop-color': mixColor(T['--c-surface'], base, 0.15) }, g);
+      cardFill[k.id] = 'url(#' + gid + ')';
+    });
+    var railId = 'viz-tl-rail-' + (GRAD_SEQ++);
+    var railG = el('linearGradient', {
+      id: railId, gradientUnits: 'userSpaceOnUse',
+      x1: axis, y1: top - 30, x2: axis, y2: top - 30 + items.length * rowH
+    }, defs);
+    el('stop', { offset: '0%', 'stop-color': T['--c-border-2'] }, railG);
+    el('stop', { offset: '100%', 'stop-color': mixColor(T['--c-border-2'], T['--c-primary'], 0.55) }, railG);
+
     var line = el('line', {
       x1: axis, y1: top - 30, x2: axis, y2: top - 30,
-      stroke: T['--c-border-2'], 'stroke-width': 2
+      stroke: 'url(#' + railId + ')', 'stroke-width': 2.5, 'stroke-linecap': 'round'
     }, svg);
     var nodes = [];
     var rings = [];   /* 每个节点一枚焦点环，供 app.js 的方向键移动（见文件末尾 ctx.focusIndex） */
@@ -1541,6 +1575,9 @@ window.CHARTS = (function () {
         x2: right ? axis + (narrow ? 14 : 26) : axis,
         y2: y, stroke: color, 'stroke-width': 2
       }, g);
+      /* 节点：先铺一圈本类色相的极浅光晕，再压上白底彩环 ——
+         节点从「白圈」变成一点会发光的位置标记 */
+      el('circle', { cx: axis, cy: y, r: narrow ? 12 : 15, fill: alpha(color, 0.16) }, g);
       el('circle', {
         cx: axis, cy: y, r: narrow ? 6 : 8,
         fill: T['--c-surface'], stroke: color, 'stroke-width': 3
@@ -1558,7 +1595,8 @@ window.CHARTS = (function () {
       var top0 = y - (narrow ? 34 : 42);
       el('rect', {
         x: cx, y: top0, width: cardW, height: cardH, rx: 12,
-        fill: T['--c-surface'], stroke: T['--c-border'], 'stroke-width': 1
+        fill: cardFill[it.kind] || T['--c-surface'],
+        stroke: mixColor(T['--c-border'], color, 0.24), 'stroke-width': 1
       }, g);
       el('rect', { x: cx, y: top0, width: 4, height: cardH, rx: 2, fill: color }, g);
 
@@ -1892,24 +1930,20 @@ window.CHARTS = (function () {
     });
     function norm(v, b) { return b.max === b.min ? 0.5 : (v - b.min) / (b.max - b.min); }
 
-    /* 连续色带：与省级地图同一条多色相顺序色阶（青 → 蓝 → 靛 → 洋红），按 t 插值；
+    /* 连续色带：经典「jet」彩虹色阶（深蓝 → 青 → 黄 → 红），整格不透明铺色；
        格子里的数字按格底亮度，在 --c-text / --c-on-primary 里挑对比更高的那枚
-       （色带跨了色相，只看 t 会糊字）。 */
-    var HOT = [[T['--c-primary'], 0.1], [T['--c-primary'], 0.34], [T['--d1'], 0.6], [T['--d5'], 0.86], [T['--d6'], 1]];
+       （jet 从深蓝一路扫到深红，明暗反复，只看 t 会糊字）。 */
     var INK = [T['--c-text'], T['--c-on-primary']];
-    var surfRgb = rgbOf(T['--c-surface']) || [255, 255, 255];
     function relLum(c) {
       var s = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
       return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
     }
     function cont(a, b) { return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); }
     function tone(t) {
-      var pos = Math.max(0, Math.min(1, t)) * (HOT.length - 1);
-      var i = Math.min(HOT.length - 2, Math.floor(pos)), f = pos - i;
-      var c = mixColor(HOT[i][0], HOT[i + 1][0], f), a = HOT[i][1] + (HOT[i + 1][1] - HOT[i][1]) * f;
-      var L = relLum((rgbOf(c) || [0, 0, 0]).map(function (v, k) { return v * a + surfRgb[k] * (1 - a); }));
+      var c = jet(t);
+      var L = relLum(rgbOf(c) || [0, 0, 0]);
       var lit = relLum(rgbOf(INK[0]) || [0, 0, 0]);
-      return { fill: alpha(c, a), ink: cont(L, lit) >= cont(L, relLum(rgbOf(INK[1]) || [0, 0, 0])) ? INK[0] : INK[1] };
+      return { fill: c, ink: cont(L, lit) >= cont(L, relLum(rgbOf(INK[1]) || [0, 0, 0])) ? INK[0] : INK[1] };
     }
 
     /* 弱口径列（后两列是间接代理指标，见 app.js 的 WEAK_METRICS）：
