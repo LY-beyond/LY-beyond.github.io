@@ -358,8 +358,8 @@ const playStart = await jv(`JSON.stringify((function () {
   bar.querySelector('.is-play').click();
   return r;
 })())`);
-check('滑块 min=0 / max=6 / step=1（7 个年份）',
-  playStart.min === '0' && playStart.max === '6' && playStart.step === '1', JSON.stringify(playStart));
+check('滑块 min=0 / max=9 / step=1（10 个年份，含 2026–2028E 外推年）',
+  playStart.min === '0' && playStart.max === '9' && playStart.step === '1', JSON.stringify(playStart));
 check('年份徽标写全「年份 + 核心 + 带动」', /20\d\d/.test(playStart.year) && /亿元|100M/.test(playStart.year), playStart.year);
 await sleep(2200);
 const playMid = await jv(`JSON.stringify((function () {
@@ -392,7 +392,7 @@ const dragRes = await jv(`JSON.stringify((function () {
   range.value = '0';
   range.dispatchEvent(new Event('input', { bubbles: true }));
   var first = { year: bar.querySelector('.viz-year').textContent };
-  range.value = '6';
+  range.value = '9';
   range.dispatchEvent(new Event('input', { bubbles: true }));
   var last = { year: bar.querySelector('.viz-year').textContent };
   bar.querySelector('.is-play').click();
@@ -401,8 +401,8 @@ const dragRes = await jv(`JSON.stringify((function () {
   var during = { label: bar.querySelector('.is-play').textContent, on: bar.querySelector('.is-play').classList.contains('is-on') };
   return { first: first, last: last, during: during };
 })())`);
-check('拖到 0 → 2019，拖到 6 → 2025E 那一档',
-  /2019/.test(dragRes.first.year) && /2025/.test(dragRes.last.year), JSON.stringify(dragRes));
+check('拖到 0 → 2019，拖到 9 → 2028 那一档（外推年也能停）',
+  /2019/.test(dragRes.first.year) && /2028/.test(dragRes.last.year), JSON.stringify(dragRes));
 check('拖动滑块会自动停止播放', dragRes.during.on === false && !/暂停/.test(dragRes.during.label), JSON.stringify(dragRes.during));
 console.log('\n[5] 导出 PNG / SVG / CSV');
 /* 文件名统一是 ai-nqpf-<图名>-<主题>.<后缀>，而 headless 里系统是深色，
@@ -1225,6 +1225,42 @@ check('P3 方向键逐个走节点、Home / End 跳到两端、Esc 与失焦都�
   JSON.stringify({ lit: tlKeys.litSeq, matched: tlKeys.matched, blurLit: tlKeys.afterBlur,
     blurLive: tlKeys.liveAfterBlur, blurFired: tlKeys.blurFired, blurHandler: tlKeys.blurHandler,
     docFocused: tlKeys.docFocused, focusMoved: tlKeys.focusMoved, texts: tlKeys.textSeq }));
+
+/* ---------- ② 节：传统 vs 新质「翻转对照卡」 ----------
+   这张卡是纯运行时的：能不能翻、翻完可及名有没有跟着换，只有真机能验。
+   两面文案都留在 DOM 里，所以「翻面」不该是「换内容」——两条文案全程都在。 */
+console.log('\n[P5] 翻转对照卡');
+const cmpRes = await jv(`JSON.stringify((function () {
+  var cards = document.querySelectorAll('#compare-cards .cmp-card');
+  var first = cards[0];
+  var btn = first.querySelector('.cmp-flip');
+  var face = function (c) {
+    return { side: c.querySelector('.cmp-side').textContent, text: c.querySelector('.cmp-text').textContent };
+  };
+  var before = { pressed: btn.getAttribute('aria-pressed'), label: btn.getAttribute('aria-label'),
+                 flipped: first.classList.contains('is-back') };
+  btn.click();
+  var on = { pressed: btn.getAttribute('aria-pressed'), label: btn.getAttribute('aria-label'),
+             flipped: first.classList.contains('is-back') };
+  btn.click();
+  var off = { pressed: btn.getAttribute('aria-pressed'), flipped: first.classList.contains('is-back') };
+  return { n: cards.length, faces: document.querySelectorAll('#compare-cards .cmp-face').length,
+           front: face(first.querySelector('.cmp-front')), back: face(first.querySelector('.cmp-back')),
+           before: before, on: on, off: off };
+})())`);
+check('② 节 5 张翻转对照卡，每张两面都在 DOM 里（＝ 原对比表的两列）',
+  cmpRes.n === 5 && cmpRes.faces === 10, JSON.stringify({ n: cmpRes.n, faces: cmpRes.faces }));
+check('正 / 背两面各有列名与文案，且互不相同（旧表的 before / after 都还在）',
+  cmpRes.front.side !== cmpRes.back.side && cmpRes.front.text !== cmpRes.back.text &&
+  !!cmpRes.front.text && !!cmpRes.back.text,
+  JSON.stringify(cmpRes.front) + ' | ' + JSON.stringify(cmpRes.back));
+check('默认亮正面（未翻面 + aria-pressed="false" + 有可及名）',
+  cmpRes.before.flipped === false && cmpRes.before.pressed === 'false' && !!cmpRes.before.label,
+  JSON.stringify(cmpRes.before));
+check('点按钮翻面：加 .is-back、aria-pressed 转 true、可及名同步换成「翻回…」，再点能翻回来',
+  cmpRes.on.flipped === true && cmpRes.on.pressed === 'true' && cmpRes.on.label !== cmpRes.before.label &&
+  cmpRes.off.flipped === false && cmpRes.off.pressed === 'false',
+  JSON.stringify({ on: cmpRes.on, off: cmpRes.off }));
 
 /* ---------- 收尾体检：整页无报错、无横向溢出 ---------- */
 const bHealth = await jv(`JSON.stringify({

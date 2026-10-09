@@ -122,13 +122,15 @@ const PAIRS = [
   { what: '次级正文 / 卡片', fg: 'var(--c-text-soft)', bg: 'var(--c-surface)', min: 4.5, where: '气泡行、单位说明（12.5px）' },
   { what: '次级正文 / 次级面板', fg: 'var(--c-text-soft)', bg: 'var(--c-surface-2)', min: 4.5, where: '次级底色上的行内说明 / 口径徽章（.prov-badge，11.5px）' },
   { what: '说明文字 / 卡片', fg: 'var(--c-muted)', bg: 'var(--c-surface)', min: 4.5, where: '.card-note / .viz-hint（11.5–12.5px）' },
-  { what: '说明文字 / 次级面板', fg: 'var(--c-muted)', bg: 'var(--c-surface-2)', min: 4.5, where: '.cmp thead th（12px）' },
-  { what: '说明文字 / 页面底', fg: 'var(--c-muted)', bg: 'var(--c-bg)', min: 4.5, where: '.hero-hint（13px）、页脚' },
+  { what: '说明文字 / 次级面板', fg: 'var(--c-muted)', bg: 'var(--c-surface-2)', min: 4.5, where: '.cmp-side（翻转对照卡正面的小标签，11.5px）' },
+  { what: '说明文字 / 页面底', fg: 'var(--c-muted)', bg: 'var(--c-bg)', min: 4.5, where: '页脚（13px）' },
   { what: '主色文字 / 主色悬停底', fg: 'var(--c-primary)', bg: mix('--c-primary', 'var(--mix-soft)', '--c-surface'), min: 4.5, where: '按钮 / 预设悬停（.viz-btn:hover）' },
   { what: '主色文字 / 主色浅底', fg: 'var(--c-primary)', bg: 'var(--c-primary-weak)', min: 4.5, where: '按下态开关（.viz-btn.is-on）' },
   { what: '主色文字 / 卡片', fg: 'var(--c-primary)', bg: 'var(--c-surface)', min: 4.5, where: '.section-num / .kpi-value / .source-idx' },
   { what: '主色文字 / 主色浅底', fg: 'var(--c-primary)', bg: mix('--c-primary', 'var(--mix-soft)', '--c-surface'), min: 4.5, where: '主色徽章' },
-  { what: '强调色文字 / 强调色浅底', fg: 'var(--c-accent-ink)', bg: mix('--c-accent', 'var(--mix-soft)', '--c-surface'), min: 4.5, where: '.force-tag（11px）' },
+  /* 作用力标签：底色 = 各自色相 var(--mix-soft) 浅底，字色 = 同色相 var(--mix-ink) 压深（与 styles.css 的 .force-tag 一致）。
+     色相按标签含义选：效率=橙 / 创新=紫 / 配置=青 / 绿色=绿 / 普惠=粉 */
+  ...[['--c-accent', '效率革命'], ['--d5', '产业创新'], ['--c-info', '资源配置'], ['--c-success', '绿色发展'], ['--d6', '普惠共享']].map(([c, w]) => ({ what: '标签文字 / 标签浅底', fg: `color-mix(in srgb, var(${c}) var(--mix-ink), var(--c-text))`, bg: mix(c, 'var(--mix-soft)', '--c-surface'), min: 4.5, where: `.force-tag · ${w}（11px）` })),
   { what: '强调色文字 / 卡片', fg: 'var(--c-accent-ink)', bg: 'var(--c-surface)', min: 4.5, where: '播放器选中态按钮' },
   { what: '强调色图形 / 卡片', fg: 'var(--c-accent)', bg: 'var(--c-surface)', min: 3, where: '按钮描边、播放器轨道（非文字）' },
   { what: '主色块上的前景', fg: 'var(--c-on-primary)', bg: 'var(--c-primary)', min: 4.5, where: '主色按钮 / 徽章' },

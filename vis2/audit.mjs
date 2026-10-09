@@ -14,7 +14,7 @@
  *   ③ 网格实际列数 vs 子元素数 —— 找出「最后一排只剩 1~2 个」的孤儿行
  *   ④ 图表 SVG 缩放比 —— 窄屏上 12 单位的标签实际还剩几 px
  *   ⑤ 可点元素尺寸 —— 找出 < 44px 的触控目标
- *   ⑥ 首屏高度、向下滚动提示是否落在折线以下
+ *   ⑥ 首屏高度（Hero 占视口的比例）
  *   ⑦ 锚点跳转时吸顶栏有没有盖住标题（scroll-padding 缺失会露馅）
  *   ⑧ 顶栏 14 个导航项在窄屏是否被裁切（navClipped）
  * 任何一档出现横向溢出或导航裁切，脚本以非零码退出；末尾给统一的 SUMMARY 行。
@@ -170,7 +170,7 @@ const PROBE = `(() => {
 
   /* ③ 网格列数 vs 子元素数（孤儿行） */
   out.grids = {};
-  ['.kpi-row', '.pillars', '.force-cards', '.scene-grid', '.ov-grid', '.sim',
+  ['.kpi-row', '.pillars', '.cmp-cards', '.force-cards', '.scene-grid', '.ov-grid', '.sim',
    '.sim-readout', '.sim-outputs', '.source-list', '.footer-inner'].forEach(function (s) {
     var el = document.querySelector(s);
     if (!el) return;
@@ -204,14 +204,11 @@ const PROBE = `(() => {
   var seen = {};
   out.tapSmall = small.filter(function (o) { if (seen[o.sel]) return false; seen[o.sel] = 1; return true; });
 
-  /* ⑥ 首屏：Hero 高度 + 提示行位置 */
+  /* ⑥ 首屏：Hero 高度 */
   var hero = document.querySelector('.hero');
-  var hint = document.querySelector('.hero-hint');
   if (hero) {
     var hr = hero.getBoundingClientRect();
-    out.hero = { h: Math.round(hr.height), fill: +(hr.height / vh).toFixed(2),
-                 hintBottom: hint ? Math.round(hint.getBoundingClientRect().bottom) : null,
-                 hintVisible: hint ? hint.getBoundingClientRect().bottom <= vh : null };
+    out.hero = { h: Math.round(hr.height), fill: +(hr.height / vh).toFixed(2) };
   }
 
   /* ⑦ 顶栏 */

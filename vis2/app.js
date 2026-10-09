@@ -330,6 +330,22 @@
   var lastHash = '';        /* serializeState() 的结果：地址栏写不进去时的「内存副本」 */
   var writtenHash = null;   /* 上次真正写进地址栏的内容，用来挡掉重复写入 */
 
+  /* 产业规模图的「可播放年份」= 7 个实际 / 给定年（scale.series）+ 3 个外推年（scale.forecast），
+     共 10 个点。年份播放器、分享链接的 y= 与跨图联动的下标都读这一份，
+     这样「播放年份」才覆盖到曲线真正画出来的最后一年（2028E），而不是停在 2025E。
+     注意：小倍数图（05 节）只有 2019–2025 这 7 列，外推年没有对应列 ——
+     联动到外推年时按「越界清空」处理（见 focusMultiples）。 */
+  function scaleYearRows() {
+    var rel = (D.scale && D.scale.related) || [];
+    var out = ((D.scale && D.scale.series) || []).map(function (p, i) {
+      return { year: p.year, value: p.value, related: (rel[i] || {}).value };
+    });
+    ((D.scale && D.scale.forecast) || []).forEach(function (f) {
+      out.push({ year: f.year, value: f.core, related: f.related });
+    });
+    return out;
+  }
+
   /* 当前状态 → 查询串（不含 '#'）；解析端只按这些键读，别的键一律忽略 */
   function serializeState() {
     var parts = [];
@@ -342,9 +358,8 @@
     }
     var p = pickedPoint();
     if (p) parts.push('f=' + p.id);
-    if (D.scale && D.scale.series && STATE.year != null && D.scale.series[STATE.year]) {
-      parts.push('y=' + D.scale.series[STATE.year].year);
-    }
+    var srows = scaleYearRows();
+    if (STATE.year != null && srows[STATE.year]) parts.push('y=' + srows[STATE.year].year);
     var met = D.province && D.province.metrics ? D.province.metrics[STATE.regionMetric] : null;
     if (met) parts.push('m=' + met.id);
     if (STATE.regionTop) parts.push('top=1');
@@ -386,9 +401,9 @@
     if (!URL_KEYS.some(function (k) { return q[k] != null; })) return false;
     var applied = false;
 
-    if (q.y != null && D.scale && D.scale.series) {
+    if (q.y != null) {
       var yi = -1;
-      D.scale.series.forEach(function (s, i) { if (String(s.year) === q.y) yi = i; });
+      scaleYearRows().forEach(function (r, i) { if (String(r.year) === q.y) yi = i; });
       if (yi >= 0) { STATE.year = yi; applied = true; }
     }
     if (q.f != null) {
@@ -527,26 +542,41 @@
       });
     }
 
-    /* 传统 vs 新质 对比表 */
+    /* 传统 vs 新质：每维一张「一翻就变」的对照卡（取代原来那张 5 行对比表）。
+       鼠标悬停即翻（styles.css 里限 @media (hover: hover)），这枚按钮是键盘 / 触屏的等价物，
+       点一下把「已翻」钉住 —— 两面文案都留在 DOM 里，天生就是那张表的数据表等价物。 */
     cardHead('compare', P(D.define.compare.caption), 'define');
-    var table = $('#compare-table');
-    if (table) {
-      clear(table);
-      var t = add(table, 'table', 'cmp');
-      var thead = add(t, 'thead');
-      var hr = add(thead, 'tr');
-      add(hr, 'th', null, '');
-      add(hr, 'th', null, P(D.define.compare.colBefore));
-      add(hr, 'th', 'is-after', P(D.define.compare.colAfter));
-      var tbody = add(t, 'tbody');
-      /* 窄屏（≤700px）表格改为堆叠显示，每个单元格靠 data-label 自带列名 —— 见 styles.css */
-      var labelBefore = P(D.define.compare.colBefore);
-      var labelAfter = P(D.define.compare.colAfter);
+    var cards = $('#compare-cards');
+    if (cards) {
+      clear(cards);
       D.define.compare.rows.forEach(function (r) {
-        var tr = add(tbody, 'tr');
-        add(tr, 'th', null, P(r.dim));
-        add(tr, 'td', null, P(r.before)).setAttribute('data-label', labelBefore);
-        add(tr, 'td', 'is-after', P(r.after)).setAttribute('data-label', labelAfter);
+        var card = add(cards, 'article', 'cmp-card');
+        var top = add(card, 'div', 'cmp-top');
+        add(top, 'h3', 'cmp-name', P(r.dim));
+        var flip = node('button', 'cmp-flip');
+        flip.type = 'button';
+        flip.setAttribute('aria-pressed', 'false');
+        top.appendChild(flip);
+        /* 两面同占一个网格单元（grid-area: 1/1），高度自动取较高者 —— 见 styles.css */
+        var inner = add(card, 'div', 'cmp-inner');
+        [[D.define.compare.colBefore, r.before, 'cmp-front'],
+         [D.define.compare.colAfter, r.after, 'cmp-back']].forEach(function (face) {
+          var box = add(inner, 'div', 'cmp-face ' + face[2]);
+          add(box, 'p', 'cmp-side', P(face[0]));
+          add(box, 'p', 'cmp-text', P(face[1]));
+        });
+        function paint() {
+          var on = card.classList.contains('is-back');
+          flip.setAttribute('aria-pressed', on ? 'true' : 'false');
+          flip.setAttribute('aria-label', on
+            ? P({ zh: '翻回传统生产力', en: 'Flip back to traditional productive forces' })
+            : P({ zh: '翻到新质生产力', en: 'Flip to new quality productive forces' }));
+        }
+        flip.addEventListener('click', function () {
+          card.classList.toggle('is-back');
+          paint();
+        });
+        paint();
       });
     }
   }
@@ -614,8 +644,8 @@
     /* 重绘前先收掉上一轮的播放定时器：否则它会继续往已经废弃的 SVG 上写 */
     if (STATE.playTimer) { window.clearInterval(STATE.playTimer); STATE.playTimer = 0; }
     /* 曲线点 = 历史 / 给定序列 + 外推段（scale.forecast，2026–2028E）。
-       外推段只加给「画出来的线」；年份播放器被 playerMax 卡在 2025E，
-       所以「逐年回放」与跨图联动仍只走公开口径的 7 年。
+       年份播放器走「全部 10 个点」（2019–2028E）—— 不再停在 2025E，外推年也能逐年回放、
+       进分享链接；联动到外推年时小倍数图没有对应列，按越界清空处理（见 focusMultiples）。
        两条线都挂 95% 预测区间（lo/hi 由构建期线性回归写入），
        锥形用各自折线的颜色，避免「蓝线的锥形是橙色」这种误读。 */
     function scalePoints(hist, key, loKey, hiKey) {
@@ -631,8 +661,8 @@
     }
     var scaleCtx = C.lineArea(host, {
       yUnit: P(D.scale.unit),
-      /* 不再写死 yMax：曲线现在画到 2028E，让引擎按数据自动定纵轴 */
-      playerMax: D.scale.series.length - 1,
+      /* 不再写死 yMax：曲线现在画到 2028E，让引擎按数据自动定纵轴。
+         也不传 playerMax —— 默认即「全部点」，年份播放器覆盖 2019–2028E（含外推年）。 */
       series: [
         {
           /* 带动产业是「底」：只描边不填面积，把大面积淡彩留给要强调的核心产业 */
@@ -715,9 +745,11 @@
     function paintYear(i) {
       STATE.year = scaleCtx.focus(i);
       yearRange.value = String(STATE.year);
+      /* 读数走统一的年份表（含外推年）：外推年取 forecast 的点估计，历史年取实测值 */
+      var row = scaleYearRows()[STATE.year] || {};
       yearOut.textContent = scaleCtx.years[STATE.year] + ' · ' +
-        P(D.scale.coreLabel) + ' ' + C.fmt(D.scale.series[STATE.year].value, 0) + ' / ' +
-        P(D.scale.relatedLabel) + ' ' + C.fmt(D.scale.related[STATE.year].value, 0) +
+        P(D.scale.coreLabel) + ' ' + C.fmt(row.value, 0) + ' / ' +
+        P(D.scale.relatedLabel) + ' ' + C.fmt(row.related, 0) +
         ' ' + P(D.scale.unit);
       /* 跨图联动（发送端）：年份不只是这条线的焦点，也是小倍数图的那一列 —— 一起挪 */
       focusMultiples(STATE.year);
@@ -1062,7 +1094,10 @@
        切语言 / 换主题会整张重画，旧 ctx 的元素已经脱离宿主，再去改它谁也看不见
        （新图首次绘制时会自己读 cfg.focusYear = STATE.year，不会漏）。 */
     if (multiplesCtx && multiplesCtx.focusYear && multiplesCtx.svg && multiplesCtx.svg.parentNode) {
-      multiplesCtx.focusYear(i);
+      /* 小倍数图只有 2019–2025 这几列；播放器走到外推年（2026–2028E）时没有对应列，
+         传 null 让它清空高亮 —— 若照旧夹到最后一列，就会把 2028E 标成 2025E，是错的年份。 */
+      var n = multiplesCtx.years ? multiplesCtx.years.length : 0;
+      multiplesCtx.focusYear(i != null && i >= 0 && i < n ? i : null);
     }
   }
 
@@ -1073,8 +1108,9 @@
     var K = palette();
     cardHead('multiples', P(M.caption), 'multiples');
 
-    /* 年份轴与 ③ 的年份播放器共用同一串年份：跨图联动的下标必须一一对齐（都是 7 个点）。
-       正常情况下直接用 ③ 的那串；万一哪天两边长度不一致，退回本地常量，
+    /* 年份轴与 ③ 的年份播放器「前 7 个点」共用同一串年份：跨图联动的下标必须一一对齐。
+       本图只有 2019–2025 这 7 列（③ 的播放器另有 2026–2028E 三个外推年，本图没有对应列，
+       联动时会被清空）。正常情况下直接用 ③ 的那串；万一哪天两边长度不一致，退回本地常量，
        宁可少一次联动，也不要让高亮跑到别的年份上去。 */
     var years = (D.scale && D.scale.series && M.series[0] &&
       D.scale.series.length === M.series[0].penetration.length)
@@ -1916,6 +1952,130 @@
     });
   }
 
+  /* ---------------- ⑮ 章节路径带：12 章流动连线（可点跳转） ----------------
+     仿 vis 页的「小节流动路径带」：读 data.js 的 overview（12 个正文章节的
+     名称 + 锚点），按容器宽度现场算出波浪贝塞尔轨道的节点坐标，画一条 SVG
+     连线 + 01…12 编号节点；虚线靠 stroke-dashoffset 沿线流动。
+     节点是锚点链接（<a>，href 取自 overview 的锚点），点一下（或键盘回车）跳到
+     对应章节；SVG 轨道只作装饰（aria-hidden + pointer-events:none），点击透传给节点。
+     当前章节的徽章跟随顶栏的高亮项（bindScrollSpy）一起点亮，并标 aria-current。 */
+  var PATH_H = 176;          /* 轨道高度（px），要容下低位节点下方的两行标签 */
+  var PATH_PAD = 44;         /* 首尾节点中心距轨道边缘 */
+  var PATH_STEP = 86;        /* 每多一个章节需要的水平空间（12 章要能塞进 1180 容器） */
+  var PATH_MIN_W = 560;      /* 窄屏横向滚动的临界宽度 */
+  var PATH_MAX_W = 1320;     /* 轨道最大宽度 */
+  var PATH_WAVE = [92, 48, 106, 54, 98, 52, 104, 58];  /* 8 档波浪 y，上下交替 */
+  var PATH_NODES = [];       /* 本轮的节点元素（由 JS 生成，不能再用 .class 查询，见 check.mjs ④） */
+  var PATH_OBS = [];         /* 监听顶栏高亮变化的观察器（重绘前先断开，避免叠加） */
+
+  /* 短标签：去掉名称里冒号后的副标题（中文「内涵：三要素升级」→「内涵」，
+     英文「Concept: three factors」→「Concept」）。冒号用转义写
+     （全角 \uFF1A / 半角 :），免得脚本里出现裸中文字面量。 */
+  function shortChapterName(name) {
+    return String(P(name)).split(/[\uFF1A:]/)[0].trim();
+  }
+
+  /* 相邻四点推导三次贝塞尔控制点（Catmull-Rom → Bézier，系数 0.18），
+     与参考站同款：逐段绘制、拼接处方向连续，没有折角 */
+  function pathSegment(pts, i) {
+    var prev = pts[Math.max(i - 1, 0)];
+    var from = pts[i];
+    var to = pts[i + 1];
+    var next = pts[Math.min(i + 2, pts.length - 1)];
+    var k = 0.18;
+    return 'M ' + from.x + ' ' + from.y +
+      ' C ' + (from.x + (to.x - prev.x) * k) + ' ' + (from.y + (to.y - prev.y) * k) +
+      ', ' + (to.x - (next.x - from.x) * k) + ' ' + (to.y - (next.y - from.y) * k) +
+      ', ' + to.x + ' ' + to.y;
+  }
+
+  /* 当前章节的徽章跟随顶栏高亮项（.nav-link.is-active） */
+  function syncChapterPath() {
+    var nodes = PATH_NODES;
+    if (!nodes.length) return;
+    var active = $('.nav-link.is-active');
+    var href = active ? (active.getAttribute('href') || '') : '';
+    var hit = false;
+    nodes.forEach(function (el) {
+      var on = el.getAttribute('data-href') === href;
+      el.classList.toggle('is-current', on);
+      /* aria-current 只标「真的滚到了这一节」；首屏默认点亮第一章只是视觉提示，
+         不冒充「你在这里」，免得读屏跟着说谎 */
+      if (on) { el.setAttribute('aria-current', 'true'); hit = true; }
+      else el.removeAttribute('aria-current');
+    });
+    /* 首屏还没滚到任何正文章节时，默认点亮第一章（与参考站的「起点」一致） */
+    if (!hit) nodes[0].classList.add('is-current');
+  }
+
+  function watchChapterPathSpy() {
+    if (!('MutationObserver' in window)) return;
+    PATH_OBS.forEach(function (o) { o.disconnect(); });
+    PATH_OBS = [];
+    var mo = new MutationObserver(syncChapterPath);
+    $$('.nav-link').forEach(function (a) {
+      mo.observe(a, { attributes: true, attributeFilter: ['class'] });
+    });
+    PATH_OBS.push(mo);
+  }
+
+  function renderChapterPath() {
+    var host = $('#chapter-path');
+    if (!host) return;
+    var items = D.overview || [];
+    if (items.length < 2) return;
+    clear(host);
+
+    /* 轨道宽度：先按「章节数 × 步距」估下限，再取容器可用宽度，
+       两者取大、再夹到上限 —— 窄屏因此横向滚动，宽屏刚好铺满 */
+    var styles = window.getComputedStyle(host);
+    var avail = host.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
+    var fitted = Math.max(PATH_MIN_W, items.length * PATH_STEP + PATH_PAD * 0.8);
+    var w = Math.round(Math.min(PATH_MAX_W, Math.max(fitted, avail)));
+    var span = Math.max(w - PATH_PAD * 2, 1);
+    var pts = items.map(function (_o, i) {
+      return { x: PATH_PAD + span * (i / (items.length - 1)), y: PATH_WAVE[i % PATH_WAVE.length] };
+    });
+    var d = pts.slice(1).map(function (_p, i) { return pathSegment(pts, i); }).join(' ');
+
+    var track = add(host, 'div', 'chapter-path__track');
+    track.style.width = w + 'px';
+    track.style.height = PATH_H + 'px';
+
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'chapter-path__svg');
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + PATH_H);
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('aria-hidden', 'true');   /* 轨道纯装饰，信息在节点链接里 */
+    ['chapter-path__base', 'chapter-path__flow'].forEach(function (cls) {
+      var p = document.createElementNS(ns, 'path');
+      p.setAttribute('class', cls);
+      p.setAttribute('d', d);
+      /* pathLength=1 归一化后，虚线周期与真实像素长度无关，任意间距都无缝循环 */
+      if (cls === 'chapter-path__flow') p.setAttribute('pathLength', '1');
+      svg.appendChild(p);
+    });
+    track.appendChild(svg);
+
+    PATH_NODES = [];
+    items.forEach(function (o, i) {
+      var el = add(track, 'a', 'chapter-path__node');
+      el.setAttribute('href', o.href);
+      el.setAttribute('data-href', o.href);
+      el.style.setProperty('--x', pts[i].x + 'px');
+      el.style.setProperty('--y', pts[i].y + 'px');
+      el.style.setProperty('--i', String(i));
+      add(el, 'span', 'chapter-path__badge', String(i + 1).padStart(2, '0'));
+      add(el, 'span', 'chapter-path__label', shortChapterName(o.name));
+      PATH_NODES.push(el);
+    });
+
+    syncChapterPath();
+    watchChapterPathSpy();
+    window.requestAnimationFrame(function () { host.classList.add('is-revealed'); });
+  }
+
   /* =========================================================
    * 渲染总入口
    * ========================================================= */
@@ -1941,6 +2101,7 @@
     renderDrivers();
     renderSources();
     renderOverview();
+    renderChapterPath();
     describeCharts();
   }
 

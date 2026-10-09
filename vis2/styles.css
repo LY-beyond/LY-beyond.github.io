@@ -24,7 +24,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--c-bg);
+  /* 页面底色：淡蓝 → 白 → 淡蓝；fixed 钉在视口上（移动端不支持时退化为整篇文档渐变） */
+  background: var(--c-bg) linear-gradient(180deg, var(--c-bg), var(--c-surface) 52%, var(--c-bg)) fixed;
   color: var(--c-text);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -190,8 +191,61 @@ b, strong { font-weight: 800; }
   overflow: hidden;
   background:
     radial-gradient(680px 320px at 12% -10%, var(--tex-glow), transparent 70%),
-    radial-gradient(520px 280px at 92% 6%, var(--tex-warm), transparent 72%);
+    radial-gradient(520px 280px at 92% 6%, var(--tex-cool), transparent 72%);
 }
+/* 首屏背景图：用户提供的「AI 引擎」渲染图（原图 2805×1343 / 3.24 MB PNG →
+   轻度降噪 + WebP q85 = 160.5 KB，尺寸不重采样）。绝对定位、不参与布局 ——
+   所以 .hero 的高度、章节节奏、audit 量到的「首屏折线」都与加图之前一致。
+   object-position 偏右：主体在画面右侧，窄屏裁切时优先保住它。 */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 68% 50%;
+}
+/* 图上压一层遮罩，让左侧文字的背景仍由令牌决定、而不是由照片决定：
+   ① 横向：正文底色向左实心、向右渐隐（标题与正文都在左侧三成内）；
+   ② 纵向：底部渐隐回底色，接上 body 的页面渐变，不留横向硬边。
+   .hero 原有的两层径向光晕保留 —— 图没加载出来时它就是兜底纹理。 */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--c-bg) 14%, color-mix(in srgb, var(--c-bg) 66%, transparent) 46%, transparent 78%),
+    linear-gradient(180deg, transparent 62%, var(--c-bg));
+}
+.hero > .wrap { position: relative; z-index: 2; }
+
+/* 深色：这张图本身是亮底的，原样铺会「发光」且压不住浅色正文，
+   所以压到四成不透明度 + 遮罩加宽加深（连右侧也留 50% 底色），
+   保证深色模式下的正文依旧落在近底色的背景上。 */
+:root[data-theme="dark"] .hero-bg { opacity: .4; }
+:root[data-theme="dark"] .hero::after {
+  background:
+    linear-gradient(90deg, var(--c-bg) 12%, color-mix(in srgb, var(--c-bg) 88%, transparent) 52%, color-mix(in srgb, var(--c-bg) 50%, transparent)),
+    linear-gradient(180deg, transparent 62%, var(--c-bg));
+}
+
+/* 窄屏：图被裁得只剩一条、文字却几乎占满宽度 —— 遮罩换成纵向，
+   上半部压到近底色（保证正文对比度），下半部让图露出来当装饰。 */
+@media (max-width: 700px) {
+  .hero-bg { object-position: 62% 42%; }
+  .hero::after {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--c-bg) 88%, transparent), color-mix(in srgb, var(--c-bg) 64%, transparent) 46%, var(--c-bg));
+  }
+  :root[data-theme="dark"] .hero::after {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--c-bg) 92%, transparent), color-mix(in srgb, var(--c-bg) 76%, transparent) 46%, var(--c-bg));
+  }
+}
+
 .hero-tag {
   display: inline-block;
   margin-bottom: var(--space);
@@ -207,6 +261,9 @@ b, strong { font-weight: 800; }
   font-size: clamp(30px, 5.2vw, 52px);
   letter-spacing: -.01em;
   max-width: 18em;
+  /* 标题固定分两行（「人工智能：」/「新质生产力的核心引擎」）：单行会横伸到右侧引擎图上。
+     断行是词表与静态 HTML 里的一个换行符 —— 不用 <br>，否则 parity-check 会误报「中文文本没挂 data-i18n」。 */
+  white-space: pre-line;
 }
 .hero-sub {
   margin-top: var(--space);
@@ -219,12 +276,6 @@ b, strong { font-weight: 800; }
   max-width: 46em;
   color: var(--c-text-soft);
 }
-.hero-hint {
-  margin-top: var(--space-lg);
-  color: var(--c-muted);
-  font-size: 13px;
-}
-.hero-hint::before { content: '↓ '; }
 
 /* ---------------- 章节通用骨架 ---------------- */
 .section { padding: clamp(36px, 5vw, 64px) 0; }
@@ -575,13 +626,24 @@ b, strong { font-weight: 800; }
 
 .kpi {
   padding: var(--space-lg);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  /* 与 .pillar / .force-card 同一条画法：只声明一个主色，底 / 边由它派生，
+     方框从左上白面斜向右下过渡到浅蓝（158deg + --mix-halo 描边）；
+     悬停再抬起 2px、描边压主色、换主色光晕（--shadow-hover 与 .scene / .pillar 同一条）。
+     方框是 <article>、不可聚焦，所以只写 :hover（不像 .ov-card 的 <a> 还要 :focus-visible）。 */
+  --kpi-soft: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface));
+  --kpi-line: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-border));
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 42%, var(--kpi-soft) 100%);
+  border: 1px solid var(--kpi-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
-.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-hover);
+}
 .kpi-value {
   display: flex;
   align-items: baseline;
@@ -608,12 +670,30 @@ b, strong { font-weight: 800; }
 }
 @media (max-width: 900px) { .pillars { grid-template-columns: 1fr; } }
 
+/* 方框底色借「上一个网站（vis）」章节方框的写法：只声明一个主色，
+   底 / 边都由它派生，一处改色整块跟着走。
+   这次主色落在本站的科技蓝上 —— 方框从左上白面斜向右下过渡到浅蓝，
+   边线也带一层淡蓝，不再是一整块大白。深浅只用既有的
+   --mix-halo 一档，不新造色阶。 */
 .pillar {
   padding: var(--space-lg);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  --pillar-soft: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface));
+  --pillar-line: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-border));
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 42%, var(--pillar-soft) 100%);
+  border: 1px solid var(--pillar-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+  /* 与 .ov-card 同一对令牌：颜色 / 阴影走 --t-control，位移走 --dur-base */
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
+}
+/* 悬停：沿用「上一个网站」章节方框的悬停 —— 抬起 2px、描边压成主色、阴影换成主色光晕
+   （--shadow-hover = 主色 22% 的柔光，与 .kpi / .force-card / .scene 同一条）。
+   方框是 <article>、不可聚焦，所以只写 :hover（不像 .ov-card 的 <a> 还要 :focus-visible）。 */
+.pillar:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-hover);
 }
 .pillar-top { display: flex; align-items: center; gap: 10px; margin-bottom: var(--space); }
 .pillar-icon {
@@ -666,76 +746,109 @@ b, strong { font-weight: 800; }
 .meter-meta b { color: var(--c-text); font-family: var(--font-mono); }
 .pillar-source { margin-top: 6px; font-size: 11.5px; color: var(--c-muted); }
 
-/* 对比表 */
-.cmp {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
+/* ---------------- ②b 传统 vs 新质：翻转对照卡 ----------------
+   每维一张卡，悬停 / 点按钮即翻面：正面「传统生产力」，背面「新质生产力」。
+   方框沿用 .kpi / .pillar / .force-card 同一条画法：158deg 渐变底 +--mix-halo 描边 /
+   悬停抬起 2px / 主色描边 / --shadow-hover 光晕。 */
+.cmp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space);
 }
-.cmp th, .cmp td {
-  padding: 12px 14px;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid var(--c-line);
+/* 与 §03 的 .force-cards 同一条「6 轨跨 2」规则：5 张卡在 4 列里会剩 1 张落单，≥1120px 起第二排居中 */
+@media (min-width: 1120px) {
+  .cmp-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .cmp-card { grid-column: span 2; }
+  .cmp-card:nth-child(4) { grid-column: 2 / span 2; }
+  .cmp-card:nth-child(5) { grid-column: 4 / span 2; }
 }
-.cmp thead th {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--c-muted);
-  background: var(--c-surface-2);
+.cmp-card {
+  padding: var(--space-lg);
+  --cmp-soft: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface));
+  --cmp-line: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-border));
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 42%, var(--cmp-soft) 100%);
+  border: 1px solid var(--cmp-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
-.cmp thead th:first-child { border-top-left-radius: var(--radius); }
-.cmp thead th:last-child { border-top-right-radius: var(--radius); }
-.cmp tbody th { font-weight: 800; white-space: nowrap; }
-.cmp td { color: var(--c-text-soft); }
-.cmp .is-after {
-  color: var(--c-text);
-  font-weight: 700;
+.cmp-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-hover);
+}
+.cmp-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cmp-name { font-size: 15.5px; }
+
+/* 翻面按钮：命中区 44×44（audit 按 44px 卡触控目标），看得见的 30px 圆点在 ::after 上 */
+.cmp-flip {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px; height: 44px;
+  margin: -6px -6px -6px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.cmp-flip::after {
+  content: '⇄';
+  position: absolute;
+  inset: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cmp-line);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-primary);
+  font-size: 15px;
+  line-height: 1;
+  transition: var(--t-control);
+}
+.cmp-flip:hover::after {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+}
+/* 钉住（背面）时按钮转实心，作为点击后的可见反馈 */
+.cmp-card.is-back .cmp-flip::after {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+/* 两面同占一格（grid-area: 1/1），高度自动取较高者。
+   网格容器上的 preserve-3d 会被浏览器压平，所以透视挂容器、两面各转 180°。 */
+.cmp-inner {
+  display: grid;
+  margin-top: 10px;
+  perspective: 900px;
+}
+.cmp-face {
+  grid-area: 1 / 1;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  backface-visibility: hidden;
+  transition: transform .5s var(--ease);
+}
+.cmp-front { background: var(--c-surface-2); }
+.cmp-back {
   background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  transform: rotateY(180deg);
 }
-.cmp tbody tr:last-child th,
-.cmp tbody tr:last-child td { border-bottom: 0; }
-.cmp-scroll { overflow-x: auto; }
-
-
-#compare-table { overflow-x: auto; }
-#compare-table .cmp { min-width: 640px; }
-
-/* 窄屏：不再让用户去横滑一张 640px 的表（容器只有 316px 时右侧列完全看不见），
-   改成上下堆叠 —— 每个单元格自带列名（data-label 由 app.js 写入） */
-@media (max-width: 700px) {
-  #compare-table { overflow-x: visible; }
-  #compare-table .cmp { min-width: 0; font-size: 13px; }
-  .cmp thead { display: none; }
-  .cmp, .cmp tbody, .cmp tr, .cmp th, .cmp td { display: block; }
-  .cmp tr {
-    padding: var(--space) 0;
-    border-bottom: 1px dashed var(--c-line);
-  }
-  .cmp tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
-  .cmp tbody th {
-    padding: 0 0 8px;
-    border: 0;
-    white-space: normal;
-    font-size: 14.5px;
-  }
-  .cmp td {
-    margin-top: 6px;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--c-surface-2);
-  }
-  .cmp td::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 2px;
-    color: var(--c-muted);
-    font-size: 11.5px;
-    font-weight: 800;
-  }
-  .cmp .is-after { background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent); }
+/* 两面朝同一方向各转 180°（背面转到 360°＝原位），看上去就是一张卡翻过去 */
+@media (hover: hover) {
+  .cmp-card:not(.is-back):hover .cmp-front { transform: rotateY(180deg); }
+  .cmp-card:not(.is-back):hover .cmp-back { transform: rotateY(360deg); }
 }
+.cmp-card.is-back .cmp-front { transform: rotateY(180deg); }
+.cmp-card.is-back .cmp-back { transform: rotateY(360deg); }
+.cmp-side { font-size: 11.5px; font-weight: 800; color: var(--c-muted); }
+/* 背面的小标签压深当字（--mix-ink，与 11.5px 徽章同一套对比度处理） */
+.cmp-back .cmp-side { color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text)); }
+.cmp-text { margin-top: 4px; font-size: 13.5px; color: var(--c-text-soft); }
+.cmp-back .cmp-text { color: var(--c-text); font-weight: 700; }
 
 /* ---------------- ③ 五股作用力 ---------------- */
 .force-cards {
@@ -757,24 +870,43 @@ b, strong { font-weight: 800; }
   display: flex;
   flex-direction: column;
   padding: var(--space-lg);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  /* 与 .pillar 同一条画法：只声明一个主色，底 / 边由它派生，方框从左上白面斜向右下
+     过渡到浅蓝（158deg + --mix-halo 描边）；悬停再抬起 2px、描边压主色、换主色光晕
+     （--shadow-hover 与 .kpi / .scene / .pillar 同一条）。方框是 <article>、不可聚焦，只写 :hover。 */
+  --force-soft: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-surface));
+  --force-line: color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-border));
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 42%, var(--force-soft) 100%);
+  border: 1px solid var(--force-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
-.force-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.force-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-hover);
+}
 .force-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .force-icon { font-size: 24px; }
 .force-tag {
   padding: 3px 9px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), transparent);
-  /* 11px 的小徽章：底色是强调色的极浅底，字色必须用压深过的 --c-accent-ink（原 --c-accent 只有 3.35:1） */
-  color: var(--c-accent-ink);
+  /* 标签底色按「含义」上色，不写死色值：默认与第 1 张（效率革命）用主强调橙，其余见下。
+     底色 = 色相的极浅底（--mix-soft），字色 = 同色相按 --mix-ink 压深当文字 ——
+     11px 的小徽章用原色只有 3.3:1 上下，压深后两档主题都 ≥ 4.5:1（逐色实测见 a11y-check.mjs）。 */
+  --tag: var(--c-accent);
+  background: color-mix(in srgb, var(--tag) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--tag) var(--mix-ink), var(--c-text));
   font-size: 11px;
   font-weight: 800;
 }
+/* 按标签含义分配色相：创新=紫（创意）、配置=青（数据理性）、绿色=绿、普惠=粉（温度 / 人文）。
+   色相全部取自既有令牌（--c-* / --d*），换肤 / 切主题自动跟随，不新增色值。 */
+.force-card:nth-child(2) .force-tag { --tag: var(--d5); }
+.force-card:nth-child(3) .force-tag { --tag: var(--c-info); }
+.force-card:nth-child(4) .force-tag { --tag: var(--c-success); }
+.force-card:nth-child(5) .force-tag { --tag: var(--d6); }
 .force-name { font-size: 15.5px; margin-bottom: 8px; }
 .force-desc { flex: 1; font-size: 13.5px; color: var(--c-text-soft); }
 .force-stat {
@@ -975,6 +1107,166 @@ b, strong { font-weight: 800; }
 .source-name { font-size: 13.5px; font-weight: 700; }
 .source-note { font-size: 12px; color: var(--c-muted); }
 
+/* =========================================================
+   章节路径带（首屏之后、「网页概览」之前）
+   仿 vis 的「小节流动路径带」：SVG 波浪贝塞尔轨道 + 01…12 编号节点，
+   虚线靠 stroke-dashoffset 沿线流动。
+   几何（轨道宽度 / 节点坐标）由 app.js 的 renderChapterPath() 现场算，
+   标签与锚点取自 data.js 的 overview（中英各一份，随语言切换重绘）。
+   节点是 <a href="#…">，点一下跳到对应章节；SVG 轨道只作装饰、不吃点击。
+   容器 max-width 与 .wrap 同款；窄屏时带内横向滚动，不撑破页面。
+   ========================================================= */
+.chapter-path {
+  position: relative;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2px var(--gutter) 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.chapter-path__track {
+  position: relative;
+  margin: 0 auto;
+}
+
+.chapter-path__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;                 /* 纯装饰轨道，点击一律透传给下面的节点链接 */
+}
+
+/* 静态轨道底：一条柔和的半透明粗线 */
+.chapter-path__base {
+  fill: none;
+  stroke: var(--c-line);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+/* 流动层：pathLength=1 归一化后，虚线周期与像素长度无关，任意间距都无缝跑动 */
+.chapter-path__flow {
+  fill: none;
+  stroke: var(--c-primary);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: .02 .016;
+  opacity: .9;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-primary) 38%, transparent));
+  animation: chapterPathFlow 1.6s linear infinite;
+}
+
+@keyframes chapterPathFlow {
+  to { stroke-dashoffset: -.036; }   /* 恰好一个虚线周期（.02+.016），循环无接缝 */
+}
+
+/* 节点：绝对定位在 JS 算出的坐标上，自身垂直排布徽章 + 标题；
+   每个节点是一个跳到章节的 <a>（键盘也能 Tab 到、回车即可跳） */
+.chapter-path__node {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 86px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .45s var(--ease) calc(var(--i, 0) * 40ms);
+}
+
+.chapter-path.is-revealed .chapter-path__node { opacity: 1; }
+
+.chapter-path__badge {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .92), transparent 46%),
+    var(--c-surface);
+  border: 2px solid color-mix(in srgb, var(--c-primary) 45%, transparent);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--c-primary) 14%, transparent),
+              var(--shadow-xs);
+  transition: var(--t-control);
+}
+
+.chapter-path__label {
+  max-width: 86px;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--c-text-soft);
+  /* 波浪线会从标题区域穿过：给标题一层页面底色的胶囊底，保证文字始终清晰 */
+  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--dur-fast) var(--ease), font-weight var(--dur-fast) var(--ease),
+              background-color var(--dur-fast) var(--ease);
+}
+
+/* 当前章节：实心徽章 + 白字 + 脉冲圆环，跟随顶栏高亮（.nav-link.is-active） */
+.chapter-path__node.is-current .chapter-path__badge {
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+  border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c-primary) 13%, transparent),
+              0 8px 18px color-mix(in srgb, var(--c-primary) 24%, transparent);
+}
+
+.chapter-path__node.is-current .chapter-path__badge::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid color-mix(in srgb, var(--c-primary) 42%, transparent);
+  border-radius: inherit;
+  animation: chapterPathPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.chapter-path__node.is-current .chapter-path__label {
+  color: var(--c-text);
+  font-weight: 800;
+}
+
+/* 可点提示：悬停 / 键盘聚焦时，徽章抬起来并换成主色描边（键盘用户靠 :focus-visible） */
+.chapter-path__node:hover .chapter-path__badge,
+.chapter-path__node:focus-visible .chapter-path__badge {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--c-primary) 26%, transparent),
+              var(--shadow-xs);
+}
+.chapter-path__node:hover .chapter-path__label,
+.chapter-path__node:focus-visible .chapter-path__label {
+  color: var(--c-text);
+}
+
+@keyframes chapterPathPulse {
+  0%, 100% { opacity: .3; transform: scale(.94); }
+  50%      { opacity: .85; transform: scale(1.08); }
+}
+
 /* ---------------- ⑥ 阅读地图 ---------------- */
 .ov-grid {
   display: grid;
@@ -984,9 +1276,19 @@ b, strong { font-weight: 800; }
 .ov-card {
   display: block;
   padding: var(--space) var(--space-lg);
-  background: var(--c-surface);
+  /* 淡蓝 × 白：斜向渐变（左上淡蓝 → 右下白）+ 两枚柔光（与首屏同一套 --tex-* 令牌），
+     卡片不再死白一片；两档主题共用这条规则，色值随令牌走。柔光最深处对
+     12.5px 的 --c-text-soft 仍约 5.4:1（亮）/ 5.7:1（暗），过 4.5 门槛。 */
+  background:
+    radial-gradient(115% 95% at 0% 0%, var(--tex-glow), transparent 60%),
+    radial-gradient(105% 95% at 100% 100%, var(--tex-cool), transparent 62%),
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--c-primary) 9%, var(--c-surface)) 0%,
+      color-mix(in srgb, var(--c-primary) 3%, var(--c-surface)) 58%,
+      var(--c-surface) 100%);
   border: 1px solid var(--c-line);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
   transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
 .ov-card:hover {
@@ -994,7 +1296,32 @@ b, strong { font-weight: 800; }
   border-color: var(--c-primary);
   box-shadow: var(--shadow-hover);
 }
-.ov-icon { font-size: 20px; }
+/* 淡蓝圆角图标底：与 .section-num / .hero-tag 同一套「主色 var(--mix-soft) 浅底 + 圆角」画法，
+   让 emoji 从渐变底上「立」起来，而不是直接躺在卡面上 */
+.ov-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 12%, transparent);
+  /* 节奏与 .ov-card 完全一致（同一对 --t-control + transform 令牌），浮起时才会「一起走」 */
+  transition: var(--t-control), transform var(--dur-base) var(--ease);
+}
+/* 悬停 / 键盘聚焦卡片时，图标底跟着「再深一档 + 踮脚 2px」，与卡片的 3px 上浮联动：
+   加深用 --mix-halo（亮 18% / 暗 34%，比常驻的 --mix-soft 深一档），描边换成 24%
+   —— 全站「选中」内描边就是这一档（见 i18n.css 语言按钮 .is-active），不新造色阶。
+   抬升幅度刻意小于卡片：视觉上是「卡片浮起、图标跟着踮一下」，而不是图标在卡面里自己乱动。 */
+.ov-card:hover .ov-icon,
+.ov-card:focus-visible .ov-icon {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-halo), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 24%, transparent);
+}
 .ov-name { margin: 6px 0 4px; font-size: 14.5px; }
 .ov-desc { font-size: 12.5px; color: var(--c-text-soft); }
 
@@ -1059,9 +1386,19 @@ b, strong { font-weight: 800; }
 
 /* ---------------- 动效降级 ---------------- */
 @media (prefers-reduced-motion: reduce) {
-  .kpi:hover, .force-card:hover, .scene:hover, .ov-card:hover { transform: none; }
+  .kpi:hover, .force-card:hover, .scene:hover, .ov-card:hover, .pillar:hover, .cmp-card:hover { transform: none; }
+  /* 翻面照样发生，只是不再有 .5s 的旋转过程（瞬时切面） */
+  .cmp-face { transition: none; }
+  /* 图标底的跟随上浮也停掉；加深色保留，它是状态提示、不是动效 */
+  .ov-card:hover .ov-icon,
+  .ov-card:focus-visible .ov-icon { transform: none; }
+  .ov-icon { transition: none; }
   .to-top { transition: none; }
   .readbar { transition: none; }
+  /* 章节路径带：停掉流动虚线与脉冲，节点直接呈现 */
+  .chapter-path__flow { animation: none; }
+  .chapter-path__node { transition: none; opacity: 1; }
+  .chapter-path__node.is-current .chapter-path__badge::after { animation: none; }
 }
 
 /* ---------------- 无 JS 兜底面板（只有禁用 JS 时才进 DOM） ---------------- */
@@ -1145,7 +1482,12 @@ b, strong { font-weight: 800; }
 
 @media print {
   .topbar, .to-top, .viz-toolbar, .skip-link { display: none !important; }
-  .card, .kpi, .pillar, .force-card, .scene { box-shadow: none; break-inside: avoid; }
+  .card, .kpi, .pillar, .force-card, .scene, .cmp-card { box-shadow: none; break-inside: avoid; }
+  /* 纸上没有悬停：两面摊开印出来，等于把那张 5 行对比表又印了一遍 */
+  .cmp-flip { display: none; }
+  .cmp-inner { display: block; }
+  .cmp-face { backface-visibility: visible; transform: none !important; }
+  .cmp-back { margin-top: 6px; }
   .section { break-inside: avoid-page; }
   /* 数据表：横向滚动与吸顶表头在纸上没有意义，摊平即可 */
   .viz-table-wrap { overflow: visible; }

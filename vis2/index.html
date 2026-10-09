@@ -8,13 +8,14 @@
 
   <!-- ================= 分享与爬虫元信息 =================
        全部「自指」：只有指向本站的 canonical / og:url，没有任何外链资源。
-       og:image 故意留空 —— 部署目录里不放任何位图（budget-check.mjs 会拦 PNG 入库），
-       硬指向 SVG 又会让多数平台的分享卡片显示空白，宁缺毋滥。
+       og:image 仍故意留空 —— 首屏那张 background.webp 是页面装饰（2.09:1 的宽幅渲染图），
+       当分享卡片会被平台按 1.91:1 裁得只剩中间一条，宁缺毋滥；硬指向 SVG 则多数平台显示空白。
+       部署目录里只允许这一张位图，budget-check.mjs 会拦下别的 PNG / JPEG / WebP。
        data-meta 是给 i18n.js 的挂点：切语言时把 title / description 同步刷成当前语言。 -->
   <link rel="canonical" href="https://ly-beyond.github.io/vis2/" />
   <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0f1518" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#eef4ff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0c1424" media="(prefers-color-scheme: dark)" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="人工智能 · 新质生产力" />
   <meta property="og:locale" content="zh_CN" />
@@ -105,12 +106,19 @@
 
     <!-- ================= 首屏 ================= -->
     <section class="hero" id="top">
+      <!-- 首屏背景图（装饰性）：alt="" 是故意的 —— 它不承载信息，不进无障碍树，
+           纯靠 CSS 绝对定位铺满 .hero，不参与布局（hero 高度与「首屏折线」都不受影响）。
+           原始素材是 2805×1343、3.24 MB 的 PNG，肉眼可见的胶片颗粒让 gzip / PNG 都压不动；
+           这里只换编码（轻度降噪 + WebP q85，尺寸不重采样）→ 160.5 KB，省下 95% 字节。
+           体积预算与「只允许这一张位图」的禁令口径见 budget-check.mjs 上方注释。 -->
+      <img class="hero-bg" src="background.webp" alt="" width="2805" height="1343"
+           decoding="async" fetchpriority="high" />
       <div class="wrap">
         <p class="hero-tag" data-i18n="hero.tag">AI · NEW QUALITY PRODUCTIVE FORCES</p>
-        <h1 class="hero-title" data-i18n="hero.title">人工智能：新质生产力的核心引擎</h1>
+        <h1 class="hero-title" data-i18n="hero.title">人工智能：
+          新质生产力的核心引擎</h1>
         <p class="hero-sub" data-i18n="hero.sub">12 个章节 · 15 张自绘 SVG 图表 · 1 台带敏感性分析的模拟器</p>
         <p class="hero-meta" data-i18n="hero.meta">从「三要素升级」到「全要素生产率」：看数据，AI 到底把生产方式改成了什么样</p>
-        <p class="hero-hint" data-i18n="hero.hint">向下滚动开始 · 图表均可交互</p>
 
         <!-- 「视图状态可分享」：按钮由 app.js 绑定 —— 把当前筛选 / 年份 / 地图指标写进地址栏并复制。
              状态用 history.replaceState 写，所以不会往后退键里塞垃圾历史；
@@ -122,13 +130,21 @@
       </div>
     </section>
 
+    <!-- ================= 章节路径带 =================
+         12 个正文章节的流动连线（仿「学习路径」）：点节点/标签即可跳到对应章节。
+         节点由 app.js 的 renderChapterPath() 生成成锚点链接（<a>，指向各章节），
+         几何按容器宽度现场算，标签与锚点取自 data.js 的 overview（中英各一份，随语言重绘）。
+         刻意用 <div> 而不是 <section class="section">：既不改「15 节」的计数，
+         也不触发 .section + .section 的分隔线。 -->
+    <div class="chapter-path" id="chapter-path"></div>
+
     <!-- ================= 0 · 阅读地图 ================= -->
     <section class="section" id="overview">
       <div class="wrap">
         <div class="section-head">
           <span class="section-num">00</span>
           <div>
-            <h2 class="section-title" data-i18n="sec.overview.title">这张页面讲了什么</h2>
+            <h2 class="section-title" data-i18n="sec.overview.title">网页概览</h2>
             <p class="section-lead" data-i18n="sec.overview.lead">十二个章节，从「概念」到「产业」再到「区域」，最后收在「结论」，每一节都配一张可交互的图。</p>
           </div>
         </div>
@@ -142,7 +158,7 @@
         <div class="section-head">
           <span class="section-num">01</span>
           <div>
-            <h2 class="section-title" data-i18n="sec.kpi.title">先看四个数字</h2>
+            <h2 class="section-title" data-i18n="sec.kpi.title">先看这四个数</h2>
             <p class="section-lead" data-i18n="sec.kpi.lead">规模、增量、份额、算力——四个数字概括了 AI 作为新质生产力的体量。</p>
           </div>
         </div>
@@ -164,9 +180,9 @@
         <div id="define-lead"></div>
         <div class="pillars" id="pillars"></div>
 
-        <div class="card" style="margin-top: var(--space-lg);">
+        <div style="margin-top: var(--space-lg);">
           <div data-mount="compare-head"></div>
-          <div id="compare-table"></div>
+          <div class="cmp-cards" id="compare-cards"></div>
         </div>
       </div>
     </section>

@@ -200,13 +200,15 @@ multiSeries.forEach((s) => {
   ok(s.penetration[5] === row.penetration && s.gain[5] === row.gain,
     `data.js: ${s.id} 的 2024 端点与 industry.rows 不一致（${s.penetration[5]}/${s.gain[5]} ≠ ${row.penetration}/${row.gain}）`);
 });
-/* 跨图联动（P2）：年份播放器用「下标」驱动小倍数图的高亮列，
-   所以两边的年份序列必须等长、逐年一一对应 —— 哪天有一边加/减了一年，这里必须立刻失败。 */
+/* 跨图联动（P2）：年份播放器用「下标」驱动小倍数图的高亮列。
+   播放器本身覆盖 2019–2028E（= scale.series + scale.forecast），但小倍数图只有 2019–2025 这 7 列
+   —— 联动的「重叠段」就是 scale.series，所以两边的年份序列必须等长、逐年一一对应；
+   哪天有一边加/减了一年，这里必须立刻失败（外推年没有对应列，联动时会清空高亮）。 */
 const scaleSeries = (DATA.scale && DATA.scale.series) || [];
 ok(scaleSeries.length === 7 && scaleSeries[0].year === 2019 && scaleSeries[6].year === 2025,
   `data.js scale.series 应为 2019–2025 共 7 个点，实际 ${scaleSeries.length}（${scaleSeries[0] && scaleSeries[0].year}–${scaleSeries[scaleSeries.length - 1] && scaleSeries[scaleSeries.length - 1].year}）`);
 ok(multiSeries.every((s) => s.penetration.length === scaleSeries.length),
-  'data.js: 年份播放器（scale.series）与小倍数图必须等长，否则跨图高亮会错位');
+  'data.js: 年份播放器与小倍数图的重叠段（scale.series，2019–2025）必须等长，否则跨图高亮会错位');
 /* 结论节（§13）：增长对比里「AI 相关产业」那一列必须真的由 §04 的带动产业规模逐年算出来 ——
    更新了产业规模却忘了重算增速（或反过来）会在这里立刻失败，避免两节数据各说各话。 */
 const gp = (DATA.growth && DATA.growth.points) || [];

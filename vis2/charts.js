@@ -714,9 +714,9 @@ window.CHARTS = (function () {
     var years = series[0].points.map(function (p, i) {
       return p.label != null ? p.label : String(p.year != null ? p.year : i + 1);
     });
-    /* 播放器/跨图联动的「可停年份」上限。曲线可以画到更远的预测年，
-       但年份轴只走到这里（产业规模图：停在有公开口径的 2025E，不把外推年份
-       混进「逐年回放」——小倍数图那边也只有 7 年，下标必须一一对齐）。 */
+    /* 播放器/跨图联动的「可停年份」上限，默认 = 全部点（产业规模图：2019–2025E 实测 +
+       2026–2028E 外推，共 10 个，外推年也能逐年回放）。仍保留 playerMax 这个旋钮：
+       万一哪天某张图只该回放到某个年份，传一个更小的值即可把上限压回去。 */
     var playMax = cfg.playerMax != null ? Math.max(0, Math.min(cfg.playerMax, n - 1)) : n - 1;
 
     function focus(idx) {
@@ -2223,7 +2223,17 @@ window.CHARTS = (function () {
     /* 联动入口：外部（年份播放器 / 分享链接）只调这一个函数，不必知道格内坐标。
        index 是年份在 cfg.years 里的下标，越界会夹住。 */
     ctx.focusYear = function (index) {
-      var idx = Math.max(0, Math.min(lastIdx, Math.round(Number(index) || 0)));
+      /* null / 越界 = 清空高亮：产业规模图的播放器走到外推年（2026–2028E）时，
+         本节没有那一列，宁可整条高亮收掉，也不要把外推年夹到 2025E 上（那是错的年份）。 */
+      if (index == null || !isFinite(Number(index)) || Number(index) < 0 || Number(index) > lastIdx) {
+        focusRecs.forEach(function (rec) {
+          rec.band.setAttribute('opacity', '0');
+          rec.mark.setAttribute('opacity', '0');
+          rec.dots.forEach(function (d) { d.node.setAttribute('opacity', '0'); });
+        });
+        return -1;
+      }
+      var idx = Math.round(Number(index));
       focusRecs.forEach(function (rec) {
         rec.band.setAttribute('x', (X(idx) - rec.bandW / 2).toFixed(1));
         rec.band.setAttribute('opacity', '1');
