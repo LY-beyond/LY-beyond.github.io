@@ -374,7 +374,7 @@ b, strong { font-weight: 800; }
 .card-note,
 .card-source {
   margin-top: var(--space-sm);
-  max-width: 68ch;          /* 不限宽时 1440px 下脚注一行 86.6em（≈100 字），远超舒适区 */
+  /* 说明与来源铺满整张卡片的宽度：一行到底，竖着扫读十几个图表时脚注对齐在图的两端 */
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--c-muted);
