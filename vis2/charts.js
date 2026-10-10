@@ -171,6 +171,14 @@ window.CHARTS = (function () {
     return Math.round(Math.max(min || 280, Math.min(cw, design)));
   }
 
+  /* 客户端 x → viewBox x。上面那条「viewBox 与屏幕 1:1」只在容器不宽于设计宽度时成立：
+     卡片正文一旦超过设计宽度（宽屏常见），<svg> 就被 max-width 锁住并水平居中，
+     屏幕坐标与 SVG 坐标之间多出一段居中留白。命中判定若仍按容器算，整条线就会右移半格。 */
+  function viewX(svg, W, clientX) {
+    var r = svg.getBoundingClientRect();
+    return r.width ? (clientX - r.left) * W / r.width : clientX;
+  }
+
   function stage(container, ratio, cap) {
     container.classList.add('viz');
     clear(container);
@@ -669,7 +677,9 @@ window.CHARTS = (function () {
       y1: pad.t, y2: pad.t + ph, stroke: T['--c-primary'],
       'stroke-width': 1.4, 'stroke-dasharray': '4 4', opacity: 0
     }, svg);
-    var hover = el('rect', { x: pad.l, y: pad.t, width: pw, height: ph, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+    var hover = el('rect', { x: pad.l, y: pad.t, width: pw + pad.r, height: ph, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+    /* 命中区比绘图区向右多留一档 pad.r：最后一个点正好落在绘图区右边界上，
+       不多留这一档就压在边界外 —— 悬停最后一个点会没反应。 */
 
     /* 悬停高亮：命中处临时放大数据点并用本色实心填充（高饱和聚焦点），
        移出即清空；原来的静态点保持不动 */
@@ -689,8 +699,10 @@ window.CHARTS = (function () {
 
     hover.addEventListener('mousemove', function (e) {
       var host = container.getBoundingClientRect();
-      var ratioX = Math.max(0, Math.min(1, (e.clientX - host.left) / host.width));
-      var idx = Math.max(0, Math.min(n - 1, Math.round(((ratioX * W - pad.l) / pw) * (n - 1))));
+      /* 命中列：按 <svg> 自己的盒子换算成 viewBox 坐标（宽屏下 SVG 被锁宽居中时，
+         直接用容器坐标会整体右移一段，年份跟着跳一格）。 */
+      var vx = viewX(svg, W, e.clientX);
+      var idx = Math.max(0, Math.min(n - 1, Math.round(((vx - pad.l) / pw) * (n - 1))));
       cross.setAttribute('x1', X(idx));
       cross.setAttribute('x2', X(idx));
       cross.setAttribute('opacity', 0.75);
@@ -701,7 +713,7 @@ window.CHARTS = (function () {
         rows += '<span class="viz-tip-row"><i style="background:' + s.color + '"></i>' + s.name +
           '<b>' + fmt(s.points[idx].value, s.decimals || 0) + (s.unit || '') + '</b></span>';
       });
-      showTip(ctx, rows, ratioX * host.width, (Y(p0.value) / H) * host.height);
+      showTip(ctx, rows, e.clientX - host.left, (Y(p0.value) / H) * host.height);
     });
     hover.addEventListener('mouseleave', function () {
       cross.setAttribute('opacity', 0);
@@ -2358,8 +2370,9 @@ window.CHARTS = (function () {
         'stroke-dasharray': '3 4', opacity: 0, 'pointer-events': 'none'
       }, g);
       var hot = el('g', { 'pointer-events': 'none' }, g);
+      /* 命中区同样向右多留一档 pad.r：最后一个点（2025E）正好压在绘图区右边界上 */
       var hit = el('rect', {
-        x: pad.l, y: pad.t, width: pw, height: ph, fill: 'transparent', style: 'cursor:crosshair'
+        x: pad.l, y: pad.t, width: pw + pad.r, height: ph, fill: 'transparent', style: 'cursor:crosshair'
       }, g);
 
       /* 联动高亮的「圆点」放在最后画：要压在折线上面才看得见 */
@@ -2378,8 +2391,9 @@ window.CHARTS = (function () {
 
       hit.addEventListener('mousemove', function (e) {
         var box = container.getBoundingClientRect();
-        /* 容器的坐标系 = SVG 坐标系（viewBox 与屏幕 1:1），并排时再减去前面几格的宽度 */
-        var lx = e.clientX - box.left - (wide ? (panelW + gap) * pi : 0);
+        /* 命中列：先按 <svg> 自己的盒子换算成 viewBox 坐标（宽屏下 SVG 被锁宽居中，
+           容器坐标 ≠ SVG 坐标），并排时再减去前面几格的宽度 */
+        var lx = viewX(svg, W, e.clientX) - (wide ? (panelW + gap) * pi : 0);
         var idx = Math.max(0, Math.min(lastIdx, Math.round(((lx - pad.l) / pw) * (m - 1))));
         clear(hot);
         cross.setAttribute('x1', X(idx).toFixed(1));
