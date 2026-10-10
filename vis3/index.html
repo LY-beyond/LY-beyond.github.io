@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>可视化 Pandas 工作台｜数据可视化作业 03</title>
+  <meta name="description" content="浏览器里的可视化 Pandas 工作台：载入或粘贴数据，用「筛选 / 清洗 / 分组 / 透视 / 连接 / 时间序列」等 52 种变换搭出一条流水线，实时看形状、表格与 10 类图表，并把整条流水线翻译成可直接运行的 pandas 代码。" data-meta="desc" />
+
+  <!-- ================= 分享与爬虫元信息 =================
+       全部「自指」：只有指向本站的 canonical / og:url，没有任何外链资源。
+       data-meta 是给 i18n.js 的挂点：切语言时把 title / description 同步刷成当前语言。 -->
+  <link rel="canonical" href="https://ly-beyond.github.io/vis3/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#eef4ff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0c1424" media="(prefers-color-scheme: dark)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="可视化 Pandas 工作台" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:url" content="https://ly-beyond.github.io/vis3/" />
+  <meta property="og:title" content="可视化 Pandas 工作台｜数据可视化作业 03" data-meta="title" />
+  <meta property="og:description" content="浏览器里的可视化 Pandas 工作台：载入或粘贴数据，用 52 种变换搭出一条流水线，实时看形状、表格与 10 类图表，并把整条流水线翻译成可直接运行的 pandas 代码。" data-meta="desc" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="可视化 Pandas 工作台｜数据可视化作业 03" data-meta="title" />
+  <meta name="twitter:description" content="浏览器里的可视化 Pandas 工作台：载入或粘贴数据，用 52 种变换搭出一条流水线，实时看形状、表格与 10 类图表，并把整条流水线翻译成可直接运行的 pandas 代码。" data-meta="desc" />
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="i18n.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="theme.css" />
+  <!-- theme.js 必须在 <head> 里、且不 defer：渲染前写入 data-theme，避免闪白 -->
+  <script src="theme.js"></script>
+</head>
+<body>
+
+  <a class="skip-link" href="#main" data-i18n="skip">跳到正文</a>
+
+  <!-- ================= 无 JS 兜底 =================
+       本页的表格、图表与代码全部由脚本现场生成，禁用 JS 只会剩一个空骨架。
+       所以这里给出「工作台是干什么的 + 怎么用」的纯文本说明（静态文案，与当前语言无关）。 -->
+  <noscript>
+    <div class="noscript">
+      <p class="noscript-title">本页的表格、图表与代码需要 JavaScript 才能生成 · This workbench needs JavaScript</p>
+      <p class="noscript-lead">它是浏览器端的可视化 pandas 工作台：① 选内置数据集或用文件 / 粘贴 / 网址载入数据 → ② 用筛选、清洗、分组、透视、连接、时间序列等 52 种变换搭一条流水线 → ③ 实时看形状、表格与 10 类图表 → ④ 得到可直接运行的 pandas 代码。全部计算在本机完成。</p>
+      <p class="noscript-files">引擎源码可离线阅读：<a href="pandas.js">pandas.js</a> · <a href="charts.js">charts.js</a> · <a href="data.js">data.js</a></p>
+    </div>
+  </noscript>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text" data-i18n="site.short">PD 工作台</span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button"
+              aria-expanded="false" aria-controls="site-nav"
+              data-i18n-attr="aria-label:nav.label">☰</button>
+
+      <nav class="topnav" id="site-nav" aria-label="工作台导航" data-i18n-attr="aria-label:nav.label">
+        <a class="nav-link" href="#p-data" data-i18n="nav.data">数据</a>
+        <a class="nav-link" href="#p-transform" data-i18n="nav.transform">变换</a>
+        <a class="nav-link" href="#p-chart" data-i18n="nav.chart">图表</a>
+        <a class="nav-link" href="#p-code" data-i18n="nav.code">代码</a>
+      </nav>
+
+      <!-- 语言切换器：两个 <button>，由 i18n.js 原位切换（theme.js 会把主题按钮插到它左边） -->
+      <div class="lang-switch" role="group" aria-label="语言 / Language">
+        <button class="lang-switch-item" type="button" data-lang="zh" aria-pressed="true">中</button>
+        <button class="lang-switch-item" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+
+      <!-- 阅读进度条：由 app.js 在滚动时写入 scaleX（纯装饰，不进无障碍树） -->
+      <div class="readbar" id="readbar" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= 首屏 ================= -->
+    <section class="hero" id="top">
+      <div class="wrap">
+        <p class="hero-tag" data-i18n="hero.tag">VISUAL PANDAS · WORKBENCH</p>
+        <h1 class="hero-title" data-i18n="hero.title">把 pandas 变成看得见的东西</h1>
+        <p class="hero-sub" data-i18n="hero.sub">数据 → 变换 → 图表 → 代码：四步走完一次完整分析</p>
+        <p class="hero-meta" data-i18n="hero.meta">零依赖的浏览器端引擎（迷你 DataFrame + 自绘 SVG 图表）。每加一个变换步骤，形状、表格、图表与 pandas 代码会同时更新 —— 不用打开 Jupyter，也能看清每一行代码对数据做了什么。</p>
+        <p class="hero-local" data-i18n="hero.local">全部解析与计算都在本机完成，数据不会离开这台设备。</p>
+
+        <!-- 实时指标：由 app.js 写入（current 结果的行 / 列 / 步骤 / 数值列 / 类别列 / 缺失值） -->
+        <dl class="hero-stats" id="hero-stats">
+          <div class="stat"><dd class="stat-num" id="st-rows">—</dd><dt class="stat-label" data-i18n="stat.rows">行</dt></div>
+          <div class="stat"><dd class="stat-num" id="st-cols">—</dd><dt class="stat-label" data-i18n="stat.cols">列</dt></div>
+          <div class="stat"><dd class="stat-num" id="st-steps">—</dd><dt class="stat-label" data-i18n="stat.steps">变换步骤</dt></div>
+          <div class="stat"><dd class="stat-num" id="st-numeric">—</dd><dt class="stat-label" data-i18n="stat.numeric">数值列</dt></div>
+          <div class="stat"><dd class="stat-num" id="st-category">—</dd><dt class="stat-label" data-i18n="stat.category">类别列</dt></div>
+          <div class="stat"><dd class="stat-num" id="st-missing">—</dd><dt class="stat-label" data-i18n="stat.missing">缺失值</dt></div>
+        </dl>
+
+        <p class="hero-status" id="workbench-status" role="status"></p>
+      </div>
+    </section>
+
+    <!-- ================= 01 数据 ================= -->
+    <section class="section" id="p-data">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="section-num">01</span>
+          <div>
+            <h2 class="section-title" data-i18n="data.title">① 数据：先有表</h2>
+            <p class="section-lead" data-i18n="data.lead">挑一个内置数据集，或用文件 / 粘贴 / 网址载入自己的表。解析器会嗅探分隔符、去重列名，并把每列推断成 int64 / float64 / bool / datetime64 / object。</p>
+          </div>
+        </header>
+
+        <div class="grid">
+          <!-- 数据来源 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="data.builtin">内置数据集</h3>
+            <div class="ds-grid" id="ds-list"></div>
+
+            <h3 class="card-title card-title--sub" data-i18n="data.custom">载入自定义数据</h3>
+            <p class="card-note" data-i18n="data.customHint">CSV / TSV / JSON 都只在本机解析，不上传任何服务器。</p>
+
+            <div class="field">
+              <label class="field-label" for="file-input" data-i18n="data.file">选择文件</label>
+              <div class="file-row">
+                <input class="sr-only" id="file-input" type="file" accept=".csv,.tsv,.txt,.json,text/csv,application/json" />
+                <label class="btn" for="file-input" data-i18n="data.fileBtn">选择文件…</label>
+                <span class="file-name" id="file-name"></span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="paste-area" data-i18n="data.paste">粘贴文本</label>
+              <textarea class="field-area" id="paste-area" rows="4" spellcheck="false"
+                        data-i18n-attr="placeholder:data.pastePlaceholder"
+                        placeholder="region,revenue,units&#10;East,12400,88&#10;North,9800,61"></textarea>
+              <button class="btn" id="paste-btn" type="button" data-i18n="data.pasteBtn">解析这段文本</button>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="url-input" data-i18n="data.url">从网址读取</label>
+              <div class="field-row">
+                <input class="field-input" id="url-input" type="url" spellcheck="false"
+                       data-i18n-attr="placeholder:data.urlPlaceholder" placeholder="https://example.com/data.csv" />
+                <button class="btn" id="url-btn" type="button" data-i18n="data.urlBtn">读取</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="delim-select" data-i18n="data.delimiter">分隔符</label>
+              <select class="field-select" id="delim-select">
+                <option value="auto" data-i18n="data.delim.auto">自动嗅探</option>
+                <option value="comma" data-i18n="data.delim.comma">逗号 ,</option>
+                <option value="tab" data-i18n="data.delim.tab">制表符 \t</option>
+                <option value="semi" data-i18n="data.delim.semi">分号 ;</option>
+                <option value="pipe" data-i18n="data.delim.pipe">竖线 |</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 已载入的数据 + 导出 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="data.sources">已载入的数据</h3>
+            <ul class="src-list" id="src-list"></ul>
+
+            <h3 class="card-title card-title--sub" data-i18n="data.exportTitle">导出当前结果</h3>
+            <p class="card-note" data-i18n="data.exportNote">导出的是「变换之后」的结果，列名已按当前步骤更新。</p>
+            <div class="btn-row">
+              <button class="btn" id="export-csv" type="button" data-i18n="data.exportCSV">导出 CSV</button>
+              <button class="btn" id="export-json" type="button" data-i18n="data.exportJSON">导出 JSON</button>
+              <button class="btn" id="export-html" type="button" data-i18n="data.exportHTML">导出 HTML 表格</button>
+              <button class="btn" id="export-sql" type="button" data-i18n="data.exportSQL">导出 SQL 建表</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn" id="copy-csv" type="button" data-i18n="data.copyCSV">复制 CSV</button>
+              <button class="btn" id="copy-tsv" type="button" data-i18n="data.copyTSV">复制 TSV（read_clipboard）</button>
+              <button class="btn" id="copy-md" type="button" data-i18n="data.copyMD">复制 Markdown 表格</button>
+            </div>
+            <p class="status-line" id="data-status" role="status"></p>
+          </div>
+        </div>
+
+        <div class="grid grid--wide">
+          <!-- 数据预览 -->
+          <div class="card card--wide">
+            <h3 class="card-title"><span data-i18n="data.preview">数据预览</span> <span class="chip" id="preview-chip"></span></h3>
+            <div class="table-wrap" id="data-table"></div>
+            <p class="card-note" id="preview-note"></p>
+          </div>
+
+          <!-- 列概览 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="data.profile">列概览</h3>
+            <div class="table-wrap" id="profile-table"></div>
+          </div>
+
+          <!-- 数据体检：dtypes / 缺失 / 唯一值 / 内存（memory_usage）+ 显示设置（set_option） -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="health.title">数据体检：dtypes 与内存</h3>
+            <p class="card-note" data-i18n="health.lead">按 pandas 的 df.info() / df.memory_usage(deep=True) 口径：每列的 dtype、缺失、唯一值、占用字节，以及换成 category 之后能省下多少。</p>
+            <div class="table-wrap" id="health-table"></div>
+            <p class="card-note" id="health-note" role="status"></p>
+            <h4 class="card-title card-title--sub" data-i18n="health.optionTitle">显示设置 pd.set_option</h4>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="health-maxrows" data-i18n="health.maxRows">预览行数 display.max_rows</label>
+                <input class="field-input" id="health-maxrows" type="number" min="5" max="100" step="1" value="12" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="health-precision" data-i18n="health.precision">小数位数 display.precision</label>
+                <input class="field-input" id="health-precision" type="number" min="0" max="6" step="1" value="3" />
+              </div>
+            </div>
+            <p class="field-hint" id="health-option"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 02 变换 ================= -->
+    <section class="section" id="p-transform">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="section-num">02</span>
+          <div>
+            <h2 class="section-title" data-i18n="transform.title">② 变换：把操作串成流水线</h2>
+            <p class="section-lead" data-i18n="transform.lead">每个步骤都对应一行 pandas 代码。步骤从上到下依次执行，可以上移 / 下移 / 删除；某一步出错会在卡片里标出来，其余步骤照常计算。</p>
+          </div>
+        </header>
+
+        <div class="grid">
+          <!-- 操作选择器 + 步骤列表 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="transform.pick">选择操作</h3>
+            <div class="field">
+              <label class="field-label" for="op-select" data-i18n="transform.pick">选择操作</label>
+              <select class="field-select" id="op-select"></select>
+              <p class="op-desc" id="op-desc"></p>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="op-add" type="button" data-i18n="transform.add">添加步骤</button>
+              <button class="btn btn-ghost" id="steps-reset" type="button" data-i18n="transform.reset">清空全部步骤</button>
+            </div>
+
+            <!-- 一键预设：把常见分析直接变成「步骤 + 图表编码」 -->
+            <div class="tool-row">
+              <div class="field tool-field">
+                <label class="field-label" for="preset-select" data-i18n="transform.presetLabel">一键预设</label>
+                <div class="field-row">
+                  <select class="field-select" id="preset-select"></select>
+                  <button class="btn btn-primary" id="preset-apply" type="button" data-i18n="transform.presetApply">套用预设</button>
+                </div>
+                <p class="field-hint" data-i18n="transform.presetHint">预设会替换现有步骤；套用后仍可继续手动加步骤、改参数。</p>
+              </div>
+              <!-- 撤销 / 重做 / 分享：整条流水线（含图表编码与数据源）都能回退、能带走 -->
+              <div class="btn-row">
+                <button class="btn btn-ghost" id="undo-btn" type="button" data-i18n="transform.undo">撤销</button>
+                <button class="btn btn-ghost" id="redo-btn" type="button" data-i18n="transform.redo">重做</button>
+                <button class="btn btn-ghost" id="share-btn" type="button" data-i18n="transform.share">复制分享链接</button>
+              </div>
+              <p class="field-hint" data-i18n="transform.undoHint">快捷键：Ctrl/⌘+Z 撤销、Ctrl/⌘+Shift+Z 重做（输入框里不拦截）。</p>
+              <p class="status-line" id="pipe-status" role="status"></p>
+            </div>
+            <p class="card-note" data-i18n="transform.lead">每个步骤都对应一行 pandas 代码。步骤从上到下依次执行，可以上移 / 下移 / 删除；某一步出错会在卡片里标出来，其余步骤照常计算。</p>
+            <div class="steps" id="steps"></div>
+          </div>
+
+          <!-- 结果：形状 + 表格 -->
+          <div class="card">
+            <h3 class="card-title" id="result-shape">—</h3>
+            <div class="shape-box" id="shape-box"></div>
+            <div class="table-wrap" id="result-table"></div>
+            <div class="pager is-hidden" id="result-pager"></div>
+            <p class="card-note" id="result-note" role="status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 03 图表 ================= -->
+    <section class="section" id="p-chart">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="section-num">03</span>
+          <div>
+            <h2 class="section-title" data-i18n="chart.title">③ 图表：把结果画出来</h2>
+            <p class="section-lead" data-i18n="chart.lead">先选一种图，再选编码列。图表直接读取当前变换结果，配色与动画跟随亮 / 暗主题。</p>
+          </div>
+        </header>
+
+        <div class="grid">
+          <!-- 编码选项 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="chart.type">图表类型</h3>
+            <div class="seg" id="chart-types" role="group" aria-label="图表类型" data-i18n-attr="aria-label:chart.type">
+              <button class="btn" type="button" data-type="bar" aria-pressed="true" data-i18n="chart.bar">条形图</button>
+              <button class="btn" type="button" data-type="barh" aria-pressed="false" data-i18n="chart.barh">横向条形图</button>
+              <button class="btn" type="button" data-type="line" aria-pressed="false" data-i18n="chart.line">折线图</button>
+              <button class="btn" type="button" data-type="area" aria-pressed="false" data-i18n="chart.area">面积图</button>
+              <button class="btn" type="button" data-type="scatter" aria-pressed="false" data-i18n="chart.scatter">散点图</button>
+              <button class="btn" type="button" data-type="histogram" aria-pressed="false" data-i18n="chart.histogram">直方图</button>
+              <button class="btn" type="button" data-type="kde" aria-pressed="false" data-i18n="chart.kde">核密度图</button>
+              <button class="btn" type="button" data-type="box" aria-pressed="false" data-i18n="chart.box">箱线图</button>
+              <button class="btn" type="button" data-type="pie" aria-pressed="false" data-i18n="chart.pie">饼图</button>
+              <button class="btn" type="button" data-type="heatmap" aria-pressed="false" data-i18n="chart.heatmap">热力图</button>
+            </div>
+            <p class="op-desc" id="chart-desc"></p>
+
+            <div class="field" id="chart-x-wrap">
+              <label class="field-label" for="chart-x" data-i18n="chart.x">X 轴（类别）</label>
+              <select class="field-select" id="chart-x"></select>
+            </div>
+
+            <div class="field" id="chart-y-wrap">
+              <label class="field-label" for="chart-y" data-i18n="chart.y">Y 轴（数值）</label>
+              <select class="field-select" id="chart-y" multiple size="4"></select>
+              <p class="field-hint" data-i18n="field.multiselectHint">按住 Ctrl / ⌘ 多选</p>
+            </div>
+
+            <div class="field" id="chart-color-wrap">
+              <label class="field-label" for="chart-color" data-i18n="chart.color">着色列</label>
+              <select class="field-select" id="chart-color"></select>
+            </div>
+
+            <div class="field" id="chart-agg-wrap">
+              <label class="field-label" for="chart-agg" data-i18n="chart.agg">同一类别的聚合方式</label>
+              <select class="field-select" id="chart-agg"></select>
+            </div>
+
+            <div class="field" id="chart-top-wrap">
+              <label class="field-label" for="chart-top" data-i18n="chart.top">最多显示几类</label>
+              <input class="field-input" id="chart-top" type="number" min="1" max="60" step="1" value="12" />
+            </div>
+
+            <div class="field" id="chart-bins-wrap">
+              <label class="field-label" for="chart-bins" data-i18n="chart.bins">分箱数</label>
+              <input class="field-input" id="chart-bins" type="number" min="3" max="60" step="1" value="20" />
+            </div>
+
+            <div class="field" id="chart-order-wrap">
+              <label class="field-label" for="chart-order" data-i18n="chart.order">排序</label>
+              <select class="field-select" id="chart-order">
+                <option value="value" data-i18n="chart.orderValue">数值降序</option>
+                <option value="label" data-i18n="chart.orderLabel">类别升序</option>
+                <option value="raw" data-i18n="chart.orderRaw">按出现顺序</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 图表 + 图表数据 -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="chart.title">③ 图表：把结果画出来</h3>
+            <div class="chart-box" id="chart-box"></div>
+            <p class="card-note" id="chart-note"></p>
+            <div class="btn-row">
+              <button class="btn" id="export-png" type="button" data-i18n="chart.exportPNG">导出 PNG</button>
+              <button class="btn" id="export-svg" type="button" data-i18n="chart.exportSVG">导出 SVG</button>
+              <button class="btn" id="export-chart-csv" type="button" data-i18n="chart.exportCSV">导出图表数据 CSV</button>
+            </div>
+            <h4 class="card-title card-title--sub" data-i18n="chart.out">图表数据</h4>
+            <div class="table-wrap" id="chart-table"></div>
+            <p class="card-note" data-i18n="chart.outNote">图上画的是什么，表里就是什么 —— 可导出成 CSV 复核。</p>
+            <p class="status-line" id="chart-status" role="status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 04 代码 ================= -->
+    <section class="section" id="p-code">
+      <div class="wrap">
+        <header class="section-head">
+          <span class="section-num">04</span>
+          <div>
+            <h2 class="section-title" data-i18n="code.title">④ 代码：把流水线翻译成 pandas</h2>
+            <p class="section-lead" data-i18n="code.lead">下面这段代码与你的步骤一一对应：读取 → 变换 → 画图 → 导出。复制到 Jupyter 或本地 Python 跑，结果与页面上完全一致。</p>
+          </div>
+        </header>
+
+        <div class="card">
+          <div class="btn-row">
+            <button class="btn btn-primary" id="code-copy" type="button" data-i18n="code.copy">复制代码</button>
+            <button class="btn" id="code-download" type="button" data-i18n="code.download">下载 .py</button>
+          </div>
+          <p class="card-note" data-i18n="code.note">代码由当前数据源 + 步骤 + 图表设置实时生成，改哪一边都会同步。</p>
+          <pre class="code-block" id="code-block"><code id="code-text"></code></pre>
+          <p class="status-line" id="code-status" role="status"></p>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title" data-i18n="code.stats">描述统计 describe()</h3>
+          <p class="card-note" data-i18n="code.statsNote">对当前结果跑一次描述统计：数值列给 count / mean / std / min / 四分位 / max，类别列给 unique / top / freq。</p>
+          <div class="table-wrap" id="stats-table"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p class="footer-line" data-i18n="footer.line1">© 2026 · 可视化 Pandas 工作台 · 数据可视化作业 03</p>
+      <p class="footer-line footer-line--soft" data-i18n="footer.line2">内置数据由固定随机种子在前端生成，仅用于教学演示；载入自有数据时，全部解析都在本机完成。</p>
+      <p class="footer-line footer-line--soft" data-i18n="status.lang.tip">切换语言会同时切换界面文案与代码注释；列名与 pandas API 保持英文。</p>
+      <p class="footer-line">
+        <button class="btn btn-ghost" id="to-top" type="button" data-i18n="common.top">回到顶部</button>
+      </p>
+    </div>
+  </footer>
+
+  <script src="pandas.js"></script>
+  <script src="charts.js"></script>
+  <script src="data.js"></script>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+
