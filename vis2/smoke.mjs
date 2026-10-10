@@ -857,14 +857,14 @@ const worldRes = await jv(`JSON.stringify((function () {
   var circles = [].slice.call(svg.querySelectorAll('circle'));
   var fills = {};
   paths.forEach(function (p) { fills[p.getAttribute('fill')] = 1; });
-  var bad = [].filter.call(svg.querySelectorAll('path, circle, text'), function (el) {
+  var bad = [].filter.call(svg.querySelectorAll('path, circle, line, text'), function (el) {
     return [].some.call(el.attributes, function (a) { return /NaN|Infinity/.test(a.value); });
   }).length;
   return {
     geo: !!window.WORLD_MAP,
     countries: window.WORLD_MAP.countries.length,
     land: window.WORLD_MAP.land.length,
-    paths: paths.length, circles: circles.length, bad: bad,
+    paths: paths.length, circles: circles.length, lines: svg.querySelectorAll('line').length, bad: bad,
     distinctFills: Object.keys(fills).length,
     options: document.getElementById('world-metric').options.length,
     texts: [].map.call(svg.querySelectorAll('text'), function (t) { return t.textContent; })
@@ -875,6 +875,7 @@ check('世界地图几何已加载（陆地轮廓 + 17 个代表国家）',
   JSON.stringify({ c: worldRes.countries, l: worldRes.land }));
 check('世界地图画出国界 + 陆地轮廓 + 1 个新加坡锚点',
   worldRes.paths === worldRes.countries + worldRes.land && worldRes.circles === 1, JSON.stringify(worldRes));
+check('世界地图画出了南海九段线（10 段）', worldRes.lines === 10, String(worldRes.lines));
 check('世界地图元素没有 NaN / Infinity 坐标', worldRes.bad === 0, String(worldRes.bad));
 check('世界地图按分位数至少分 5 档填色', worldRes.distinctFills >= 5, String(worldRes.distinctFills));
 check('世界地图有 2 项指标下拉', worldRes.options === 2, String(worldRes.options));

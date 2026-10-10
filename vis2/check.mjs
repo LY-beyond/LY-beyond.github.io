@@ -194,6 +194,16 @@ if (WORLD_MAP) {
   const wGeoIds = new Set((WORLD_MAP.countries || []).map((c) => c.id).concat(Object.keys(WORLD_MAP.marks || {})));
   [...wGeoIds].forEach((id) => ok(wDataIds.has(id), `data.js world.rows 缺少几何 id ${id}`));
   [...wDataIds].forEach((id) => ok(wGeoIds.has(id), `map-world.js 缺少 data.js 里的 id ${id}`));
+  /* 中国版图：台湾必须并入中国（110m 底图单列成 158，不并就会被画成中性底色） */
+  ok(!(WORLD_MAP.countries || []).some((c) => c.id === '158'),
+    'map-world.js: 台湾应并入中国（156），不应再单列 id 158');
+  /* 南海九段线：坐标必须是窗口内的有限值 */
+  const sea = WORLD_MAP.seaLine || [];
+  ok(sea.length >= 9, `map-world.js: 南海九段线应有 ≥9 段，实际 ${sea.length}`);
+  ok(sea.every((s) => s.length === 4 && s.every((v) => isFinite(v)) &&
+    s[0] >= 0 && s[0] <= WORLD_MAP.w && s[2] >= 0 && s[2] <= WORLD_MAP.w &&
+    s[1] >= 0 && s[1] <= WORLD_MAP.h && s[3] >= 0 && s[3] <= WORLD_MAP.h),
+    'map-world.js: 南海九段线坐标有 NaN 或越界（重新跑 _worldmap.mjs）');
 }
 
 /* 六个新引擎必须真的导出（app.js 会直接调用） */

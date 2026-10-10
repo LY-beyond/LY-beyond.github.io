@@ -2014,6 +2014,14 @@ window.CHARTS = (function () {
       labels.push({ id: id, v: v, c: c });
     });
 
+    /* —— 中国南海九段线：强调色短线（与 §06 的南海插图同一份数据）—— */
+    (geo.seaLine || []).forEach(function (sgm) {
+      el('line', {
+        x1: PX(sgm[0]), y1: PY(sgm[1]), x2: PX(sgm[2]), y2: PY(sgm[3]),
+        stroke: T['--c-accent'], 'stroke-width': narrow ? 1 : 1.3, 'stroke-linecap': 'round'
+      }, plot);
+    });
+
     /* —— 标签：数值大的先放，撞车就上下找位置 —— */
     var boxes = [];
     var lsize = narrow ? 8.5 : 10;
