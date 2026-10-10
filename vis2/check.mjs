@@ -341,7 +341,7 @@ ok(provBad.length === 0, `data.js provenance: ${provBad.length} 处取值不合�
 const provRefs = [...app.matchAll(/cardHead\('[a-z]+',\s*[^;]*?,\s*'([A-Za-z]+)'\)/g)].map((m) => m[1]);
 const provMiss = [...new Set(provRefs)].filter((k) => !PROV[k]);
 ok(provMiss.length === 0, `app.js: cardHead 引用了没有登记口径的键 '${provMiss.join("', '")}'（在 data/manifest.json 里补 provenance）`);
-ok(provRefs.length >= 19, `app.js: 只有 ${provRefs.length} 处 cardHead 带口径徽章，应覆盖 19 张卡片（15 张图 + 模拟器 + 2 张敏感性 + 时间线 + 场景 + 来源）`);
+ok(provRefs.length >= 19, `app.js: 只有 ${provRefs.length} 处 cardHead 带口径徽章，应覆盖 19 张卡片（16 张图 + 模拟器 + 2 张敏感性 + 时间线 + 场景 + 来源）`);
 /* 徽章文字与悬停说明都从词表取：T('prov.' + prov) 是拼接键，静态脚本拿不到字面量，这里逐条点名 */
 PROV_KINDS.concat(['list', 'rule']).forEach((k) =>
   ok(zhKeys.has('prov.' + k), `i18n.js: 缺少词条 prov.${k}（口径徽章的文字 / 悬停说明 / 规则列出处的出处）`));
