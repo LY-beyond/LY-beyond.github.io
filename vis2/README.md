@@ -324,7 +324,7 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 站点体积很小：**页面只请求 19 个文件 / 磁盘 678 KB / gzip 后 327 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
 抽稀后的省级边界 `map-china.js` 28 KB，生成的 `data.js` 70 KB；其余为页面代码、样式与一张首屏背景图 `background.webp` 160 KB）。
 部署目录里另有**不参与页面加载**的东西：8 个自检脚本（219 KB）、`data/` 数据源与构建脚本（170 KB）、
-`README.md` / `HIGHLIGHTS.md` / `KEY-HIGHLIGHTS.md` 等 5 份文档（95 KB），整个目录 84 个文件 / 1163 KB。
+`README.md` / `HIGHLIGHTS.md` / `KEY-HIGHLIGHTS.md` 等 5 份文档（95 KB），整个目录 85 个文件 / 1171 KB。
 
 
 ---
@@ -379,5 +379,6 @@ data.js            页面加载的数据模块（构建产物，顶部写着「�
 | [KEY-HIGHLIGHTS.md](./KEY-HIGHLIGHTS.md) | 面向课程评阅人：关键亮点、与常见做法的对照、建议评阅动线（约 5 分钟）与已知边界 |
 | [HIGHLIGHTS.md](./HIGHLIGHTS.md) | 第一人称亮点自述：结构布局、配色选择、内容连续性、功能多样性、可视化美观，以及数据链路、双语、无障碍与工程质量的实测数据 |
 | [FEATURES.md](./FEATURES.md) | 面向访客的亮点介绍（一页看完这个站是什么、有什么） |
+| [亮点说明.md](./亮点说明.md) | 课程提交用的一页式亮点说明（抬头信息 + 亮点一…八 + 推荐使用路线） |
 | [data/README.md](./data/README.md) | 数据字典：48 个数据集、每个字段的类型与含义、CSV ↔ 页面章节的对应关系 |
 | [DEPLOY-NETLIFY.md](./DEPLOY-NETLIFY.md) | 部署：Netlify 双站点、GitHub Pages 404 的实测结论与排查 |
