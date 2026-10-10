@@ -255,7 +255,7 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 | 双语文案 | 502 | `data.js` 里 `{ zh, en }` 叶子数（两侧都非空、英文无中文） |
 | 数据记录 | 340 | `data.js` 里各数组元素总数（48 个 CSV 数据集 / 306 行数据表） |
 | 覆盖视口 | 11 | `audit.mjs` 的 360 → 1440px（含 414 / 600 / 768 / 820 / 900 / 1024 / 1100 / 1180 / 1280 / 1440） |
-| 站点体积 | 327 | 页面实际请求的 19 个文件，gzip 第 9 级合计（磁盘 678 KB） |
+| 站点体积 | 327 | 页面实际请求的 19 个文件，gzip 第 9 级合计（磁盘 677 KB） |
 
 > `budget-check.mjs` 核对上表里的 8 个数字（节 / 图表 / 自检脚本 / i18n 词条 / 双语文案 / 站点体积 / 覆盖视口 / 数据记录），
 > `selfcheck.mjs` 核对「静态断言」；「真机断言」在 `--full` 时核对。
@@ -321,10 +321,10 @@ CI 里已经这么挂了：`.github/workflows/selfcheck.yml` —— 改动 `vis2
 - GitHub Pages：仓库 `main` 分支根目录发布，访问 `https://ly-beyond.github.io/vis2/`；
 - **应急手动部署**：Netlify Drop 拖拽 `vis2` 文件夹，或 `npx netlify-cli deploy --prod --dir=vis2`。
 
-站点体积很小：**页面只请求 19 个文件 / 磁盘 678 KB / gzip 后 327 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
+站点体积很小：**页面只请求 19 个文件 / 磁盘 677 KB / gzip 后 327 KB**（其中 `vendor/` 的 5 个 d3 脚本累计约 11 KB gzip，
 抽稀后的省级边界 `map-china.js` 28 KB，生成的 `data.js` 70 KB；其余为页面代码、样式与一张首屏背景图 `background.webp` 160 KB）。
 部署目录里另有**不参与页面加载**的东西：8 个自检脚本（219 KB）、`data/` 数据源与构建脚本（170 KB）、
-`README.md` / `HIGHLIGHTS.md` / `KEY-HIGHLIGHTS.md` 等 5 份文档（95 KB），整个目录 84 个文件 / 1162 KB。
+`README.md` / `HIGHLIGHTS.md` / `KEY-HIGHLIGHTS.md` 等 5 份文档（95 KB），整个目录 84 个文件 / 1161 KB。
 
 
 ---

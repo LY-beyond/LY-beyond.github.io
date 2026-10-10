@@ -27,6 +27,9 @@ window.CHARTS = (function () {
   /* 同理，<linearGradient> 的 id 也要每张图各一批（时间线的卡片底 / 中轴用得上） */
   var GRAD_SEQ = 0;
 
+  /* 世界地图的裁剪框 id 也要唯一：同一页可能重绘多次 */
+  var WM_SEQ = 0;
+
   /* ---------------- 基础工具 ---------------- */
 
   function el(tag, attrs, parent) {
@@ -1956,10 +1959,17 @@ window.CHARTS = (function () {
     var rank = {};
     vals.slice().sort(function (a, b) { return b - a; }).forEach(function (v, i) { if (rank[v] == null) rank[v] = i + 1; });
 
+    /* 裁剪框：几何一旦有多余的点落到窗口外，也不会画到图例与注脚上；
+       所有地图元素都挂在这个 <g> 里 */
+    var clipId = 'wm-clip-' + (++WM_SEQ);
+    el('rect', { x: pad.l.toFixed(1), y: pad.t.toFixed(1), width: pw.toFixed(1), height: ph.toFixed(1) },
+      el('clipPath', { id: clipId }, el('defs', null, svg)));
+    var plot = el('g', { 'clip-path': 'url(#' + clipId + ')' }, svg);
+
     /* —— 底图：陆地轮廓（安静的中性灰，不抢代表国家的颜色）—— */
     geo.land.forEach(function (flat) {
       el('path', { d: pathOf([flat]), fill: T['--c-surface-2'],
-        stroke: T['--c-border'], 'stroke-width': 0.7, 'stroke-linejoin': 'round' }, svg);
+        stroke: T['--c-border'], 'stroke-width': 0.7, 'stroke-linejoin': 'round' }, plot);
     });
 
     /* —— 悬停读数：国名 + 指标值 + 名次 —— */
@@ -1979,7 +1989,7 @@ window.CHARTS = (function () {
       var v = cfg.values[p.id];
       if (v == null) return;                    /* 只画「有数据」的代表国家 */
       var path = el('path', { d: pathOf(p.polys), fill: fillFor(v),
-        stroke: T['--c-surface'], 'stroke-width': 1, style: 'cursor:pointer' }, svg);
+        stroke: T['--c-surface'], 'stroke-width': 1, style: 'cursor:pointer' }, plot);
       path.addEventListener('mousemove', function (e) {
         path.setAttribute('stroke', T['--c-accent']);
         tipFor(p.id, v, e.clientX, e.clientY);
@@ -1998,7 +2008,7 @@ window.CHARTS = (function () {
       var c = [m[0] * s + ox, m[1] * s + oy];
       var dot = el('circle', { cx: c[0].toFixed(2), cy: c[1].toFixed(2),
         r: narrow ? 2.6 : 3.4, fill: fillFor(v), stroke: T['--c-surface'],
-        'stroke-width': 1, style: 'cursor:pointer' }, svg);
+        'stroke-width': 1, style: 'cursor:pointer' }, plot);
       dot.addEventListener('mousemove', function (e) { tipFor(id, v, e.clientX, e.clientY); });
       dot.addEventListener('mouseleave', function () { hideTip(ctx); });
       labels.push({ id: id, v: v, c: c });
@@ -2022,10 +2032,10 @@ window.CHARTS = (function () {
         boxes.push([bx, by, tw, th]);
         var ty = L.c[1] + offs[i] + lsize * 0.34;
         el('text', { x: L.c[0].toFixed(1), y: ty.toFixed(1), 'text-anchor': 'middle',
-          fill: 'none', stroke: T['--c-surface'], 'stroke-width': 2.4, 'font-size': lsize, 'font-weight': 800 }, svg)
+          fill: 'none', stroke: T['--c-surface'], 'stroke-width': 2.4, 'font-size': lsize, 'font-weight': 800 }, plot)
           .textContent = name;
         el('text', { x: L.c[0].toFixed(1), y: ty.toFixed(1), 'text-anchor': 'middle',
-          fill: T['--c-text'], 'font-size': lsize, 'font-weight': 800 }, svg).textContent = name;
+          fill: T['--c-text'], 'font-size': lsize, 'font-weight': 800 }, plot).textContent = name;
         break;
       }
     });
