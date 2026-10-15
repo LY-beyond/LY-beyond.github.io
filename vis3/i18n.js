@@ -81,6 +81,14 @@
       'op.pctchange': 'pct_change 环比',
       'op.hist': '直方图',
       'op.bar': '条形图',
+      'op.pie': '饼图/环形图',
+      'f.catCol': '类别列',
+      'f.sizeCol': '数值列(可选)',
+      'f.pieCount': '计数(默认)',
+      'f.pieStyle': '图形样式',
+      'f.pie': '饼图',
+      'f.donut': '环形图',
+      'f.pieOther': '其他',
       'op.line': '折线图',
       'op.scatter': '散点图',
       'op.box': '箱线图',
@@ -157,6 +165,9 @@
       'ins.pd.scatter': 'pandas 的角色:选列、剔除缺失与抽样由 pandas 完成,相关性强弱可用 df[[x,y]].corr() 量化',
       'ins.pd.box': 'pandas 的角色:各组中位数与四分位数来自 groupby(…).describe()',
       'ins.pd.heatmap': 'pandas 的角色:整张相关矩阵由 df.corr(numeric_only=True) 一步生成',
+      'ins.pie.top': '最大扇区「{cat}」占 {pct}%。',
+      'ins.pd.pie': 'pandas 的角色:各扇区数值先由 value_counts() 或 groupby(…).sum() 算好,plot(kind=\'pie\') 只负责按占比切分圆面',
+      'ins.pd.valuecounts': 'pandas 的角色:value_counts() 一次完成按取值分组计数与降序排列,下方环形图就是这份频数表的图形化',
       'ins.pd.resample': 'pandas 的角色:pd.to_datetime + set_index + resample(…).agg() 是时序聚合三件套',
       'ins.pd.rolling': 'pandas 的角色:df[col].rolling(w).mean() 一行完成滑动窗口统计,窗口不足 w 期自动留空',
       'ins.pd.pctchange': 'pandas 的角色:df[col].pct_change() 一步算出环比,等价于 df[col] / df[col].shift(1) - 1',
@@ -314,6 +325,13 @@
       'tbl.empty': '当前结果为空(0 行)。',
       'tbl.sortHint': '点击表头可按该列排序(记入操作历史)',
 
+      /* ---------- 表格筛选条 ---------- */
+      'tf.search': '搜索…',
+      'tf.all': '全选',
+      'tf.apply': '筛选',
+      'tf.clear': '清除',
+      'tf.noMatch': '没有符合筛选条件的行。',
+
       /* ---------- 历史 / 代码 ---------- */
       'hist.title': '操作历史',
       'hist.empty': '还没有操作。在左侧任选一个功能开始分析。',
@@ -358,9 +376,10 @@
         '<p><b>载入自己的数据:</b>上传 CSV / JSON 文件、粘贴 CSV 文本,或从 URL 拉取;列类型自动推断(数值 / 日期 / 布尔 / 文本)。</p>' +
         '<p><b>内置数据集:</b><code>sales</code> 订单明细(默认)、<code>products</code> 产品维表(演示 merge)、<code>tips</code> 餐厅小费、<code>iris</code> 鸢尾花、<code>titanic</code> 泰坦尼克乘客、<code>weather</code> 气象日序列;再上传一份数据即可与内置表连接 / 拼接。</p>' +
         '<p><b>时序:</b>「时序」分组提供 resample 重采样(按日 / 周 / 月聚合)、rolling 滚动平均与 pct_change 环比,先把某列转成 datetime 再用它们,配合折线图即可观察长期趋势与短期波动。</p>' +
-        '<p><b>图表:</b>直方、条形、折线、散点、箱线、相关热力图;悬停任意图形会高亮同系列并淡出其余,折线图带十字准线,可同时读取所有系列在该处的数值,底部图例悬停同样能高亮对应系列;可导出 SVG / PNG。</p>' +
+        '<p><b>图表:</b>直方、条形、饼图/环形图、折线、散点、箱线、相关热力图;饼图/环形图是 value_counts 的天然搭档(「汇总 → value_counts 计数」即自动联动环形图),悬停任意图形会高亮同系列并淡出其余,折线图带十字准线,可同时读取所有系列在该处的数值,底部图例悬停同样能高亮对应系列;可导出 SVG / PNG。</p>' +
         '<p><b>机器学习:</b>7 个代表性算法——回归类:线性回归、多项式回归(拟合曲线 + 顶点),散点图自动区分训练 / 测试点;分类类:逻辑回归、K近邻、决策树(决策边界 + 可读规则);聚类:K-Means(簇着色 + 质心);降维:PCA(方差解释率 + 载荷箭头)。有监督算法会自动按约 70/30 划分训练 / 测试集,同时展示两组指标,分类任务还会给出测试集混淆矩阵。代码面板同步给出 sklearn 写法。</p>' +
-        '<p><b>数据洞察:</b>每个图表下方附「图表解读」,自动总结数据要点;「查看 → 缺失值地图」列出每列的缺失数与缺失率,直接指导该 dropna 删列还是 fillna 填充。</p>',
+        '<p><b>数据洞察:</b>每个图表下方附「图表解读」,自动总结数据要点;「查看 → 缺失值地图」列出每列的缺失数与缺失率,直接指导该 dropna 删列还是 fillna 填充。</p>' +
+        '<p><b>表格筛选:</b>每张表格上方都有一行筛选条——每列一个可搜索的多选下拉(勾选要保留的值,支持多列同时筛选、取交集),选好后点「筛选」按钮即按所选元组过滤表格,「清除」一键还原全部行;筛选只是视图效果,不会改动数据。</p>',
 
       'skip': '跳到正文',
       'footer.line1': '© 2026 · Vis3 可视化数据分析台 · 数据仅保存在本地浏览器',
@@ -432,6 +451,14 @@
       'op.pctchange': 'pct_change — percent change',
       'op.hist': 'Histogram',
       'op.bar': 'Bar chart',
+      'op.pie': 'Pie / Donut chart',
+      'f.catCol': 'Category column',
+      'f.sizeCol': 'Value column (optional)',
+      'f.pieCount': 'Count (default)',
+      'f.pieStyle': 'Chart style',
+      'f.pie': 'Pie',
+      'f.donut': 'Donut',
+      'f.pieOther': 'Others',
       'op.line': 'Line chart',
       'op.scatter': 'Scatter plot',
       'op.box': 'Box plot',
@@ -508,6 +535,9 @@
       'ins.pd.scatter': "pandas' role: column selection, null dropping and sampling are done by pandas; correlation strength can be quantified with df[[x,y]].corr()",
       'ins.pd.box': "pandas' role: per-group medians and quartiles come from groupby(…).describe()",
       'ins.pd.heatmap': "pandas' role: the whole correlation matrix is produced in one step by df.corr(numeric_only=True)",
+      'ins.pie.top': 'The largest slice "{cat}" accounts for {pct}%.',
+      'ins.pd.pie': "pandas' role: slice sizes are computed first by value_counts() or groupby(…).sum(); plot(kind='pie') only splits the circle by share",
+      'ins.pd.valuecounts': "pandas' role: value_counts() groups, counts and sorts in one call; the donut below is that frequency table drawn",
       'ins.pd.resample': "pandas' role: pd.to_datetime + set_index + resample(…).agg() is the classic time-series aggregation trio",
       'ins.pd.rolling': "pandas' role: df[col].rolling(w).mean() does sliding-window statistics in one line; windows shorter than w stay blank automatically",
       'ins.pd.pctchange': "pandas' role: df[col].pct_change() computes period-over-period change in one step, equal to df[col] / df[col].shift(1) - 1",
@@ -660,6 +690,13 @@
       'tbl.empty': 'The current result is empty (0 rows).',
       'tbl.sortHint': 'Click a header to sort by that column (recorded in history)',
 
+      /* ---------- Table filter bar ---------- */
+      'tf.search': 'Search…',
+      'tf.all': 'All',
+      'tf.apply': 'Filter',
+      'tf.clear': 'Clear',
+      'tf.noMatch': 'No rows match the current filter.',
+
       'hist.title': 'History',
       'hist.empty': 'No operations yet. Pick any function on the left to start.',
       'hist.original': 'Original data',
@@ -700,9 +737,10 @@
         '<p><b>Your own data:</b> upload a CSV / JSON file, paste CSV text, or fetch from a URL; dtypes (number / datetime / boolean / text) are inferred automatically.</p>' +
         '<p><b>Built-in datasets:</b> <code>sales</code> order details (default), <code>products</code> product dimension (merge demo), <code>tips</code> restaurant bills, <code>iris</code> flowers, <code>titanic</code> passengers and <code>weather</code> daily readings; upload a second file to join or append with a built-in table.</p>' +
         '<p><b>Time series:</b> the Time Series group offers resample (aggregate by day / week / month), rolling moving average and pct_change; convert a column to datetime first, then pair them with a line chart to watch long-term trends and short-term wiggles.</p>' +
-        '<p><b>Charts:</b> histogram, bar, line, scatter, box and correlation heatmap — hovering any shape highlights its series and fades the rest, the line chart has a crosshair that reads every series at that point at once, and hovering the legend at the bottom highlights the matching series too; export as SVG / PNG.</p>' +
+        '<p><b>Charts:</b> histogram, bar, pie/donut, line, scatter, box and correlation heatmap — the pie/donut is the natural partner of value_counts (Aggregate → value_counts auto-draws a donut); hovering any shape highlights its series and fades the rest, the line chart has a crosshair that reads every series at that point at once, and hovering the legend at the bottom highlights the matching series too; export as SVG / PNG.</p>' +
         '<p><b>Machine learning:</b> seven classic algorithms — regression: linear regression and polynomial regression (fitted curve + vertex), with train / test points drawn apart in the scatter; classification: logistic regression, K-nearest neighbors and decision trees (decision boundary + readable rules); clustering: K-Means (colored clusters + centroids); dimensionality reduction: PCA (variance explained + loading arrows). Supervised algorithms split the data roughly 70/30 into train/test automatically, report both sets of metrics, and classifiers also show a confusion matrix on the test set. The code panel shows the matching sklearn code.</p>' +
-        '<p><b>Data insights:</b> every chart carries an interpretation box summarizing the key takeaways; Inspect → Missing map lists each column’s missing count and rate, telling you straight whether to dropna a column or fillna the gaps.</p>',
+        '<p><b>Data insights:</b> every chart carries an interpretation box summarizing the key takeaways; Inspect → Missing map lists each column’s missing count and rate, telling you straight whether to dropna a column or fillna the gaps.</p>' +
+        '<p><b>Table filters:</b> above every table sits a filter bar — one searchable multi-select dropdown per column (tick the values you want to keep; several columns can be combined and intersect). Press “Filter” to keep the matching rows and “Clear” to restore everything; filtering only affects the view and never changes the data.</p>',
 
       'skip': 'Skip to content',
       'footer.line1': '© 2026 · Vis3 Visual Analytics · Data stays in your browser',

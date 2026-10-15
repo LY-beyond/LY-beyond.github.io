@@ -3,7 +3,7 @@
  * ---------------------------------------------------------
  * 零依赖:直接拼 SVG 字符串,颜色全部运行时读 tokens.css 的
  * CSS 变量,主题切换后由 app.js 重绘即可换肤。
- * 支持:histogram / bar / line / scatter / box / corr(相关系数热力)
+ * 支持:histogram / bar / pie(饼图·环形) / line / scatter / box / corr(相关系数热力)
  * 全部图表可交互:悬停图元即高亮(同系列点亮、其余淡出)并弹出自绘
  * 提示框;折线图额外提供十字准线 + 多系列读数。不引任何第三方库。
  * ========================================================= */
@@ -175,6 +175,56 @@
     });
     s += '<line x1="' + M.left + '" y1="' + zero + '" x2="' + (W - M.right) + '" y2="' + zero +
       '" stroke="' + P.muted + '" stroke-width="1"/>';
+    return s + '</svg>';
+  }
+
+  /* ---------------- 饼图 / 环形图 ----------------
+   * spec = { type:'pie', labels, values, hole(0=饼 / 0.55=环), title }
+   * 每个扇区是一个 <g class="mk" data-ser="i">,与图例联动高亮;
+   * 占比 ≥4% 的扇区在中心处标注百分数。角度从 12 点方向顺时针。 */
+  function pie(spec, P) {
+    var labels = spec.labels || [], vals = spec.values || [];
+    var items = [], total = 0;
+    labels.forEach(function (lb, i) {
+      var v = (typeof vals[i] === 'number' && !isNaN(vals[i])) ? vals[i] : 0;
+      if (v > 0) { items.push({ label: String(lb), v: v }); total += v; }
+    });
+    if (!items.length || total <= 0) return '';
+    var cx = W / 2, cy = 210, r = 138;
+    var hole = Math.max(0, Math.min(0.8, spec.hole || 0));
+    var ri = r * hole;
+    function pt(rad, a) {
+      return (cx + rad * Math.sin(a)).toFixed(2) + ' ' + (cy - rad * Math.cos(a)).toFixed(2);
+    }
+    var s = svgOpen() + chartTitle(P, spec.title);
+    var a0 = 0;
+    items.forEach(function (d, i) {
+      var frac = d.v / total;
+      var a1 = (i === items.length - 1) ? Math.PI * 2 : a0 + frac * Math.PI * 2;
+      var a1c = Math.min(a1, a0 + Math.PI * 2 - 1e-4);  /* 单扇区满圆时钳制,避免弧路径退化 */
+      var large = (a1c - a0) > Math.PI ? 1 : 0;
+      var color = P.series[i % P.series.length];
+      var path;
+      if (ri > 0) {
+        path = 'M ' + pt(r, a0) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + pt(r, a1c) +
+          ' L ' + pt(ri, a1c) + ' A ' + ri + ' ' + ri + ' 0 ' + large + ' 0 ' + pt(ri, a0) + ' Z';
+      } else {
+        path = 'M ' + cx + ' ' + cy + ' L ' + pt(r, a0) +
+          ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + pt(r, a1c) + ' Z';
+      }
+      var pct = frac * 100;
+      s += '<g class="mk" data-ser="' + i + '"' + tip(d.label + ': ' + fmt(d.v) + ' (' + pct.toFixed(1) + '%)') + '>' +
+        '<path d="' + path + '" fill="' + color + '" stroke="' + P.surface + '" stroke-width="1.5"/>';
+      if (pct >= 4) {
+        var am = (a0 + a1c) / 2, tr = ri > 0 ? (r + ri) / 2 : r * 0.62;
+        s += '<text x="' + (cx + tr * Math.sin(am)).toFixed(1) + '" y="' + (cy - tr * Math.cos(am) + 4).toFixed(1) +
+          '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff" pointer-events="none">' +
+          pct.toFixed(0) + '%</text>';
+      }
+      s += '</g>';
+      a0 = a1;
+    });
+    s += legend(P, items.map(function (d) { return d.label; }), P.series);
     return s + '</svg>';
   }
 
@@ -643,6 +693,7 @@
     var out = '';
     if (spec.type === 'hist') out = hist(spec, P);
     else if (spec.type === 'bar') out = bar(spec, P);
+    else if (spec.type === 'pie') out = pie(spec, P);
     else if (spec.type === 'line') out = line(spec, P);
     else if (spec.type === 'scatter') out = scatter(spec, P);
     else if (spec.type === 'box') out = box(spec, P);

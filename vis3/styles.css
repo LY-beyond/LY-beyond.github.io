@@ -65,49 +65,15 @@ body {
 }
 .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-sm); }
 
-/* ---------------- 顶部装饰横幅 ----------------
-   放在 .topbar 与 .app 之间,仅视觉装饰、不参与布局逻辑高度(高度独立)。
-   背景图为深蓝科技风「Pandas」横幅(2838×865 PNG),深底亮字,
-   亮色主题下作为顶部对比色带,深色主题下与页面底色自然融合。 */
-.page-hero {
-  position: relative;
-  height: clamp(92px, 10vw, 160px);
-  overflow: hidden;
-}
+/* ---------------- 顶部横幅 ----------------
+   放在 .topbar 与 .app 之间,background.png(2838×865,比例 3.28:1)
+   按原始比例整幅直接展示:宽度铺满、高度随比例自适应,不裁切、不加渐变修饰。 */
 .page-hero .hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* 主体(发光的 Pandas 字样)在画面正中,横幅比例 3.28:1 远宽于横幅高度,
-     cover 裁切上下边缘,取中间带即可保住文字 */
-  object-position: 50% 46%;
+  height: auto;
   user-select: none;
   pointer-events: none;
-}
-/* 遮罩:只做纵向收边 —— 底部渐隐回页面底色,消除深色横幅与 .app 的硬接缝;
-   颜色取 var(--c-bg),亮暗主题各自融入自己的底色。 */
-.page-hero::after {
-  content: '';
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: linear-gradient(180deg,
-    transparent 52%,
-    color-mix(in srgb, var(--c-bg) 55%, transparent) 82%,
-    var(--c-bg) 100%);
-}
-
-/* 窄屏:横幅压矮,裁切进一步收紧,底部渐隐加深保证接缝平滑。 */
-@media (max-width: 700px) {
-  .page-hero { height: clamp(72px, 18vw, 120px); }
-  .page-hero .hero-bg { object-position: 50% 44%; }
-  .page-hero::after {
-    background: linear-gradient(180deg,
-      transparent 40%,
-      color-mix(in srgb, var(--c-bg) 65%, transparent) 74%,
-      var(--c-bg) 100%);
-  }
 }
 
 /* ---------------- 总布局 ---------------- */
@@ -416,6 +382,93 @@ body {
   background: var(--c-surface-2); position: sticky; left: 0;
 }
 .table-empty { padding: 40px; text-align: center; color: var(--c-muted); }
+
+/* ---------------- 表格筛选条 ---------------- */
+.tf-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 10px var(--space);
+  border-bottom: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--c-surface-2) 45%, transparent);
+  position: relative; z-index: 6;
+}
+.tf-item { position: relative; }
+.tf-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  max-width: 168px; padding: 4px 9px;
+  font: inherit; font-size: 11.5px; color: var(--c-text-soft);
+  background: var(--c-surface); border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: var(--t-control);
+}
+.tf-btn:hover {
+  border-color: color-mix(in srgb, var(--c-primary) 45%, var(--c-line));
+  color: var(--c-primary);
+}
+.tf-btn-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.tf-badge {
+  min-width: 16px; padding: 0 5px; border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: #fff; font-size: 10px; font-weight: 700; text-align: center;
+}
+.tf-caret { font-size: 9px; opacity: .65; transition: transform .15s ease; }
+.tf-item.open .tf-caret { transform: rotate(180deg); }
+.tf-item.open .tf-btn, .tf-item.has-sel .tf-btn {
+  border-color: color-mix(in srgb, var(--c-primary) 55%, var(--c-line));
+  color: var(--c-primary);
+}
+.tf-panel {
+  position: absolute; top: calc(100% + 5px); left: 0; z-index: 40;
+  width: 212px; padding: 8px;
+  background: var(--c-surface); border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--c-primary) 16%, transparent);
+}
+.tf-panel.flip { left: auto; right: 0; }
+.tf-search {
+  width: 100%; box-sizing: border-box;
+  font: inherit; font-size: 12px; color: var(--c-text);
+  background: var(--c-surface-2); border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm); padding: 5px 8px; outline: none;
+  transition: var(--t-control);
+}
+.tf-search:focus-visible { border-color: var(--c-primary); outline: 2px solid var(--c-focus); outline-offset: -1px; }
+.tf-all {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 6px 2px;
+  font-size: 11.5px; font-weight: 600; color: var(--c-text-soft);
+  border-bottom: 1px dashed var(--c-line); cursor: pointer;
+}
+.tf-opts { max-height: 200px; overflow: auto; margin-top: 4px; scrollbar-width: thin; }
+.tf-opt {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 4px; border-radius: 4px;
+  font-size: 12px; color: var(--c-text); cursor: pointer;
+}
+.tf-opt:hover { background: color-mix(in srgb, var(--c-primary) 8%, transparent); }
+.tf-opt input, .tf-all input { accent-color: var(--c-primary); margin: 0; flex: none; }
+.tf-opt-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tf-apply {
+  margin-left: auto;
+  padding: 5px 16px; font: inherit; font-size: 12px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--c-primary) 30%, transparent);
+  transition: var(--t-control);
+}
+.tf-apply:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.tf-apply:focus-visible, .tf-clear:focus-visible, .tf-btn:focus-visible {
+  outline: 2px solid var(--c-focus); outline-offset: 2px;
+}
+.tf-clear {
+  padding: 5px 12px; font: inherit; font-size: 12px; color: var(--c-muted);
+  background: transparent; border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: var(--t-control);
+}
+.tf-clear:hover {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-primary) 40%, var(--c-line));
+}
 
 .pager {
   display: flex; align-items: center; gap: var(--space-sm);

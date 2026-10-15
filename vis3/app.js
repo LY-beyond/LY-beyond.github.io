@@ -72,6 +72,7 @@
 
   function switchDataset(name, silent) {
     activeName = name;
+    mainFilter = null;   /* 筛选条件属于旧数据集,切表时还原 */
     renderAll();
     if (!silent) toast(t('msg.switched', { name: name }));
   }
@@ -438,6 +439,10 @@
       dialog: function (b, df) { b.appendChild(columnField('col', t('f.column'), df.columns)); },
       collect: function (b) { return { col: val(b, 'col') }; },
       run: function (df, p) { return resultValueCounts(df, p.col); },
+      /* value_counts 的天然搭档:计数完成即自动联动环形图 */
+      chart: function (df, p) {
+        return pieSpecOf(df, p.col, '', 0.55, 'value_counts · ' + p.col);
+      },
       code: function (p) { return "df['" + p.col + "'].value_counts()"; }
     },
     corr: {
@@ -569,6 +574,33 @@
       },
       code: function (p) {
         return "df.groupby('" + p.x + "')['" + p.y + "']." + p.func + "().plot(kind='bar')";
+      }
+    },
+    pie: {
+      group: 'viz', cmt: 'op.pie',
+      dialog: function (b, df) {
+        b.appendChild(columnField('col', t('f.catCol'), df.columns));
+        var numOpts = [{ v: '', label: t('f.pieCount') }].concat(PD.numericColumns(df).map(function (c) {
+          return { v: c, label: c + ' (sum)' };
+        }));
+        b.appendChild(selectField('size', t('f.sizeCol'), numOpts));
+        b.appendChild(selectField('style', t('f.pieStyle'), [
+          { v: 'pie', label: t('f.pie') },
+          { v: 'donut', label: t('f.donut') }
+        ]));
+      },
+      collect: function (b) {
+        return { col: val(b, 'col'), size: val(b, 'size'), style: val(b, 'style') };
+      },
+      chart: function (df, p) {
+        return pieSpecOf(df, p.col, p.size, p.style === 'donut' ? 0.55 : 0,
+          (p.size ? 'sum(' + p.size + ')' : 'count') + ' by ' + p.col);
+      },
+      code: function (p) {
+        var plot = p.style === 'donut' ? "plot(kind='pie', wedgeprops=dict(width=0.45))" : "plot(kind='pie')";
+        return p.size
+          ? "df.groupby('" + p.col + "')['" + p.size + "'].sum()." + plot
+          : "df['" + p.col + "'].value_counts()." + plot;
       }
     },
     line: {
@@ -1116,6 +1148,31 @@
   }
   function tsXName(df) { return tsDateCol(df) || '#'; }
 
+  /* 饼图/环形图数据源:sizeCol 为空 → value_counts 计数;否则按类别列 sum 数值列。
+   * 按值降序,超过 10 项合并为「其他」,避免扇区过多难以辨认。 */
+  function pieSpecOf(df, col, sizeCol, hole, title) {
+    var rows;
+    if (sizeCol) {
+      var g = PD.groupBy(df, [col], [{ col: sizeCol, func: 'sum' }]);
+      rows = PD.sortBy(g, [{ col: g.columns[1], asc: false }]).rows.map(function (r) {
+        return { value: r[0], count: (typeof r[1] === 'number' && !isNaN(r[1])) ? r[1] : 0 };
+      });
+    } else {
+      rows = PD.valueCounts(df, col).map(function (d) {
+        return { value: d.value, count: d.count };
+      });
+    }
+    rows = rows.filter(function (d) { return d.count > 0; });
+    if (rows.length > 10) {
+      var rest = rows.slice(9).reduce(function (a, d) { return a + d.count; }, 0);
+      rows = rows.slice(0, 9);
+      rows.push({ value: t('f.pieOther'), count: rest });
+    }
+    return { type: 'pie', hole: hole, title: title,
+             labels: rows.map(function (d) { return d.value == null ? 'NaN' : PD.formatValue(d.value); }),
+             values: rows.map(function (d) { return d.count; }) };
+  }
+
   var GROUPS = [
     { key: 'inspect', ops: ['head', 'tail', 'sample', 'info', 'describe', 'missingmap'] },
     { key: 'select', ops: ['select', 'drop', 'rename', 'astype'] },
@@ -1124,7 +1181,7 @@
     { key: 'ts', ops: ['resample', 'rolling', 'pctchange'] },
     { key: 'agg', ops: ['groupby', 'pivot', 'valuecounts', 'corr'] },
     { key: 'ml', ops: ['linreg', 'polyreg', 'logreg', 'knn', 'dtree', 'kmeans', 'pca'] },
-    { key: 'viz', ops: ['hist', 'bar', 'line', 'scatter', 'box', 'heatmap'] }
+    { key: 'viz', ops: ['hist', 'bar', 'pie', 'line', 'scatter', 'box', 'heatmap'] }
   ];
 
   function otherDatasets() {
@@ -1222,6 +1279,30 @@
           var top3 = rows.slice(0, 3).reduce(function (a, r) { return a + (r[1] || 0); }, 0);
           lines.push(t('ins.bar.top3', { pct: (top3 / total * 100).toFixed(1), n: rows.length }));
         }
+      }
+      return lines;
+    },
+    valuecounts: function (df, p) { return INSIGHTS.pie(df, { col: p.col }); },
+    pie: function (df, p) {
+      /* 与 chart() 同源:value_counts 或 groupby sum,取最大扇区与前 3 占比 */
+      var rows;
+      if (p.size) {
+        var g = PD.groupBy(df, [p.col], [{ col: p.size, func: 'sum' }]);
+        rows = PD.sortBy(g, [{ col: g.columns[1], asc: false }]).rows.map(function (r) {
+          return [r[0], (typeof r[1] === 'number' && !isNaN(r[1])) ? r[1] : 0];
+        });
+      } else {
+        rows = PD.valueCounts(df, p.col).map(function (d) { return [d.value, d.count]; });
+      }
+      rows = rows.filter(function (d) { return d[1] > 0; });
+      if (!rows.length) return [];
+      var total = rows.reduce(function (a, d) { return a + d[1]; }, 0);
+      if (!total) return [];
+      var lines = [t('ins.pie.top', { cat: rows[0][0] == null ? 'NaN' : PD.formatValue(rows[0][0]),
+                                      pct: (rows[0][1] / total * 100).toFixed(1) })];
+      if (rows.length > 3) {
+        var top3 = rows.slice(0, 3).reduce(function (a, d) { return a + d[1]; }, 0);
+        lines.push(t('ins.bar.top3', { pct: (top3 / total * 100).toFixed(1), n: rows.length }));
       }
       return lines;
     },
@@ -1845,21 +1926,254 @@
     codeEl.textContent = lines.join('\n');
   }
 
+  /* ================= 表格筛选条 =================
+   * 每张表格上方一行筛选条:每列一个多选下拉(选项 = 该列去重值,可输关键字搜索),
+   * 各列条件取交集;末尾「筛选」按钮应用、「清除」恢复。
+   * 主数据表按数据过滤(联动分页),结果面板表格按 DOM 行显隐,都不改数据本身。 */
+
+  var mainFilter = null;   /* 主数据表筛选状态:列名(或 '#') -> 选中值数组;切数据集时重置 */
+  var TF_MAX_OPTS = 1000;  /* 单列下拉最多列出的选项数 */
+
+  function sortTfVals(list) {
+    return list.slice().sort(function (a, b) {
+      if (a === 'NaN') return -1;
+      if (b === 'NaN') return 1;
+      var na = Number(a), nb = Number(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+  }
+
+  /* 某列在整表中的去重展示值(与单元格渲染同源:缺失显示 NaN) */
+  function tfDistinctCol(df, col) {
+    var ci = df.columns.indexOf(col), dt = df.dtypes[col];
+    var seen = {}, out = [];
+    for (var r = 0; r < df.rows.length; r++) {
+      var v = df.rows[r][ci];
+      var txt = PD.isNull(v) ? 'NaN' : PD.formatValue(v, dt);
+      if (!seen[txt]) { seen[txt] = 1; out.push(txt); if (out.length >= TF_MAX_OPTS) break; }
+    }
+    return sortTfVals(out);
+  }
+
+  /* 构建筛选条:headers/valuesPerCol/checkedByCol 均按列下标对齐;
+   * onApply(checked) 的 checked 是「每列勾选值数组」 */
+  function buildTfBar(headers, valuesPerCol, checkedByCol, onApply) {
+    var bar = el('div', { 'class': 'tf-bar' });
+    var items = [];   /* { item, btn, badge, panel, search, allBox, boxes } */
+
+    function closeOthers(except) {
+      items.forEach(function (it) {
+        if (it.item !== except) {
+          it.item.classList.remove('open');
+          it.panel.hidden = true;
+        }
+      });
+    }
+
+    headers.forEach(function (h, ci) {
+      var vals = sortTfVals(valuesPerCol[ci] || []).slice(0, TF_MAX_OPTS);
+      var checked = {};
+      ((checkedByCol && checkedByCol[ci]) || []).forEach(function (v) { checked[v] = 1; });
+
+      var item = el('div', { 'class': 'tf-item' });
+      var btn = el('button', { 'class': 'tf-btn', type: 'button', title: h });
+      var badge = el('span', { 'class': 'tf-badge' });
+      btn.appendChild(el('span', { 'class': 'tf-btn-name', text: h }));
+      btn.appendChild(badge);
+      btn.appendChild(el('span', { 'class': 'tf-caret', text: '▾' }));
+
+      var panel = el('div', { 'class': 'tf-panel' });
+      panel.hidden = true;
+      var search = el('input', { 'class': 'tf-search', type: 'text', placeholder: t('tf.search') });
+      var allRow = el('label', { 'class': 'tf-all' });
+      var allBox = el('input', { type: 'checkbox' });
+      allRow.appendChild(allBox);
+      allRow.appendChild(el('span', { text: t('tf.all') }));
+      var opts = el('div', { 'class': 'tf-opts' });
+      var boxes = [];
+
+      vals.forEach(function (v) {
+        var lab = el('label', { 'class': 'tf-opt' });
+        var cb = el('input', { type: 'checkbox' });
+        cb.checked = !!checked[v];
+        lab.appendChild(cb);
+        lab.appendChild(el('span', { 'class': 'tf-opt-txt', text: v }));
+        opts.appendChild(lab);
+        boxes.push({ v: v, cb: cb, lab: lab });
+      });
+
+      function visibleBoxes() {
+        return boxes.filter(function (b) { return b.lab.style.display !== 'none'; });
+      }
+      function syncBtn() {
+        var n = boxes.filter(function (b) { return b.cb.checked; }).length;
+        badge.textContent = String(n);
+        badge.hidden = n === 0;
+        item.classList.toggle('has-sel', n > 0);
+      }
+      function syncAll() {
+        var vis = visibleBoxes();
+        var n = vis.filter(function (b) { return b.cb.checked; }).length;
+        allBox.checked = vis.length > 0 && n === vis.length;
+        allBox.indeterminate = n > 0 && n < vis.length;
+      }
+      allBox.addEventListener('change', function () {
+        var on = allBox.checked;
+        visibleBoxes().forEach(function (b) { b.cb.checked = on; });
+        syncBtn();
+      });
+      boxes.forEach(function (b) {
+        b.cb.addEventListener('change', function () { syncBtn(); syncAll(); });
+      });
+      search.addEventListener('input', function () {
+        var kw = search.value.trim().toLowerCase();
+        boxes.forEach(function (b) {
+          b.lab.style.display = !kw || b.v.toLowerCase().indexOf(kw) >= 0 ? '' : 'none';
+        });
+        syncAll();
+      });
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var willOpen = panel.hidden;
+        closeOthers(null);
+        panel.hidden = !willOpen;
+        item.classList.toggle('open', willOpen);
+        if (willOpen) {
+          search.value = '';
+          boxes.forEach(function (b) { b.lab.style.display = ''; });
+          /* 靠近右缘时面板向左展开,避免被容器裁掉 */
+          panel.classList.toggle('flip',
+            btn.getBoundingClientRect().right + 224 > bar.getBoundingClientRect().right);
+          syncAll();
+        }
+      });
+
+      item.appendChild(btn);
+      panel.appendChild(search);
+      panel.appendChild(allRow);
+      panel.appendChild(opts);
+      item.appendChild(panel);
+      bar.appendChild(item);
+      items.push({ item: item, btn: btn, badge: badge, panel: panel, search: search, allBox: allBox, boxes: boxes });
+      syncBtn();
+    });
+
+    var applyBtn = el('button', { 'class': 'tf-apply', type: 'button', text: t('tf.apply') });
+    var clearBtn = el('button', { 'class': 'tf-clear', type: 'button', text: t('tf.clear') });
+    applyBtn.addEventListener('click', function () {
+      closeOthers(null);
+      onApply(items.map(function (it) {
+        return it.boxes.filter(function (b) { return b.cb.checked; }).map(function (b) { return b.v; });
+      }));
+    });
+    clearBtn.addEventListener('click', function () {
+      closeOthers(null);
+      items.forEach(function (it) {
+        it.boxes.forEach(function (b) { b.cb.checked = false; });
+        it.item.classList.remove('has-sel');
+        it.badge.hidden = true;
+        it.search.value = '';
+        it.boxes.forEach(function (b) { b.lab.style.display = ''; });
+      });
+      onApply(items.map(function () { return []; }));
+    });
+    bar.appendChild(applyBtn);
+    bar.appendChild(clearBtn);
+    return bar;
+  }
+
+  /* 点击下拉以外区域收起已展开的面板(整页只绑一次) */
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.closest && !e.target.closest('.tf-item')) {
+      Array.prototype.forEach.call(document.querySelectorAll('.tf-item.open'), function (it) {
+        it.classList.remove('open');
+        var p = it.querySelector('.tf-panel');
+        if (p) p.hidden = true;
+      });
+    }
+  });
+
+  /* 结果面板:给节点里的每张表挂筛选条(按 DOM 行显隐,不改数据) */
+  function attachResultFilters(node) {
+    Array.prototype.forEach.call(node.querySelectorAll('table'), function (tb) {
+      var head = tb.tHead && tb.tHead.rows[0];
+      var body = tb.tBodies[0];
+      if (!head || !body || !body.rows.length) return;
+      var n = head.cells.length;
+      var headers = [], lists = [], seen = [];
+      for (var c = 0; c < n; c++) {
+        headers.push(head.cells[c].textContent.trim() || '#');
+        seen.push({});
+        lists.push([]);
+      }
+      Array.prototype.forEach.call(body.rows, function (tr) {
+        for (var c = 0; c < n; c++) {
+          var cell = tr.cells[c];
+          if (!cell) continue;
+          var txt = cell.textContent.trim();
+          if (!seen[c][txt]) { seen[c][txt] = 1; lists[c].push(txt); }
+        }
+      });
+      var bar = buildTfBar(headers, lists, null, function (checked) {
+        var any = checked.some(function (a) { return a.length > 0; });
+        Array.prototype.forEach.call(body.rows, function (tr) {
+          var show = true;
+          if (any) {
+            for (var c = 0; c < n; c++) {
+              if (!checked[c].length) continue;
+              var cell = tr.cells[c];
+              var txt = cell ? cell.textContent.trim() : '';
+              if (checked[c].indexOf(txt) < 0) { show = false; break; }
+            }
+          }
+          tr.style.display = show ? '' : 'none';
+        });
+      });
+      tb.parentNode.insertBefore(bar, tb);
+    });
+  }
+
   /* ================= 渲染:数据表 ================= */
 
   function renderTable(df) {
     var st = cur();
     var wrap = $('table-wrap');
     var size = +$('page-size').value || 50;
-    var pages = Math.max(1, Math.ceil(df.rows.length / size));
+
+    /* 应用筛选条:各列条件取交集(视图级,不改数据);'#' 对过滤后的行号生效 */
+    var keep = df.rows;
+    if (mainFilter) {
+      var pre = df.rows.filter(function (row) {
+        for (var col in mainFilter) {
+          if (col === '#') continue;
+          var ci = df.columns.indexOf(col);
+          if (ci < 0) continue;   /* 列已被后续操作删掉时忽略该条件 */
+          var v = row[ci];
+          var txt = PD.isNull(v) ? 'NaN' : PD.formatValue(v, df.dtypes[col]);
+          if (mainFilter[col].indexOf(txt) < 0) return false;
+        }
+        return true;
+      });
+      if (mainFilter['#']) {
+        var posSet = {};
+        mainFilter['#'].forEach(function (p) { posSet[p] = 1; });
+        keep = pre.filter(function (_, pos) { return !!posSet[String(pos)]; });
+      } else {
+        keep = pre;
+      }
+    }
+
+    var pages = Math.max(1, Math.ceil(keep.length / size));
     if (st.page > pages) st.page = pages;
     if (st.page < 1) st.page = 1;
 
-    if (!df.rows.length) {
-      wrap.innerHTML = '<div class="table-empty">' + esc(t('tbl.empty')) + '</div>';
+    if (!keep.length) {
+      wrap.innerHTML = '<div class="table-empty">' +
+        esc(mainFilter ? t('tf.noMatch') : t('tbl.empty')) + '</div>';
     } else {
       var start = (st.page - 1) * size;
-      var rows = df.rows.slice(start, start + size);
+      var rows = keep.slice(start, start + size);
       var html = '<table class="data-table"><thead><tr><th class="cell-idx">#</th>';
       /* 表头排序状态:最后一步是单列 sort 时显示箭头 */
       var last = st.steps.length ? st.steps[st.steps.length - 1] : null;
@@ -1883,6 +2197,29 @@
       });
       html += '</tbody></table>';
       wrap.innerHTML = html;
+    }
+
+    /* 挂筛选条(重建以同步勾选状态;空表且无筛选时不显示) */
+    var panelBox = wrap.parentNode;
+    var oldBar = panelBox.querySelector('.tf-bar');
+    if (oldBar) oldBar.parentNode.removeChild(oldBar);
+    if (df.rows.length || mainFilter) {
+      var headers = ['#'].concat(df.columns);
+      var valuesPer = [df.rows.map(function (_, i) { return String(i); })];
+      df.columns.forEach(function (c) { valuesPer.push(tfDistinctCol(df, c)); });
+      var checkedByCol = mainFilter
+        ? headers.map(function (h) { return (mainFilter[h] || []).slice(); })
+        : null;
+      var tfBar = buildTfBar(headers, valuesPer, checkedByCol, function (checked) {
+        var f = null;
+        headers.forEach(function (h, i) {
+          if (checked[i] && checked[i].length) { (f || (f = {}))[h] = checked[i]; }
+        });
+        mainFilter = f;
+        st.page = 1;
+        renderTable(df);
+      });
+      panelBox.insertBefore(tfBar, wrap);
     }
 
     $('page-info').textContent = t('tbl.page', { p: st.page, n: pages });
@@ -1909,6 +2246,7 @@
     var body = $('result-body');
     body.innerHTML = '';
     body.appendChild(res.node);
+    attachResultFilters(res.node);
     panel.hidden = false;
   }
 
