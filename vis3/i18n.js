@@ -15,9 +15,9 @@
 
   var DICT = {
     zh: {
-      'doc.title': 'Vis3 · 可视化 Pandas 数据分析台',
+      'doc.title': 'Pandas功能可视化平台',
       'doc.desc': '在浏览器里以可视化方式完成 pandas 式数据分析:加载 CSV/JSON,筛选、排序、分组、透视、合并、画图,并自动生成对应的 pandas 代码。',
-      'brand': 'Vis3 · 可视分析台',
+      'brand': 'Pandas功能可视化平台',
 
       /* ---------- 数据源 ---------- */
       'src.title': '数据源',
@@ -370,7 +370,7 @@
       'msg.nothingRedo': '没有可重做的步骤',
 
       /* ---------- 说明 ---------- */
-      'help.title': 'Vis3 使用说明',
+      'help.title': '使用说明',
       'help.body': '<p><b>这是什么:</b>一个纯前端的「可视化 pandas」。左侧选数据与操作,中间看表与图,右侧自动生成可复制的 pandas 代码。</p>' +
         '<p><b>上手三步:</b>① 默认已加载 <code>sales</code> 订单数据,直接点左侧任意操作;② 每个操作在弹窗里选列、填参数,点「应用」;③ 随时「撤销」「回到原始表」,或把代码复制到本地 Python 复现。</p>' +
         '<p><b>载入自己的数据:</b>上传 CSV / JSON 文件、粘贴 CSV 文本,或从 URL 拉取;列类型自动推断(数值 / 日期 / 布尔 / 文本)。</p>' +
@@ -382,14 +382,14 @@
         '<p><b>表格筛选:</b>每张表格上方都有一行筛选条——每列一个可搜索的多选下拉(勾选要保留的值,支持多列同时筛选、取交集),选好后点「筛选」按钮即按所选元组过滤表格,「清除」一键还原全部行;筛选只是视图效果,不会改动数据。</p>',
 
       'skip': '跳到正文',
-      'footer.line1': '© 2026 · Vis3 可视化数据分析台 · 数据仅保存在本地浏览器',
+      'footer.line1': '© 2026 · Pandas功能可视化平台 · 数据仅保存在本地浏览器',
       'footer.line2': '内置数据为固定种子生成的演示数据;上传的数据不会离开你的设备。'
     },
 
     en: {
-      'doc.title': 'Vis3 · Visual Pandas Analytics Studio',
+      'doc.title': 'Pandas功能可视化平台',
       'doc.desc': 'Do pandas-style data analysis visually in the browser: load CSV/JSON, filter, sort, group, pivot, merge and chart — with equivalent pandas code generated for every step.',
-      'brand': 'Vis3 · Visual Studio',
+      'brand': 'Pandas功能可视化平台',
 
       'src.title': 'Data Sources',
       'src.builtin': 'Built-in',
@@ -731,7 +731,7 @@
       'msg.nothing': 'Nothing to undo',
       'msg.nothingRedo': 'Nothing to redo',
 
-      'help.title': 'How to use Vis3',
+      'help.title': 'User Guide',
       'help.body': '<p><b>What this is:</b> a pure front-end “visual pandas”. Pick data and operations on the left, see the table and charts in the middle, and get ready-to-copy pandas code on the right.</p>' +
         '<p><b>Three steps:</b> ① the <code>sales</code> dataset is loaded by default — click any operation on the left; ② configure columns and parameters in the dialog, then “Apply”; ③ undo or reset anytime, or copy the generated code into your local Python to reproduce.</p>' +
         '<p><b>Your own data:</b> upload a CSV / JSON file, paste CSV text, or fetch from a URL; dtypes (number / datetime / boolean / text) are inferred automatically.</p>' +
@@ -743,7 +743,7 @@
         '<p><b>Table filters:</b> above every table sits a filter bar — one searchable multi-select dropdown per column (tick the values you want to keep; several columns can be combined and intersect). Press “Filter” to keep the matching rows and “Clear” to restore everything; filtering only affects the view and never changes the data.</p>',
 
       'skip': 'Skip to content',
-      'footer.line1': '© 2026 · Vis3 Visual Analytics · Data stays in your browser',
+      'footer.line1': '© 2026 · Pandas功能可视化平台 · Data stays in your browser',
       'footer.line2': 'Built-in data is generated with a fixed seed for demo; uploaded data never leaves your device.'
     }
   };
