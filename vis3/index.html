@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vis3 · 可视化 Pandas 数据分析台</title>
+  <meta name="description" content="在浏览器里以可视化方式完成 pandas 式数据分析:加载 CSV/JSON,筛选、排序、分组、透视、合并、画图,并自动生成对应的 pandas 代码。" data-meta="desc" />
+  <meta name="theme-color" content="#eef4ff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0c1424" media="(prefers-color-scheme: dark)" />
+  <meta property="og:title" content="Vis3 · 可视化 Pandas 数据分析台" data-meta="title" />
+  <meta property="og:description" content="在浏览器里以可视化方式完成 pandas 式数据分析。" data-meta="desc" />
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="i18n.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <!-- theme.js / i18n.js 不 defer:渲染前定好 data-theme 与 lang,避免闪烁 -->
+  <script src="theme.js"></script>
+  <script src="i18n.js"></script>
+</head>
+<body>
+
+  <a class="skip-link" href="#main" data-i18n="skip">跳到正文</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <svg class="brand-mark" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/>
+          <rect x="12" y="8" width="3" height="10" rx="1"/><rect x="17" y="5" width="3" height="13" rx="1"/>
+        </svg>
+        <span class="brand-text" data-i18n="brand">Vis3 · 可视分析台</span>
+      </a>
+
+      <div class="topbar-actions">
+        <button class="ghost-btn" id="help-btn" type="button" data-i18n="act.help">使用说明</button>
+        <!-- theme.js 会把主题切换钮注入到语言切换器左侧 -->
+        <div class="lang-switch" role="group" aria-label="语言 / Language">
+          <button class="lang-switch-item" type="button" data-lang="zh" aria-pressed="true">中</button>
+          <button class="lang-switch-item" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 顶部装饰横幅 ================= -->
+  <section class="page-hero" aria-hidden="true">
+    <img class="hero-bg" src="background.png" alt="" width="2838" height="865" loading="eager" decoding="async" />
+  </section>
+
+  <!-- ================= 工作台 ================= -->
+  <div class="app" id="top">
+
+    <!-- ---------- 左侧:数据源 + 操作 ---------- -->
+    <aside class="sidebar" aria-label="side">
+      <section class="panel">
+        <h2 class="panel-title" data-i18n="src.title">数据源</h2>
+        <div class="src-group-label" data-i18n="src.builtin">内置数据</div>
+        <div id="src-builtin" class="src-list"></div>
+        <div class="src-group-label" data-i18n="src.loaded">已加载</div>
+        <div id="src-loaded" class="src-list"></div>
+        <div class="src-actions">
+          <button class="btn btn-block" id="upload-btn" type="button" data-i18n="src.upload">上传 CSV / JSON</button>
+          <input type="file" id="file-input" accept=".csv,.json,.txt" hidden />
+          <button class="btn btn-block" id="paste-btn" type="button" data-i18n="src.paste">粘贴数据</button>
+          <button class="btn btn-block" id="url-btn" type="button" data-i18n="src.url">从 URL 加载</button>
+        </div>
+        <p class="src-note" data-i18n="src.useDefault">已载入默认数据集 sales,可直接开始分析。</p>
+      </section>
+
+      <section class="panel ops-panel">
+        <h2 class="panel-title">pandas</h2>
+        <div id="ops-root"></div>
+      </section>
+    </aside>
+
+    <!-- ---------- 中间:状态 + 历史 + 结果 + 表 ---------- -->
+    <main class="main" id="main">
+      <div class="toolbar panel">
+        <div class="toolbar-info">
+          <strong id="ds-name">sales</strong>
+          <span class="badge" id="ds-shape">0 × 0</span>
+          <span class="badge badge-warn" id="ds-missing"></span>
+          <span class="badge" id="ds-mem"></span>
+          <p class="ds-desc" id="ds-desc"></p>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn" id="undo-btn" type="button" data-i18n="act.undo">撤销一步</button>
+          <button class="btn" id="redo-btn" type="button" data-i18n="act.redo">重做</button>
+          <button class="btn" id="reset-btn" type="button" data-i18n="act.reset">回到原始表</button>
+          <button class="btn" id="export-btn" type="button" data-i18n="act.export">导出 CSV</button>
+          <button class="btn btn-primary" id="code-btn" type="button" data-i18n="act.code">pandas 代码</button>
+        </div>
+      </div>
+
+      <div class="history-wrap panel">
+        <span class="history-label" data-i18n="hist.title">操作历史</span>
+        <div class="history-chips" id="history-chips"></div>
+      </div>
+
+      <section class="panel result-panel" id="result-panel" hidden>
+        <div class="panel-head">
+          <h2 class="panel-title" id="result-title" data-i18n="res.title">结果</h2>
+          <button class="ghost-btn" id="result-close" type="button" data-i18n="act.close">关闭</button>
+        </div>
+        <div class="result-body" id="result-body"></div>
+      </section>
+
+      <section class="panel chart-panel" id="chart-panel" hidden>
+        <div class="panel-head">
+          <h2 class="panel-title" data-i18n="res.charts">图表</h2>
+          <div class="panel-head-actions">
+            <button class="ghost-btn" id="chart-svg-btn" type="button" data-i18n="act.exportSvg">导出 SVG</button>
+            <button class="ghost-btn" id="chart-png-btn" type="button" data-i18n="act.exportPng">导出 PNG</button>
+            <button class="ghost-btn" id="chart-close" type="button" data-i18n="act.close">关闭</button>
+          </div>
+        </div>
+        <div class="chart-body" id="chart-body"></div>
+        <div class="chart-insight" id="chart-insight" hidden></div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="table-wrap" id="table-wrap" tabindex="0"></div>
+        <div class="pager">
+          <button class="btn" id="page-prev" type="button" data-i18n="tbl.prev">上一页</button>
+          <span class="pager-info" id="page-info"></span>
+          <button class="btn" id="page-next" type="button" data-i18n="tbl.next">下一页</button>
+          <label class="pager-size">
+            <span data-i18n="tbl.pageSize">每页</span>
+            <select id="page-size">
+              <option>25</option>
+              <option selected>50</option>
+              <option>100</option>
+              <option>200</option>
+            </select>
+            <span data-i18n="tbl.rows">行</span>
+          </label>
+        </div>
+        <p class="table-hint" data-i18n="tbl.sortHint">点击表头可按该列排序(记入操作历史)</p>
+      </section>
+    </main>
+
+    <!-- ---------- 右侧:等价的 pandas 代码 ---------- -->
+    <aside class="code-panel" id="code-panel">
+      <div class="panel-head">
+        <h2 class="panel-title" data-i18n="code.title">等价的 pandas 代码</h2>
+        <div class="panel-head-actions">
+          <button class="ghost-btn" id="code-copy" type="button" data-i18n="act.copy">复制代码</button>
+          <button class="ghost-btn" id="code-close" type="button" data-i18n="act.close">关闭</button>
+        </div>
+      </div>
+      <p class="code-hint" data-i18n="code.hint">每一步操作都会在这里追加对应代码,可直接复制到 Python 里复现。</p>
+      <pre class="code-block"><code id="code-block"></code></pre>
+    </aside>
+  </div>
+
+  <footer class="footer">
+    <p data-i18n="footer.line1">© 2026 · Vis3 可视化数据分析台 · 数据仅保存在本地浏览器</p>
+    <p data-i18n="footer.line2">内置数据为固定种子生成的演示数据;上传的数据不会离开你的设备。</p>
+  </footer>
+
+  <!-- 模态框 / 轻提示 -->
+  <div class="modal-mask" id="modal-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" id="modal"></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="pandas.js" defer></script>
+  <script src="data.js" defer></script>
+  <script src="ml.js" defer></script>
+  <script src="charts.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
