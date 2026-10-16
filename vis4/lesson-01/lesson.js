@@ -357,7 +357,7 @@ DEMOS['d-1-3'] = (mount) => {
                   <circle cx="${x}" cy="${y + 7}" r="7.5" style="fill: var(--ch-1);"/>
                   <text x="62" y="${y + 11}" text-anchor="end" style="fill: var(--c-text-soft); font-size: 11.5px;">${d.name}</text>`;
         }).join('')}
-        <text x="576" y="196" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">年龄 →</text>
+        <text x="590" y="168" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">年龄 →</text>
       </svg>
     </div>
 

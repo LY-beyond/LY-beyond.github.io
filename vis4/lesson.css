@@ -873,8 +873,9 @@ html.code-only .chapter { padding-bottom: 12px; }
 .lesson-footer p { margin: 0; }
 
 /* =========================================================
- * 小节流动路径带（.lesson-header 下方，纯装饰）
+ * 小节流动路径带（.lesson-header 下方）
  * 几何由 lesson-path.js 生成；流动来自 CSS dashoffset 动画
+ * 节点可点击：平滑跳转到对应小节
  * ========================================================= */
 .lesson-path {
   position: relative;
@@ -921,11 +922,33 @@ html.code-only .chapter { padding-bottom: 12px; }
   flex-direction: column;
   align-items: center;
   gap: 7px;
-  pointer-events: none;
+  /* 链接重置 */
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
   opacity: 0;
   transition: opacity .45s var(--ease) calc(var(--i, 0) * 60ms);
 }
 .lesson-path.is-revealed .lesson-path__node { opacity: 1; }
+.lesson-path__node:hover .lesson-path__badge,
+.lesson-path__node:focus-visible .lesson-path__badge {
+  border-color: color-mix(in srgb, var(--c-primary) 80%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c-primary) 13%, transparent),
+              0 8px 18px color-mix(in srgb, var(--c-primary) 24%, transparent);
+  transform: translateY(-2px);
+}
+.lesson-path__node:hover .lesson-path__label,
+.lesson-path__node:focus-visible .lesson-path__label {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-bg));
+}
+.lesson-path__node:focus-visible { outline: none; }
+.lesson-path__node:focus-visible .lesson-path__badge {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
+}
 .lesson-path__badge {
   position: relative;
   width: 46px;
@@ -946,7 +969,8 @@ html.code-only .chapter { padding-bottom: 12px; }
               var(--shadow-xs);
   transition: box-shadow var(--dur-base) var(--ease),
               background-color var(--dur-base) var(--ease),
-              border-color var(--dur-base) var(--ease);
+              border-color var(--dur-base) var(--ease),
+              transform var(--dur-base) var(--ease);
 }
 .lesson-path__label {
   max-width: 104px;

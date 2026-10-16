@@ -337,13 +337,21 @@ img, svg { max-width: 100%; }
   min-width: 0;
   padding: 12px 8px;
   border-radius: var(--radius);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--node-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 80%);
+  border: 1px solid color-mix(in srgb, var(--node-c, var(--c-primary)) var(--mix-halo), var(--c-line));
   text-align: center;
   transition: var(--t-control);
 }
+/* 5 个节点各染所属章节色（与节点内联 SVG 图标的既有配色一一对应） */
+.relmap__node:nth-of-type(1) { --node-c: var(--ch-1); }
+.relmap__node:nth-of-type(2) { --node-c: var(--ch-2); }
+.relmap__node:nth-of-type(3) { --node-c: var(--ch-4); }
+.relmap__node:nth-of-type(4) { --node-c: var(--ch-3); }
+.relmap__node:nth-of-type(5) { --node-c: var(--ch-6); }
 .relmap__node:hover {
-  border-color: color-mix(in srgb, var(--c-primary) 40%, var(--c-line));
+  border-color: color-mix(in srgb, var(--node-c, var(--c-primary)) 48%, var(--c-line));
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
@@ -421,6 +429,12 @@ img, svg { max-width: 100%; }
   position: relative;
   padding: 0 10px;
 }
+/* 每一步染所属章节色（与 Hero 关系图、章节卡片同一套 --ch-* 映射） */
+.path-step:nth-child(1) { --step-c: var(--ch-1); }
+.path-step:nth-child(2) { --step-c: var(--ch-2); }
+.path-step:nth-child(3) { --step-c: var(--ch-4); }
+.path-step:nth-child(4) { --step-c: var(--ch-3); }
+.path-step:nth-child(5) { --step-c: var(--ch-6); }
 
 /* 步骤之间的「流动虚线」：从上一节点中心连到本节点中心 */
 .path-step:not(:first-child)::before {
@@ -447,7 +461,7 @@ img, svg { max-width: 100%; }
 }
 .path-step__link:hover {
   color: var(--c-text);
-  background: color-mix(in srgb, var(--c-primary) 5%, transparent);
+  background: color-mix(in srgb, var(--step-c, var(--c-primary)) 6%, transparent);
 }
 
 .path-step__dot {
@@ -457,19 +471,18 @@ img, svg { max-width: 100%; }
   height: 50px;
   margin: 0 auto 14px;
   border-radius: 50%;
-  background: var(--c-surface);
-  border: 2px solid color-mix(in srgb, var(--c-primary) 30%, var(--c-line));
-  color: var(--c-primary);
+  background: color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-soft), var(--c-surface));
+  border: 2px solid color-mix(in srgb, var(--step-c, var(--c-primary)) 45%, var(--c-line));
+  color: color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-ink), var(--c-text));
   font-family: var(--font-mono);
   font-size: 15px;
   font-weight: 800;
   transition: var(--t-control);
 }
 .path-step__link:hover .path-step__dot {
-  background: var(--c-primary);
-  border-color: var(--c-primary);
-  color: var(--c-on-primary);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--c-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-halo), var(--c-surface));
+  border-color: var(--step-c, var(--c-primary));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--step-c, var(--c-primary)) 30%, transparent);
 }
 
 .path-step__body { display: block; }
@@ -494,8 +507,10 @@ img, svg { max-width: 100%; }
   margin-top: 10px;
   padding: 9px 11px;
   border-radius: var(--radius-sm);
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
+  background: linear-gradient(170deg,
+    color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 135%);
+  border: 1px solid color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-halo), var(--c-line));
   font-size: 12px;
   line-height: 1.55;
   color: var(--c-text-soft);
@@ -576,25 +591,35 @@ img, svg { max-width: 100%; }
   padding: 20px;
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
-  background: var(--c-surface);
+  background: linear-gradient(168deg,
+    color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 48%);
   box-shadow: var(--shadow-card);
   color: var(--c-text);
   transition: var(--t-control), transform var(--dur-base) var(--ease);
 }
+/* 每章一个章节色：卡面染色、色条、徽章、进度条共用同一变量 */
+.card[data-lesson="lesson-01"] { --card-c: var(--ch-1); }
+.card[data-lesson="lesson-02"] { --card-c: var(--ch-2); }
+.card[data-lesson="lesson-04"] { --card-c: var(--ch-3); }
+.card[data-lesson="lesson-05"] { --card-c: var(--ch-6); }
+.card--color { --card-c: var(--ch-4); }
 .card:hover {
   color: var(--c-text);
-  border-color: color-mix(in srgb, var(--c-primary) 34%, var(--c-line));
+  border-color: color-mix(in srgb, var(--card-c, var(--c-primary)) 40%, var(--c-line));
   box-shadow: var(--shadow-lg);
   transform: translateY(-3px);
 }
-/* 顶部一条「主题色条」，第 3 章（色彩专题）用调色板渐变以示区别 */
+/* 顶部一条「章节色条」，第 3 章（色彩专题）用调色板渐变以示区别 */
 .card::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
   height: 4px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2));
+  background: linear-gradient(90deg,
+    var(--card-c, var(--c-primary)),
+    color-mix(in srgb, var(--card-c, var(--c-primary)) 42%, transparent));
 }
 .card--color::before {
   background: var(--ramp-qual);
@@ -614,8 +639,9 @@ img, svg { max-width: 100%; }
   gap: 7px;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
-  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  background: color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-soft), transparent);
+  border: 1px solid color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-ink), var(--c-text));
   font-family: var(--font-mono);
   font-size: 11.5px;
   font-weight: 700;
@@ -646,8 +672,8 @@ img, svg { max-width: 100%; }
 .card__tags li {
   padding: 3px 9px;
   border-radius: var(--radius-sm);
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--card-c, var(--c-primary)) 8%, var(--c-surface-2));
+  border: 1px solid color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-halo), var(--c-line));
   font-size: 11.5px;
   color: var(--c-text-soft);
 }
@@ -673,7 +699,9 @@ img, svg { max-width: 100%; }
   height: 100%;
   width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--c-primary-2), var(--c-primary));
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--card-c, var(--c-primary)) 62%, var(--c-surface)),
+    var(--card-c, var(--c-primary)));
   transition: width var(--dur-base) var(--ease);
 }
 .card__progtext {
@@ -689,7 +717,7 @@ img, svg { max-width: 100%; }
   gap: 6px;
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--c-primary);
+  color: color-mix(in srgb, var(--card-c, var(--c-primary)) var(--mix-ink), var(--c-text));
 }
 .card__cta::after {
   content: "→";
@@ -708,13 +736,20 @@ img, svg { max-width: 100%; }
   display: flex;
   gap: 13px;
   padding: 17px 18px;
-  border: 1px solid var(--c-line);
+  border: 1px solid color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-halo), var(--c-line));
   border-radius: var(--radius);
-  background: var(--c-surface);
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 74%);
   transition: var(--t-control);
 }
+/* 四件工具各配一个系列色：图谱蓝 / 指南橙 / 测验绿 / 实战天蓝 */
+.tool:nth-child(1) { --tool-c: var(--ch-1); }
+.tool:nth-child(2) { --tool-c: var(--ch-2); }
+.tool:nth-child(3) { --tool-c: var(--ch-3); }
+.tool:nth-child(4) { --tool-c: var(--ch-5); }
 .tool:hover {
-  border-color: color-mix(in srgb, var(--c-primary) 32%, var(--c-line));
+  border-color: color-mix(in srgb, var(--tool-c, var(--c-primary)) 42%, var(--c-line));
   box-shadow: var(--shadow-sm);
 }
 .tool__icon {
@@ -724,8 +759,8 @@ img, svg { max-width: 100%; }
   width: 38px;
   height: 38px;
   border-radius: 11px;
-  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
-  color: var(--c-primary);
+  background: color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-halo), var(--c-surface));
+  color: color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-ink), var(--c-text));
 }
 .tool__icon svg { display: block; }
 .tool__body { min-width: 0; }
@@ -763,13 +798,15 @@ img, svg { max-width: 100%; }
 /* 已上线的工具：整张卡片就是一个可点链接（.tool--live） */
 .tool--live { color: var(--c-text); cursor: pointer; }
 .tool--live:hover { color: var(--c-text); }
-.tool--live .tool__title { color: var(--c-primary); }
+.tool--live .tool__title {
+  color: color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-ink), var(--c-text));
+}
 .tool--live::after {
   content: "→";
   align-self: center;
   margin-left: auto;
   padding-left: 6px;
-  color: var(--c-primary);
+  color: color-mix(in srgb, var(--tool-c, var(--c-primary)) var(--mix-ink), var(--c-text));
   font-weight: 800;
 }
 
@@ -786,7 +823,9 @@ img, svg { max-width: 100%; }
   margin-top: 26px;
   border: 1px solid var(--c-line);
   border-radius: var(--radius);
-  background: var(--c-surface);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 140px);
   overflow-x: auto;
 }
 .cheat table {
@@ -813,7 +852,7 @@ img, svg { max-width: 100%; }
   font-weight: 700;
   letter-spacing: .04em;
   color: var(--c-text);
-  background: var(--c-surface-2);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface-2));
   white-space: nowrap;
 }
 .cheat tbody tr:last-child td { border-bottom: none; }
@@ -830,10 +869,10 @@ img, svg { max-width: 100%; }
   height: 22px;
   margin-right: 6px;
   border-radius: 6px;
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-primary) var(--mix-halo), var(--c-line));
   vertical-align: -6px;
-  color: var(--c-text-soft);
+  color: var(--c-primary);
 }
 
 /* ---------------- §7 关于 / 使用方式 / 数据集 ---------------- */
@@ -845,10 +884,18 @@ img, svg { max-width: 100%; }
 }
 .about-item {
   padding: 18px;
-  border: 1px solid var(--c-line);
+  border: 1px solid color-mix(in srgb, var(--about-c, var(--c-primary)) var(--mix-halo), var(--c-line));
   border-radius: var(--radius);
-  background: var(--c-surface);
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--about-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+    var(--c-surface) 82%);
 }
+/* 五个信息块各配一个语义色，与 emoji 图标的冷暖气质呼应 */
+.about-item:nth-child(1) { --about-c: var(--c-primary); }
+.about-item:nth-child(2) { --about-c: var(--c-accent-2); }
+.about-item:nth-child(3) { --about-c: var(--c-success); }
+.about-item:nth-child(4) { --about-c: var(--c-info); }
+.about-item:nth-child(5) { --about-c: var(--ch-4); }
 .about-item h4 {
   font-size: 14px;
   margin-bottom: 8px;
@@ -902,8 +949,10 @@ img, svg { max-width: 100%; }
     gap: 14px;
     align-items: flex-start;
     padding: 12px 14px;
-    border: 1px solid var(--c-line);
-    background: var(--c-surface);
+    border: 1px solid color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-halo), var(--c-line));
+    background: linear-gradient(150deg,
+      color-mix(in srgb, var(--step-c, var(--c-primary)) var(--mix-soft), var(--c-surface)) 0%,
+      var(--c-surface) 90%);
   }
   .path-step__dot { margin: 2px 0 0; width: 38px; height: 38px; font-size: 13px; }
   .path-step__title,

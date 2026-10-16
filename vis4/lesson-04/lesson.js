@@ -292,7 +292,7 @@ DEMOS['d-4-1'] = async (mount) => {
   };
 
   // ---- 平行坐标布局 ----
-  const PC_W = 640, PC_TOP = 34, PC_BOT = 196;
+  const PC_W = 640, PC_TOP = 44, PC_BOT = 196;
   const axisX = (i) => 56 + i * 132;
   const pcY = (n) => PC_TOP + (1 - n) * (PC_BOT - PC_TOP);
 
@@ -848,7 +848,7 @@ DEMOS['d-4-4'] = async (mount) => {
           <g data-role="perceived"><line x1="${AX}" y1="${AY}" x2="${AX}" y2="${AY}" style="stroke: var(--c-warn); stroke-width: 2;" stroke-dasharray="6 4"/></g>
           <circle cx="${AX}" cy="${AY}" r="4" style="fill: var(--c-text-soft);"/>
           <text x="${AX - 8}" y="${AY + 4}" text-anchor="end" style="fill: var(--c-text-soft); font-size: 10.5px;">起点</text>
-          <text x="10" y="236" style="fill: var(--c-muted); font-size: 10.5px;">蓝实线 = 真实倾角 · 橙虚线 = 人眼感知的倾角</text>
+          <text x="10" y="16" style="fill: var(--c-muted); font-size: 10.5px;">蓝实线 = 真实倾角 · 橙虚线 = 人眼感知的倾角</text>
         </svg>
         <div class="demo-detail" style="margin-top:12px" data-role="readout"></div>
       </div>

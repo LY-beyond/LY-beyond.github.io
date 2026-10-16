@@ -119,7 +119,7 @@ function DrawPie(ageData){
         // 添加百分比标签
         arcs.append("text")
             .attr("transform", d => `translate(${arc.centroid(d)})`)
-            .attr("dy", "1.5em")
+            .attr("dy", "2.2em")
             .text(d => `${(d.data.count/480 * 100).toFixed(1)}%`)
             .style("font-size", "10px")
             .style("text-anchor", "middle");

@@ -589,6 +589,9 @@ DEMOS['d-2-3'] = async (mount) => {
       const g = nodeEls.get(n.id);
       g.style.transform = `translate(${posFor(n, s)}px, ${depthY[n.depth]}px)`;
       g.classList.toggle('is-hi', s === 2 && !!n.children);
+      // 未就位的节点互相堆叠是教学点，但文字叠成一片不可读：只留圆点，标签等就位后再显现
+      const label = g.querySelector('text');
+      if (label) label.style.opacity = (s === 0 || (s === 1 && n.children)) ? '0' : '1';
     });
 
     // 连线：第 2 遍之后才淡入（等节点动画基本落位，避免短暂错位）

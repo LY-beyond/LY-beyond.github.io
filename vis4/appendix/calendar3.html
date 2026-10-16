@@ -157,7 +157,8 @@ g.selectAll('cell.firstday')
         const monthFmt = d3.timeFormat('%b');
         g.append('g')
           .selectAll('text.month-label')
-          .data(months)
+          // range 右端多跨出一个月（下一年 1 月），会与当年 1 月同坐标重叠，标签跳过末位
+          .data(months.slice(0, -1))
           .join('text')
           .attr('class','month-label')
           // 月份标签位置基于周日起点的周序号

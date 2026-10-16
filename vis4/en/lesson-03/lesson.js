@@ -391,7 +391,7 @@ DEMOS['d-3-1'] = function (mount) {
     s += '<circle cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" r="8" fill="' + rgbCss(rgb) + '" style="stroke: var(--c-surface); stroke-width:2.5;"/>';
     s += '<text x="' + cx + '" y="' + (cy + 5) + '" text-anchor="middle" style="fill: var(--c-text); font-size:10.5px;">H ' + Math.round(ha) + '°</text>';
     s += '<text x="216" y="172" style="fill: var(--c-muted); font-size:10.5px;">S ' + Math.round(hsl[1]) + '% · L ' + Math.round(hsl[2]) + '%</text>';
-    s += '<text x="216" y="188" style="fill: var(--c-muted); font-size:10.5px;">note: HSL lightness is not perceptually uniform</text>';
+    s += '<text x="216" y="188" style="fill: var(--c-muted); font-size:10.5px;">HSL L is not perceptually uniform</text>';
 
     // panel 3 · the CIE Lab a*b* plane
     const ox = 470, oy = 101, sc = 0.62;
@@ -399,7 +399,7 @@ DEMOS['d-3-1'] = function (mount) {
     s += '<line x1="' + (ox - 62) + '" y1="' + oy + '" x2="' + (ox + 76) + '" y2="' + oy + '" style="stroke: var(--c-border-2);"/>';
     s += '<line x1="' + ox + '" y1="' + (oy - 72) + '" x2="' + ox + '" y2="' + (oy + 72) + '" style="stroke: var(--c-border-2);"/>';
     s += '<text x="' + (ox + 80) + '" y="' + (oy + 4) + '" style="fill: var(--c-muted); font-size:10px;">a*</text>';
-    s += '<text x="' + (ox + 5) + '" y="' + (oy - 76) + '" style="fill: var(--c-muted); font-size:10px;">b*</text>';
+    s += '<text x="' + (ox + 8) + '" y="' + (oy - 56) + '" style="fill: var(--c-muted); font-size:10px;">b*</text>';
     const px = ox + Math.max(-62, Math.min(76, lab[1] * sc)), py = oy - Math.max(-72, Math.min(72, lab[2] * sc));
     s += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="9" fill="' + rgbCss(rgb) + '" style="stroke: var(--c-surface); stroke-width:2.5;"/>';
     s += '<text x="410" y="172" style="fill: var(--c-muted); font-size:10.5px;">distance ≈ perceived difference</text>';

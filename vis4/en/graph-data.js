@@ -51,7 +51,7 @@ window.KG_DATA = {
         { "id": "c4",       "name": "Chapter 4 · Low-Dimensional Data",   "cat": "chapter", "route": "lesson-04/", "drillTo": "lowdim" },
         { "id": "c5",       "name": "Chapter 5 · Temporal Data",          "cat": "chapter", "route": "lesson-05/", "drillTo": "temporal" },
         { "id": "guide",    "name": "Special · Chart Guide",              "cat": "tool",    "route": "topic-chart-guide/" },
-        { "id": "quiz",     "name": "Chapter quizzes (44 questions)",     "cat": "tool",    "route": "quiz.html" },
+        { "id": "quiz",     "name": "Chapter quizzes (44)",               "cat": "tool",    "route": "quiz.html" },
         { "id": "practice", "name": "D3 practice workbench",              "cat": "tool",    "route": "practice.html" },
         { "id": "ds-hub",   "name": "Bundled datasets (6 files)",         "cat": "dataset", "route": "./#about" }
       ],

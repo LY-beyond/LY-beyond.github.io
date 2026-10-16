@@ -594,6 +594,10 @@ DEMOS['d-2-3'] = async (mount) => {
       const g = nodeEls.get(n.id);
       g.style.transform = `translate(${posFor(n, s)}px, ${depthY[n.depth]}px)`;
       g.classList.toggle('is-hi', s === 2 && !!n.children);
+      // Stacked nodes are the teaching point, but piled-up labels are unreadable:
+      // keep the dots, reveal each label only once its node is placed.
+      const label = g.querySelector('text');
+      if (label) label.style.opacity = (s === 0 || (s === 1 && n.children)) ? '0' : '1';
     });
 
     // Links fade in only after pass 2 (wait until the node animation has roughly settled, avoiding brief misalignment)

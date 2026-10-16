@@ -700,7 +700,8 @@ const countByClass = d3.rollup(
         <figure class="figure">
           <svg viewBox="0 0 640 200" role="img" aria-label="Key function comparison: without a key, binding is by index, so a data reorder turns every element into update; with a key, binding is by id and element identity stays stable">
             <text x="0" y="18" style="fill: var(--c-danger); font-size: 12.5px; font-weight: 700;">✗ No key: identity bound by index</text>
-            <text x="0" y="36" style="fill: var(--c-muted); font-size: 11.5px;">After a data reorder, the circle at every position is judged an "update"; identities are scrambled and the transition animation is misaligned</text>
+            <text x="0" y="33" style="fill: var(--c-muted); font-size: 11.5px;">After a data reorder, the circle at every position is</text>
+            <text x="0" y="47" style="fill: var(--c-muted); font-size: 11.5px;">judged an "update" — identities scrambled, animation off</text>
             <g>
               <circle cx="60" cy="66" r="18" style="fill: color-mix(in srgb, var(--c-primary) 30%, transparent);"/><text x="60" y="71" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">id 1</text>
               <circle cx="140" cy="66" r="18" style="fill: color-mix(in srgb, var(--c-primary) 30%, transparent);"/><text x="140" y="71" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">id 2</text>
@@ -710,11 +711,12 @@ const countByClass = d3.rollup(
               <circle cx="60" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-2) 26%, transparent);"/><text x="60" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">3</text>
               <circle cx="140" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-2) 26%, transparent);"/><text x="140" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">2</text>
               <circle cx="220" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-2) 26%, transparent);"/><text x="220" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">1</text>
-              <text x="270" y="151" style="fill: var(--c-warn); font-size: 11.5px; font-weight: 700;">→ all three judged as update</text>
+              <text x="140" y="188" text-anchor="middle" style="fill: var(--c-warn); font-size: 11.5px; font-weight: 700;">→ all three judged as update</text>
             </g>
             <line x1="330" y1="16" x2="330" y2="184" style="stroke: var(--c-line-2); stroke-width: 1;"/>
             <text x="360" y="18" style="fill: var(--c-success); font-size: 12.5px; font-weight: 700;">✓ With key: identity bound by id</text>
-            <text x="360" y="36" style="fill: var(--c-muted); font-size: 11.5px;">After a data reorder, each circle knows who it is; only cx changes → natural animation</text>
+            <text x="360" y="33" style="fill: var(--c-muted); font-size: 11.5px;">After a data reorder, each circle knows who it is;</text>
+            <text x="360" y="47" style="fill: var(--c-muted); font-size: 11.5px;">only cx changes → the animation stays natural</text>
             <g>
               <circle cx="392" cy="66" r="18" style="fill: color-mix(in srgb, var(--c-primary) 30%, transparent);"/><text x="392" y="71" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">1</text>
               <circle cx="472" cy="66" r="18" style="fill: color-mix(in srgb, var(--c-primary) 30%, transparent);"/><text x="472" y="71" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">2</text>
@@ -724,7 +726,7 @@ const countByClass = d3.rollup(
               <circle cx="552" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-1) 26%, transparent);"/><text x="552" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">1</text>
               <circle cx="472" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-1) 26%, transparent);"/><text x="472" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">2</text>
               <circle cx="392" cy="146" r="18" style="fill: color-mix(in srgb, var(--ch-1) 26%, transparent);"/><text x="392" y="151" text-anchor="middle" style="fill: var(--c-text); font-size: 12px;">3</text>
-              <text x="300" y="151" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">← it merely changed position</text>
+              <text x="472" y="188" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">← it merely changed position</text>
             </g>
           </svg>
           <figcaption>The key function is the soul of D3 transition animation: it lets elements still "know who they are" after a data reorder</figcaption>
@@ -824,7 +826,7 @@ const bars = d3.selectAll(<span class="str">".bar"</span>).data(values);</code><
   </nav>
 
   <footer class="lesson-footer">
-    <p>© 2026 "Introduction to Visualization" course · China University of Petroleum (East China) · Instructor: Li Xin · Primary reference: Chen Wei, <i>Introduction to Visualization</i></p>
+    <p>© 2026 "Introduction to Visualization" course · China University of Petroleum (East China) · Primary reference: Chen Wei, <i>Introduction to Visualization</i></p>
     <p>Zero-build static site · Inline SVG graphics · No video · Bilingual (Chinese/English) with dark mode</p>
   </footer>
 

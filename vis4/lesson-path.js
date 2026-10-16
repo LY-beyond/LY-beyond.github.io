@@ -1,11 +1,12 @@
 // =========================================================
 // lesson-path.js —— 章节页顶部「小节流动路径带」
 // ---------------------------------------------------------
-// 纯装饰、零依赖、零数据文件：
+// 零依赖、零数据文件：
 //   1. 读取左侧目录 .chapter-nav a[data-chapter]（中英各页自动取到本地语言）
 //   2. 在 .lesson-header 下方注入一条路径带：
 //      SVG 波浪贝塞尔轨道（底层静态灰线 + 流动虚线）+ 绝对定位的编号节点
-//   3. 节点仅展示，不可点击；当前小节徽章跟随 .chapter.active 高亮
+//   3. 节点是可点击锚点，点击平滑滚动到对应小节（复用左目录的跳转处理），
+//      当前小节徽章跟随 .chapter.active 高亮；键盘 Tab 可聚焦、Enter 跳转
 //
 // 「流动」原理：给 <path pathLength="1"> 做归一化后，
 // stroke-dasharray 用小数周期（与真实像素长度无关），
@@ -65,10 +66,27 @@ export function initLessonPath() {
   }));
   if (items.length < 2) return;
 
-  const band = document.createElement('div');
+  const band = document.createElement('nav');
   band.className = 'lesson-path';
-  band.setAttribute('aria-hidden', 'true'); // 纯装饰：信息在左侧目录里已完整提供
+  // 复用左侧目录标题作为无障碍名称（中英各页自动取本地语言，如「第 1 章 · 目录」）
+  const navHeading = nav.querySelector('h3');
+  if (navHeading && navHeading.textContent.trim()) {
+    band.setAttribute('aria-label', navHeading.textContent.trim());
+  }
   header.insertAdjacentElement('afterend', band);
+
+  // 点击节点 → 触发左目录中对应链接的既有处理（平滑滚动 + hash + 高亮 + 进度）。
+  // 事件委托挂在 band 上，resize 重渲染后依然有效。
+  band.addEventListener('click', (e) => {
+    const node = e.target.closest('.lesson-path__node');
+    if (!node) return;
+    // 中键 / 新标签页打开等默认行为不拦截
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const link = nav.querySelector('a[data-chapter="' + CSS.escape(node.dataset.id) + '"]');
+    if (!link) return; // 兜底：让锚点原生跳转
+    e.preventDefault();
+    link.click();
+  });
 
   let nodeEls = [];
 
@@ -105,12 +123,13 @@ export function initLessonPath() {
           <path class="lesson-path__flow" d="${d}" pathLength="1" />
         </svg>
         ${items.map((item, i) => `
-          <div class="lesson-path__node"
+          <a class="lesson-path__node"
+               href="#${escapeHtml(item.id)}"
                data-id="${escapeHtml(item.id)}"
                style="--x:${points[i].x}px;--y:${points[i].y}px;--i:${i}">
             <span class="lesson-path__badge">${String(i + 1).padStart(2, '0')}</span>
             <span class="lesson-path__label">${escapeHtml(item.label)}</span>
-          </div>
+          </a>
         `).join('')}
       </div>
     `;

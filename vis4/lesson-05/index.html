@@ -455,14 +455,14 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
             <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">同一份数据，两种排法</text>
 
             <!-- 左：折线 -->
-            <text x="10" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">折线图：季节信号被日间噪声淹没</text>
+            <text x="10" y="30" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">折线图：季节信号被日间噪声淹没</text>
             <polyline points="10,140 20,96 30,132 40,88 50,126 60,102 70,138 80,92 90,120 100,86 110,128 120,108 130,140 140,100 150,118 160,84 170,130 180,106 190,136 200,94 210,116 220,100"
               fill="none" style="stroke: var(--c-primary); stroke-width: 1.5;"/>
             <line x1="10" y1="150" x2="220" y2="150" style="stroke: var(--c-line-2);"/>
             <text x="10" y="172" style="fill: var(--c-text-soft); font-size: 11px;">一条线上同时挤着「季节」与「每天天气」两种信号</text>
 
             <!-- 右：日历网格 -->
-            <text x="330" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">日历热图：同季格子连成色带</text>
+            <text x="330" y="30" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">日历热图：同季格子连成色带</text>
             <g>
               <text x="318" y="58" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">一</text>
               <text x="318" y="70" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">二</text>
@@ -654,10 +654,10 @@ g.selectAll(<span class="str">'line.mdiv'</span>)
             <text x="266" y="200" style="fill: var(--c-success); font-size: 12px; font-weight: 700;">θ</text>
 
             <!-- 圈标注 -->
-            <text x="272" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">第 1 圈</text>
-            <text x="272" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= 第 1 个周期</text>
-            <text x="306" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">第 2 圈</text>
-            <text x="306" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= 第 2 个周期</text>
+            <text x="276" y="156" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700; paint-order: stroke; stroke: var(--c-surface); stroke-width: 3px;">第 1 圈</text>
+            <text x="276" y="169" style="fill: var(--c-muted); font-size: 10.5px; paint-order: stroke; stroke: var(--c-surface); stroke-width: 3px;">= 第 1 个周期</text>
+            <text x="276" y="188" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700; paint-order: stroke; stroke: var(--c-surface); stroke-width: 3px;">第 2 圈</text>
+            <text x="276" y="201" style="fill: var(--c-muted); font-size: 10.5px; paint-order: stroke; stroke: var(--c-surface); stroke-width: 3px;">= 第 2 个周期</text>
 
             <!-- 公式与说明 -->
             <text x="360" y="60" style="fill: var(--c-primary); font-size: 15px; font-weight: 800;">r = a + bθ</text>
@@ -959,7 +959,7 @@ d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">1.0</span>));  <span 
   </nav>
 
   <footer class="lesson-footer">
-    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 主要参考教材：陈为《可视化导论》</p>
     <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
   </footer>
 

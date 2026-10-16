@@ -66,10 +66,39 @@ export function activateSection(id, opts = {}) {
   if (!id) return;
   const el = document.getElementById(id);
   if (!el) return;
-  if (opts.scroll !== false) {
-    el.scrollIntoView({ behavior: opts.instant ? 'auto' : 'smooth', block: 'start' });
-  }
+  if (opts.scroll === false) { setCurrent(id); return; }
+  el.scrollIntoView({ behavior: opts.instant ? 'auto' : 'smooth', block: 'start' });
   setCurrent(id);
+  if (opts.instant) return;
+
+  // 长章节里，演示在滚动途中懒渲染会改变文档高度，平滑滚动可能提前停在半路。
+  // 滚动稳定后若目标小节仍远离视口顶部，补一次即时校正；用户手动接管则放弃校正。
+  let lastY = window.scrollY, stable = 0, cancelled = false;
+  const cancel = () => { cancelled = true; };
+  window.addEventListener('wheel', cancel, { passive: true });
+  window.addEventListener('touchmove', cancel, { passive: true });
+  const timer = window.setInterval(() => {
+    if (cancelled) { cleanup(); return; }
+    const y = window.scrollY;
+    if (Math.abs(y - lastY) < 1) {
+      if (++stable >= 2) {
+        cleanup();
+        if (Math.abs(el.getBoundingClientRect().top) > 140) {
+          el.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }
+    } else {
+      stable = 0;
+    }
+    lastY = y;
+  }, 150);
+  const deadline = window.setTimeout(cleanup, 4000);
+  function cleanup() {
+    window.clearInterval(timer);
+    window.clearTimeout(deadline);
+    window.removeEventListener('wheel', cancel);
+    window.removeEventListener('touchmove', cancel);
+  }
 }
 
 function setCurrent(id) {
