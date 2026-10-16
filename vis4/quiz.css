@@ -1,0 +1,573 @@
+/* =========================================================
+ * quiz.css —— 章节测验页样式（quiz.html 专用）
+ * ---------------------------------------------------------
+ * 调研来源：源站 styles.css 的 .quiz-* 段，但配色**全部**改写为
+ * vis4 的设计令牌（tokens.css），本文件不出现任何硬编码色值：
+ * 只用 var(--…) 与 color-mix(in srgb, var(--…) xx%, transparent)。
+ *
+ * 与章节页共享 classes：顶栏 / 页头 / 页脚来自 lesson.css，
+ * 语言切换器来自 i18n.css；本文件只管测验自身的 .quiz-* 模块。
+ *
+ * 创新点约定：
+ *   §1 .quiz-config   —— 起始页的「题量 / 范围」单选组（fieldset + radio）
+ *   §2 .quiz-option   —— 选项用 <label> 包 <input type="radio">，不显示字母
+ *   §3 .quiz-score    —— 得分环 = 内联 SVG circle + dashoffset + CSS transition
+ * ========================================================= */
+
+/* ---------------- 主体容器 ---------------- */
+.quiz-main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 72px;
+}
+
+/* ---------------- 空态 / 卡片 ---------------- */
+.quiz-empty {
+  margin: 0;
+  padding: 20px;
+  border: 1px dashed var(--c-line-2);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-size: 14px;
+}
+
+.quiz-card {
+  --quiz-accent: var(--c-primary);
+  --quiz-soft:   color-mix(in srgb, var(--quiz-accent) var(--mix-soft), var(--c-surface));
+  --quiz-line:   color-mix(in srgb, var(--quiz-accent) var(--mix-halo), var(--c-border));
+
+  padding: var(--space-lg);
+  background: linear-gradient(158deg,
+    var(--c-surface) 0%, var(--c-surface) 52%, var(--quiz-soft) 100%);
+  border: 1px solid var(--quiz-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.quiz-title { font-size: 18px; margin-bottom: 8px; }
+.quiz-desc { margin: 0 0 14px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-subtitle { font-size: 16px; margin: var(--space-lg) 0 var(--space); }
+
+/* ---------------- §1 起始页的配置单选组 ---------------- */
+.quiz-config {
+  display: grid;
+  gap: var(--space);
+  margin-bottom: var(--space-lg);
+}
+
+.quiz-field {
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+}
+
+.quiz-field legend {
+  padding: 0 6px;
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.quiz-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.quiz-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.quiz-radio:hover { border-color: var(--c-primary); color: var(--c-primary); }
+
+.quiz-radio input[type="radio"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--c-primary);
+  cursor: pointer;
+}
+
+/* 选中态：优先用 :has（现代浏览器），不支持时仍可依赖原生 radio 视觉 */
+.quiz-radio:has(input:checked) {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+}
+
+/* ---------------- 规则清单 ---------------- */
+.quiz-rules { display: grid; gap: 6px; margin: 0; }
+.quiz-rules li { position: relative; padding-left: 22px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-rules li::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: .62em;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-primary);
+}
+
+/* ---------------- 按钮 ---------------- */
+.quiz-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space);
+}
+
+.quiz-actions--tight { margin-top: 12px; }
+
+.quiz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+
+.quiz-btn:hover:not(:disabled) {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  transform: translateY(-1px);
+}
+
+.quiz-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.quiz-btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--c-primary-2), var(--c-primary));
+  color: var(--c-on-primary);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--c-primary) 30%, transparent);
+}
+
+.quiz-btn--primary:hover:not(:disabled) {
+  color: var(--c-on-primary);
+  box-shadow: var(--shadow-hover);
+}
+
+.quiz-btn--ghost {
+  background: transparent;
+  border-style: dashed;
+  color: var(--c-text-soft);
+}
+
+.quiz-btn--ghost:hover:not(:disabled) {
+  color: var(--c-text);
+  border-color: var(--c-text-soft);
+}
+
+.quiz-btn--danger {
+  border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border));
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+  color: var(--c-danger);
+}
+
+.quiz-btn--danger:hover:not(:disabled) { border-color: var(--c-danger); color: var(--c-danger); }
+
+.quiz-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-accent) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-accent) var(--mix-ink), var(--c-text));
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.quiz-notice {
+  margin: var(--space) 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+  font-size: 13.5px;
+}
+
+/* ---------------- 进度条 ---------------- */
+.quiz-progress { margin-bottom: var(--space); }
+
+.quiz-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space);
+  font-size: 14px;
+  color: var(--c-text-soft);
+}
+
+.quiz-progress-head b { color: var(--c-text); font-size: 16px; }
+.quiz-progress-count { font-family: var(--font-mono); font-size: 12.5px; }
+
+.quiz-progress-bar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  overflow: hidden;
+}
+
+.quiz-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--c-primary-2), var(--c-primary));
+  transition: width var(--dur-base) var(--ease);
+}
+
+/* ---------------- 题干与标签 ---------------- */
+.quiz-qmeta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+.quiz-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.quiz-tag--chapter {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-primary) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+}
+
+.quiz-tag--type {
+  background: color-mix(in srgb, var(--c-info) var(--mix-soft), var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-info) var(--mix-halo), transparent);
+  color: color-mix(in srgb, var(--c-info) var(--mix-ink), var(--c-text));
+}
+
+.quiz-qtext { margin: 0 0 var(--space); font-size: 17px; font-weight: 700; line-height: 1.65; }
+
+/* ---------------- §2 选项：label + radio（不显示字母） ---------------- */
+.quiz-options { display: grid; gap: 10px; }
+
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 14.5px;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+
+.quiz-option:hover { border-color: var(--c-primary); transform: translateY(-1px); }
+
+.quiz-option input[type="radio"] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--c-primary);
+  cursor: pointer;
+}
+
+.quiz-option-text { flex: 1 1 auto; min-width: 0; }
+
+.quiz-option.is-picked {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  box-shadow: 0 0 0 3px var(--c-focus);
+}
+
+/* ---------------- 结果页 ---------------- */
+.quiz-result-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+/* §3 得分环：内联 SVG circle + stroke-dasharray / stroke-dashoffset
+   + CSS transition 做增长（不用 requestAnimationFrame）。
+   --quiz-score 由 JS 写入（0–100），仅用于无障碍/调试参考；
+   真正的弧长由 JS 直接写 stroke-dashoffset。 */
+.quiz-score {
+  --quiz-score-ink: var(--c-primary);
+  --quiz-ring-dur: 1s;
+
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  width: 118px;
+  height: 118px;
+  padding-top: 40px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-score-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.quiz-score-ring circle { fill: none; stroke-width: 11; }
+
+.quiz-score-track { stroke: color-mix(in srgb, var(--c-border) 70%, transparent); }
+
+.quiz-score-fill {
+  stroke: var(--quiz-score-ink);
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset var(--quiz-ring-dur) var(--ease);
+}
+
+.quiz-score-num,
+.quiz-score-unit { position: relative; }
+.quiz-score-num {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: var(--quiz-score-ink);
+}
+.quiz-score-unit { font-size: 13px; color: var(--c-text-soft); }
+
+.quiz-score.is-best { --quiz-score-ink: var(--c-success); }
+.quiz-score.is-good { --quiz-score-ink: var(--c-info); }
+.quiz-score.is-pass { --quiz-score-ink: var(--c-warn); }
+.quiz-score.is-low  { --quiz-score-ink: var(--c-danger); }
+
+.quiz-result-msg { flex: 1 1 260px; min-width: 0; }
+.quiz-result-meta { margin: 0 0 6px; color: var(--c-text-soft); font-size: 14px; }
+.quiz-result-meta b { color: var(--c-text); font-size: 16px; }
+.quiz-result-hint { margin: 0; color: var(--c-muted); font-size: 13.5px; }
+
+/* 薄弱章节：暖色提示块 + 章节回看入口 */
+.quiz-weak-box {
+  margin-top: var(--space);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-warn) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-warn) var(--mix-halo), transparent);
+}
+
+.quiz-weak-box h4 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: color-mix(in srgb, var(--c-warn) var(--mix-ink), var(--c-text));
+}
+
+.quiz-weak-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.quiz-weak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-2);
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--t-control);
+}
+
+.quiz-weak:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+/* ---------------- 逐题解析 / 错题本 列表 ---------------- */
+.quiz-review,
+.quiz-wrong-list { display: grid; gap: var(--space); margin: 0; padding: 0; list-style: none; }
+
+.quiz-review-item,
+.quiz-wrong-item {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  /* 左侧 4px 竖条常驻、只换颜色，悬浮不会抖 */
+  border-left: 4px solid var(--c-border-2);
+  box-shadow: var(--shadow-xs);
+}
+
+.quiz-review-item.is-ok  { border-left-color: var(--c-success); }
+.quiz-review-item.is-bad { border-left-color: var(--c-danger); }
+.quiz-wrong-item         { border-left-color: var(--c-danger); }
+
+.quiz-review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.quiz-review-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-review-flag { margin-left: auto; color: var(--c-muted); font-size: 13px; font-weight: 700; }
+.quiz-review-item.is-ok  .quiz-review-flag { color: var(--c-success); }
+.quiz-review-item.is-bad .quiz-review-flag { color: var(--c-danger); }
+
+.quiz-review-q { margin: 0 0 8px; font-size: 15px; font-weight: 700; line-height: 1.6; }
+.quiz-review-line { margin: 0 0 10px; color: var(--c-text-soft); font-size: 13.5px; }
+
+/* 正误同时用「颜色 + ✓/✗ 符号」双重编码，不单靠颜色区分（色觉友好） */
+b.is-ok  { color: var(--c-success); }
+b.is-bad { color: var(--c-danger); }
+
+.quiz-review-explain {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.quiz-review-explain span {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-wrong-count {
+  margin-left: auto;
+  color: var(--c-danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------------- 历史成绩 ---------------- */
+.quiz-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: var(--space);
+}
+
+.quiz-stat {
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  text-align: center;
+}
+
+.quiz-stat-num { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+.quiz-stat-label { display: block; color: var(--c-text-soft); font-size: 12.5px; }
+
+.quiz-history { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.quiz-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  font-size: 13.5px;
+}
+
+.quiz-history-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quiz-history-time { color: var(--c-text-soft); font-family: var(--font-mono); font-size: 12.5px; }
+.quiz-history-score { font-weight: 800; }
+.quiz-history-score.is-best { color: var(--c-success); }
+.quiz-history-score.is-good { color: var(--c-info); }
+.quiz-history-score.is-pass { color: var(--c-warn); }
+.quiz-history-score.is-low  { color: var(--c-danger); }
+.quiz-history-detail { color: var(--c-muted); font-size: 12.5px; }
+
+/* ---------------- 小屏适配 ---------------- */
+@media (max-width: 720px) {
+  .quiz-card { padding: var(--space); }
+  .quiz-result-top { gap: var(--space); }
+  .quiz-score { width: 100px; height: 100px; padding-top: 34px; }
+  .quiz-score-num { font-size: 28px; }
+}
+
+/* ---------------- 动效降级 ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .quiz-btn,
+  .quiz-option,
+  .quiz-radio,
+  .quiz-progress-bar span { transition: none; }
+  .quiz-score-fill { transition: none; }
+  .quiz-btn:hover:not(:disabled),
+  .quiz-option:hover { transform: none; }
+}

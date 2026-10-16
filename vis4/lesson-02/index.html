@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 2 章 数据可视化流程 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》第 2 章：Card / Mackinlay / van Wijk 三套流程模型、d3.rollup 数据变换、Reingold–Tilford 树布局与 DOM 事件委托交互。含 4 个可运行演示与 6 道即时自测。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 章节顶栏 ================= -->
+  <header class="course-topbar" data-current="2">
+    <a class="brand" href="../">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">第 2 章 · 数据可视化流程</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="../lesson-01/">第 1 章 数据</a>
+      <a href="./">第 2 章 流程</a>
+      <a href="../lesson-03/">第 3 章 色彩</a>
+      <a href="../lesson-04/">第 4 章 低维</a>
+      <a href="../lesson-05/">第 5 章 时序</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      只看代码
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="../en/lesson-02/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 章节头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>第 2 章 · 数据可视化流程</h1>
+        <p class="subtitle">从「拿到一张表」到「画出一张图」—— <b>流程模型 · 数据变换 · 视觉映射 · 视图交互</b></p>
+      </div>
+      <div class="header-tip">读到哪里看到哪里 · 演示就地渲染 · 自测即时判分</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本章学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说得出 Card / Mackinlay / van Wijk 三个流程模型各自回答什么问题，并画出数据流管道的四段</span></label></li>
+        <li><label><input type="checkbox"><span>用 <code>d3.rollup</code> 把新生记录按「班级 → 性别」聚合成嵌套 Map，并讲清它和 <code>d3.group</code> 的区别</span></label></li>
+        <li><label><input type="checkbox"><span>讲清数据变换的四大操作（清洗 / 聚合 / 连接 / 派生）分别对应 D3 的哪个函数</span></label></li>
+        <li><label><input type="checkbox"><span>用自己的话解释 Reingold–Tilford 三遍遍历，并说明树布局为什么等价于「用位置通道做视觉映射」</span></label></li>
+        <li><label><input type="checkbox"><span>讲清 DOM 事件三阶段与事件委托，说明 <code>stopPropagation</code> 在「切换 vs 选中」里解决了什么问题</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>第 2 章 · 目录</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 4 小节</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-2-1" data-chapter="ch-2-1">2.1 数据可视化流程</a></li>
+        <li><a href="#ch-2-2" data-chapter="ch-2-2">2.2 数据变换</a></li>
+        <li><a href="#ch-2-3" data-chapter="ch-2-3">2.3 视觉映射</a></li>
+        <li><a href="#ch-2-4" data-chapter="ch-2-4">2.4 视图渲染与交互</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本章怎么学</b><br>
+        ① 先勾上方的学习目标；<br>
+        ② 按小节连续往下读，演示会就地渲染；<br>
+        ③ 做完每节自测再进下一节；<br>
+        ④ 复习时点右上角「只看代码」。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 2.1 数据可视化流程 ============ -->
+      <article class="chapter" id="ch-2-1">
+        <h2>2.1 数据可视化流程（Card · Mackinlay · van Wijk）</h2>
+        <p class="chapter-subtitle">三套经典模型描述同一件事的三个侧面：一条管道、一套自动决策、一个反馈环。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>本章从头到尾只用一份数据：<strong>中国石油大学（华东）2025 级新生名册 <code>newstudent.csv</code></strong>，含 <strong>80 条记录、8 列</strong>（序号 / 姓名 / 性别 / 生日 / 年龄 / 班级 / 籍贯 / 民族）。</p>
+        <p>原站的 2.1 给出的是一张「<strong>3 个可视化流程模型</strong>」的概念图。本节课我们把它重画成一张可交互的<strong>数据流管道图</strong>：点击任意一段，就能看到它在三套模型里分别对应什么。</p>
+
+        <table class="theory-table">
+          <caption>三套模型：同一件事的三个侧面</caption>
+          <thead>
+            <tr><th>模型</th><th>作者 / 年份</th><th>回答的问题</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>Card 数据流模型</b></td><td>Card, Mackinlay &amp; Shneiderman, 1999</td><td>「先做什么、后做什么」—— 给出管道的顺序</td></tr>
+            <tr><td><b>Mackinlay 自动化准则</b></td><td>Mackinlay, 1986</td><td>「映射这一步怎么自动决策」—— 选哪条通道</td></tr>
+            <tr><td><b>van Wijk 反馈模型</b></td><td>van Wijk, 2005</td><td>「视图之后怎么把用户操作喂回去」—— 反馈环</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>Card 数据流模型（1999）：可视化的「管道」</h4>
+          <p>把可视化拆成四段：<strong>原始数据（Raw Data）→ 数据表（Data Tables）→ 视觉结构（Visual Structure）→ 视图（Views）</strong>。段与段之间是嵌套变换 <strong>D → T → V → C/L/S</strong>：数据变换（D→T）、视觉映射（T→V）、视图变换（V→C/L/S，即 Camera / Light / Screen）。</p>
+        </div>
+        <div class="theory-card">
+          <h4>Mackinlay 自动化准则（1986）：映射怎么自动决策</h4>
+          <p>对每一种数据类型，自动挑「<strong>量化误差最小</strong>」的视觉通道：<strong>数值型 → 位置</strong>（最准）、<strong>有序型 → 长度 / 密度</strong>、<strong>类别型 → 色调 / 形状</strong>。它解决的是管道里「数据表 → 视觉结构」这一步的选型问题。</p>
+        </div>
+        <div class="theory-card">
+          <h4>van Wijk 反馈模型（2005）：把交互画成一个环</h4>
+          <p>经典管道是单向的，van Wijk 强调<strong>交互反馈循环</strong>：<code>View ⇆ Filter ⇆ Param ⇆ Other Views</code>。用户看图 → 改变筛选 / 参数 → 触发新视图，视图和用户之间是一个闭环，而不是一次性渲染。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 214" role="img" aria-label="Card 数据流管道图：原始数据经数据变换得到数据表，再经视觉映射得到视觉结构，最后经渲染得到视图；视图通过交互反馈回到输入端">
+            <defs>
+              <marker id="f21-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-primary);"/>
+              </marker>
+            </defs>
+
+            <rect x="8" y="58" width="124" height="56" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="70" y="82" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">原始数据</text>
+            <text x="70" y="100" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Raw Data</text>
+
+            <line x1="132" y1="86" x2="171" y2="86" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#f21-arrow)"/>
+            <text x="151" y="50" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">变换</text>
+            <text x="151" y="36" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">D → T</text>
+
+            <rect x="175" y="58" width="124" height="56" rx="10" style="fill: color-mix(in srgb, var(--ch-3) 14%, transparent); stroke: color-mix(in srgb, var(--ch-3) 50%, transparent);"/>
+            <text x="237" y="82" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">数据表</text>
+            <text x="237" y="100" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Data Tables</text>
+
+            <line x1="299" y1="86" x2="338" y2="86" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#f21-arrow)"/>
+            <text x="318" y="50" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">映射</text>
+            <text x="318" y="36" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">T → V</text>
+
+            <rect x="342" y="58" width="124" height="56" rx="10" style="fill: color-mix(in srgb, var(--ch-2) 14%, transparent); stroke: color-mix(in srgb, var(--ch-2) 50%, transparent);"/>
+            <text x="404" y="82" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">视觉结构</text>
+            <text x="404" y="100" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Visual Structure</text>
+
+            <line x1="466" y1="86" x2="505" y2="86" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#f21-arrow)"/>
+            <text x="485" y="50" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">渲染</text>
+            <text x="485" y="36" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">V → C/L/S</text>
+
+            <rect x="509" y="58" width="124" height="56" rx="10" style="fill: color-mix(in srgb, var(--c-success) 14%, transparent); stroke: color-mix(in srgb, var(--c-success) 50%, transparent);"/>
+            <text x="571" y="82" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">视图</text>
+            <text x="571" y="100" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Views</text>
+
+            <path d="M571 114 Q571 172 320 172 Q70 172 70 114" fill="none" stroke-dasharray="4 4" style="stroke: var(--c-warn); stroke-width: 1.4;"/>
+            <text x="320" y="196" text-anchor="middle" style="fill: var(--c-warn); font-size: 11.5px; font-weight: 700;">交互反馈环 · van Wijk：View ⇆ Filter ⇆ Param ⇆ Other Views</text>
+            <text x="320" y="211" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">Card 给「管道」· Mackinlay 给「自动决策」· van Wijk 给「反馈环」—— 三者叠加，不冲突</text>
+          </svg>
+          <figcaption>数据流管道图：四段箭头对应三种变换；下方的虚线是 van Wijk 补上的「反馈环」</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>核心教学要点：</strong>三个模型是<strong>叠加关系，不是冲突关系</strong>。<strong>Card</strong> 告诉你「transform 之后该 mapping，mapping 之后该 view」；<strong>Mackinlay</strong> 告诉你「mapping 这一步怎么自动决策」；<strong>van Wijk</strong> 告诉你「view 之后还要把用户操作 feed 回去」。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> SVG 箭头：&lt;marker&gt; + marker-end</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 1. 在 &lt;defs&gt; 里定义箭头形状，用 id 命名</span>
+svg.append(<span class="str">"defs"</span>).append(<span class="str">"marker"</span>)
+   .attr(<span class="str">"id"</span>, <span class="str">"arrowhead"</span>)
+   .attr(<span class="str">"viewBox"</span>, <span class="str">"0 -5 10 10"</span>)
+   .attr(<span class="str">"refX"</span>, <span class="num">8</span>)            <span class="cmt">// 箭头位置校准：让尖端贴住节点边缘</span>
+   .attr(<span class="str">"orient"</span>, <span class="str">"auto"</span>)      <span class="cmt">// 跟随线段方向自动旋转</span>
+   .append(<span class="str">"path"</span>).attr(<span class="str">"d"</span>, <span class="str">"M0,-5L10,0L0,5"</span>);
+
+<span class="cmt">// 2. 用 marker-end="url(#arrowhead)" 把箭头「装」到线段末端</span>
+svg.append(<span class="str">"line"</span>)
+   .attr(<span class="str">"marker-end"</span>, <span class="str">"url(#arrowhead)"</span>)
+   .attr(<span class="str">"x1"</span>, x1).attr(<span class="str">"y1"</span>, y).attr(<span class="str">"x2"</span>, x2).attr(<span class="str">"y2"</span>, y);</code></pre>
+              <div class="key-point">
+                <p><code>marker-end="url(#arrowhead)"</code> 是 SVG 的<strong>引用</strong>机制 —— 用 URL 把 <code>&lt;defs&gt;</code> 里定义的形状复用到线段末端。<code>refX</code> 决定箭尖相对线段终点的偏移，<code>orient="auto"</code> 让箭头自动转向。<strong>一条 marker 可以服务所有线</strong>，不必为每根箭头各画一个三角。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> classed：一次切换所有节点的状态</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 单选：把所有节点的 selected 状态一次刷新</span>
+svg.selectAll(<span class="str">".node"</span>)
+   .classed(<span class="str">"selected"</span>, n =&gt; n.id === d.id);   <span class="cmt">// 接收布尔函数</span></code></pre>
+              <div class="key-point">
+                <p><code>classed(name, predicate)</code> 接收一个<strong>布尔函数</strong>，一次性切换全部节点的类名，比自己写 <code>forEach</code> + <code>classList.toggle</code> 简洁得多。它只负责<strong>改 class</strong>，真正的外观（高亮、描边）交给 CSS —— 这正是 D3 分离「状态」与「样式」的典型做法。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 数据驱动的管道：把 stage 数组绑成 SVG 节点</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">const</span> STAGES = [<span class="str">"原始数据"</span>, <span class="str">"数据表"</span>, <span class="str">"视觉结构"</span>, <span class="str">"视图"</span>];
+
+svg.selectAll(<span class="str">".stage"</span>).data(STAGES).join(<span class="str">"g"</span>)
+   .attr(<span class="str">"class"</span>, <span class="str">"stage"</span>)
+   .attr(<span class="str">"transform"</span>, (d, i) =&gt; <span class="str">`translate(${i * 160}, 0)`</span>);</code></pre>
+              <div class="key-point">
+                <p>管道的每一段都是「<strong>数据 → 图元</strong>」的一次绑定。把 <code>STAGES</code> 换成别的数组，整张图随之改变 —— 这就是 D3 的核心思想：<strong>document 由 data 驱动</strong>。本章后面的树、列表、聚合图，用的都是同一套 join 模式。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「▶ 逐段点亮」看管道依次亮起，或直接点任意一段 —— 右侧会显示该段的职责、典型操作，以及它在三套模型里分别对应什么。</p>
+          <div class="demo-mount" data-demo="d-2-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>Card 1999 把可视化拆成四段管道：原始数据 → 数据表 → 视觉结构 → 视图，段间是嵌套变换 D→T→V→C/L/S。</li>
+            <li>Mackinlay 1986 负责「映射」这一步的自动决策（数值→位置、类别→色调）；van Wijk 2005 补上「视图 ⇆ 用户」的反馈环。</li>
+            <li>三个模型是<strong>叠加</strong>关系：管道、自动决策、反馈环各管一段，合起来才是完整的可视化流程。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">在 Card 数据流模型里，「给年龄这个属性选出最合适的视觉通道（位置）」属于哪一段箭头？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-1" value="a"><span>原始数据 → 数据表（数据变换）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-1" value="b"><span>数据表 → 视觉结构（视觉映射）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-1" value="c"><span>视觉结构 → 视图（视图渲染）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-1" value="d"><span>以上都不是，通道选择属于交互层</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>「把属性映射到通道」正是<strong>视觉映射（数据表 → 视觉结构）</strong>，也正是 Mackinlay 自动化准则发挥作用的那一段。数据变换（D）只管整理表格，视图渲染（V）只管把已定好的图元画到屏幕上。</p>
+        </div>
+      </article>
+
+      <!-- ============ 2.2 数据变换 ============ -->
+      <article class="chapter" id="ch-2-2">
+        <h2>2.2 数据变换：原数据 → 数据表</h2>
+        <p class="chapter-subtitle">把「按班级分」升级成「按维度组合分」—— 这是管道的第一段箭头，也是可视化的「第一公里」。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>接上节的管道，本节的 <strong>2.2</strong> 处理的正是第一段箭头「<strong>原始数据 → 数据表</strong>」，也就是 <strong>数据变换（Data Transformation）</strong>。</p>
+        <p>原案例用新生数据按「班级 / 专业」做 <strong>rollup 分桶聚合</strong>，核心是 <code>d3.rollup</code> 的链式调用 —— 一个函数完成多维度分组。本节课把它做成一段可单步的<strong>折叠动画</strong>：80 条明细 → 按班级分组计数 → 再按性别嵌套聚合。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>数据变换的四大操作（Card 1999 · D 层）</h4>
+          <p>从「原始数据」到「数据表」，D 层做四类操作。原文 2.2 只讲了「分桶聚合」，这里把它放进完整的框架里 —— 你会看到聚合只是其中一行。</p>
+          <table class="theory-table">
+            <thead><tr><th>操作</th><th>做什么</th><th>D3 实现</th></tr></thead>
+            <tbody>
+              <tr><td><b>清洗 / 过滤</b></td><td>去缺失、去异常，筛选满足条件的行</td><td><code>.filter()</code>、<code>d3.csv(url, row)</code> 回调</td></tr>
+              <tr><td><b>聚合 / 汇总</b></td><td>按 key 分组，把同组归约为一个值</td><td><code>d3.rollup()</code>、<code>d3.group()</code></td></tr>
+              <tr><td><b>连接 / 关联</b></td><td>按键把两张表拼起来（学生表 join 班级表）</td><td><code>d3.map</code> + 手动索引</td></tr>
+              <tr><td><b>派生 / 衍生</b></td><td>由已有列算出新列（从「班级」切出「专业」）</td><td>row 回调里算一个新字段</td></tr>
+            </tbody>
+          </table>
+          <p><strong>本节演示的 rollup 聚合，属于「聚合」这一行。</strong>读懂这张表，你才知道数据变换是整个流水线的「第一公里」—— 数据表没整理好，后面的映射与渲染全都白搭。</p>
+        </div>
+        <div class="theory-card">
+          <h4>d3.rollup = 「按 key 分桶、再 reduce 一次」的函数式组合</h4>
+          <p><code>d3.rollup(data, reducer, ...keys)</code> 返回的是 <strong>Map</strong>（不是数组、也不是普通对象），所以遍历要用 <code>for ([k, v] of m)</code> 或 <code>m.entries()</code>；嵌套 rollup 得到的是<strong>嵌套 Map</strong>。<br>
+          与 <code>d3.group</code> 的区别一句话：<strong>rollup 把组内数据归约成一个值，group 保留原数组</strong>。</p>
+        </div>
+        <div class="theory-card">
+          <h4>OLAP 切片 / 切块 / 钻取（Codd 1993）</h4>
+          <table class="theory-table">
+            <thead><tr><th>OLAP 操作</th><th>实际对应</th></tr></thead>
+            <tbody>
+              <tr><td><b>切片</b> Slice</td><td>固定一个维度（只看 2025 级）→ <code>.filter()</code> 后再 rollup</td></tr>
+              <tr><td><b>切块</b> Dice</td><td>按两个维度分组 → 双 key rollup</td></tr>
+              <tr><td><b>钻取</b> Drill</td><td>层层下钻 → 嵌套 rollup + 递归展开</td></tr>
+            </tbody>
+          </table>
+          <p>可视化系统的「下钻交互」，背后通常就是 <strong>rollup + hierarchy</strong> 的组合。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 236" role="img" aria-label="数据聚合的三层折叠：左边是 80 条明细表，中间按班级分组计数，右边再按性别嵌套聚合得到嵌套 Map">
+            <defs>
+              <marker id="f22-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-muted);"/>
+              </marker>
+            </defs>
+
+            <text x="8" y="16" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">① 明细表</text>
+            <text x="8" y="31" style="fill: var(--c-muted); font-size: 10.5px;">80 行 × 3 列</text>
+            <rect x="8" y="40" width="164" height="126" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <g style="fill: var(--c-muted); font-size: 10.5px;">
+              <text x="18" y="60">张明 · 软件1班 · 男</text>
+              <text x="18" y="82">李华 · 软件1班 · 女</text>
+              <text x="18" y="104">王芳 · 软件1班 · 女</text>
+              <text x="18" y="126">刘强 · 数据1班 · 男</text>
+              <text x="18" y="148">孙七 · 数据2班 · 女</text>
+              <text x="18" y="162" style="fill: var(--c-muted); font-style: italic;">⋮ 共 80 条</text>
+            </g>
+
+            <line x1="176" y1="103" x2="210" y2="103" style="stroke: var(--c-muted); stroke-width: 1.4;" marker-end="url(#f22-arrow)"/>
+            <text x="193" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 10.5px; font-weight: 700;">rollup</text>
+            <text x="193" y="120" text-anchor="middle" style="fill: var(--c-muted); font-size: 10px;">key=班级</text>
+
+            <text x="218" y="16" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">② 分组计数</text>
+            <text x="218" y="31" style="fill: var(--c-muted); font-size: 10.5px;">Map(班级 → 人数)</text>
+            <g>
+              <rect x="218" y="40" width="176" height="34" rx="8" style="fill: color-mix(in srgb, var(--ch-1) 14%, transparent); stroke: color-mix(in srgb, var(--ch-1) 46%, transparent);"/>
+              <text x="230" y="61" style="fill: var(--c-text); font-size: 11.5px;">软件工程1班</text>
+              <text x="386" y="61" text-anchor="end" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">24</text>
+              <rect x="218" y="80" width="176" height="34" rx="8" style="fill: color-mix(in srgb, var(--ch-3) 14%, transparent); stroke: color-mix(in srgb, var(--ch-3) 46%, transparent);"/>
+              <text x="230" y="101" style="fill: var(--c-text); font-size: 11.5px;">数据科学1班</text>
+              <text x="386" y="101" text-anchor="end" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">28</text>
+              <rect x="218" y="120" width="176" height="34" rx="8" style="fill: color-mix(in srgb, var(--ch-2) 14%, transparent); stroke: color-mix(in srgb, var(--ch-2) 46%, transparent);"/>
+              <text x="230" y="141" style="fill: var(--c-text); font-size: 11.5px;">数据科学2班</text>
+              <text x="386" y="141" text-anchor="end" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">28</text>
+            </g>
+
+            <line x1="398" y1="103" x2="432" y2="103" style="stroke: var(--c-muted); stroke-width: 1.4;" marker-end="url(#f22-arrow)"/>
+            <text x="415" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 10.5px; font-weight: 700;">rollup</text>
+            <text x="415" y="120" text-anchor="middle" style="fill: var(--c-muted); font-size: 10px;">key=性别</text>
+
+            <text x="440" y="16" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">③ 嵌套聚合</text>
+            <text x="440" y="31" style="fill: var(--c-muted); font-size: 10.5px;">Map(班级 → Map(性别 → 人数))</text>
+            <rect x="440" y="40" width="192" height="92" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="450" y="58" style="fill: var(--c-text); font-size: 11px; font-weight: 700;">软件工程1班</text>
+            <text x="458" y="78" style="fill: var(--c-text-soft); font-size: 11px;">├─ 男　12</text>
+            <text x="458" y="96" style="fill: var(--c-text-soft); font-size: 11px;">└─ 女　12</text>
+            <text x="450" y="118" style="fill: var(--c-text); font-size: 11px; font-weight: 700;">数据科学1班 ……</text>
+
+            <rect x="8" y="180" width="624" height="44" rx="10" style="fill: color-mix(in srgb, var(--c-primary) 8%, transparent); stroke: color-mix(in srgb, var(--c-primary) 26%, transparent);"/>
+            <text x="320" y="200" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">层层折叠：80 行 → 3 个班级 → 3 个班级 × 2 性别</text>
+            <text x="320" y="216" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">每加一层 key，就用 rest 参数 …keys 多传一个分组函数 —— 这就是 OLAP 的「维度组合」</text>
+          </svg>
+          <figcaption>聚合的三层折叠：明细表 →（按班级）分组计数 →（再按性别）嵌套聚合</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 双层 rollup：返回嵌套 Map</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 外层 key = 班级，内层 key = 性别，reducer = 计数</span>
+<span class="kw">const</span> nested = d3.rollup(
+  students,
+  v =&gt; v.length,          <span class="cmt">// 把同组归约为一个值（数人数）</span>
+  d =&gt; d.class,           <span class="cmt">// 外层 key</span>
+  d =&gt; d.gender           <span class="cmt">// 内层 key（rest 参数，可继续加）</span>
+);
+
+<span class="cmt">// 遍历嵌套 Map：</span>
+<span class="kw">for</span> (<span class="kw">const</span> [cls, inner] <span class="kw">of</span> nested) {
+  <span class="kw">for</span> (<span class="kw">const</span> [gender, count] <span class="kw">of</span> inner) {
+    console.log(cls, gender, count);   <span class="cmt">// 软件工程1班 男 12</span>
+  }
+}</code></pre>
+              <div class="key-point">
+                <p><code>d3.rollup</code> 的 key 参数是<strong>rest 参数</strong>（<code>...keys</code>）：传 1 个 → 单层 Map，传 2 个 → 嵌套 Map，传 3 个 → 三层嵌套。返回的是 <code>Map</code>，所以遍历用 <code>for...of</code> 或 <code>.entries()</code>，不是 <code>Object.keys</code>。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 用正则从「班级」切出「专业」</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">const</span> data = <span class="kw">await</span> d3.csv(<span class="str">"./data/newstudent.csv"</span>, d =&gt; {
+  <span class="kw">const</span> cls = d[<span class="str">"班级"</span>].trim();
+  <span class="kw">const</span> m = cls.match(<span class="str">/^(.+?)(\d+班)$/</span>);  <span class="cmt">// 中间非贪婪 + 末尾「数字+班」</span>
+  <span class="kw">return</span> {
+    id:     <span class="kw">+</span>d[<span class="str">"序号"</span>],
+    name:   d[<span class="str">"姓名"</span>].trim(),
+    class:  cls,
+    gender: d[<span class="str">"性别"</span>].trim(),
+    major:  m ? m[<span class="num">1</span>] : cls,   <span class="cmt">// "软件工程1班" → "软件工程"</span>
+  };
+});</code></pre>
+              <div class="key-point">
+                <p>正则里 <code>.+?</code> 是<strong>非贪婪</strong>匹配：让中间尽可能短，把 <code>\d+班</code> 留给末尾。若写成贪婪的 <code>.+</code>，它会把整串都匹配走，<code>m[1]</code> 就是 <code>undefined</code>。这类正则坑学生常踩，必须掌握。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> group 与 rollup 的一句话区别</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// group：分组「保留」——每个 key 下是完整的元素数组</span>
+<span class="kw">const</span> byClass = d3.group(students, d =&gt; d.class);
+
+<span class="cmt">// rollup：分组「聚合」——每个 key 下只有一个归约值</span>
+<span class="kw">const</span> countByClass = d3.rollup(students, v =&gt; v.length, d =&gt; d.class);</code></pre>
+              <div class="key-point">
+                <p>一句话记住：<strong>group 是分组保留，rollup 是分组聚合</strong>。如果「人数」和「名单」都要（后面还要下钻），用 <code>group</code>；只要汇总数字，用 <code>rollup</code> 更紧凑。本节演示的折叠动画，两级都用 <code>rollup</code>。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「下一步」看 80 条明细如何逐层折叠成嵌套 Map；也可以「上一步」回退或「重放」。左侧会同步打印 <code>d3.rollup</code> 的输出。</p>
+          <div class="demo-mount" data-demo="d-2-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>数据变换是管道的「第一公里」，含清洗 / 聚合 / 连接 / 派生四类操作，rollup 只是其中的「聚合」。</li>
+            <li><code>d3.rollup(data, reducer, ...keys)</code> 返回 <strong>Map</strong>（嵌套则返回嵌套 Map），keys 是 rest 参数 —— 加一层 key 就多一级分组。</li>
+            <li><code>group</code> 保留每组原数组，<code>rollup</code> 只留聚合值；正则 <code>/^(.+?)(\d+班)$/</code> 里的 <code>.+?</code> 非贪婪是切出「专业」的关键。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">执行 <code>d3.rollup(students, v =&gt; v.length, d =&gt; d.class)</code>，返回值是什么？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2a" value="a"><span>一个数组，长度等于班级数</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2a" value="b"><span>一个普通对象，键是班级名、值是人数字符串</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2a" value="c"><span>一个 <code>Map</code>，键是班级名、值是人数</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2a" value="d"><span>一个 <code>Map</code>，键是班级名、值是完整的学生数组</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden><code>rollup</code> 返回 <strong>Map</strong>；因为给了 reducer <code>v =&gt; v.length</code>，每组只保留一个聚合值（人数），所以<strong>不是保留原数组</strong>（那才是 <code>group</code> 的行为）。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q">正则 <code>/^(.+?)(\d+班)$/</code> 里的 <code>.+?</code> 若改成贪婪的 <code>.+</code>，对 <code>"数据科学2班"</code> 会怎样？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2b" value="a"><span>仍能正确切出「数据科学」，结果不变</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2b" value="b"><span>整串被 <code>.+</code> 吃掉，<code>m[1]</code> 变成 <code>undefined</code> 或空</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2b" value="c"><span>会抛语法错误，正则无法编译</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-2b" value="d"><span>切出的专业会多一个「2」，变成「数据科学2」</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>贪婪的 <code>.+</code> 会先尽量「吃」掉尽可能多的字符，导致留给 <code>\d+班</code> 的部分几乎为空，第 1 个捕获组拿不到「专业」。<strong>非贪婪 <code>.+?</code> 让它尽量少吃</strong>，把「数字+班」留给后面 —— 这才是正确切分的关键。</p>
+        </div>
+      </article>
+
+      <!-- ============ 2.3 视觉映射 ============ -->
+      <article class="chapter" id="ch-2-3">
+        <h2>2.3 视觉映射：数据表 → 视觉结构</h2>
+        <p class="chapter-subtitle">拿到层级数据后，怎么把节点摆到屏幕上不打架？—— Reingold–Tilford 算法，本质是一次「位置通道」的视觉映射。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>接上节，我们有了「数据表」。本节的 <strong>2.3</strong> 是第二段箭头「<strong>数据表 → 视觉结构</strong>」，也就是 <strong>视觉映射（Visual Mapping）</strong>。它回答一个核心问题：<em>数据里每个属性，该用哪个视觉通道来表达？</em></p>
+        <p>原案例提到「树形结构可视化」。本节课展开<strong>树布局算法</strong>原理 —— 用「班级 / 性别」分组得到一棵层级树，然后把它稳稳地摆到屏幕上。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>视觉通道与 Mackinlay 排名（1986）</h4>
+          <p><strong>视觉通道</strong>是「把数据编码到视觉元素上」的载体：位置、长度、面积、角度、颜色、形状、纹理……Mackinlay 1986 给出经典排名：对<strong>不同数据类型</strong>，各通道的<strong>量化精确度</strong>不一样。</p>
+          <table class="theory-table">
+            <thead><tr><th>数据类型</th><th>通道精确度排序（高 → 低）</th></tr></thead>
+            <tbody>
+              <tr><td><b>定量</b> Quantitative</td><td>位置 → 长度 → 角度 → 斜率 → 面积</td></tr>
+              <tr><td><b>有序</b> Ordinal</td><td>位置 → 密度 → 饱和度 → 亮度 → 体积</td></tr>
+              <tr><td><b>名义</b> Nominal</td><td>位置 → 色调 → 纹理 → 连接 → 形状</td></tr>
+            </tbody>
+          </table>
+          <p><strong>位置（Position）永远第一</strong> —— 三种数据类型都最准，人眼对位置最敏感。</p>
+        </div>
+        <div class="theory-card">
+          <h4>两类通道：幅度 vs 标识</h4>
+          <p>按「能不能表达量的多少」，通道分两类：<strong>幅度通道（Magnitude）</strong>表达<em>有序 / 定量</em>属性（共用尺度位置最准，长度 / 倾斜 / 面积次之，亮度 / 饱和度 / 体积最弱）；<strong>标识通道（Identity）</strong>表达<em>类别</em>属性（空间区域、色调、运动、形状 —— 能区分「不同类」，但分不出「谁多谁少」）。选错类别 = 误导读者。</p>
+        </div>
+        <div class="theory-card">
+          <h4>Reingold–Tilford 算法：树布局的核心（1981）</h4>
+          <p>至今仍是 <code>d3.tree()</code> 的实现核心，核心思路分三遍遍历：</p>
+          <ol>
+            <li><strong>第一遍（自底向上）：</strong>对每个父节点，计算其左右子树「占用多少横向空间」。</li>
+            <li><strong>第二遍（自顶向下）：</strong>给每个节点分配<strong>绝对 x 坐标</strong>（保证兄弟节点紧贴父节点中线且不重叠）。</li>
+            <li><strong>第三遍：</strong>处理「线程 (threads)」—— 修复子节点跨父中线时的对齐。</li>
+          </ol>
+          <p>复杂度 <strong>O(n)</strong>。整个算法做的就是「用位置通道把层级关系编码成父上子下的树」—— 所以树布局本质上就是一次视觉映射。</p>
+        </div>
+        <div class="theory-card">
+          <h4>d3-hierarchy 模块全家桶</h4>
+          <table class="theory-table">
+            <thead><tr><th>API</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>hierarchy(data)</code></td><td>把嵌套 data 转成 hierarchy（补 parent / children / depth）</td></tr>
+              <tr><td><code>tree().size([h, w])</code></td><td>Reingold–Tilford 算法，左右布局（本节的演示用的就是它）</td></tr>
+              <tr><td><code>cluster().size([h, w])</code></td><td>所有叶子对齐到同一深度</td></tr>
+              <tr><td><code>treemap().tile(...)</code></td><td>面积布局（slice-and-dice / squarified）</td></tr>
+              <tr><td><code>pack().radius(...)</code> / <code>partition()</code></td><td>圆环打包 / icicle·sunburst 布局</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Mackinlay 通道排名：定量、有序、名义三类数据各自的视觉通道精确度排序，位置永远排第一">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 11.5px;">数据类型</text>
+            <text x="640" y="14" text-anchor="end" style="fill: var(--c-muted); font-size: 11.5px;">视觉通道 · 量化精确度 高 → 低</text>
+
+            <text x="0" y="52" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">定量</text>
+            <text x="0" y="68" style="fill: var(--c-muted); font-size: 10.5px;">Quantitative</text>
+            <rect x="92" y="34" width="106" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-1) 82%, transparent);"/><text x="145" y="52" text-anchor="middle" style="fill: var(--c-on-primary); font-size: 11.5px; font-weight: 700;">位置</text>
+            <rect x="206" y="34" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-1) 60%, transparent);"/><text x="255" y="52" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">长度</text>
+            <rect x="312" y="34" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-1) 44%, transparent);"/><text x="361" y="52" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">角度</text>
+            <rect x="418" y="34" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-1) 30%, transparent);"/><text x="467" y="52" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">斜率</text>
+            <rect x="524" y="34" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-1) 18%, transparent); stroke: var(--c-border-2);"/><text x="573" y="52" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">面积</text>
+
+            <text x="0" y="112" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">有序</text>
+            <text x="0" y="128" style="fill: var(--c-muted); font-size: 10.5px;">Ordinal</text>
+            <rect x="92" y="94" width="106" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-3) 82%, transparent);"/><text x="145" y="112" text-anchor="middle" style="fill: var(--c-on-primary); font-size: 11.5px; font-weight: 700;">位置</text>
+            <rect x="206" y="94" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-3) 60%, transparent);"/><text x="255" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">密度</text>
+            <rect x="312" y="94" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-3) 44%, transparent);"/><text x="361" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">饱和度</text>
+            <rect x="418" y="94" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-3) 30%, transparent);"/><text x="467" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">亮度</text>
+            <rect x="524" y="94" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-3) 18%, transparent); stroke: var(--c-border-2);"/><text x="573" y="112" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">体积</text>
+
+            <text x="0" y="172" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">名义</text>
+            <text x="0" y="188" style="fill: var(--c-muted); font-size: 10.5px;">Nominal</text>
+            <rect x="92" y="154" width="106" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-2) 82%, transparent);"/><text x="145" y="172" text-anchor="middle" style="fill: var(--c-on-primary); font-size: 11.5px; font-weight: 700;">位置</text>
+            <rect x="206" y="154" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-2) 60%, transparent);"/><text x="255" y="172" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">色调</text>
+            <rect x="312" y="154" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-2) 44%, transparent);"/><text x="361" y="172" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">纹理</text>
+            <rect x="418" y="154" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-2) 30%, transparent);"/><text x="467" y="172" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">连接</text>
+            <rect x="524" y="154" width="98" height="26" rx="7" style="fill: color-mix(in srgb, var(--ch-2) 18%, transparent); stroke: var(--c-border-2);"/><text x="573" y="172" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">形状</text>
+
+            <text x="0" y="214" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">↑ 三类数据的第一名都是「位置」—— 树布局正是用位置通道把层级摆开</text>
+            <text x="0" y="232" style="fill: var(--c-muted); font-size: 10.5px;">色块越实＝精确度越高；这是 Mackinlay 1986 排名示意（内联 SVG，无位图）</text>
+          </svg>
+          <figcaption>Mackinlay 通道排名：定量 / 有序 / 名义三类数据的通道精确度排序，位置永远第一</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> hierarchy + tree：树布局三步走</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 1. hierarchy：嵌套数据 → 补上 parent / children / depth</span>
+<span class="kw">const</span> root = d3.hierarchy(rootData);
+
+<span class="cmt">// 2. tree 布局（Reingold–Tilford）：算 x / y 坐标</span>
+<span class="kw">const</span> treeData = d3.tree().size([<span class="num">360</span>, <span class="num">720</span>])(root);
+
+<span class="cmt">// 3. links：父—子连线；注意 x=d.y、y=d.x 的「交换」</span>
+g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span class="str">"path"</span>)
+  .attr(<span class="str">"d"</span>, d3.linkHorizontal().x(d =&gt; d.y).y(d =&gt; d.x));
+
+<span class="cmt">// 4. nodes：每个节点 translate 到 (y, x)</span>
+<span class="kw">const</span> ng = g.selectAll(<span class="str">".node"</span>).data(treeData.descendants()).join(<span class="str">"g"</span>)
+  .attr(<span class="str">"transform"</span>, d =&gt; <span class="str">`translate(${d.y}, ${d.x})`</span>);</code></pre>
+              <div class="key-point">
+                <p><code>treeData.x</code> 是<strong>深度方向</strong>（垂直），<code>treeData.y</code> 是<strong>水平方向</strong>（同层不同节点）。所以横向树里 <code>linkHorizontal</code> 必须写 <code>x = d.y, y = d.x</code> 这样<strong>交换</strong>，直接把 <code>d.x</code> 当横坐标会把连线连错。这种「x 轴走 y、y 轴走 x」的 swap 是横向树特有的。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> separation：控制兄弟节点间距</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">const</span> treeLayout = d3.tree()
+  .size([<span class="num">360</span>, <span class="num">720</span>])
+  .separation((a, b) =&gt; (a.parent === b.parent ? <span class="num">1</span> : <span class="num">2</span>));
+<span class="cmt">//                              ↑ 兄弟紧贴        ↑ 不同父至少隔 2 倍</span></code></pre>
+              <div class="key-point">
+                <p><code>separation</code> 接收一个函数，返回两个节点之间的「间隔倍数」。默认兄弟 1、非兄弟 2；调小到 <code>0.5</code> 全部挤在一起，调大到 <code>2.0</code> 树变宽。<strong>本质上就是给「位置通道」再加一条约束</strong> —— 兄弟之间要留够间距。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 从 rollup 的 Map 搭出 hierarchy 树</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 把嵌套 Map 递归转成 { name, children } 的普通对象树</span>
+<span class="kw">function</span> toTree(node, label) {
+  <span class="kw">if</span> (node <span class="kw">instanceof</span> Map) {
+    <span class="kw">const</span> children = [];
+    <span class="kw">for</span> (<span class="kw">const</span> [k, v] <span class="kw">of</span> node) children.push(toTree(v, k));
+    <span class="kw">return</span> { name: label, children };
+  }
+  <span class="kw">return</span> { name: <span class="str">`${label} (${node.length})`</span> };   <span class="cmt">// 叶子</span>
+}
+
+<span class="kw">const</span> root = d3.hierarchy(toTree(nested, <span class="str">"2025 级新生"</span>));</code></pre>
+              <div class="key-point">
+                <p>上节的 <code>rollup</code> 产出嵌套 Map，本节的 <code>hierarchy</code> 要的是 <code>{ name, children }</code>。中间这一步「递归转换」是把<strong>数据变换</strong>接到<strong>视觉映射</strong>的桥 —— 这一步做完，树的形状就定死了，剩下的只是把位置算出来。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「下一步」逐步求解：先看未布局时节点全部重叠，再走 Reingold–Tilford 的三遍 —— 自底向上量宽度 → 自顶向下定坐标 → 对齐收尾。</p>
+          <div class="demo-mount" data-demo="d-2-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>视觉映射 = 给每个数据属性挑通道；Mackinlay 1986 排名里「位置」对三种数据类型都最准，所以树布局优先用位置。</li>
+            <li>通道分两类：幅度通道（有序/定量，如位置、长度）与标识通道（类别，如色调、形状），选错类别就会误导读者。</li>
+            <li>Reingold–Tilford 三遍遍历（自底向上量宽度 → 自顶向下定 x → 处理 threads）复杂度 O(n)，是 <code>d3.tree()</code> 的核心。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="a">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">横向树（<code>d3.tree().size([360, 720])</code>）里，<code>linkHorizontal().x(d =&gt; d.y).y(d =&gt; d.x)</code> 为什么要交换 x、y？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3a" value="a"><span>因为 <code>treeData.y</code> 才是水平方向、<code>treeData.x</code> 是深度方向</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3a" value="b"><span>因为 SVG 的坐标系 y 轴向下，需要翻转</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3a" value="c"><span>因为要用非贪婪匹配才能拿到坐标</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3a" value="d"><span>没理由，写反了也能得到正确结果</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden><code>d3.tree</code> 输出的 <code>x</code> 是<strong>深度方向</strong>（默认垂直）、<code>y</code> 是<strong>水平方向</strong>（同一深度的不同节点）。要做成横向树，就得把水平方向交给 x、深度方向交给 y —— 所以 <code>linkHorizontal</code> 里写成 <code>x = d.y, y = d.x</code>。不做这个交换，连线会把父子连到错误的方向上。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="d">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q">把「专业」（软件工程 / 数据科学，无顺序）映射到<strong>色相</strong>、把「年龄」映射到<strong>位置</strong>，这两种做法分别用到了哪类通道？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3b" value="a"><span>两者都是幅度通道</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3b" value="b"><span>两者都是标识通道</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3b" value="c"><span>专业用幅度通道，年龄用标识通道</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-3b" value="d"><span>专业用标识通道（色相），年龄用幅度通道（位置）</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>专业是<strong>类别</strong>属性 → 用标识通道（色相）区分「不同类」；年龄是<strong>定量</strong>属性 → 用幅度通道（位置）表达「多与少」。两者都挑对了：如果反过来把年龄塞进色相，读者就无法判断谁大谁小。</p>
+        </div>
+      </article>
+
+      <!-- ============ 2.4 视图渲染与用户交互 ============ -->
+      <article class="chapter" id="ch-2-4">
+        <h2>2.4 视图渲染与用户交互</h2>
+        <p class="chapter-subtitle">把树画成可折叠的 HTML 列表 —— 一路踩过点击、冒泡、委托三个坑，最后用动画补上「时间维」。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>接上节，我们有了「视觉结构」。本节 <strong>2.4</strong> 是最后两段箭头：「<strong>视觉结构 → 视图</strong>」（渲染）和「<strong>视图 ↔ 用户</strong>」（交互反馈）。Card 模型的 V 层，加上 van Wijk 的反馈环，都落在这里。</p>
+        <p>原文档用了 <code>classed</code> 控制节点样式、用 <code>stopPropagation</code> 阻止冒泡，重点是把 D3 树布局的输出变成<strong>可交互的 HTML 列表</strong>。本节课把「事件冒泡」做成一段可点、可看的示踪动画。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>DOM 事件三阶段</h4>
+          <p>浏览器的事件流分三阶段（DOM 规范）：</p>
+          <ol>
+            <li><strong>捕获（capturing）：</strong>window → document → … → 目标元素（从外到内）</li>
+            <li><strong>目标（target）：</strong>目标元素本身</li>
+            <li><strong>冒泡（bubbling）：</strong>目标元素 → … → document → window（从内到外）</li>
+          </ol>
+          <p>默认监听的是<strong>冒泡阶段</strong>。你可以在监听器里 <code>e.stopPropagation()</code> 截断冒泡，让上层的监听器不再触发。</p>
+        </div>
+        <div class="theory-card">
+          <h4>事件委托（Event Delegation）</h4>
+          <p><strong>问题：</strong>列表里有 1000 个 <code>li</code>，给每个 <code>li</code> 都绑 click 监听器 → 慢、内存大、新增元素还要重新绑。<br>
+          <strong>解法：</strong>只给父元素（<code>ul</code>）绑 <strong>1 个</strong> click 监听器，靠冒泡统一收口；用 <code>e.target.closest('.label')</code> 找到「实际被点的子元素」。<br>
+          <strong>优势：</strong>1 个监听器代替 N 个，未来新增的元素自动支持。</p>
+        </div>
+        <div class="theory-card">
+          <h4>动画：视图渲染的「时间维」</h4>
+          <p>动画（transition）不是「花哨」，而是视图渲染在<em>时间维</em>上的展开。D3 用 <code>.transition().duration(ms)</code> 让属性从旧值<strong>平滑过渡</strong>到新值。教学价值集中在 <code>duration</code> 这一个参数：</p>
+          <ul>
+            <li><code>duration = 0</code>：瞬间跳变，看不出「变化过程」；</li>
+            <li><code>duration = 500</code>：0.5 秒过渡，能看清展开 / 收缩 / 位移的流畅过程；</li>
+            <li><code>duration &gt; 1500</code>：太慢，学生开始走神。</li>
+          </ul>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 230" role="img" aria-label="DOM 事件传播三阶段：事件先沿 window→document→ul→li→span 自上而下捕获，到达目标 span 后再自下而上冒泡；父级 ul 上的委托监听器在冒泡阶段被触发">
+            <defs>
+              <marker id="f24-cap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-info);"/>
+              </marker>
+              <marker id="f24-bub" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-success);"/>
+              </marker>
+            </defs>
+
+            <text x="118" y="20" text-anchor="middle" style="fill: var(--c-info); font-size: 11.5px; font-weight: 700;">捕获 ↓ 从外到内</text>
+            <text x="522" y="20" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">冒泡 ↑ 从内到外</text>
+
+            <rect x="238" y="30" width="164" height="26" rx="7" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="320" y="47" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">window</text>
+
+            <rect x="238" y="62" width="164" height="26" rx="7" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="320" y="79" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">document</text>
+
+            <rect x="238" y="94" width="164" height="26" rx="7" style="fill: color-mix(in srgb, var(--c-success) 18%, transparent); stroke: var(--c-success);"/>
+            <text x="320" y="111" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">ul　★ 委托监听器在这里</text>
+
+            <rect x="238" y="126" width="164" height="26" rx="7" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="320" y="143" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">li　（可在这一层 stopPropagation）</text>
+
+            <rect x="238" y="158" width="164" height="26" rx="7" style="fill: color-mix(in srgb, var(--c-accent-2) 24%, transparent); stroke: color-mix(in srgb, var(--c-accent) 60%, transparent);"/>
+            <text x="320" y="175" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">span ← 目标（e.target）</text>
+
+            <line x1="212" y1="36" x2="212" y2="170" style="stroke: var(--c-info); stroke-width: 1.5; stroke-dasharray: 4 4;" marker-end="url(#f24-cap)"/>
+            <line x1="428" y1="176" x2="428" y2="42" style="stroke: var(--c-success); stroke-width: 1.5;" marker-end="url(#f24-bub)"/>
+
+            <text x="320" y="206" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px;">点中 span → 事件在冒泡阶段一路向上，被 ul 上的<strong>唯一</strong>监听器接住</text>
+            <text x="320" y="222" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">在 li 上调用 stopPropagation()，冒泡链就在这里断开，ul 的监听器不再触发</text>
+          </svg>
+          <figcaption>DOM 事件传播：捕获自外向内、冒泡自内向外；事件委托就发生在冒泡阶段的父级</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 事件委托：父级绑一次，子级全受益</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 只在父级 ul 上绑一次 click（事件委托）</span>
+ul.addEventListener(<span class="str">"click"</span>, (e) =&gt; {
+  <span class="kw">const</span> li = e.target.closest(<span class="str">"li"</span>);   <span class="cmt">// 找到「实际被点的行」</span>
+  <span class="kw">if</span> (!li || !ul.contains(li)) <span class="kw">return</span>;
+  pick(li);                            <span class="cmt">// 统一处理选中</span>
+});</code></pre>
+              <div class="key-point">
+                <p>1000 个 <code>li</code> 各绑 1 个监听器 → 慢且费内存；改成父级绑 1 次，靠冒泡统一收口。<code>e.target.closest("li")</code> 负责从「真正被点的元素」回溯到「我们关心的行」，即使点击落在行内的图标或文字上也能正确命中。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> toggle 与 select 的冲突：stopPropagation</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 折叠箭头：阻止冒泡，别触发父级的「选中」</span>
+label.addEventListener(<span class="str">"click"</span>, (e) =&gt; {
+  e.stopPropagation();       <span class="cmt">// ⭐ 截断冒泡</span>
+  node._collapsed = !node._collapsed;
+  render();
+});
+
+<span class="cmt">// 行选中：只会被「非 toggle」的点击触发</span>
+li.addEventListener(<span class="str">"click"</span>, () =&gt; pick(li));</code></pre>
+              <div class="key-point">
+                <p>不 <code>stopPropagation</code> 的话，点折叠箭头会<strong>同时</strong>触发「切换折叠」和「选中节点」，用户看着会困惑。这是 DOM 事件机制的核心教学点：<strong>一个点击，两个监听器，用截断冒泡来分工</strong>。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> transition + duration：给渲染补上时间维</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code>svg.selectAll(<span class="str">".node"</span>)
+  .transition()                          <span class="cmt">// 进入过渡状态</span>
+  .duration(<span class="kw">DURATION</span>)                  <span class="cmt">// 时长（ms），由滑块控制</span>
+  .attr(<span class="str">"transform"</span>, d =&gt; <span class="str">`translate(${d.y}, ${d.x})`</span>)
+  .attr(<span class="str">"opacity"</span>, <span class="num">1</span>);
+
+<span class="cmt">// 新节点：先设 opacity=0，再过渡到 1 → 淡入效果</span>
+ng.attr(<span class="str">"opacity"</span>, <span class="num">0</span>)
+  .transition().duration(<span class="kw">DURATION</span>).attr(<span class="str">"opacity"</span>, <span class="num">1</span>);</code></pre>
+              <div class="key-point">
+                <p><code>duration = 0</code> 是瞬间跳变、看不出过程；<code>500</code> 能看清展开 / 收缩；超过 <code>1500</code> 就太慢会走神。动画把「视图渲染」从一帧变成一段时间里的连续过程，也是 van Wijk 反馈环最直观的体现。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点最里层的子元素，看事件如何沿 DOM 树向上冒泡到父级监听器；勾上「在 li 层截断冒泡」再点一次，对比路径的差别。右侧还有「逐个绑定 vs 事件委托」的监听器数量对比。</p>
+          <div class="demo-mount" data-demo="d-2-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>DOM 事件三阶段：捕获（自外向内）→ 目标 → 冒泡（自内向外）；默认监听的是冒泡阶段。</li>
+            <li>事件委托 = 父级绑 1 个监听器 + <code>e.target.closest()</code> 定位子元素，用 1 个监听器代替 N 个，新增元素自动生效。</li>
+            <li>toggle 与 select 分工靠 <code>stopPropagation()</code> 截断冒泡；动画的 <code>duration</code> 则是视图渲染的「时间维」。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">一个列表有 1000 个 <code>li</code>，且会不断新增。用事件委托相比「给每个 <code>li</code> 各绑一个 click」，最本质的好处是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="a"><span>点击响应更快，因为监听器在父级、离屏幕中心更近</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="b"><span>只需 1 个监听器，且新增的元素无需重新绑定就自动生效</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="c"><span>能自动阻止事件冒泡到 document</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="d"><span>不需要 <code>e.target</code> 就能知道点的是哪一行</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>事件委托把监听器数量从 <strong>N 降到 1</strong>，并且新插入的 <code>li</code> 会沿着冒泡自然触发父级监听器，<strong>无需逐个重新绑定</strong>。它并不自动阻止冒泡，判断「点了哪一行」仍然要靠 <code>e.target.closest("li")</code>。</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一章 / 下一章 ================= -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-01/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 1 章 数据</span>
+    </a>
+    <a class="pager-portal" href="../">返回门户</a>
+    <a class="pager-next" href="../lesson-03/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 3 章 色彩专题</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 本章演示与交互（ES Module；file:// 下会被 CORS 拦截，页面仍可阅读） -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

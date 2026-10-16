@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 4 · Low-Dimensional Data Visualization · Introduction to Visualization</title>
+  <meta name="description" content="Introduction to Visualization, Chapter 4: wide/long reshaping, the three-layer data space → normalized space → screen-pixel transform, 10 curve-fitting models compared, Cleveland's 45° slope perception, and Marching Squares contours. Includes runnable crime.csv demos and instant self-checks.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+
+  <!-- Theme script must run early: set data-theme before paint, no flash on toggle -->
+  <script src="../../theme.js"></script>
+
+  <link rel="stylesheet" href="../../tokens.css">
+  <link rel="stylesheet" href="../../theme.css">
+  <link rel="stylesheet" href="../../i18n.css">
+  <link rel="stylesheet" href="../../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= Chapter top bar ================= -->
+  <header class="course-topbar" data-current="4">
+    <a class="brand" href="../">
+      <span class="back">←</span> Introduction to Visualization
+      <span class="brand__sub">Chapter 4 · Low-Dimensional Data</span>
+    </a>
+
+    <nav class="tabs" aria-label="Chapter navigation">
+      <a href="../lesson-01/">Ch. 1 Data</a>
+      <a href="../lesson-02/">Ch. 2 Workflow</a>
+      <a href="../lesson-03/">Ch. 3 Color</a>
+      <a href="./">Ch. 4 Low-dim</a>
+      <a href="../lesson-05/">Ch. 5 Time</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      Show code only
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      <a class="lang-switch-item" href="../../lesson-04/" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+    </div>
+  </header>
+
+  <!-- ================= Lesson header ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>Chapter 4 · Low-Dimensional Data</h1>
+        <p class="subtitle">Turning tables into graphics — <b>wide/long reshape · three-layer coordinates · curve fitting · 45° slope · contours</b></p>
+      </div>
+      <div class="header-tip">Read as you go · demos render in place · self-checks score instantly</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>Chapter goals</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>Explain the difference between wide and long format, and use flatMap to expand one crime.csv row into several observations</span></label></li>
+        <li><label><input type="checkbox"><span>Draw the three-layer "data space → normalized space → screen-pixel space" transform and explain why the layers are required</span></label></li>
+        <li><label><input type="checkbox"><span>Given a set of points, decide whether to interpolate or fit, and use R² to compare how well different models match</span></label></li>
+        <li><label><input type="checkbox"><span>Explain Cleveland's 45° experiment and Stevens's power law, and why key slopes should land within 30°–60°</span></label></li>
+        <li><label><input type="checkbox"><span>Describe the 16 Marching Squares cases and the saddle-point ambiguity, and hand-write grid encoding and edge interpolation</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= Body ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>Chapter 4 · Contents</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 5 sections</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-4-1" data-chapter="ch-4-1">4.1 Data Reshaping</a></li>
+        <li><a href="#ch-4-2" data-chapter="ch-4-2">4.2 Coordinate Transforms</a></li>
+        <li><a href="#ch-4-3" data-chapter="ch-4-3">4.3 Curve Fitting</a></li>
+        <li><a href="#ch-4-4" data-chapter="ch-4-4">4.4 Slope Perception (the 45° golden angle)</a></li>
+        <li><a href="#ch-4-5" data-chapter="ch-4-5">4.5 Contours (Marching Squares)</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>How to study this chapter</b><br>
+        ① Tick the learning goals at the top;<br>
+        ② Read straight down, section by section — the demos render in place;<br>
+        ③ Finish each section's self-check before moving on;<br>
+        ④ For review, click "Show code only" in the top-right.
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 4.1 Data reshaping ============ -->
+      <article class="chapter" id="ch-4-1">
+        <h2>4.1 Data Reshaping</h2>
+        <p class="chapter-subtitle">Wide format is for people, long format is for programs — one flatMap completes the conversion.</p>
+
+        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <p>From start to finish this chapter uses a single dataset: <strong>crime.csv, 1985 crime statistics for the 50 US states</strong>. It holds <strong>50 rows × 12 columns</strong>, one row per state and one metric per column — a classic <strong>wide format</strong>.</p>
+
+        <table class="theory-table">
+          <caption>crime.csv field list: 1 identifier column + 1 population column + 10 crime-metric columns</caption>
+          <thead>
+            <tr><th>Column</th><th>Meaning</th><th>Type</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>state</code></td><td>State name (unique key)</td><td>String</td></tr>
+            <tr><td><code>population</code></td><td>1985 population</td><td>Number (530k ~ 27M, spanning 50×)</td></tr>
+            <tr><td><code>population_growth</code></td><td>Population growth rate (%)</td><td>Number (can be positive or negative)</td></tr>
+            <tr><td><code>robbery</code> / <code>aggravated_assault</code></td><td>Robbery / aggravated assault</td><td>Number (case count)</td></tr>
+            <tr><td><code>burglary</code> / <code>larceny_theft</code> / <code>motor_vehicle_theft</code></td><td>Burglary / larceny theft / motor-vehicle theft</td><td>Number (case count)</td></tr>
+            <tr><td><code>murder</code> / <code>arson</code> / <code>rape1</code> / <code>rape2</code></td><td>Murder / arson / two rape definitions</td><td>Number (case count)</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded Theory</span>
+        <div class="theory-card">
+          <h4>Wide format vs long format</h4>
+          <p><strong>Wide format</strong>: one row per <em>entity</em> (state), with metrics as columns (murder, robbery…). It is easy for people to read at a glance, but the information "which metric" hides in the <strong>column names</strong>, where a program cannot reach it.</p>
+          <p><strong>Long format</strong>: one row per <em>observation</em>, with fixed columns <code>{state, metric, value}</code>. The "metric" is <strong>demoted to a single data column</strong>, so filter / group / data-join can all split on it directly.</p>
+          <p><strong>Conversion</strong>: for each state, walk the list of metrics to keep and expand the (state, metric, value) triple — that is <code>flatMap</code>. This is ES2019 syntax, equivalent to <code>map()</code> followed by <code>flat()</code>.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 190" role="img" aria-label="Wide format: one row per state with metrics as columns; via flatMap it expands into long format with one row per observation">
+            <defs>
+              <marker id="l4-a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-primary);"/>
+              </marker>
+            </defs>
+
+            <text x="8" y="22" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">Wide format</text>
+            <text x="8" y="38" style="fill: var(--c-muted); font-size: 11px;">one row per state · metrics hidden in the column names</text>
+            <rect x="8" y="46" width="250" height="112" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <rect x="8" y="46" width="250" height="26" rx="10" style="fill: color-mix(in srgb, var(--c-primary) 12%, transparent);"/>
+            <text x="18" y="64" style="fill: var(--c-text); font-size: 11px; font-family: var(--font-mono); font-weight: 700;">state | murder | robbery | burglary</text>
+            <text x="18" y="94" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | 350 | 10670 | 95380</text>
+            <text x="18" y="118" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alaska  |  65 |  1729 |  6567</text>
+            <text x="18" y="142" style="fill: var(--c-muted); font-size: 11px; font-family: var(--font-mono);">…50 rows × 12 columns</text>
+
+            <line x1="262" y1="102" x2="368" y2="102" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a1)"/>
+            <text x="315" y="92" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-weight: 700; font-family: var(--font-mono);">flatMap</text>
+            <text x="315" y="124" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">walk the metric list</text>
+
+            <text x="382" y="22" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">Long format</text>
+            <text x="382" y="38" style="fill: var(--c-muted); font-size: 11px;">one row per observation · metric demoted to a column</text>
+            <rect x="382" y="46" width="250" height="112" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <rect x="382" y="46" width="250" height="26" rx="10" style="fill: color-mix(in srgb, var(--c-success) 14%, transparent);"/>
+            <text x="392" y="64" style="fill: var(--c-text); font-size: 11px; font-family: var(--font-mono); font-weight: 700;">state | metric | value</text>
+            <text x="392" y="94" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | murder  | 350</text>
+            <text x="392" y="112" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | robbery | 10670</text>
+            <text x="392" y="130" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | burglary| 95380</text>
+            <text x="392" y="150" style="fill: var(--c-muted); font-size: 10.5px; font-family: var(--font-mono);">…150 rows × 3 columns</text>
+
+            <text x="320" y="180" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">Same information · recast as "one row per observation", it can be filtered / grouped / joined</text>
+          </svg>
+          <figcaption>Wide → long: turning "column names" into "a data column" keeps the information identical but makes it far more operable</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>How to choose:</strong> tables meant for people to read or fill in use the <strong>wide format</strong>; intermediate data meant for programs and D3 joins uses the <strong>long format</strong>. The same data usually "enters and leaves the pipeline in one format each", and the switch happens right on the <code>flatMap</code> line.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.autoType: type inference as you load</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Pass d3.autoType as the second argument to skip a +d.field per column</span>
+const raw = <span class="kw">await</span> d3.csv(<span class="str">'./data/crime.csv'</span>, d3.autoType);
+
+<span class="cmt">// Confirm the types really were converted:</span>
+console.log(raw[<span class="num">0</span>].population);        <span class="cmt">// 3979000 (a Number, not "3979000")</span>
+console.log(<span class="kw">typeof</span> raw[<span class="num">0</span>].state);      <span class="cmt">// "string"</span></code></pre>
+              <div class="key-point">
+                <p>Internally, <code>autoType</code> walks every column and tries <code>Number()</code> / <code>Date()</code> / boolean literals: whatever it can recognise it converts, and whatever it cannot it <strong>leaves as a string</strong>. So it is convenient but also conservative — a thousands-separated number like <code>"1,234"</code> is <em>not</em> converted for you and still needs its own cleaning.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> flatMap: the one-liner that goes wide → long</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Wide format: one row per state, columns = metrics</span>
+<span class="cmt">// Long format: one row per observation {state, metric, value}</span>
+const METRICS = [<span class="str">'murder'</span>, <span class="str">'robbery'</span>, <span class="str">'burglary'</span>];
+
+const long = raw.flatMap(d =&gt;
+  METRICS.map(metric =&gt; ({
+    state: d.state,
+    metric,
+    value: d[metric],
+  }))
+);
+<span class="cmt">// 50 rows × 3 metrics = 150 rows</span>
+const byMetric = d3.group(long, d =&gt; d.metric);   <span class="cmt">// grouping, filtering, joining all just work</span></code></pre>
+              <div class="key-point">
+                <p><code>flatMap</code> = "map, then flatten the result one level". Writing <code>map(...).flat()</code> gives the same result, but <code>flatMap</code> states the intent more clearly and avoids the intermediate nested array. <strong>Note:</strong> the row count rises from 50 to 150 — long format trades <em>rows</em> for <em>operability</em>.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Per-axis normalization before parallel coordinates</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Parallel coordinates: min-max every axis independently into [0, 1]</span>
+const norm = (values) =&gt; {
+  const lo = Math.min(...values), hi = Math.max(...values);
+  const span = hi - lo || <span class="num">1</span>;          <span class="cmt">// avoid divide-by-zero when all values are equal</span>
+  return (v) =&gt; (v - lo) / span;
+};
+const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
+              <div class="key-point">
+                <p><strong>The biggest trap of parallel coordinates:</strong> each axis has a <em>different</em> scale. After normalization, comparing across axes compares "relative position", not absolute values — so you may say "this state sits high on the murder axis and low on the theft axis", but not "murder 350 = theft 350". <strong>Scatterplot matrices</strong> do not have this problem: for pairwise comparison both axes keep their real scales.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable Demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">First use <em>parallel coordinates</em> to see the "profile" of the 50 states across 5 metrics, then use a <em>scatterplot matrix</em> for pairwise comparison. Pick an axis and drag the two sliders to brush — the selected states light up <strong>in sync</strong> across both charts; that is linked brushing.</p>
+          <div class="demo-mount" data-demo="d-4-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section Summary</h4>
+          <ul>
+            <li>Wide format: one row per entity (human-friendly); long format: one row per observation (program-friendly); <code>flatMap</code> does wide → long in a single line.</li>
+            <li><code>d3.autoType</code> infers column types at load time, but it only makes conversions it can "guess", so dirty data still needs cleaning.</li>
+            <li>Parallel coordinates need <strong>per-axis normalization</strong> (across axes you read only relative position); scatterplot matrices compare with real scales — two different strategies for projecting multivariate data.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · Question 1</div>
+          <p class="selftest__q">In crime.csv, "one row per state with one crime metric per column" — which layout is this?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="a"><span>Long format: one row per observation</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="b"><span>Wide format: one row per entity, one metric per column</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="c"><span>Neither long nor wide — it is a "matrix format"</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="d"><span>Three-dimensional data, because each state has several metrics</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Wide format = one row per <strong>entity</strong> (state), with columns as <strong>metrics</strong> (murder, robbery…). Only recasting it as one <code>(state, metric, value)</code> triple per row makes it long format — the shape that filter / group / data-join needs.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · Question 2</div>
+          <p class="selftest__q">Taking the 50-row wide crime.csv and <code>flatMap</code>-ing it into long format with the three metrics <code>['murder', 'robbery', 'burglary']</code>, how many rows do you get?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="a"><span>50 rows (the count is unchanged)</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="b"><span>150 rows (50 × 3)</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="c"><span>12 rows (the column count is unchanged)</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="d"><span>3 rows (only the three metrics are kept)</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Each state expands into 3 observation rows: 50 × 3 = 150 rows. Long format trades <strong>rows for operability</strong> — the data grows bigger, but filter / group / binding joins all become simpler.</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.2 Coordinate transforms ============ -->
+      <article class="chapter" id="ch-4-2">
+        <h2>4.2 Coordinate Transforms</h2>
+        <p class="chapter-subtitle">Data space → normalized space → screen-pixel space: three layers with clear duties; mix them up and everything falls apart.</p>
+
+        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <p>The original §5.1.2 uses a scatterplot to show <strong>murder vs robbery</strong> in crime.csv. The trouble: murders run from 32 (Vermont) to 3082 (California) and robberies from 489 (Wyoming) to 254707 (California) — if you feed the raw values directly as pixels, the canvas simply cannot hold them.</p>
+
+        <table class="theory-table">
+          <thead><tr><th>Layer</th><th>Coordinate meaning</th><th>Value in this case</th><th>Who owns it</th></tr></thead>
+          <tbody>
+            <tr><td><b>① Data space</b></td><td>Raw values (real units)</td><td>murder = 3082</td><td>Your data</td></tr>
+            <tr><td><b>② Normalized space</b></td><td>Standardized coordinates squeezed into <code>0..innerW</code></td><td>x' = 0.98</td><td><code>scaleLinear / scaleLog / scaleSqrt</code></td></tr>
+            <tr><td><b>③ Screen-pixel space</b></td><td>Final pixel position after adding the margin offset</td><td>X = 48 + 0.98×560 ≈ 597 px</td><td>The second-layer scale or <code>d3.axisBottom</code></td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded Theory</span>
+        <div class="theory-card">
+          <h4>Why three layers are mandatory</h4>
+          <p>Splitting "value → coordinate" from "coordinate → pixel" buys <strong>decoupling</strong>: the normalized result depends only on the <em>data</em>, while the screen pixel depends only on the <em>canvas size</em>. So resizing the canvas (responsive layout, exporting charts at different sizes) recomputes only the third layer, and the first layer's normalized result is reused as-is.</p>
+          <p>If you take the shortcut of "one scale that handles both domain=data and range=[margin, margin+innerW]", then every change to the margin forces you back into the data layer — and coordinates shared between elements (say the position of a reference line) can no longer be reused.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 190" role="img" aria-label="Three-layer coordinate transform: raw values in data space are normalized into 0 to innerW standardized coordinates, then offset by the margin into screen-pixel coordinates">
+            <defs>
+              <marker id="l4-a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-primary);"/>
+              </marker>
+            </defs>
+
+            <rect x="8" y="44" width="176" height="72" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="96" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① Data space</text>
+            <text x="96" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-family: var(--font-mono);">murder = 3082</text>
+
+            <line x1="186" y1="80" x2="232" y2="80" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a2)"/>
+            <text x="209" y="68" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">①</text>
+
+            <rect x="240" y="44" width="176" height="72" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="328" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② Normalized space</text>
+            <text x="328" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-family: var(--font-mono);">x' = 0.98 (0..innerW)</text>
+
+            <line x1="418" y1="80" x2="464" y2="80" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a2)"/>
+            <text x="441" y="68" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">②</text>
+
+            <rect x="472" y="44" width="160" height="72" rx="10" style="fill: color-mix(in srgb, var(--c-success) 12%, transparent); stroke: color-mix(in srgb, var(--c-success) 45%, transparent);"/>
+            <text x="552" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ Screen-pixel space</text>
+            <text x="552" y="94" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-family: var(--font-mono);">X = 597 px</text>
+
+            <text x="8" y="152" style="fill: var(--c-text-soft); font-size: 11.5px; font-family: var(--font-mono);">① x' = (x − min) / (max − min) × innerW</text>
+            <text x="8" y="174" style="fill: var(--c-text-soft); font-size: 11.5px; font-family: var(--font-mono);">② X = margin.left + x'</text>
+            <text x="400" y="174" style="fill: var(--c-muted); font-size: 11px;">The two layers are independent → resizing recomputes only the second</text>
+          </svg>
+          <figcaption>Three spaces: raw value → standardized coordinate → pixel coordinate with margin. Axis ticks are handled automatically from the second to the third layer by <code>d3.axisBottom</code></figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p><strong>A common slip:</strong> writing "data domain → pixel domain" into a <em>single</em> scale (<code>domain=[0, maxMurder]</code>, <code>range=[margin, margin+innerW]</code>). At the time nothing looks wrong, until you need to change the margin, go responsive, or overlay a shared reference line — and only then discover that every scale has to be edited in two places.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Two scales: data → normalized → pixel</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code>const M = { t: <span class="num">20</span>, r: <span class="num">20</span>, b: <span class="num">36</span>, l: <span class="num">48</span> };   <span class="cmt">// margins</span>
+const innerW = W - M.l - M.r, innerH = H - M.t - M.b;
+
+<span class="cmt">// First layer: data space → normalized space (depends only on the data)</span>
+const xData = d3.scaleLinear().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// Second layer: normalized space → screen-pixel space (depends only on the canvas)</span>
+const xScreen = d3.scaleLinear().domain([<span class="num">0</span>, innerW]).range([M.l, M.l + innerW]);
+
+<span class="cmt">// Compose them at render time: data → normalized → pixel</span>
+.attr(<span class="str">'cx'</span>, d =&gt; xScreen(xData(d.murder)))</code></pre>
+              <div class="key-point">
+                <p><code>domain()</code> is the input and <code>range()</code> the output. Once the two layers are separated, <code>xData</code> can be shared across many charts (the mini-charts of one dataset), while <code>xScreen</code> is used once at render time. <strong>Rule of thumb:</strong> the inner layer owns the data, the outer layer owns the canvas.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Choosing the first-layer scale: linear / log / sqrt</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Even distribution: the most common choice, a straight linear map</span>
+const xLin  = d3.scaleLinear().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// Across orders of magnitude (population 530k ~ 27M): log turns equal ratios into equal distances</span>
+const xLog  = d3.scaleLog().domain([<span class="num">1</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// Area perception: map the squared radius to the value (the right way to do bubble charts)</span>
+const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+<span class="cmt">// Categorical axes use scaleBand (bar charts); don't order categories with scaleLinear</span></code></pre>
+              <div class="key-point">
+                <p><strong>Swapping the scale touches only the first layer; the second layer stays completely unchanged</strong> — that is the value of the split. The data distribution decides which first-layer scale to use: linear for even data, log across orders of magnitude, sqrt when mapping to area (not length).</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable Demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Click "Next" to step through the layers and watch <strong>the same states</strong> change coordinates at each one; switching linear / log / sqrt above also changes the layer ② normalization, and the table on the right gives each point's three sets of coordinates plus the current formula.</p>
+          <div class="demo-mount" data-demo="d-4-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section Summary</h4>
+          <ul>
+            <li>Three duties: data space (real values) → normalized space (<code>0..innerW</code>) → screen-pixel space (plus margin); the bridge between layers is the scale.</li>
+            <li>The split buys decoupling: the normalized result is independent of canvas size, resizing recomputes only the outermost layer, and shared elements (reference lines, grids) need no recompute.</li>
+            <li>The first-layer scale follows the data distribution: linear for even data, log across orders of magnitude, sqrt for area, band for categories.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="a">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">Splitting "data space → normalized space → screen-pixel space" into two scales mainly gives you what?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="a"><span>Decoupling the normalized result from canvas size, so a screen change only recomputes the outermost margin mapping</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="b"><span>Because d3 scales must come in pairs or they throw an error</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="c"><span>It makes the chart colors look better</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="d"><span>It saves one network request</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>The second layer depends only on canvas size and the first only on the data. When you change the canvas, the first layer's normalized result is reused as-is — and shared elements (grid lines, reference lines, other mini-charts) all share the same set of coordinates. d3 does <strong>not</strong> force two layers.</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.3 Curve fitting ============ -->
+      <article class="chapter" id="ch-4-3">
+        <h2>4.3 Curve Fitting</h2>
+        <p class="chapter-subtitle">For the same set of points, a different model is a different trend line — what tells you which one fits better?</p>
+
+        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <p>The original §5.1.3 shows the trend across 50 states with "polyline + points", and the code says <code>curveCatmullRom</code> — but <strong>never explains why</strong>, so the result is a curve that overfits and draws out every state's jitter.</p>
+
+        <span class="sec-label"><i>2</i> Embedded Theory</span>
+        <div class="theory-card">
+          <h4>Interpolation vs fitting</h4>
+          <p><strong>Interpolation</strong>: the curve passes <em>through every</em> data point (Catmull-Rom, Natural, monotoneX). It keeps all the information, but draws the noise in with it.</p>
+          <p><strong>Fitting</strong>: the curve is <em>not</em> required to pass through the data points, it only reflects the trend (linear regression, power function, LOESS). It deliberately "throws away" the point-to-point detail in exchange for seeing the overall direction.</p>
+          <p><strong>How to choose:</strong> few points (&lt; 10) → interpolate, there isn't much information to waste anyway; many points (&gt; 30) → fit, most of the jitter is noise; data that has an inherent order and must stay monotone → <code>monotoneX</code> (no spurious oscillation).</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 180" role="img" aria-label="The same set of points: an interpolation curve passes through every point but wobbles between them, while a fitted line misses the points but reflects the overall trend">
+            <text x="20" y="18" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① Interpolation · passes all points</text>
+            <rect x="12" y="26" width="276" height="126" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <g transform="translate(20,34)">
+              <path d="M10,92 C30,70 38,66 58,62 C80,58 86,72 106,76 C128,80 132,42 154,36 C176,30 180,50 202,52 C224,54 228,30 250,26"
+                    fill="none" style="stroke: var(--c-primary); stroke-width: 2.2;"/>
+              <circle cx="10" cy="92" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="58" cy="62" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="106" cy="76" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="154" cy="36" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="202" cy="52" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="250" cy="26" r="4" style="fill: var(--c-ch-2);"/>
+            </g>
+
+            <text x="340" y="18" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② Fitting · trend only</text>
+            <rect x="322" y="26" width="276" height="126" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <g transform="translate(330,34)">
+              <line x1="0" y1="88" x2="260" y2="36" style="stroke: var(--c-success); stroke-width: 2.2;"/>
+              <circle cx="10" cy="92" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="58" cy="64" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="106" cy="80" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="154" cy="42" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="202" cy="60" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="250" cy="32" r="4" style="fill: var(--c-ch-2);"/>
+            </g>
+
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">The left preserves every point's jitter, the right preserves the overall rise — <tspan style="fill: var(--c-text); font-weight: 700;">both are correct, it depends on the question you are asking</tspan></text>
+          </svg>
+          <figcaption>Same data, two drawings: interpolation draws the noise in, fitting pulls the trend out</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>Don't forget the colormap.</strong> The colors used in this section's scatterplots also follow Chapter 3's rules: one hue per category, no rainbow ramp — color only distinguishes "selected or not", it does not encode a value.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.line().curve(): swap one line to change the style</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code>const line = d3.line()
+  .x(d =&gt; x(d.population))
+  .y(d =&gt; y(d.murder))
+  .curve(d3.curveMonotoneX);   <span class="cmt">// ← change only this line to switch curve style</span>
+
+svg.append(<span class="str">'path'</span>)
+  .datum(data)                 <span class="cmt">// hand the whole array to the path as a single datum</span>
+  .attr(<span class="str">'d'</span>, line)
+  .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>);</code></pre>
+              <div class="key-point">
+                <p><code>datum()</code> binds the array <strong>as a whole</strong> to one element (not element by element). Common curves: <code>linear</code> straight joins, <code>monotoneX</code> keeps monotonicity, <code>catmullRom</code> smooths through the points, <code>step</code> stairsteps. <strong>Rule of thumb:</strong> ordered data → monotoneX, heavy jitter → a smooth spline, discrete states → step.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Least squares: linearize a power function to solve it</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Power function y = a · x^b → take logs on both sides to get a line: ln y = ln a + b · ln x</span>
+const pts = data.filter(d =&gt; d.population &gt; <span class="num">0</span> &amp;&amp; d.murder &gt; <span class="num">0</span>);
+const lx = pts.map(d =&gt; Math.log(d.population));
+const ly = pts.map(d =&gt; Math.log(d.murder));
+
+const { slope, intercept } = ols(lx, ly);   <span class="cmt">// simple linear regression</span>
+const a = Math.exp(intercept), b = slope;   <span class="cmt">// the two parameters of the power function</span></code></pre>
+              <div class="key-point">
+                <p>"<strong>Linearization</strong>" is the master key to fitting: exponential, power, inverse and square-root models can all be turned into a straight line by a change of variables, then fed to the same <code>ols()</code>. Note: minimizing error in the linearized space is <em>not</em> the same as minimizing it in the original space — so an R² computed after taking logs must be evaluated back in the original space.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> R²: a common yardstick for goodness of fit</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// R² = 1 − SSres / SStot: the closer to 1, the better the fit</span>
+const mean  = ys.reduce((s, v) =&gt; s + v, <span class="num">0</span>) / ys.length;
+const ssTot = ys.reduce((s, v) =&gt; s + (v - mean) ** <span class="num">2</span>, <span class="num">0</span>);
+const ssRes = ys.reduce((s, v, i) =&gt; s + (v - fit[i]) ** <span class="num">2</span>, <span class="num">0</span>);
+const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// can go negative: worse than "just use the mean"</span></code></pre>
+              <div class="key-point">
+                <p><strong>R² is not "the higher the better".</strong> It measures the improvement over the <em>mean baseline</em>: a straight line reaching 0.6 over 50 states is already good, while a cubic polynomial can always squeeze out another 0.02 — but that 0.02 is usually just fitting the noise. When comparing R², <strong>look at the parameter count as well</strong>.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable Demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Use the buttons below to switch between <strong>10 fitting models</strong>: the same paired points (population → murders) stay put while the curve, fitted equation and R² update together; the ranking bar on the right sorts by R² from high to low, showing at a glance which fits best.</p>
+          <div class="demo-mount" data-demo="d-4-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section Summary</h4>
+          <ul>
+            <li>Interpolation passes all points (keeps information and noise); fitting only reflects the trend (drops detail, sees clearly); the point count is the main criterion.</li>
+            <li><code>d3.line().curve()</code> changes style in one line: ordered data → <code>monotoneX</code>, heavy jitter → a smooth spline, discrete states → <code>step</code>.</li>
+            <li>Fitting unifies everything under least squares via "linearization"; when comparing goodness with R² you must also weigh model complexity, or you'll pick the overfitted one.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · Question 1</div>
+          <p class="selftest__q">For a line chart with only 8 data points, which curve keeps the sequence monotone without spurious oscillation?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="a"><span><code>curveCatmullRom</code>: the smoothest</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="b"><span><code>curveMonotoneX</code>: monotone, no invented bumps</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="c"><span><code>curveStep</code>: a staircase, the most stable</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="d"><span><code>curveBasis</code>: doesn't pass the points but looks good</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Tension splines like Catmull-Rom can "flick" a bump between points that isn't really there (spurious oscillation). <code>monotoneX</code> constrains each segment's cubic term so that "if the data rises, it doesn't bend down" — the safest default for time series and ordered data.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="a">
+          <div class="selftest__head">Self-check · Question 2</div>
+          <p class="selftest__q">About goodness of fit R², which statement is <strong>correct</strong>?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="a"><span>It measures improvement over the mean baseline; more complex models inflate it more easily, so weigh the parameter count too</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="b"><span>A cubic polynomial's R² is always higher than a straight line's, so the cubic is always better</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="c"><span>A negative R² means the computation went wrong</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="d"><span>R² can directly compare different models across datasets</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>R² = 1 − SSres/SStot, with the baseline being "predict everything with the mean". It <strong>can</strong> be negative (worse than the mean, meaning the model is entirely unsuitable); it is only comparable <em>within the same dataset</em> and meaningless across datasets; and the higher the complexity the more easily it is inflated — so look at the parameter count (or adjusted R²).</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.4 Slope perception ============ -->
+      <article class="chapter" id="ch-4-4">
+        <h2>4.4 Slope Perception (the 45° golden angle)</h2>
+        <p class="chapter-subtitle">The eye's estimate of slope is <strong>not</strong> linear — 45° is the visual "midpoint".</p>
+
+        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <p>The original §5.1.4 mentions "the optimal average inclination is 45°" but never explains why. And for data spanning 50× like crime.csv, drawn on a <strong>linear axis</strong>, most states clump together and the trend line's slope is nearly horizontal (&lt; 20°), so readers can barely read the slope.</p>
+
+        <span class="sec-label"><i>2</i> Embedded Theory</span>
+        <div class="theory-card">
+          <h4>Cleveland's 1984 slope-estimation experiment</h4>
+          <p>Participants estimated the slope of straight lines and reported the deviation of their perceived value from the true value; the result is a <strong>U-shaped curve</strong>:</p>
+          <ul>
+            <li>When the slope approaches <strong>0° or 90°</strong>, estimation error is largest (it is nearly impossible to judge "whether this difference counts as steeper").</li>
+            <li>When the slope approaches <strong>45°</strong>, estimation is most accurate — this is the "golden angle".</li>
+          </ul>
+          <p><strong>Stevens's power law</strong> explains why: perceived slope ≈ true slope<sup>1.0~1.3</sup>, i.e. the eye <em>exaggerates steepness by about 30%</em> overall. Only near 45° do the "exaggeration" and "compression" errors cancel, so perception comes closest to reality.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 220" role="img" aria-label="The U-shaped curve of Cleveland's slope-estimation error: error is largest at 0° and 90° and smallest at 45°, with 30° to 60° being the stable range">
+            <rect x="237" y="30" width="182" height="150" rx="8" style="fill: color-mix(in srgb, var(--c-success) 12%, transparent);"/>
+            <text x="328" y="24" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">Stable zone 30°–60°</text>
+
+            <line x1="56" y1="180" x2="600" y2="180" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <line x1="56" y1="30" x2="56" y2="180" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <text x="46" y="40" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">Large error</text>
+            <text x="46" y="176" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">Small error</text>
+
+            <path d="M56,40 C150,182 506,182 600,40" fill="none" style="stroke: var(--c-primary); stroke-width: 2.6;"/>
+            <line x1="328" y1="30" x2="328" y2="180" stroke-dasharray="4 4" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+            <circle cx="328" cy="146" r="5" style="fill: var(--c-danger);"/>
+            <circle cx="56" cy="40" r="4" style="fill: var(--c-warn);"/>
+            <circle cx="600" cy="40" r="4" style="fill: var(--c-warn);"/>
+            <text x="328" y="140" text-anchor="middle" style="fill: var(--c-danger); font-size: 11.5px; font-weight: 700;">45°: smallest error</text>
+            <text x="72" y="56" style="fill: var(--c-warn); font-size: 11px; font-weight: 700;">0°: largest error</text>
+            <text x="560" y="56" text-anchor="end" style="fill: var(--c-warn); font-size: 11px; font-weight: 700;">90°: largest error</text>
+
+            <text x="56" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">0°</text>
+            <text x="237" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">30°</text>
+            <text x="328" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">45°</text>
+            <text x="419" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">60°</text>
+            <text x="600" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">90°</text>
+            <text x="320" y="214" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Visual inclination → (slope-estimation error is U-shaped in inclination: worst at both ends, best at 45°)</text>
+          </svg>
+          <figcaption>Cleveland's U-shaped error curve: when designing, herd the key slopes into 30°–60°; avoid trend comparisons at the extremes (below 5° / above 85°)</figcaption>
+        </figure>
+
+        <div class="callout callout--ok">
+          <p><strong>Design principles:</strong> ① keep the key data's slopes within <strong>30°–60°</strong>; ② when comparing growth curves, use a <strong>log axis</strong> to pull the steepness back toward about 45°; ③ avoid trend comparisons below 5° or above 85° — there the perceptual error is enough to lead you to a wrong conclusion.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Angle → screen coordinates (mind SVG's downward y-axis)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// SVG's y-axis points down (the opposite of math coordinates), so the sin term is negated</span>
+function lineAt(deg, len = <span class="num">240</span>, o = { x: <span class="num">100</span>, y: <span class="num">240</span> }) {
+  const r = deg * Math.PI / <span class="num">180</span>;
+  return {
+    x1: o.x, y1: o.y,
+    x2: o.x + len * Math.cos(r),
+    y2: o.y - len * Math.sin(r),
+  };
+}</code></pre>
+              <div class="key-point">
+                <p>This is the <strong>first trap</strong> when drawing angle figures: SVG has its origin at the top-left and y growing downward, so the <code>sin</code> term must be negated, otherwise 30° is drawn as "30° down to the right". The second trap: angles must be <em>converted to radians</em> before being fed to <code>Math.cos / Math.sin</code>.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> The U-shaped error model + slider driving</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Cleveland's U-shaped error: |ln(tan θ)| is 0 at 45° and diverges toward the ends</span>
+const err = (deg) =&gt; {
+  if (deg &lt;= <span class="num">0</span> || deg &gt;= <span class="num">90</span>) return <span class="num">1</span>;
+  const r = deg * Math.PI / <span class="num">180</span>;
+  return <span class="num">1</span> - Math.exp(-Math.abs(Math.log(Math.tan(r))));
+};
+
+slider.addEventListener(<span class="str">'input'</span>, e =&gt; draw(+e.target.value));</code></pre>
+              <div class="key-point">
+                <p>Turning abstract theory into an <strong>adjustable parameter</strong> is what lets students "feel" it: dragging the slider updates both the "line's inclination" and the "cursor on the error curve", and once the two pieces of information correspond, the meaning of the U shape sticks.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Using a log axis to pull the trend slope back to 45°</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Exponential growth on a linear axis is "slow then steep": slope 5° → 85°, distorted at both ends</span>
+<span class="cmt">// Switch to a log axis: equal ratios become equal distances, and the trend's inclination falls back near 45°</span>
+const xLog = d3.scaleLog()
+  .domain(d3.extent(data, d =&gt; d.population))   <span class="cmt">// [530k, 27M]</span>
+  .range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// Check: regress the points onto a "normalized square canvas" and measure whether the angle entered 30°–60°</span>
+const angle = Math.atan(ols(normX, normY).slope) * <span class="num">180</span> / Math.PI;</code></pre>
+              <div class="key-point">
+                <p>This is where 4.2's scale selection connects with this section's design principles: <strong>swapping the first-layer scale changes the inclination of that trend line on screen</strong>. In the demo below, switching linear / log shows the angle computed from the very same regression coefficient jumping from &lt; 20° into the golden range.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable Demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Drag the slider to change the <strong>visual inclination</strong>: the left chart is the line itself (with a dashed 45° reference), the middle is Cleveland's U-shaped error curve with a cursor, and the lower-right computes the "trend inclination under the current axis" from a real regression on crime.csv — switch linear / log to watch it run into 30°–60°.</p>
+          <div class="demo-mount" data-demo="d-4-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section Summary</h4>
+          <ul>
+            <li>Cleveland 1984: slope-estimation error is U-shaped, worst at 0° / 90° and best at 45°; take 30°–60° as the stable range.</li>
+            <li>Stevens's power law (perceived ≈ true<sup>1.0~1.3</sup>) explains why: the eye exaggerates steepness by about 30%, and near 45° that is exactly cancelled.</li>
+            <li>Design actions: herd the key slopes into 30°–60°; compress steepness on growth curves with a log axis — swapping the scale swaps the inclination.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">Dragging the visual inclination from 45° to 85° with the slider, how does Cleveland's U-shaped error curve change?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="a"><span>The error is unchanged, the eye always estimates slope steadily</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="b"><span>The error first grows and then shrinks</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="c"><span>The error grows monotonically as you move away from 45°, and 85° is already in the danger zone</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="d"><span>The error becomes negative</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Both sides of the U shape <strong>rise monotonically</strong>: starting from 45°, whether you move toward 0° or toward 90°, the error grows. Both 85° and 5° are in the "danger zone"; comparing trends at such inclinations lets perceptual error directly swamp the real difference.</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.5 Contours ============ -->
+      <article class="chapter" id="ch-4-5">
+        <h2>4.5 Contours (Marching Squares)</h2>
+        <p class="chapter-subtitle">Given a scalar field and a threshold, trace out the curve where "value = threshold".</p>
+
+        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <p>The original §5.2.2 extracts contours from crime.csv with Marching Squares, but the original code is <strong>a screenshot placeholder</strong> — in this lesson we complete it into a genuinely runnable algorithm and lay out every step.</p>
+        <p>The idea: first treat two metrics of the 50 states (say murder and robbery) as points on a 2D plane, use kernel density estimation (KDE) to lay out a <strong>scalar field</strong>, then take contours of this continuous field — what the contours enclose are regions of "similar density".</p>
+
+        <span class="sec-label"><i>2</i> Embedded Theory</span>
+        <div class="theory-card">
+          <h4>The idea: use "which corners of a cell are above the threshold" to decide how the segment runs</h4>
+          <p>Discretize the scalar field into a grid. For each cell, look at whether its <strong>4 corners</strong> exceed the threshold — the 4 booleans form a <strong>case number 0~15</strong> (2⁴ = 16). Each case maps to <strong>0 / 1 / 2 segments</strong>, which exactly separate the "above threshold" and "below threshold" regions.</p>
+          <p><strong>Bit encoding:</strong> <code>bit0 = BL</code>, <code>bit1 = BR</code>, <code>bit2 = TR</code>, <code>bit3 = TL</code> (bottom-left → bottom-right → top-right → top-left, clockwise).</p>
+          <p>Each segment's endpoints lie on the cell's edges, positioned by <strong>linear interpolation</strong>: <code>t = (threshold − a) / (b − a)</code>, where a and b are the values at the two grid nodes of that edge.</p>
+          <p><strong>The only case that needs thought:</strong> case 5 and case 10 are <strong>saddle points</strong> (the two diagonal corners exceed the threshold), where the segment has two possible connections and the cell's <em>center value</em> is needed to decide which way to connect.</p>
+          <p><strong>Generalizing to 3D:</strong> each cube has 8 corners → 2⁸ = 256 cases, which is Marching Cubes (Lorensen &amp; Cline 1987), the standard for isosurface extraction in medical MRI / CT.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 176" role="img" aria-label="Four typical Marching Squares cases: case 1 one corner, case 3 two corners on the same edge, case 6 two adjacent corners, case 10 saddle with two segments">
+            <g transform="translate(14,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <path d="M45,0 L0,45" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 1 · 0001</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">only BL above · 1 segment</text>
+            </g>
+
+            <g transform="translate(176,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M45,0 L45,90" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 3 · 0011</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">bottom two corners · 1 segment</text>
+            </g>
+
+            <g transform="translate(338,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="6" style="fill: var(--c-success);"/>
+              <circle cx="0" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M0,45 L90,45" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 6 · 0110</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">right two corners · 1 segment</text>
+            </g>
+
+            <g transform="translate(500,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: color-mix(in srgb, var(--c-warn) 12%, transparent); stroke: color-mix(in srgb, var(--c-warn) 45%, transparent);"/>
+              <circle cx="0" cy="0" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M0,45 L45,90" style="stroke: var(--c-warn); stroke-width: 2.4;"/>
+              <path d="M45,0 L90,45" style="stroke: var(--c-warn); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-warn); font-size: 11.5px; font-weight: 700;">case 10 · 1010</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">saddle · 2 segments · ambiguous</text>
+            </g>
+
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Filled dot = that corner exceeds the threshold &nbsp;·&nbsp; bit encoding bit0=BL · bit1=BR · bit2=TR · bit3=TL</text>
+          </svg>
+          <figcaption>4 typical cases: a single corner, two corners on the same edge, and two adjacent corners each give 1 segment; only the saddle (case 5 / 10) gives 2 and needs a direction decision</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> EDGE_TABLE: the core data structure for the 16 cases</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Edge numbering: 0 = left-middle, 1 = bottom-middle, 2 = right-middle, 3 = top-middle</span>
+const EDGE_TABLE = [
+  [],                  <span class="cmt">// 0000 all below threshold → no segment</span>
+  [[3, 0]],            <span class="cmt">// 0001 only BL above</span>
+  [[0, 1]],            <span class="cmt">// 0010 only BR above</span>
+  [[3, 1]],            <span class="cmt">// 0011 BL + BR</span>
+  [[1, 2]],            <span class="cmt">// 0100 only TR above</span>
+  [[3, 0], [1, 2]],    <span class="cmt">// 0101 saddle (check the cell center)</span>
+  [[0, 2]],            <span class="cmt">// 0110 BR + TR</span>
+  [[3, 2]],            <span class="cmt">// 0111 only TL below</span>
+  [[2, 3]],            <span class="cmt">// 1000 only TL above</span>
+  [[2, 0]],            <span class="cmt">// 1001 TL + BL</span>
+  [[0, 1], [2, 3]],    <span class="cmt">// 1010 saddle (check the cell center)</span>
+  [[2, 1]],            <span class="cmt">// 1011 only BR below</span>
+  [[1, 3]],            <span class="cmt">// 1100 TR + TL</span>
+  [[1, 0]],            <span class="cmt">// 1101 only TR below</span>
+  [[0, 3]],            <span class="cmt">// 1110 only BL below</span>
+  [],                  <span class="cmt">// 1111 all above threshold</span>
+];</code></pre>
+              <div class="key-point">
+                <p>This table <em>is</em> the <strong>whole algorithmic logic</strong> of Marching Squares — everything else is table lookup plus interpolation. Cases 0 and 15 have no crossing (the whole cell is on one side), while cases 5 and 10 each have 2 segments and an ambiguous direction.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Assembling the case number with bitwise ops</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Whether each of the 4 corners exceeds the threshold → 4 bits → case number 0~15</span>
+let code = <span class="num">0</span>;
+if (bl &gt; threshold) code |= <span class="num">1</span>;   <span class="cmt">// bit 0</span>
+if (br &gt; threshold) code |= <span class="num">2</span>;   <span class="cmt">// bit 1</span>
+if (tr &gt; threshold) code |= <span class="num">4</span>;   <span class="cmt">// bit 2</span>
+if (tl &gt; threshold) code |= <span class="num">8</span>;   <span class="cmt">// bit 3</span>
+
+const segs = EDGE_TABLE[code];    <span class="cmt">// table lookup gives 0 / 1 / 2 segments</span></code></pre>
+              <div class="key-point">
+                <p>Using <code>|=</code> to accumulate "powers of two" is the classic bitwise idiom: four booleans assemble exactly into a number 0~15. The <strong>order</strong> matters — the 0/1/2/3 edge numbering in the table must correspond one-to-one with the bit arrangement here, or segments will connect at the wrong places.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Linear interpolation on edges for crossing points (with saddle direction)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Position t ∈ [0,1] of the level point on edge (a→b)</span>
+const t = (threshold - a) / (b - a);
+const px = ax + t * (bx - ax);
+const py = ay + t * (by - ay);
+
+<span class="cmt">// Saddle: compare the cell center with the threshold to decide which pair of edges each segment connects</span>
+const center = (tl + tr + bl + br) / <span class="num">4</span>;
+<span class="cmt">// code 5: center &gt; threshold → connect [3,0]; otherwise [1,2]</span>
+<span class="cmt">// code 10: center &gt; threshold → connect [2,3]; otherwise [0,1]</span></code></pre>
+              <div class="key-point">
+                <p><strong>Why interpolation is mandatory:</strong> if you take the lazy route of the <em>edge midpoint</em>, the contour becomes a jagged polyline that gets uglier the coarser the grid. Linear interpolation slides the crossing point along the edge in proportion to the values, giving a smooth curve even on a coarse grid.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable Demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Click "Next" to walk through the algorithm step by step: <strong>sample the grid → mark cells above the threshold → interpolate crossing points on edges → connect into polylines</strong>; you can also "Play" to run it automatically, and drag the threshold slider to watch the contour deform — sometimes splitting into two loops.</p>
+          <div class="demo-mount" data-demo="d-4-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section Summary</h4>
+          <ul>
+            <li>Marching Squares = using each cell's "whether its four corners exceed the threshold" to assemble a case number (0~15), then a table lookup gives 0/1/2 segments that separate the two regions.</li>
+            <li>Segment endpoints come from <strong>linear interpolation</strong> on the edges (<code>t = (threshold − a)/(b − a)</code>), which is the key to smooth contours.</li>
+            <li>Only the saddle (case 5 / 10) is ambiguous and needs the cell-center value to decide direction; generalized to 3D it becomes Marching Cubes with 2⁸ = 256 cases.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">In Marching Squares, why do cases 5 and 10 need special handling?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="a"><span>These two cases have no segments and can simply be skipped</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="b"><span>They are saddle points: the two diagonal corners exceed the threshold, so the two segments have two possible connections and the cell-center value decides the direction</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="c"><span>They are the boundary cases of "all above / all below"</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="d"><span>They only appear in 3D Marching Cubes</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Only all-above (15) and all-below (0) have no segments. Cases 5 / 10 have two diagonal corners above the threshold, so the two segments can either "enclose the two big corners" or "enclose the two small corners" — geometrically ambiguous; the algorithmic convention is to compare the <strong>cell-center value</strong> with the threshold to settle it.</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= Prev / Next chapter ================= -->
+  <nav class="chapter-pager" aria-label="Chapter pagination">
+    <a class="pager-prev" href="../lesson-03/">
+      <span class="pager-dir">← Previous</span>
+      <span class="pager-title">Chapter 3 · Color</span>
+    </a>
+    <a class="pager-portal" href="../">Back to portal</a>
+    <a class="pager-next" href="../lesson-05/">
+      <span class="pager-dir">Next →</span>
+      <span class="pager-title">Chapter 5 · Time Series Data</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 Introduction to Visualization · China University of Petroleum (East China) · Instructor: Li Xin · Main textbook: Chen Wei, "Introduction to Visualization"</p>
+    <p>Zero-build static site · inline SVG graphics · no video · bilingual (Chinese / English) with dark mode</p>
+  </footer>
+
+  <!-- Chapter demos and interactions (ES module; blocked by CORS on file://, the page still reads fine) -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Knowledge Graph · Introduction to Visualization</title>
+  <meta name="description" content="The course knowledge graph of Introduction to Visualization: a network of chapters ↔ sections ↔ key points ↔ cases ↔ datasets. Drag nodes freely, switch between graph / table views, filter by category, export as PNG. Zero-build static page, works offline.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- The theme script must run as early as possible: write data-theme before paint so switching is flicker-free -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+  <link rel="stylesheet" href="../graph.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= Top bar ================= -->
+  <header class="course-topbar">
+    <a class="brand" href="./">
+      <span class="back">←</span> Introduction to Visualization
+      <span class="brand__sub">Tools · Knowledge Graph</span>
+    </a>
+
+    <nav class="tabs" aria-label="Chapter navigation">
+      <a href="lesson-01/">Chapter 1 Data</a>
+      <a href="lesson-02/">Chapter 2 Process</a>
+      <a href="lesson-03/">Chapter 3 Color</a>
+      <a href="lesson-04/">Chapter 4 Low-dimensional</a>
+      <a href="lesson-05/">Chapter 5 Temporal</a>
+      <a href="topic-chart-guide/">Chart Guide</a>
+      <a href="quiz.html">Chapter Quiz</a>
+      <a href="practice.html">Practice Workbench</a>
+      <a href="graph.html" class="current" aria-current="page">Knowledge Graph</a>
+    </nav>
+
+    <div class="lang-switch" role="group" aria-label="Language / Language">
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      <a class="lang-switch-item" href="../graph.html" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+    </div>
+  </header>
+
+  <!-- ================= Page header ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>Course Knowledge Graph</h1>
+        <p class="subtitle">Lay the 5 chapters out as one web of relations: <b>chapter → section → key point → case / dataset</b>. Which knowledge builds on which, and which sections use which datasets — clear at a glance.</p>
+      </div>
+      <div class="header-tip">Nodes are draggable · Graph / table views · Filterable · Export PNG</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>Learning goals for this page</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>Name the knowledge skeleton of this course: the theme of each of the 5 chapters, and how they build on one another</span></label></li>
+        <li><label><input type="checkbox"><span>Given any knowledge node, tell which of "section / key point / case / dataset" it belongs to</span></label></li>
+        <li><label><input type="checkbox"><span>Follow the graph to find "which sections use a given dataset", and jump back to the lesson quickly</span></label></li>
+        <li><label><input type="checkbox"><span>Use "Expand this module" to drill into one chapter's detail view, and "Open this section" to jump back to the lesson anchor</span></label></li>
+        <li><label><input type="checkbox"><span>Switch between the graph / table views, and run one filter over a color-coded category</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= Main ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>Knowledge Graph · Contents</h3>
+      <ul>
+        <li><a href="#kg">Course knowledge graph</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>How to use this page</b><br>
+        ① Start with the "Overview" above: click and drag nodes to see how the chapters connect;<br>
+        ② Select a node in the side panel, then click "Expand this module" to drill down;<br>
+        ③ To jump back to the lesson, select a node and click "Open this section";<br>
+        ④ Clicking a node itself never navigates — all jumps happen through the side-panel buttons.
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+      <section class="chapter" id="kg">
+        <h2>Course Knowledge Graph</h2>
+        <p class="chapter-subtitle">Nodes = chapters / sections / key points / cases / datasets; links = part of (solid), prerequisite (dashed), used in (dotted).</p>
+        <div id="kg-root"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ================= Previous / next ================= -->
+  <nav class="chapter-pager" aria-label="Page navigation">
+    <a class="pager-prev" href="topic-chart-guide/">
+      <span class="pager-dir">← Previous</span>
+      <span class="pager-title">Chart Guide · From data to chart</span>
+    </a>
+    <a class="pager-portal" href="./">Back to portal</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 Introduction to Visualization course · China University of Petroleum (East China) · Instructor: Li Xin · Main textbook: Introduction to Visualization by Chen Wei</p>
+    <p>Zero-build static site · Inline SVG graphics · No videos · Bilingual (EN/ZH) and dark mode supported</p>
+  </footer>
+
+  <!-- Graph dependencies: the 4 local d3-force libraries must load in this order, all plain scripts (file://-safe) -->
+  <script src="../vendor/d3-quadtree.min.js"></script>
+  <script src="../vendor/d3-dispatch.min.js"></script>
+  <script src="../vendor/d3-timer.min.js"></script>
+  <script src="../vendor/d3-force.min.js"></script>
+  <script src="graph-ui.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="../graph.js"></script>
+</body>
+</html>

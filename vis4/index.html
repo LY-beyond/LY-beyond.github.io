@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>《可视化导论》· 从数据到图表</title>
+  <meta name="description" content="《可视化导论》课程门户：5 章 27 小节，含可运行演示、连续阅读的章节页、图表速查与自测。零构建静态站，支持中英双语与深色模式。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：在渲染前写好 data-theme，切换无闪烁 -->
+  <script src="theme.js"></script>
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="i18n.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20v-8M9.3 20V5M14.7 20v-6M20 20V9"/>
+          </svg>
+        </span>
+        <span>
+          《可视化导论》
+          <span class="brand__sub">DATA VISUALIZATION · D3.JS</span>
+        </span>
+      </a>
+
+      <nav class="topnav" aria-label="页面导航">
+        <a href="#path">学习路径</a>
+        <a href="#chapters">课程章节</a>
+        <a href="#tools">学习工具</a>
+        <a href="#guide">图表速查</a>
+        <a href="#about">关于</a>
+      </nav>
+
+      <!-- 主题切换按钮由 theme.js 注入到这个语言切换器的左侧 -->
+      <div class="lang-switch" role="group" aria-label="语言 / Language">
+        <span class="lang-switch-item is-active" aria-current="true">中</span>
+        <a class="lang-switch-item" href="en/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= Hero ================= -->
+    <section class="hero">
+      <div class="hero__lead">
+        <p class="hero__tag">VISUALIZATION · INTRODUCTION</p>
+        <h1 class="hero__title">《可视化<em>导论</em>》</h1>
+        <p class="hero__sub">从数据到图表：JavaScript + D3.js 实战课程。先看懂数据是什么，再决定该用什么图形去表达它。</p>
+        <p class="hero__meta">
+          中国石油大学（华东）· 授课教师：
+          <a href="https://cinger007.github.io" target="_blank" rel="noopener">李昕</a>
+          · 主要参考教材：陈为《可视化导论》
+        </p>
+
+        <ul class="hero__facts">
+          <li><b>5</b> 章</li>
+          <li><b>27</b> 小节</li>
+          <li><b>27</b> 个可运行演示</li>
+          <li><b>24</b> 张原理示意图</li>
+          <li><b>2</b> 种语言</li>
+        </ul>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary" id="hero-start" href="lesson-01/">开始学习 · 第 1 章 数据</a>
+          <a class="btn btn--ghost" href="#path">看学习路径</a>
+        </div>
+      </div>
+
+      <!-- 课程关系示意图：5 个模块成链，箭头表示先修关系 -->
+      <figure class="relmap" role="group" aria-label="课程关系示意图：数据 → 流程 → 色彩 → 低维 → 时序">
+        <div class="relmap__row">
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-1)">
+              <ellipse cx="12" cy="6" rx="7" ry="3"/>
+              <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/>
+              <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>
+            </svg>
+            <b>数据</b><span>DATA</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-2)">
+              <rect x="3" y="3" width="7" height="6" rx="1.6"/>
+              <rect x="14" y="15" width="7" height="6" rx="1.6"/>
+              <path d="M6.5 9v3a2 2 0 0 0 2 2H16a2 2 0 0 1 2 2"/>
+            </svg>
+            <b>流程</b><span>PIPELINE</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-4)">
+              <rect x="3" y="4" width="18" height="16" rx="2.4"/>
+              <path d="M9 4v16M15 4v16"/>
+            </svg>
+            <b>色彩</b><span>COLOR</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-3)">
+              <path d="M4 3v17h17"/>
+              <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="18" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+            <b>低维</b><span>2D</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-6)">
+              <path d="M4 3v17h17"/>
+              <path d="M7 16l4-6 3 3 4-7"/>
+            </svg>
+            <b>时序</b><span>TEMPORAL</span>
+          </div>
+        </div>
+        <p class="relmap__cap">
+          <span>先修关系：</span><b>数据</b> 是所有章节的地基，<b>色彩</b> 与 <b>低维</b> 互为表里
+        </p>
+        <figcaption class="relmap__caption">课程关系示意图（示意图形由内联 SVG 绘制，无位图）</figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= 学习路径 ================= -->
+    <section class="section" id="path">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">LEARNING PATH</span>
+        <h2>学习路径</h2>
+        <p>按顺序走完这 5 步，你会从「把数据读进浏览器」一路走到「为不同粒度的时间数据挑对图形」。每一步都写明<strong>学完能做什么</strong>——点节点直接进章节。</p>
+      </div>
+
+      <div class="progress-line" id="progress-line" hidden>
+        <span class="progress-line__text">已读 <b id="progress-done">0</b> / 27 小节</span>
+        <span class="progress-line__bar" aria-hidden="true"><i id="progress-fill"></i></span>
+        <button type="button" class="progress-line__reset" id="progress-reset">重置学习进度</button>
+      </div>
+
+      <ol class="path-map">
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-01/">
+            <span class="path-step__dot">01</span>
+            <span class="path-step__body">
+              <span class="path-step__title">数据</span>
+              <span class="path-step__desc">把现实世界装进一张表格</span>
+              <span class="path-step__out">
+                <b>学完能</b>
+                看一列数据就知道它是「名字」还是「数值」，并选中合适的视觉通道去表达它。
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-02/">
+            <span class="path-step__dot">02</span>
+            <span class="path-step__body">
+              <span class="path-step__title">数据可视化流程</span>
+              <span class="path-step__desc">从原始数据到屏幕上的图</span>
+              <span class="path-step__out">
+                <b>学完能</b>
+                说清「原始数据 → 数据表 → 视觉结构 → 视图」每一步到底做了什么、在哪一步出错。
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-03/">
+            <span class="path-step__dot">03</span>
+            <span class="path-step__body">
+              <span class="path-step__title">色彩专题</span>
+              <span class="path-step__desc">颜色不是装饰，是一个通道</span>
+              <span class="path-step__out">
+                <b>学完能</b>
+                为任意图表挑出一套可读、色盲友好、能通过对比度检查的配色。
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-04/">
+            <span class="path-step__dot">04</span>
+            <span class="path-step__body">
+              <span class="path-step__title">低维数据可视化</span>
+              <span class="path-step__desc">二维平面上的全部技巧</span>
+              <span class="path-step__out">
+                <b>学完能</b>
+                在一张图里同时编码两个变量、一条趋势和若干离群点，并判断读图误差从哪来。
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-05/">
+            <span class="path-step__dot">05</span>
+            <span class="path-step__body">
+              <span class="path-step__title">时序数据可视化</span>
+              <span class="path-step__desc">时间是最常见的维度</span>
+              <span class="path-step__out">
+                <b>学完能</b>
+                为不同粒度的时间数据（时刻 / 区间 / 周期 / 跨度）选择日历、螺旋或故事线。
+              </span>
+            </span>
+          </a>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ================= 章节卡片墙 ================= -->
+    <section class="section" id="chapters">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">CHAPTERS</span>
+        <h2>课程章节</h2>
+        <p>每章都是<strong>连续阅读</strong>的：一个小节固定「原案例 → 理论 → 关键代码 → 可运行演示 → 小结 → 自测」六段，代码就地折叠、演示就地渲染，读到哪里看到哪里。</p>
+      </div>
+
+      <div class="cards">
+
+        <!-- 第 1 章 -->
+        <a class="card" href="lesson-01/" data-lesson="lesson-01" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <ellipse cx="12" cy="6" rx="7" ry="3"/>
+                <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/>
+                <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>
+              </svg>
+              第 1 章
+            </span>
+            <span class="card__hours">5 小节</span>
+          </span>
+          <h3>数据</h3>
+          <p class="card__desc">从合成的新生数据出发：数据生成、DIKW 金字塔、Stevens 四种测量尺度、Mackinlay 视觉通道，以及 D3 的数据变换与 Data-Join 三态。</p>
+          <ul class="card__tags">
+            <li>DIKW 金字塔</li>
+            <li>Stevens 4 尺度</li>
+            <li>8 个 D3 变换函数</li>
+            <li>Selection 三态</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">进入章节</span>
+          </span>
+        </a>
+
+        <!-- 第 2 章 -->
+        <a class="card" href="lesson-02/" data-lesson="lesson-02" data-total="4">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="6" rx="1.6"/>
+                <rect x="14" y="15" width="7" height="6" rx="1.6"/>
+                <path d="M6.5 9v3a2 2 0 0 0 2 2H16a2 2 0 0 1 2 2"/>
+              </svg>
+              第 2 章
+            </span>
+            <span class="card__hours">4 小节</span>
+          </span>
+          <h3>数据可视化流程</h3>
+          <p class="card__desc">Card / Mackinlay / van Wijk 三种数据流模型，新生数据 → 分类树 → 树形列表的完整链路，Reingold–Tilford 布局与 DOM 事件机制。</p>
+          <ul class="card__tags">
+            <li>Card 数据流模型</li>
+            <li>d3.rollup 聚合</li>
+            <li>Reingold–Tilford</li>
+            <li>事件委托</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 4</span>
+            </span>
+            <span class="card__cta">进入章节</span>
+          </span>
+        </a>
+
+        <!-- 第 3 章：色彩专题 -->
+        <a class="card card--color" href="lesson-03/" data-lesson="lesson-03" data-total="8">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2.4"/>
+                <path d="M9 4v16M15 4v16"/>
+              </svg>
+              第 3 章
+            </span>
+            <span class="card__hours">8 小节 · 专题</span>
+          </span>
+          <h3>色彩专题</h3>
+          <p class="card__desc">颜色模型 → colormap 三类 → CIE Lab 色域 → 5 大色系规则 → 经典科研配色 → 正误案例，并配一套可交互的配色工具：CVD 模拟、配色生成、对比度检查。</p>
+          <ul class="card__tags">
+            <li>4 种颜色空间</li>
+            <li>顺序 / 发散 / 定性</li>
+            <li>Wong &amp; Paul Tol</li>
+            <li>CVD 模拟器</li>
+            <li>WCAG 对比度</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 8</span>
+            </span>
+            <span class="card__cta">进入专题</span>
+          </span>
+        </a>
+
+        <!-- 第 4 章 -->
+        <a class="card" href="lesson-04/" data-lesson="lesson-04" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 3v17h17"/>
+                <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="18" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+              第 4 章
+            </span>
+            <span class="card__hours">5 小节</span>
+          </span>
+          <h3>低维数据可视化</h3>
+          <p class="card__desc">Crime 数据的三层坐标变换、10 种曲线拟合对照、Cleveland 45° 倾角感知、Marching Squares 等值线逐步追踪。</p>
+          <ul class="card__tags">
+            <li>三层坐标变换</li>
+            <li>10 种曲线拟合</li>
+            <li>Cleveland 45°</li>
+            <li>Marching Squares</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">进入章节</span>
+          </span>
+        </a>
+
+        <!-- 第 5 章 -->
+        <a class="card" href="lesson-05/" data-lesson="lesson-05" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 3v17h17"/>
+                <path d="M7 16l4-6 3 3 4-7"/>
+              </svg>
+              第 5 章
+            </span>
+            <span class="card__hours">5 小节</span>
+          </span>
+          <h3>时序数据可视化</h3>
+          <p class="card__desc">时间的 5 个属性、法国人名时间序列、van Wijk 日历热图、阿基米德螺旋日历，以及《侏罗纪公园》故事线（Storyline）。</p>
+          <ul class="card__tags">
+            <li>时间属性分解</li>
+            <li>日历热图</li>
+            <li>极坐标变换</li>
+            <li>Storygraph 故事线</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">进入章节</span>
+          </span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ================= 学习工具 ================= -->
+    <section class="section" id="tools">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">STUDY TOOLS</span>
+        <h2>学习工具</h2>
+        <p>四件配套工具：看清知识之间的关系、按任务反查该画什么图、随时抽题自测、动手写一段 D3 代码。它们复用同一套设计令牌与双语机制。</p>
+      </div>
+
+      <div class="tools">
+        <a class="tool tool--live" href="graph.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="2.6"/>
+              <circle cx="5" cy="18" r="2.6"/>
+              <circle cx="19" cy="18" r="2.6"/>
+              <path d="M10.2 7.2 6.6 15.7M13.8 7.2l3.6 8.5M7.6 18h8.8"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">知识图谱</span>
+            <p class="tool__desc">章 ↔ 小节 ↔ 关键点 ↔ 案例 ↔ 数据集的关系网络，可拖动、可筛选、可导出图片。</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="topic-chart-guide/">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v5M12 8 6 13v8M12 8l6 5v8"/>
+              <circle cx="12" cy="3" r="1.7"/>
+              <circle cx="6" cy="21" r="1.7"/>
+              <circle cx="18" cy="21" r="1.7"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">选图指南</span>
+            <p class="tool__desc">「我有什么数据、我想表达什么」两个问题走完决策树，直接得到推荐图表、主视觉通道与常见误用。</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="quiz.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 4h6v3H9z"/>
+              <path d="M9 5H5.5A1.5 1.5 0 0 0 4 6.5v13A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 18.5 5H15"/>
+              <path d="M8.5 13.6l2.4 2.4 4.6-5"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">章节测验</span>
+            <p class="tool__desc">覆盖 5 章 + 专题的 44 道题库，按章均衡抽题、即时判分、逐题解析，并记录错题本与历次成绩。</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="practice.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 6l-5 6 5 6M16 6l5 6-5 6M14 4l-4 16"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">D3 实战工作台</span>
+            <p class="tool__desc">8 个环节，从零用 D3 画出柱状图：写一点、看一眼、验一点，只判效果不判写法，成品可导出 SVG。</p>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= 图表速查 ================= -->
+    <section class="section" id="guide">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">CHART CHEAT SHEET</span>
+        <h2>图表速查：先问任务，再挑图形</h2>
+        <p>右侧这一列是<strong>最常被误用</strong>的地方。挑图形的第一步不是「哪个好看」，而是「我的数据类型允许哪些视觉通道」。</p>
+      </div>
+
+      <div class="cheat">
+        <table>
+          <caption>速查矩阵：按「想表达什么」反查图表（完整版含 20 行、交互决策树、正误用图对照与 6 题小测，见《选图指南》专题页）</caption>
+          <thead>
+            <tr>
+              <th scope="col">你想表达</th>
+              <th scope="col">推荐图表</th>
+              <th scope="col">主要视觉通道</th>
+              <th scope="col">慎用 / 常见错误</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>比较若干个类别的大小</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="4" width="4" height="14" rx="1"/><rect x="8" y="9" width="4" height="9" rx="1"/><rect x="14" y="6" width="4" height="12" rx="1"/></svg></span><span class="cheat__rec">条形图</span></td>
+              <td>长度（位置）</td>
+              <td class="cheat__no">别用面积 / 体积表达大小；类别多时按数值排序</td>
+            </tr>
+            <tr>
+              <td>看一个变量的分布形状</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="11" width="4" height="7" rx="1"/><rect x="7" y="5" width="4" height="13" rx="1"/><rect x="12" y="13" width="4" height="5" rx="1"/><rect x="16" y="8" width="3" height="10" rx="1"/></svg></span><span class="cheat__rec">直方图 / 密度图</span></td>
+              <td>长度（分箱计数）</td>
+              <td class="cheat__no">分箱宽度决定形状，换宽度会「换一个故事」</td>
+            </tr>
+            <tr>
+              <td>看两个变量的关系</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><circle cx="4" cy="15" r="1.8"/><circle cx="8" cy="11" r="1.8"/><circle cx="11" cy="12" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="17" cy="4" r="1.8"/></svg></span><span class="cheat__rec">散点图</span></td>
+              <td>位置（x, y）</td>
+              <td class="cheat__no">点重叠时先设透明度，或换六边形分箱</td>
+            </tr>
+            <tr>
+              <td>看随时间的趋势</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16l5-7 4 4 3-6 4 3"/></svg></span><span class="cheat__rec">折线图</span></td>
+              <td>位置 + 斜率</td>
+              <td class="cheat__no">时间轴必须等距、连续；不要给无序类别画折线</td>
+            </tr>
+            <tr>
+              <td>看构成与占比</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="11" width="16" height="4" rx="1"/><rect x="2" y="5" width="16" height="5" rx="1"/></svg></span><span class="cheat__rec">堆叠条形图</span></td>
+              <td>长度（可比较总长）</td>
+              <td class="cheat__no">饼图超过 5 个扇区就读不出差值；扇区要按大小排序</td>
+            </tr>
+            <tr>
+              <td>看二维密度 / 相关强度</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="2" width="5" height="5"/><rect x="8" y="2" width="5" height="5"/><rect x="14" y="2" width="4" height="5"/><rect x="2" y="8" width="5" height="5"/><rect x="8" y="8" width="5" height="5"/><rect x="14" y="8" width="4" height="5"/><rect x="2" y="14" width="5" height="4"/><rect x="8" y="14" width="5" height="4"/><rect x="14" y="14" width="4" height="4"/></svg></span><span class="cheat__rec">热力图</span></td>
+              <td>颜色亮度（顺序型 colormap）</td>
+              <td class="cheat__no">别用彩虹色阶；必须有颜色图例</td>
+            </tr>
+            <tr>
+              <td>比较多组分布并找离群点</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="7" width="12" height="7" rx="1"/><path d="M10 2v5M10 14v4M2 10.5h2M16 10.5h2"/></svg></span><span class="cheat__rec">箱线图 / 小提琴图</span></td>
+              <td>位置 + 长度（统计量）</td>
+              <td class="cheat__no">样本量很小的组不要画箱线图，直接画点</td>
+            </tr>
+            <tr>
+              <td>看多变量之间的整体结构</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3v14h16"/><path d="M4 14h12M6 15V7M9 15V4M12 15V9M15 15v-5"/></svg></span><span class="cheat__rec">散点矩阵 / 平行坐标</span></td>
+              <td>位置（多轴）</td>
+              <td class="cheat__no">维度超过 8 个要换降维（PCA）或分面</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="guide-cta">
+        <a class="btn btn--primary" href="topic-chart-guide/">打开完整选图指南 · 决策树 + 速查矩阵 + 正误对照 + 6 题小测</a>
+      </p>
+    </section>
+
+    <!-- ================= 关于 ================= -->
+    <section class="section" id="about">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">ABOUT</span>
+        <h2>关于本课程</h2>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-item">
+          <h4>📖 理论来源</h4>
+          <p>陈为《可视化导论》；Mackinlay 1986（视觉通道排序）；Stevens 1946（测量尺度）；Cleveland 1984（图形感知）；Card 1999（数据流模型）；Bostock 的 D3 官方文档。</p>
+        </div>
+        <div class="about-item">
+          <h4>🎯 设计原则</h4>
+          <p><strong>案例为中心</strong>，不是理论为中心。每个知识点都嵌在实践案例里，配 ⭐ 关键点解释、可运行演示与即时自测。</p>
+        </div>
+        <div class="about-item">
+          <h4>🧭 怎么学</h4>
+          <p>① 章首先勾学习目标；② 按小节连续往下读，演示会就地渲染；③ 用「只看代码」开关快速复习；④ 做完每节自测再看下一节。</p>
+        </div>
+        <div class="about-item">
+          <h4>🛠️ 技术栈与约束</h4>
+          <p>零构建：纯 HTML + CSS + ES Modules + 本地内置的 D3 模块，<strong>不含任何视频</strong>。所有原理示意图都用内联 SVG 绘制，整站体积可控、离线可用。</p>
+        </div>
+        <div class="about-item">
+          <h4>🗂️ 附录 · 可视化原始标本</h4>
+          <p><a href="appendix/">附录页</a>收编了课程原有的全部独立演示与第 4 章讲义 PDF：保留原生 D3 写法，先读正文，再来对照源码。</p>
+        </div>
+      </div>
+
+      <div class="cheat">
+        <table>
+          <caption>数据集索引：全部随站点打包在 <code>data/</code> 目录，浏览器直接读取，离线可用</caption>
+          <thead>
+            <tr>
+              <th scope="col">数据集</th>
+              <th scope="col">所属章节</th>
+              <th scope="col">规模</th>
+              <th scope="col">用来演示什么</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>newstudent.csv</code></td>
+              <td>第 1–2 章</td>
+              <td>80 行 × 8 列</td>
+              <td>数据生成、测量尺度、视觉通道、d3.rollup 聚合、树形布局</td>
+            </tr>
+            <tr>
+              <td><code>crime.csv</code></td>
+              <td>第 4 章</td>
+              <td>50 州 × 12 列</td>
+              <td>三层坐标变换、曲线拟合、Cleveland 45° 感知、等值线</td>
+            </tr>
+            <tr>
+              <td><code>weather_2024.csv</code></td>
+              <td>第 5 章</td>
+              <td>366 天 × 3 列</td>
+              <td>时间序列多尺度、日历热图、螺旋日历</td>
+            </tr>
+            <tr>
+              <td><code>french_names.json</code></td>
+              <td>第 5 章</td>
+              <td>长表（年份 × 名）</td>
+              <td>多序列时间线、Storyline 故事线</td>
+            </tr>
+            <tr>
+              <td><code>calendar_data.csv</code></td>
+              <td>附录 · 扩展演示</td>
+              <td>1461 行</td>
+              <td>van Wijk 日历热图的日期对齐与分箱</td>
+            </tr>
+            <tr>
+              <td><code>terrain10.csv</code></td>
+              <td>附录 · 扩展演示</td>
+              <td>10 × 10 网格</td>
+              <td>Marching Squares 等值线追踪</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      © 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：
+      <a href="https://cinger007.github.io" target="_blank" rel="noopener">李昕</a>
+      · 主要参考教材：陈为《可视化导论》
+    </p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 门户交互（进度回填 / 顶栏高亮）；file:// 下模块被 CORS 拦截时静默降级 -->
+  <script type="module" src="portal.js"></script>
+</body>
+</html>

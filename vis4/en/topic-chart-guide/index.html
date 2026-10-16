@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chart Selection Guide · From Data to Charts · Introduction to Visualization</title>
+  <meta name="description" content="The Chart Selection Guide topic of Introduction to Visualization: a three-step decision tree (task → data → chart), a quick-reference matrix organized by five task types, a comparison of the four most common chart misuses, and a 6-question quiz graded instantly.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../../theme.js"></script>
+
+  <link rel="stylesheet" href="../../tokens.css">
+  <link rel="stylesheet" href="../../theme.css">
+  <link rel="stylesheet" href="../../i18n.css">
+  <link rel="stylesheet" href="../../lesson.css">
+  <link rel="stylesheet" href="../../chart-help.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="course-topbar">
+    <a class="brand" href="../">
+      <span class="back">←</span> Introduction to Visualization
+      <span class="brand__sub">Topic · Chart Selection Guide</span>
+    </a>
+
+    <nav class="tabs" aria-label="Chapter navigation">
+      <a href="../lesson-01/">Ch. 1 Data</a>
+      <a href="../lesson-02/">Ch. 2 Process</a>
+      <a href="../lesson-03/">Ch. 3 Color</a>
+      <a href="../lesson-04/">Ch. 4 Low-dim</a>
+      <a href="../lesson-05/">Ch. 5 Temporal</a>
+      <a href="./" class="current" aria-current="page">Chart Guide</a>
+      <a href="../quiz.html">Chapter Quiz</a>
+      <a href="../practice.html">Practice Lab</a>
+      <a href="../graph.html">Knowledge Graph</a>
+    </nav>
+
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      <a class="lang-switch-item" href="../../index.html" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+    </div>
+  </header>
+
+  <!-- ================= 页头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>Chart Selection Guide · From Data to Charts</h1>
+        <p class="subtitle">“Which chart should I draw?” — this step should not rely on instinct. Ask about the <b>task</b> first, then look at the <b>data</b>, and only then pick the <b>chart</b>.</p>
+      </div>
+      <div class="header-tip">Interactive decision tree · Quick-reference matrix · Quiz graded instantly</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>Learning goals</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>State the order “task first, then data, then chart”, and explain why it cannot be reversed</span></label></li>
+        <li><label><input type="checkbox"><span>Given a dataset plus an intent, follow the decision tree to a concrete chart</span></label></li>
+        <li><label><input type="checkbox"><span>Name each common chart's main visual channel, and the data size at which it breaks down</span></label></li>
+        <li><label><input type="checkbox"><span>Recognize the four most common misuses: precise comparison by angle, truncated value axes, one-dimensional size encoded as area, and rainbow scales</span></label></li>
+        <li><label><input type="checkbox"><span>When arguing about “which chart to draw”, justify your choice with the channel rules in the quick-reference matrix</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>Chart Guide · Contents</h3>
+      <ul>
+        <li><a href="#cg-1" data-chapter="cg-1">1. Three-step decision tree</a></li>
+        <li><a href="#cg-2" data-chapter="cg-2">2. Quick-reference matrix</a></li>
+        <li><a href="#cg-3" data-chapter="cg-3">3. Right vs wrong charts</a></li>
+        <li><a href="#cg-4" data-chapter="cg-4">4. Quiz (6 questions)</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>How to use this page</b><br>
+        ① Tick the learning goals above first;<br>
+        ② Actually walk the decision tree in Section 1 and see what it recommends;<br>
+        ③ Use the Section 2 matrix to look back: once you know what you want, come check the channel;<br>
+        ④ After the Section 4 quiz, go back and find which rule you misremembered.
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 1. 三步选图决策树 ============ -->
+      <article class="chapter" id="cg-1">
+        <h2>1. The three-step decision tree</h2>
+        <p class="chapter-subtitle">The most common mistake in chart selection is “pick something pretty first, then squeeze the data into it”.</p>
+
+        <span class="sec-label"><i>1</i> Why it cannot be reversed</span>
+        <p>What really decides “what a chart lets people see” is not how pretty it is, but <strong>which visual channel</strong> it uses; and whether a channel is usable is decided by the data's <strong>scale of measurement</strong> (see <a href="../lesson-01/#ch-1-3">Chapter 1, 1.3 Data attributes</a>).</p>
+
+        <div class="theory-card">
+          <h4>Channel readability ranking (precision of human judgment)</h4>
+          <p><strong>Length / position &gt; angle &gt; area &gt; color lightness &gt; volume</strong>. The eye reads length most accurately and volume least accurately — so “comparing sizes with two circles” is almost guaranteed to mislead, while “comparing the lengths of two bars” almost never fails.</p>
+        </div>
+
+        <ul>
+          <li>✅ <strong>Ordinal / nominal data</strong> → length, position, color (hue only separates, never orders).</li>
+          <li>⚠️ <strong>Quantitative data</strong> → position and length are the safest; area and volume only convey “order of magnitude”, never precise comparison.</li>
+          <li>❌ <strong>Forcing quantitative data into angles</strong> (pie charts) → only for “≤ 5 slices, major vs minor only”.</li>
+        </ul>
+
+        <span class="sec-label"><i>2</i> The three steps</span>
+        <p>Fold the rules above into one walkable path: <strong>task → data → chart</strong>. The first two steps are constraints; the third is the choice made inside them.</p>
+
+        <figure class="figure">
+          <svg viewBox="0 0 660 160" role="img" aria-label="Three-step chart selection: step 1 asks about the task, step 2 examines the data, step 3 picks the chart">
+            <defs>
+              <marker id="cgArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0L10 5L0 10Z" style="fill: var(--c-border-2)"/>
+              </marker>
+            </defs>
+
+            <!-- 第 1 步 -->
+            <rect x="4" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-primary) 30%, transparent);"/>
+            <text x="20" y="48" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">Step 1 · Task</text>
+            <text x="20" y="74" style="fill: var(--c-text); font-size: 13px;">Compare · Distribute · Relate</text>
+            <text x="20" y="94" style="fill: var(--c-text); font-size: 13px;">Change · Compose</text>
+            <text x="20" y="118" style="fill: var(--c-muted); font-size: 11.5px;">First ask “what should the reader see”</text>
+
+            <line x1="196" y1="77" x2="232" y2="77" marker-end="url(#cgArrow)"
+                  style="stroke: var(--c-border-2); stroke-width: 1.6;"/>
+
+            <!-- 第 2 步 -->
+            <rect x="236" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-accent) 30%, transparent);"/>
+            <text x="252" y="48" style="fill: var(--c-accent); font-size: 12px; font-weight: 800;">Step 2 · Data</text>
+            <text x="252" y="74" style="fill: var(--c-text); font-size: 13px;">Category · Number · Time</text>
+            <text x="252" y="94" style="fill: var(--c-text); font-size: 13px;">Hierarchy · Interval</text>
+            <text x="252" y="118" style="fill: var(--c-muted); font-size: 11.5px;">Measurement scale decides usable channels</text>
+
+            <line x1="428" y1="77" x2="464" y2="77" marker-end="url(#cgArrow)"
+                  style="stroke: var(--c-border-2); stroke-width: 1.6;"/>
+
+            <!-- 第 3 步 -->
+            <rect x="468" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-success) 30%, transparent);"/>
+            <text x="484" y="48" style="fill: var(--c-success); font-size: 12px; font-weight: 800;">Step 3 · Chart</text>
+            <text x="484" y="74" style="fill: var(--c-text); font-size: 13px;">Pick one within the allowed channels</text>
+            <text x="484" y="94" style="fill: var(--c-text); font-size: 13px;">Then trade off by data size</text>
+            <text x="484" y="118" style="fill: var(--c-muted); font-size: 11.5px;">Category count / sample size / span</text>
+
+            <text x="330" y="152" text-anchor="middle"
+                  style="fill: var(--c-muted); font-size: 11.5px;">The order cannot be swapped: fixing the chart first and bending the data to it is boarding the train before choosing a destination</text>
+          </svg>
+          <figcaption>Three-step chart selection: task and data are the constraints; the chart is a solution under them (inline SVG, no bitmaps)</figcaption>
+        </figure>
+
+        <span class="sec-label"><i>3</i> Hands-on: walk the decision tree</span>
+        <div class="demo-card cg-wizard">
+          <p class="demo-hint">Answer 2–3 questions and the wizard recommends a chart, its main visual channel, the scale it fits and its common misuses. You can step back with “Back” at any point, or “Start over” anytime.</p>
+          <div class="cg-crumbs" id="cg-crumbs" hidden></div>
+          <div class="cg-stage" id="cg-stage"></div>
+          <div class="cg-wizard__foot">
+            <button type="button" class="demo-btn" id="cg-back" hidden>← Back</button>
+            <button type="button" class="demo-btn demo-btn--primary" id="cg-reset">Start over</button>
+          </div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>The first step of chart selection is not “which one looks nice” but “what data do I have and what do I want to express”.</li>
+            <li>Channel readability: length / position &gt; angle &gt; area &gt; color lightness &gt; volume; the data's scale decides which channels are usable.</li>
+            <li>A chart is a solution under the “task × data” constraints, with final trade-offs by scale (category count, sample size, time span).</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ============ 2. 图表速查矩阵 ============ -->
+      <article class="chapter" id="cg-2">
+        <h2>2. The quick-reference matrix</h2>
+        <p class="chapter-subtitle">Once you know what you want, come back and look it up: which channel does this chart use? When does it fail?</p>
+
+        <span class="sec-label"><i>1</i> Look up by five task types</span>
+        <p>The table below is grouped by the five most common intents. Every row gives the <strong>recommended chart</strong>, the <strong>main visual channel</strong> it relies on, and where it most easily goes wrong — the last item often matters more than the first two, because it decides “whether the chart will lie”.</p>
+
+        <div class="cheat cg-matrix table-scroll">
+          <table class="theory-table">
+            <caption>Quick-reference matrix: task × chart × channel × misuse (the “See” column jumps to the corresponding chapter)</caption>
+            <thead>
+              <tr>
+                <th scope="col">Recommended chart</th>
+                <th scope="col">Main visual channel</th>
+                <th scope="col">Best-fit scenario</th>
+                <th scope="col">Use with care / common mistakes</th>
+                <th scope="col">See</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">① Compare size — who is high, who is low</th></tr>
+              <tr>
+                <td>Bar chart (vertical)</td><td>Length / position</td>
+                <td>≤ 12 categories, precise values needed</td>
+                <td>Sorting alphabetically; encoding size as area / volume</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>Bar chart (horizontal, value-sorted)</td><td>Length / position</td>
+                <td>&gt; 12 categories, or long labels (full province names)</td>
+                <td>Putting the value axis on top; shuffling the order after sorting</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>Grouped bar chart</td><td>Length + group color</td>
+                <td>Comparing 2–3 subcategories within one categorical variable</td>
+                <td>When groups × categories &gt; 12, switch to small-multiple facets</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>Stacked bar chart</td><td>Length (total + segments)</td>
+                <td>Seeing total and inner composition at once</td>
+                <td>Middle segments are unreliable to read; merge into “other” beyond 6 segments</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">② Distribution — what one variable looks like</th></tr>
+              <tr>
+                <td>Histogram</td><td>Length (binned counts)</td>
+                <td>The shape of one continuous variable (skew, bimodality)</td>
+                <td>Bin width “changes the story”; it is not a time axis</td>
+                <td><a href="../lesson-04/#ch-4-1">4.1</a></td>
+              </tr>
+              <tr>
+                <td>Density / violin plot</td><td>Area (smoothed density)</td>
+                <td>Overlaying several distributions without binning noise</td>
+                <td>Areas are normalized — frequencies cannot be read</td>
+                <td><a href="../lesson-04/#ch-4-1">4.1</a></td>
+              </tr>
+              <tr>
+                <td>Box plot</td><td>Position + length (statistics)</td>
+                <td>Comparing groups, spotting outliers (≥ 30 per group)</td>
+                <td>Draw points for small groups; it hides bimodality</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>Strip (jitter) plot</td><td>Position (jitter prevents overlap)</td>
+                <td>Very few observations per group (&lt; 10), every one matters</td>
+                <td>Jitter so wide it changes the impression of the distribution</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">③ Relationship — are the variables connected</th></tr>
+              <tr>
+                <td>Scatter plot</td><td>Position (x, y)</td>
+                <td>Relations, outliers and clusters of two numeric variables</td>
+                <td>Heavy overlap with no transparency, or skipping hexagonal binning</td>
+                <td><a href="../lesson-04/#ch-4-3">4.3</a></td>
+              </tr>
+              <tr>
+                <td>Scatter + fitted trend line</td><td>Position + slope</td>
+                <td>Emphasizing trend direction, comparing fitted models</td>
+                <td>Hiding outliers behind the fit; forcing straight lines onto nonlinear data</td>
+                <td><a href="../lesson-04/#ch-4-3">4.3</a></td>
+              </tr>
+              <tr>
+                <td>Scatterplot matrix / parallel coordinates</td><td>Position (multiple axes)</td>
+                <td>Overall structure of 3–8 variables, quick correlation scan</td>
+                <td>Beyond 8 dimensions, switch to dimensionality reduction or facets</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>Heatmap (correlation matrix)</td><td>Color lightness (sequential colormap)</td>
+                <td>Pairwise correlation strength, scanned in a single image</td>
+                <td>Rainbow scales; missing color legend; values not matching colors</td>
+                <td><a href="../lesson-03/#ch-3-2">3.2</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">④ Change — how it moves over time</th></tr>
+              <tr>
+                <td>Line chart (single / multi-series)</td><td>Position + slope</td>
+                <td>Evenly spaced continuous series, trends and turning points</td>
+                <td>The time axis must be even and continuous; never line up unordered categories</td>
+                <td><a href="../lesson-05/#ch-5-2">5.2</a></td>
+              </tr>
+              <tr>
+                <td>Calendar heatmap</td><td>Color lightness (sequential colormap)</td>
+                <td>Daily events compared across years (weekday / monthly patterns)</td>
+                <td>A color legend is mandatory; missing days stay visibly blank</td>
+                <td><a href="../lesson-05/#ch-5-3">5.3</a></td>
+              </tr>
+              <tr>
+                <td>Spiral / polar calendar</td><td>Angle (cycle) + radius (time)</td>
+                <td>Long spans with clear cycles (seasons, multi-year)</td>
+                <td>Comparing lengths in polar form is imprecise — patterns only</td>
+                <td><a href="../lesson-05/#ch-5-4">5.4</a></td>
+              </tr>
+              <tr>
+                <td>Storyline / Gantt chart</td><td>Position (interval start–end)</td>
+                <td>Events, phases and durations with a clear start and end</td>
+                <td>Unsuitable for instant events; split into lanes when crossings pile up</td>
+                <td><a href="../lesson-05/#ch-5-5">5.5</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">⑤ Composition — what the whole is made of</th></tr>
+              <tr>
+                <td>Donut / pie chart</td><td>Angle + area</td>
+                <td>≤ 5 parts, major vs minor only</td>
+                <td>Beyond 5 slices differences vanish; never use it for precise comparison</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>100% stacked bar chart</td><td>Length (share)</td>
+                <td>The pie's replacement beyond 5 parts; shares stay comparable</td>
+                <td>Too many parts blur the colors — merge them</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+              <tr>
+                <td>100% stacked area chart</td><td>Area (share over time)</td>
+                <td>Composition evolving over time (shares trading places)</td>
+                <td>Middle layers are hard to read; use stacked areas when absolute values matter</td>
+                <td><a href="../lesson-05/#ch-5-2">5.2</a></td>
+              </tr>
+              <tr>
+                <td>Treemap</td><td>Area (hierarchical composition)</td>
+                <td>Multi-level composition with skewed shares</td>
+                <td>Area comparison is imprecise; beyond 3 levels it gets hard to read and small items vanish</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Using the matrix properly:</strong> first walk the Section 1 decision tree to a candidate, then check this table's “use with care” column against your data size; if it bites, switch to the neighboring chart in the same row (e.g. bars → horizontal bars, pie → 100% stacked bars).</p>
+        </div>
+      </article>
+
+      <!-- ============ 3. 正误用图对照 ============ -->
+      <article class="chapter" id="cg-3">
+        <h2>3. Right vs wrong charts</h2>
+        <p class="chapter-subtitle">Same data: drawn right, you see the conclusion; drawn wrong, you see “the chart's lie”.</p>
+
+        <span class="sec-label"><i>1</i> Four pairs</span>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ Misuse</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A donut chart with seven slices — hard to tell which is bigger">
+                <path d="M66 11A29 29 0 0 1 87.4 26.4L73.2 34.3A15 15 0 0 0 66 26Z" style="fill: var(--ch-1)"/>
+                <path d="M87.4 26.4A29 29 0 0 1 91.3 51.1L74.9 45.7A15 15 0 0 0 73.2 34.3Z" style="fill: var(--ch-2)"/>
+                <path d="M91.3 51.1A29 29 0 0 1 75.5 65.6L71.8 48.7A15 15 0 0 0 74.9 45.7Z" style="fill: var(--ch-3)"/>
+                <path d="M75.5 65.6A29 29 0 0 1 52.4 66.3L58.3 48.7A15 15 0 0 0 71.8 48.7Z" style="fill: var(--ch-4)"/>
+                <path d="M52.4 66.3A29 29 0 0 1 33.5 53.7L48.1 42.5A15 15 0 0 0 58.3 48.7Z" style="fill: var(--ch-5)"/>
+                <path d="M33.5 53.7A29 29 0 0 1 28.6 30.2L44.1 34.5A15 15 0 0 0 48.1 42.5Z" style="fill: var(--ch-6)"/>
+                <path d="M28.6 30.2A29 29 0 0 1 50.7 12.1L58.3 26.3A15 15 0 0 0 44.1 34.5Z" style="fill: var(--ch-7)"/>
+                <path d="M50.7 12.1A29 29 0 0 1 66 11L66 26A15 15 0 0 0 58.3 26.3Z" style="fill: var(--ch-8)"/>
+              </svg>
+            </div>
+            <p><b>Seven slices crammed into one donut.</b> Adjacent slices differ by less than 10° — the eye cannot read it; which of two similar slices is bigger is pure guesswork.</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ Correct</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A value-sorted horizontal bar chart">
+                <path class="cg-axis" d="M14 8V70M14 70H126"/>
+                <rect x="14" y="12" width="104" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="24" width="82" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="36" width="62" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="48" width="40" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="60" width="22" height="8" rx="2" style="fill: var(--ch-1)"/>
+              </svg>
+            </div>
+            <p><b>Swap to a value-sorted horizontal bar chart.</b> Length is the most precise channel — ranking and gaps read at a glance, and no number of categories feels “cramped”.</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ Misuse</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A bar chart with a truncated value axis — differences exaggerated">
+                <path class="cg-axis" d="M12 70H126"/>
+                <path class="cg-guide" d="M12 46H126"/>
+                <rect x="20" y="46" width="16" height="4" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="48" y="40" width="16" height="10" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="76" y="30" width="16" height="20" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="104" y="16" width="16" height="34" rx="1.6" style="fill: var(--ch-6)"/>
+                <text class="cg-lbl" x="20" y="76">3.4</text>
+                <text class="cg-lbl" x="76" y="76">4.1</text>
+                <text class="cg-lbl" x="98" y="76">4.6</text>
+              </svg>
+            </div>
+            <p><b>The value axis starts at 3.4, not 0.</b> 3.4 vs 4.6 is a 35% gap, yet it looks three times bigger — once a bar chart loses its zero, its lengths stop being trustworthy.</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ Correct</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A zero-based bar chart — differences truthful">
+                <path class="cg-axis" d="M12 8V70M12 70H126"/>
+                <rect x="20" y="33" width="16" height="37" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="48" y="29" width="16" height="41" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="76" y="25" width="16" height="45" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="104" y="20" width="16" height="50" rx="1.6" style="fill: var(--ch-1)"/>
+                <text class="cg-lbl" x="126" y="12" text-anchor="end">from 0</text>
+              </svg>
+            </div>
+            <p><b>Start the bars at 0.</b> The differences “look smaller”, but they are the true differences. To emphasize relative change, use a line chart or label percentages directly — never quietly truncate the axis.</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ Misuse</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="One-dimensional values encoded as circle areas — grossly exaggerated">
+                <circle cx="30" cy="42" r="9" style="fill: var(--ch-6)" opacity=".85"/>
+                <circle cx="68" cy="42" r="12.7" style="fill: var(--ch-6)" opacity=".85"/>
+                <circle cx="112" cy="42" r="18" style="fill: var(--ch-6)" opacity=".85"/>
+                <text class="cg-lbl" x="30" y="72" text-anchor="middle">10</text>
+                <text class="cg-lbl" x="68" y="72" text-anchor="middle">20</text>
+                <text class="cg-lbl" x="112" y="72" text-anchor="middle">40</text>
+              </svg>
+            </div>
+            <p><b>One-dimensional values as circle areas.</b> When the value quadruples the radius should only double, yet a reader's first instinct is “4× the radius” — visually inflated roughly 16×.</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ Correct</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="The same values encoded as lengths — proportions truthful">
+                <path class="cg-axis" d="M14 8V70M14 70H126"/>
+                <rect x="14" y="14" width="26" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="32" width="52" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="50" width="104" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <text class="cg-lbl" x="126" y="70" text-anchor="end">length ⇄ value 1:1</text>
+              </svg>
+            </div>
+            <p><b>Switch to length.</b> Length maps one-to-one to value — 4× is 4×. If a “sense of size” is truly needed, the values must be labeled and the mapping rule stated.</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ Misuse</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A rainbow-scale heatmap — lightness out of step with value">
+                <!-- 故意演示「错误配色」：彩虹色阶的亮度与数值不同向，因此此处直接写 hsl() 色值 -->
+                <rect x="4" y="10" width="20" height="20" style="fill: hsl(210, 90%, 40%)"/>
+                <rect x="26" y="10" width="20" height="20" style="fill: hsl(120, 90%, 45%)"/>
+                <rect x="48" y="10" width="20" height="20" style="fill: hsl(280, 90%, 55%)"/>
+                <rect x="70" y="10" width="20" height="20" style="fill: hsl(45, 95%, 55%)"/>
+                <rect x="92" y="10" width="20" height="20" style="fill: hsl(0, 90%, 48%)"/>
+                <rect x="4" y="34" width="20" height="20" style="fill: hsl(160, 90%, 42%)"/>
+                <rect x="26" y="34" width="20" height="20" style="fill: hsl(310, 85%, 60%)"/>
+                <rect x="48" y="34" width="20" height="20" style="fill: hsl(20, 92%, 52%)"/>
+                <rect x="70" y="34" width="20" height="20" style="fill: hsl(240, 85%, 45%)"/>
+                <rect x="92" y="34" width="20" height="20" style="fill: hsl(90, 90%, 45%)"/>
+              </svg>
+            </div>
+            <p><b>The rainbow (jet) scale.</b> Hue shifts while lightness jumps up and down, so readers take “the brightest yellow” as the maximum; the blue and red ends read as two extremes, inventing a midpoint that does not exist.</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ Correct</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="A sequential single-hue heatmap — lightness tracks the value">
+                <rect x="4" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".16"/>
+                <rect x="26" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".34"/>
+                <rect x="48" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".52"/>
+                <rect x="70" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".72"/>
+                <rect x="92" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity="1"/>
+                <rect x="4" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".28"/>
+                <rect x="26" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".6"/>
+                <rect x="48" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".88"/>
+                <rect x="70" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".44"/>
+                <rect x="92" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".2"/>
+                <text class="cg-lbl" x="4" y="68">light = small</text>
+                <text class="cg-lbl" x="112" y="68">dark = large</text>
+              </svg>
+            </div>
+            <p><b>A sequential single-hue scale (light → dark).</b> Lightness moves with the value, so order stays readable; use a diverging scale when “deviation from a midpoint” matters (see <a href="../lesson-03/#ch-3-2">3.2 Choosing among three colormap families</a>).</p>
+          </div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Precise comparison by angle (pie slices), truncated value axes, and one-dimensional values encoded as area are the three stealthiest “chart lies”.</li>
+            <li>Bar lengths must start at 0; to emphasize relative change use a line chart or label percentages directly.</li>
+            <li>Color is a channel, not decoration: sequential scales for ordered data, diverging scales for deviation from a center, qualitative scales only for pure categories.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ============ 4. 选图小测 ============ -->
+      <article class="chapter" id="cg-4">
+        <h2>4. Chart selection quiz (6 questions)</h2>
+        <p class="chapter-subtitle">Every question hands you a dataset and an intent, then asks what to draw — exactly like the questions of real work.</p>
+
+        <span class="sec-label"><i>1</i> Start answering</span>
+        <div class="cg-score">
+          <span>Score on this page</span>
+          <span class="cg-score__num" id="cg-score-num">Answered 0 / 6 · Correct 0</span>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Question 1</div>
+          <p class="selftest__q">You have GDP data for 30 provincial-level regions and want readers to see at a glance “who is high and who is low”, ranking them without comparing one by one. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="a"><span>Pie chart — see each region's share at a glance</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="b"><span>Horizontal bar chart, sorted by value from large to small</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="c"><span>Line chart — connect every region's GDP into one line</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="d"><span>Area chart — encode each region's size as area</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>With 30 categories and full-length province / region names, vertical bars would crowd together. A horizontal bar chart puts the labels on the y axis with lengths starting at 0 — <strong>length</strong>, the most precise channel; sorted by value, the reader's eye only sweeps top to bottom. A pie with 30 slices is unreadable.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Question 2</div>
+          <p class="selftest__q">A club has only 7 students and you want to see each student's own height. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="a"><span>Box plot — read the five statistics directly</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="b"><span>Density plot — smooth the distribution into a curve</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="c"><span>Strip plot — draw all 7 observations directly</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="d"><span>Histogram — 5 bins to see the distribution</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>With only 7 samples, quartiles and extremes are <strong>unstable as statistics</strong> — a box plot would paint one student's fluke value as a group trait, and after binning a histogram holds only one or two people per bin. With tiny samples the most honest move is to draw every observation (strip plot).</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Question 3</div>
+          <p class="selftest__q">You want to show how the crime mix across provinces changes over time, focusing on how each crime type's <strong>share</strong> rises and falls rather than absolute counts. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="a"><span>Stacked bar chart — three bars per year</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="b"><span>100% stacked area chart — normalize each year to 100%</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="c"><span>Donut chart — one ring per year</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="d"><span>Scatter plot — crime rates as the two coordinates</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>The key phrase is “<strong>share over time</strong>”. Normalizing each year to 100% leaves the stacked area's height differences showing only share changes — exactly what a 100% stacked area chart is for. Stacked bars better compare totals and composition at a few time points; a donut cannot show continuous trends.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="d">
+          <div class="selftest__head">Question 4</div>
+          <p class="selftest__q">You hold 30 years of daily temperature records for one place and want to see “the seasonal cycle repeating”. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="a"><span>Line chart — 30 years drawn as one line</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="b"><span>Calendar heatmap — a weekday × week grid</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="c"><span>Strip plot — one dot per day</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="d"><span>Spiral / polar calendar — cycle folded into angle, time on the radius</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>30 years × 365 days ≈ ten thousand points; as a line chart they smear into a color band and the periodicity vanishes. A spiral maps the <strong>cycle onto angle</strong> (the same season always falls in the same direction) and <strong>time onto radius</strong>, so “same season, same angle, spreading outward year by year” — periodicity at a glance. A calendar heatmap fits “daily events, comparing weekday / month patterns across years”; over such a long span it gets too sparse.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Question 5</div>
+          <p class="selftest__q">A dataset has 6 numeric variables (age, grade, height, weight, commute distance, weekly study hours) and you want to see their <strong>overall structure</strong> at once, not just pairwise relations. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="a"><span>One scatter plot — pick two variables</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="b"><span>Grouped bar chart — one bar per variable</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="c"><span>Scatterplot matrix / parallel coordinates — many axes together</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="d"><span>Box plot — one box per variable</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>6 variables combine into 15 pairs — too many scatter plots to inspect one by one. A scatterplot matrix lays every pair out as a small multiple, letting you sweep out correlated pairs at once; parallel coordinates draw each observation as a polyline, good for overall cluster structure. Box plots treat variables one at a time and cannot show <strong>between-variable</strong> relations.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Question 6</div>
+          <p class="selftest__q">You must present “each student's time at school from enrollment to graduation” — the data is an <strong>interval with start and end dates</strong>, not an instant. Which chart?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="a"><span>Line chart — connect the enrollment dates</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="b"><span>Storyline / Gantt chart — one interval segment per student</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="c"><span>Histogram — count students by enrollment year</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="d"><span>Calendar heatmap — color every enrolled day</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>The data is an <strong>interval</strong> (start → end), not an instant. A Gantt / storyline expresses “start and end” with one segment, matching the data's nature one-to-one; a line chart crushes intervals into points and loses the span. A calendar heatmap could color the interval too, but each student occupies a whole block of cells, hiding “who stayed longer”.</p>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>After answering:</strong> take each miss back to the <a href="#cg-2">Section 2 quick-reference matrix</a> — the matrix's “use with care” column is basically where these questions come from.</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一页 / 下一页 ================= -->
+  <nav class="chapter-pager" aria-label="Page pager">
+    <a class="pager-prev" href="../lesson-05/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 5 Temporal Data Visualization</span>
+    </a>
+    <a class="pager-portal" href="../">Back to portal</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 Introduction to Visualization course · China University of Petroleum (East China) · Instructor: Li Xin · Main textbook: Chen Wei, “Introduction to Visualization”</p>
+    <p>Zero-build static site · inline SVG graphics · no videos · bilingual (Chinese / English) with dark mode</p>
+  </footer>
+
+  <!-- 本页交互（决策树 / 小测 / 滚动高亮；ES Module，file:// 下会被 CORS 拦截，页面仍可阅读） -->
+    <script src="../chart-help-ui.js"></script>
+  <script type="module" src="../../chart-help.js"></script>
+</body>
+</html>

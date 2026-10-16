@@ -1,0 +1,330 @@
+/* =========================================================
+   graph.css —— 课程知识图谱样式（《可视化导论》）
+   --------------------------------------------------------
+   配色 / 圆角 / 间距 / 阴影 / 动效全部走 tokens.css 的设计令牌：
+   暗色模式与整体换肤自动跟随，本文件不出现任何硬编码色值。
+   SVG 内部的颜色由 graph.js 读令牌后写成「表现属性」（为了导出 PNG 不掉色）。
+   ========================================================= */
+
+.kg {
+  margin-top: var(--space);
+}
+
+/* ---------------- 工具栏 ---------------- */
+.kg-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.kg-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--c-text-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.kg-crumb-sep { color: var(--c-muted); }
+
+.kg-crumb--cur { color: var(--c-text); font-weight: 800; }
+
+.kg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kg-gap { width: 4px; }
+
+.kg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  color: var(--c-text-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--c-surface);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--t-control);
+}
+
+.kg-btn:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+.kg-btn:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+.kg-btn--icon { width: 36px; padding: 0; font-size: 15px; }
+
+.kg-btn[aria-pressed="true"] {
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+}
+
+/* ---------------- 主体：图 + 侧栏 ---------------- */
+.kg-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space);
+  align-items: start;
+}
+
+.kg-stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+}
+
+.kg-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 960 / 560;   /* 与 viewBox 同比例：坐标换算才准确 */
+  touch-action: none;        /* 交给 pointer 事件做拖拽/平移 */
+  cursor: grab;
+}
+
+.kg-svg.is-panning,
+.kg-svg.is-dragging-node { cursor: grabbing; }
+
+.kg-node { cursor: grab; }
+
+.kg-stats {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--c-surface) 86%, transparent);
+  border: 1px solid var(--c-border);
+  pointer-events: none;
+}
+
+/* 表格视图：图形之外的等价入口（键盘 / 读屏 / 手机） */
+.kg-list {
+  max-height: 520px;
+  overflow: auto;
+  padding: var(--space-sm);
+}
+
+.kg-list-head {
+  margin: 0 0 4px;
+  color: var(--c-text);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.kg-list-hint {
+  margin: 0 0 var(--space-sm);
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.kg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.kg-table th,
+.kg-table td {
+  padding: 7px 9px;
+  text-align: left;
+  border-bottom: 1px solid var(--c-border);
+  vertical-align: middle;
+}
+
+.kg-table th {
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.kg-table tr.is-sel { background: var(--c-surface-2); }
+
+.kg-table-name { font-weight: 700; color: var(--c-text); }
+
+.kg-table-cat { color: var(--c-text-soft); white-space: nowrap; }
+
+.kg-table-num { color: var(--c-text-soft); text-align: right; white-space: nowrap; }
+
+.kg-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.kg-row-btn {
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  color: var(--c-text-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--c-surface);
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.kg-row-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+
+.kg-row-btn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+
+.kg-row-btn[aria-pressed="true"] {
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+}
+
+/* ---------------- 侧栏：图例 + 筛选 + 详情 ---------------- */
+.kg-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 248px;
+  min-width: 0;
+}
+
+.kg-legend,
+.kg-filter,
+.kg-detail {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.kg-legend-title { color: var(--c-muted); font-weight: 800; }
+
+.kg-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+
+.kg-legend-item svg { width: 34px; height: 10px; display: block; }
+
+.kg-filter-title { margin: 0 0 6px; color: var(--c-muted); font-weight: 800; }
+
+.kg-filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.kg-chip {
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill);
+  color: var(--c-text-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--c-surface);
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.kg-chip:hover { border-color: var(--c-primary); color: var(--c-primary); }
+
+.kg-chip:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+
+.kg-chip[aria-pressed="true"] {
+  border-color: var(--c-primary);
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+}
+
+.kg-detail-head { margin: 0 0 6px; color: var(--c-text); font-size: 13px; font-weight: 800; }
+
+.kg-detail-empty { margin: 0; font-size: 12.5px; line-height: 1.6; }
+
+.kg-detail-name { margin: 0 0 2px; color: var(--c-text); font-size: 14px; font-weight: 800; }
+
+.kg-detail-meta { margin: 0 0 var(--space-sm); color: var(--c-text-soft); font-size: 12px; }
+
+.kg-detail-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.kg-hint {
+  margin: var(--space-sm) 0 0;
+  color: var(--c-text-soft);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.kg-error {
+  margin: 0;
+  padding: var(--space-sm) var(--space);
+  border: 1px dashed var(--c-danger);
+  border-radius: var(--radius);
+  color: var(--c-danger);
+  font-size: 13.5px;
+  background: var(--c-surface);
+}
+
+/* 读屏专用（状态播报） */
+.kg-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 980px) {
+  .kg-body { grid-template-columns: minmax(0, 1fr); }
+  .kg-side { width: 100%; }
+  .kg-list { max-height: none; }
+}
+
+@media (max-width: 620px) {
+  .kg-actions { width: 100%; }
+  .kg-btn { flex: 1 1 auto; }
+  .kg-btn--icon { flex: 0 0 36px; }
+  .kg-table-cat { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kg-btn, .kg-chip, .kg-row-btn { transition: none; }
+}

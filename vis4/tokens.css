@@ -1,0 +1,194 @@
+﻿/* =========================================================
+ * tokens.css —— 《可视化导论》全站设计令牌
+ * ---------------------------------------------------------
+ * 本文件是全站唯一的「配色 / 间距 / 圆角 / 字体 / 阴影」来源。
+ * 想整体换肤，只改这里；任何其他文件都不允许出现硬编码色值。
+ *
+ * 主题定调：这是一门「数据可视化」课，
+ *   主色 = 靛蓝（图表里最常用的定量色相，稳重、可读）
+ *   强调 = 琥珀（与主色互补，用于「关键点 / 注意」）
+ *   图表系列色 = Okabe–Ito 8 色（色觉缺陷友好，见 §图表调色板）
+ * ========================================================= */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- 品牌色 ---------- */
+  --c-primary:      #4338ca;   /* 主色：靛蓝 */
+  --c-primary-2:    #6366f1;   /* 主色亮阶 */
+  --c-primary-weak: #e8e7fb;   /* 主色浅底 */
+  --c-accent:       #b45309;   /* 强调色：琥珀（亮底上用深一档保证对比） */
+  --c-accent-2:     #f59e0b;
+  --c-accent-weak:  #fdf2e0;
+  --c-on-primary:   #ffffff;
+  --c-on-accent:    #ffffff;
+
+  /* ---------- 背景与表面 ---------- */
+  --c-bg:        #fbfbfd;      /* 页面底色（极浅冷白） */
+  --c-surface:   #ffffff;      /* 卡片 / 面板 */
+  --c-surface-2: #f3f4f9;      /* 次级面板 */
+
+  /* ---------- 文字 ---------- */
+  --c-text:      #171a25;
+  --c-text-soft: #525c72;
+  --c-muted:     #858ea3;
+
+  /* ---------- 边框 / 分隔 ---------- */
+  --c-border:    #e3e5ee;
+  --c-border-2:  #cfd3e0;
+
+  /* ---------- 派生层（只改比例，全站状态色整体加深/变淡） ---------- */
+  --mix-soft: 9%;    /* 极浅底：标签底 / 徽章底 */
+  --mix-halo: 20%;   /* 柔光圈：描边 / 光晕 */
+  --mix-ink:  74%;   /* 深字：主色压深当文字，保证对比度 */
+  --mix-line: 96%;   /* 边框：半透明比实色更透气 */
+
+  --c-line:   color-mix(in srgb, var(--c-border) var(--mix-line), transparent);
+  --c-line-2: color-mix(in srgb, var(--c-border-2) var(--mix-line), transparent);
+  --c-focus:  color-mix(in srgb, var(--c-primary) 34%, transparent);
+
+  /* ---------- 纯 CSS 背景纹理（零图片请求） ---------- */
+  --tex-grid: color-mix(in srgb, var(--c-primary) 8%, transparent);
+  --tex-line: color-mix(in srgb, var(--c-primary) 14%, transparent);
+  --tex-glow: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  --tex-warm: color-mix(in srgb, var(--c-accent-2) 14%, transparent);
+
+  /* ---------- 语义色 ---------- */
+  --c-info:    #0369a1;
+  --c-success: #15803d;
+  --c-warn:    #b45309;
+  --c-danger:  #dc2626;
+
+  /* =======================================================
+   * 图表调色板（本课特有的令牌）
+   * 1) 定性系列色：Okabe–Ito 8 色 —— 色觉缺陷（CVD）友好的行业标准
+   * 2) 顺序/发散色阶：直接内置 CSS 渐变，供示意图形与图例使用
+   * ===================================================== */
+  --ch-1: #0072b2;   /* 蓝 */
+  --ch-2: #e69f00;   /* 橙 */
+  --ch-3: #009e73;   /* 绿 */
+  --ch-4: #cc79a7;   /* 品红 */
+  --ch-5: #56b4e9;   /* 天蓝 */
+  --ch-6: #d55e00;   /* 朱红 */
+  --ch-7: #8c6d1f;   /* 土黄 */
+  --ch-8: #3f3f46;   /* 炭灰 */
+
+  /* 顺序型（sequential）：浅 → 深，用于「值的大小」 */
+  --ramp-seq: linear-gradient(90deg, #f0f9ff, #bae6fd, #38bdf8, #0284c7, #0c4a6e);
+  /* 发散型（diverging）：负 → 中点 → 正，用于「偏离中心」 */
+  --ramp-div: linear-gradient(90deg, #b2182b, #ef8a62, #f7f7f7, #67a9cf, #2166ac);
+  /* 定性型（qualitative）：无顺序，用于「类别」 */
+  --ramp-qual: linear-gradient(90deg, var(--ch-1), var(--ch-2), var(--ch-3),
+                                       var(--ch-4), var(--ch-5), var(--ch-6));
+
+  /* ---------- 演示专用色（彩色盒子 / 迷你图元；沿用 Okabe–Ito 前 6 色） ---------- */
+  --d1: var(--ch-1);
+  --d2: var(--ch-3);
+  --d3: var(--ch-2);
+  --d4: var(--ch-6);
+  --d5: #7c3aed;
+  --d6: var(--ch-4);
+
+  /* ---------- 圆角 ---------- */
+  --radius-sm:   8px;
+  --radius:      12px;
+  --radius-lg:   20px;
+  --radius-pill: 999px;
+
+  /* ---------- 间距（8pt 节奏） ---------- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space:    16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --gutter:   24px;
+
+  /* ---------- 阴影 ---------- */
+  --shadow-xs:    0 1px 2px rgba(23, 26, 37, .05);
+  --shadow-sm:    0 4px 10px rgba(23, 26, 37, .05);
+  --shadow-card:  0 10px 21px rgba(23, 26, 37, .065);
+  --shadow:       0 12px 30px rgba(23, 26, 37, .07);
+  --shadow-lg:    0 18px 46px rgba(23, 26, 37, .08);
+  --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 22%, transparent);
+
+  /* ---------- 动效（统一节奏；禁止 transition: all） ---------- */
+  --dur-fast: .18s;
+  --dur-base: .22s;
+  --ease:     cubic-bezier(.4, 0, .2, 1);
+  --t-control: color var(--dur-fast) var(--ease),
+               background-color var(--dur-fast) var(--ease),
+               border-color var(--dur-fast) var(--ease),
+               box-shadow var(--dur-fast) var(--ease);
+
+  /* ---------- 字体 ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI",
+               "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas,
+               "Courier New", monospace;
+
+  /* ---------- 布局尺寸 ---------- */
+  --maxw:      1180px;
+  --topbar-h:  60px;
+  --sidebar-w: 258px;
+  --z-nav:     50;
+}
+
+/* =========================================================
+ * 深色模式
+ * 由 <html data-theme="dark"> 驱动：theme.js 在 <head> 里渲染前
+ * 按「用户手动选择（localStorage）→ 系统 prefers-color-scheme」
+ * 的顺序解析并写入 data-theme，因此切换无闪烁。
+ * ========================================================= */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --c-bg:        #0e1119;
+  --c-surface:   #161a26;
+  --c-surface-2: #1e2333;
+
+  --c-text:      #e7eaf3;
+  --c-text-soft: #a6aec2;
+  --c-muted:     #737d95;
+
+  --c-border:    #2a3040;
+  --c-border-2:  #3a4257;
+
+  --c-primary:      #a5b4fc;
+  --c-primary-2:    #c7d2fe;
+  --c-primary-weak: #1d2140;
+  --c-accent:       #fbbf24;
+  --c-accent-2:     #fcd34d;
+  --c-accent-weak:  #33260c;
+
+  /* 语义色在深底上必须提亮，否则对比度掉到 4.5:1 以下 */
+  --c-info:    #38bdf8;
+  --c-success: #4ade80;
+  --c-warn:    #fbbf24;
+  --c-danger:  #f87171;
+
+  /* 深色下主色偏亮，前景必须翻成深色才够对比（白字会糊） */
+  --c-on-primary: #101426;
+  --c-on-accent:  #241a04;
+
+  --mix-soft: 24%;
+  --mix-halo: 34%;
+  --mix-ink:  66%;
+  --mix-line: 92%;
+
+  /* 深底上 Okabe–Ito 原值偏暗，整体提亮一档保证可读 */
+  --ch-1: #4fa3d1;
+  --ch-2: #f0b429;
+  --ch-3: #34c79a;
+  --ch-4: #e09cc4;
+  --ch-5: #7cc9f0;
+  --ch-6: #ef8a4c;
+  --ch-7: #c2a04a;
+  --ch-8: #b9c0cc;
+
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, .40);
+  --shadow-sm:    0 4px 10px rgba(0, 0, 0, .42);
+  --shadow-card:  0 10px 21px rgba(0, 0, 0, .45);
+  --shadow:       0 12px 30px rgba(0, 0, 0, .48);
+  --shadow-lg:    0 18px 46px rgba(0, 0, 0, .55);
+  --shadow-hover: 0 14px 28px color-mix(in srgb, var(--c-primary) 26%, transparent);
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课程知识图谱 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》课程知识图谱：章 ↔ 小节 ↔ 关键点 ↔ 案例 ↔ 数据集的关系网络，可自由拖动节点、可切换图形 / 表格视图、可按分类筛选、可导出 PNG。零构建静态页，离线可用。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="theme.js"></script>
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="i18n.css">
+  <link rel="stylesheet" href="lesson.css">
+  <link rel="stylesheet" href="graph.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="course-topbar">
+    <a class="brand" href="./">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">工具 · 知识图谱</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="lesson-01/">第 1 章 数据</a>
+      <a href="lesson-02/">第 2 章 流程</a>
+      <a href="lesson-03/">第 3 章 色彩</a>
+      <a href="lesson-04/">第 4 章 低维</a>
+      <a href="lesson-05/">第 5 章 时序</a>
+      <a href="topic-chart-guide/">选图指南</a>
+      <a href="quiz.html">章节测验</a>
+      <a href="practice.html">实战工作台</a>
+      <a href="graph.html" class="current" aria-current="page">知识图谱</a>
+    </nav>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="en/graph.html" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 页头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>课程知识图谱</h1>
+        <p class="subtitle">把 5 章课程摊成一张关系网：<b>章 → 小节 → 关键点 → 案例 / 数据集</b>。哪些知识互为前置、哪些数据集被哪一节使用，一眼看清。</p>
+      </div>
+      <div class="header-tip">节点可拖动 · 图 / 表双视图 · 可筛选 · 可导出 PNG</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本页学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说得出这门课的知识骨架：5 章各自的主题，以及它们之间的先修关系</span></label></li>
+        <li><label><input type="checkbox"><span>看到任意一个知识节点，能说出它属于「小节 / 关键点 / 案例 / 数据集」中的哪一类</span></label></li>
+        <li><label><input type="checkbox"><span>能顺着图谱找到「某个数据集被哪些小节使用」，快速定位回到正文</span></label></li>
+        <li><label><input type="checkbox"><span>会用「展开这个模块」下钻到某一章的细节视图，用「去看这一节」跳回正文锚点</span></label></li>
+        <li><label><input type="checkbox"><span>会切换图形 / 表格两种等价视图，并为不同颜色编码的类别做一次筛选</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>知识图谱 · 目录</h3>
+      <ul>
+        <li><a href="#kg">课程知识图谱</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本页怎么用</b><br>
+        ① 先看上方「总览」，点节点拖动看看各章如何相连；<br>
+        ② 在右侧面板选中一个节点，再点「展开这个模块」下钻；<br>
+        ③ 想跳回正文，选中后点「去看这一节」；<br>
+        ④ 节点单击本身不会跳转，所有跳转都在右侧面板按钮上完成。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+      <section class="chapter" id="kg">
+        <h2>课程知识图谱</h2>
+        <p class="chapter-subtitle">节点 = 章节 / 小节 / 关键点 / 案例 / 数据集；连线 = 包含（实线）、先修（虚线）、用于（点线）。</p>
+        <div id="kg-root"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ================= 上一页 / 下一页 ================= -->
+  <nav class="chapter-pager" aria-label="页面翻页">
+    <a class="pager-prev" href="topic-chart-guide/">
+      <span class="pager-dir">← 上一页</span>
+      <span class="pager-title">选图指南 · 从数据到图</span>
+    </a>
+    <a class="pager-portal" href="./">返回门户</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 图谱依赖：4 个本地 d3-force 相关库必须按此顺序，且都是普通 script（file:// 可用） -->
+  <script src="vendor/d3-quadtree.min.js"></script>
+  <script src="vendor/d3-dispatch.min.js"></script>
+  <script src="vendor/d3-timer.min.js"></script>
+  <script src="vendor/d3-force.min.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="graph.js"></script>
+</body>
+</html>

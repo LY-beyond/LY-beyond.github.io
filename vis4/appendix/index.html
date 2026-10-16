@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>附录 · 扩展演示 / Appendix · Extended Demos · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》附录：14 个独立扩展演示（日历热图、等高线、散点与回归、颜色映射、数据表格与树列表等）与第 4 章讲义 PDF 下载。原生 D3 v7 实现，本地内置依赖，离线可用。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <style>
+    body { margin: 0; background: var(--c-bg); color: var(--c-text); font-family: var(--font-sans); line-height: 1.65; }
+    .wrap { max-width: 1020px; margin: 0 auto; padding: 0 var(--gutter) var(--space-xl); }
+    .topbar { position: sticky; top: 0; z-index: var(--z-nav); background: color-mix(in srgb, var(--c-bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--c-line); }
+    .topbar-inner { max-width: 1020px; margin: 0 auto; padding: 0 var(--gutter); height: var(--topbar-h); display: flex; align-items: center; gap: var(--space); }
+    .brand { display: inline-flex; align-items: center; gap: var(--space-sm); color: var(--c-text); text-decoration: none; font-weight: 700; font-size: 15px; }
+    .brand:hover { color: var(--c-primary); }
+    .brand .back { color: var(--c-muted); font-size: 14px; }
+    .topnote { margin-left: auto; color: var(--c-muted); font-size: 12.5px; }
+    .hero { padding: var(--space-xl) 0 var(--space-lg); }
+    .eyebrow { margin: 0 0 var(--space-sm); color: var(--c-primary); font-size: 12px; font-weight: 800; letter-spacing: .14em; }
+    h1 { margin: 0 0 var(--space-sm); font-size: 30px; letter-spacing: -.01em; }
+    .lede { margin: 0; max-width: 46em; color: var(--c-text-soft); }
+    .lede b { color: var(--c-text); }
+    .group { margin-top: var(--space-xl); }
+    .group > h2 { display: flex; align-items: baseline; gap: var(--space-sm); margin: 0 0 var(--space); font-size: 19px; letter-spacing: -.01em; }
+    .group > h2 .en { color: var(--c-muted); font-size: 12px; font-weight: 700; letter-spacing: .1em; }
+    .group > h2 .tag { margin-left: auto; color: var(--c-muted); font-size: 12px; font-weight: 400; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); gap: var(--space); }
+    a.demo { display: flex; flex-direction: column; gap: 6px; padding: var(--space) var(--space) calc(var(--space) - 2px); background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--radius); box-shadow: var(--shadow-xs); color: var(--c-text); text-decoration: none; transition: var(--t-control), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); }
+    a.demo:hover { border-color: color-mix(in srgb, var(--c-primary) 40%, var(--c-line)); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    a.demo:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+    .demo-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px; }
+    .demo-name .dot { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; background: var(--dot, var(--c-primary)); }
+    .demo-file { color: var(--c-muted); font-size: 11.5px; font-family: var(--font-mono); }
+    .demo-desc { margin: 0; color: var(--c-text-soft); font-size: 13px; }
+    .pdf-card { display: flex; align-items: center; gap: var(--space); padding: var(--space-lg); background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--radius); box-shadow: var(--shadow-xs); color: var(--c-text); text-decoration: none; transition: var(--t-control), box-shadow var(--dur-fast) var(--ease); }
+    .pdf-card:hover { border-color: color-mix(in srgb, var(--c-primary) 40%, var(--c-line)); box-shadow: var(--shadow-hover); }
+    .pdf-card:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+    .pdf-ico { flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--radius-sm); display: grid; place-items: center; background: color-mix(in srgb, var(--c-danger) 12%, transparent); color: var(--c-danger); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+    .pdf-meta b { display: block; font-size: 14.5px; }
+    .pdf-meta span { color: var(--c-muted); font-size: 12.5px; }
+    .note { margin: var(--space-lg) 0 0; padding: var(--space); background: color-mix(in srgb, var(--c-accent-2) var(--mix-soft), transparent); border: 1px solid color-mix(in srgb, var(--c-accent-2) 32%, transparent); border-radius: var(--radius); color: var(--c-text-soft); font-size: 13px; }
+    .note b { color: var(--c-text); }
+    footer { margin-top: var(--space-xl); padding: var(--space-lg) 0 var(--space-xl); border-top: 1px solid var(--c-line); color: var(--c-muted); font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../"><span class="back">&larr;</span> 《可视化导论》
+        <span style="color: var(--c-muted); font-weight: 400;">附录 · 扩展演示</span>
+      </a>
+      <span class="topnote">原生 D3 v7 · 依赖本地内置</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <p class="eyebrow">APPENDIX &middot; EXTENDED DEMOS</p>
+      <h1>附录 · 扩展演示</h1>
+      <p class="lede">
+        这里收录课程原有的 <b>14 个独立演示页</b>与<b>第 4 章讲义 PDF</b>。它们先于本站主线内容诞生，
+        保留了原生 D3 的写法与中文界面，适合在读完对应章节后动手把玩——<b>先读正文，再来这里对照源码</b>。<br>
+        Collected from the original course site: 14 standalone demos and the Chapter 4 lecture PDF.
+        Read the corresponding chapter first, then come here to play with the raw D3 source.
+      </p>
+    </div>
+
+    <section class="group">
+      <h2>第 1–2 章 · 数据与流程 <span class="en">DATA &amp; PIPELINE</span><span class="tag">4 个演示</span></h2>
+      <div class="grid">
+        <a class="demo" href="newstudent.html" style="--dot: var(--ch-1)">
+          <span class="demo-name"><i class="dot"></i>新生数据表 · Newstudent</span>
+          <span class="demo-file">newstudent.html</span>
+          <p class="demo-desc">80 条新生记录的读取、统计与表格呈现；对应 1.1 数据生成。</p>
+        </a>
+        <a class="demo" href="tableshow.html" style="--dot: var(--ch-1)">
+          <span class="demo-name"><i class="dot"></i>可排序表格 · Table</span>
+          <span class="demo-file">tableshow.html</span>
+          <p class="demo-desc">D3 数据绑定渲染表格，点击表头排序；对应 1.4 数据变换。</p>
+        </a>
+        <a class="demo" href="treelist.html" style="--dot: var(--ch-1)">
+          <span class="demo-name"><i class="dot"></i>树状列表 · Treelist</span>
+          <span class="demo-file">treelist.html</span>
+          <p class="demo-desc">层级数据的展开 / 收起列表；对应 2.3 层级结构与 d3.hierarchy 思想。</p>
+        </a>
+        <a class="demo" href="nssystem.html" style="--dot: var(--ch-1)">
+          <span class="demo-name"><i class="dot"></i>系统组合视图 · System</span>
+          <span class="demo-file">nssystem.html</span>
+          <p class="demo-desc">树列表 + 明细表联动的小型系统；对应 2.4 交互与多视图协调。</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>第 3 章 · 色彩 <span class="en">COLOR</span><span class="tag">1 个演示</span></h2>
+      <div class="grid">
+        <a class="demo" href="colormap.html" style="--dot: var(--ch-4)">
+          <span class="demo-name"><i class="dot"></i>Colormap 对照 · Colormap</span>
+          <span class="demo-file">colormap.html</span>
+          <p class="demo-desc">多组 colormap 色带对照取样；对应 3.2 连续颜色方案。</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>第 4 章 · 低维数据 <span class="en">LOW-DIMENSIONAL</span><span class="tag">5 个演示 + 讲义</span></h2>
+      <div class="grid">
+        <a class="demo" href="mark.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>标记与通道 · Marks</span>
+          <span class="demo-file">mark.html</span>
+          <p class="demo-desc">点 / 线 / 面三类标记的通道编码试验；对应 4.1 标记与通道。</p>
+        </a>
+        <a class="demo" href="sex_compare.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>男女对比散点 · Scatter</span>
+          <span class="demo-file">sex_compare.html</span>
+          <p class="demo-desc">按性别着色的散点图；对应 4.2 散点图与颜色通道。</p>
+        </a>
+        <a class="demo" href="crime1985.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>1985 犯罪散点 · Crime</span>
+          <span class="demo-file">crime1985.html</span>
+          <p class="demo-desc">各国谋杀率 / 暴力犯罪散点矩阵；本章主案例 crime.csv 的原始版本。</p>
+        </a>
+        <a class="demo" href="regression.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>线性回归 · Regression</span>
+          <span class="demo-file">regression.html</span>
+          <p class="demo-desc">d3-regression 拟合最小二乘直线；对应 4.3 趋势线。</p>
+        </a>
+        <a class="demo" href="contour.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>等高线（Canvas）· Contour</span>
+          <span class="demo-file">contour.html</span>
+          <p class="demo-desc">地形高度场的密度等高线；对应 4.5 等值线与 Marching Squares。</p>
+        </a>
+        <a class="demo" href="contourd3.html" style="--dot: var(--ch-3)">
+          <span class="demo-name"><i class="dot"></i>等高线（D3）· ContourD3</span>
+          <span class="demo-file">contourd3.html</span>
+          <p class="demo-desc">同一地形的 D3 等值线实现，可与 Canvas 版对照阅读。</p>
+        </a>
+      </div>
+
+      <a class="pdf-card" href="5-低维数据可视化.pdf" download style="margin-top: var(--space);">
+        <span class="pdf-ico" aria-hidden="true">PDF</span>
+        <span class="pdf-meta">
+          <b>第 4 章讲义 · 低维数据可视化（888 KB）</b>
+          <span>Lecture handout for Chapter 4 · 点击下载 / click to download</span>
+        </span>
+      </a>
+    </section>
+
+    <section class="group">
+      <h2>第 5 章 · 时序数据 <span class="en">TEMPORAL</span><span class="tag">3 个演示</span></h2>
+      <div class="grid">
+        <a class="demo" href="calendar.html" style="--dot: var(--ch-6)">
+          <span class="demo-name"><i class="dot"></i>日历热图 · Calendar</span>
+          <span class="demo-file">calendar.html</span>
+          <p class="demo-desc">全年逐日数值的日历热图（van Wijk 布局）；对应 5.2。</p>
+        </a>
+        <a class="demo" href="calendar1.html" style="--dot: var(--ch-6)">
+          <span class="demo-name"><i class="dot"></i>日历热图 · 变体一</span>
+          <span class="demo-file">calendar1.html</span>
+          <p class="demo-desc">按月分行的日历变体，比较两种月份分隔画法。</p>
+        </a>
+        <a class="demo" href="calendar3.html" style="--dot: var(--ch-6)">
+          <span class="demo-name"><i class="dot"></i>日历热图 · 变体三</span>
+          <span class="demo-file">calendar3.html</span>
+          <p class="demo-desc">带色阶与图例的完整日历版本，适合对照 5.2 小结阅读。</p>
+        </a>
+      </div>
+    </section>
+
+    <p class="note">
+      <b>说明 / Note：</b>这些演示是课程的「原始标本」，保留原生 D3 写法与中文界面，数据来自
+      <code>appendix/data/</code> 与 <code>appendix/*.csv</code>；所有依赖（d3 v7、d3-regression）均已本地内置到
+      <code>vendor/</code>，离线可用、不访问外网。若某个演示需要通过 HTTP 访问数据（file:// 下会被 CORS 拦截），
+      请用本地静态服务器打开本站。 / These demos keep their original vanilla-D3 code; all dependencies are
+      vendored locally, and CSV-backed pages need a local HTTP server under file://.
+    </p>
+
+    <footer>
+      &copy; 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》
+    </footer>
+  </main>
+</body>
+</html>

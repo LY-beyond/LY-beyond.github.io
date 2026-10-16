@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction to Visualization · From Data to Charts</title>
+  <meta name="description" content="Portal of the Introduction to Visualization course: 5 chapters and 27 sections with runnable demos, continuously readable chapter pages, a chart cheat sheet and self-tests. Zero-build static site, bilingual and dark-mode aware.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：在渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20v-8M9.3 20V5M14.7 20v-6M20 20V9"/>
+          </svg>
+        </span>
+        <span>
+          Introduction to Visualization
+          <span class="brand__sub">DATA VISUALIZATION · D3.JS</span>
+        </span>
+      </a>
+
+      <nav class="topnav" aria-label="Page navigation">
+        <a href="#path">Learning path</a>
+        <a href="#chapters">Chapters</a>
+        <a href="#tools">Study tools</a>
+        <a href="#guide">Chart cheat sheet</a>
+        <a href="#about">About</a>
+      </nav>
+
+      <!-- 主题切换按钮由 theme.js 注入到这个语言切换器的左侧 -->
+      <div class="lang-switch" role="group" aria-label="Language / 语言">
+        <span class="lang-switch-item is-active" aria-current="true">EN</span>
+        <a class="lang-switch-item" href="../index.html" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= Hero ================= -->
+    <section class="hero">
+      <div class="hero__lead">
+        <p class="hero__tag">VISUALIZATION · INTRODUCTION</p>
+        <h1 class="hero__title">Introduction to <em>Visualization</em></h1>
+        <p class="hero__sub">From data to charts: a hands-on course with JavaScript + D3.js. First understand what the data is, then decide which graphic should express it.</p>
+        <p class="hero__meta">
+          China University of Petroleum (East China) · Instructor:
+          <a href="https://cinger007.github.io" target="_blank" rel="noopener">Li Xin</a>
+          · Main textbook: Chen Wei, “Introduction to Visualization”
+        </p>
+
+        <ul class="hero__facts">
+          <li><b>5</b> chapters</li>
+          <li><b>27</b> sections</li>
+          <li><b>27</b> runnable demos</li>
+          <li><b>24</b> principle diagrams</li>
+          <li><b>2</b> languages</li>
+        </ul>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary" id="hero-start" href="lesson-01/">Start learning · Ch.1 Data</a>
+          <a class="btn btn--ghost" href="#path">View the learning path</a>
+        </div>
+      </div>
+
+      <!-- 课程关系示意图：5 个模块成链，箭头表示先修关系 -->
+      <figure class="relmap" role="group" aria-label="Course relationship map: data → pipeline → color → low-dimensional → temporal">
+        <div class="relmap__row">
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-1)">
+              <ellipse cx="12" cy="6" rx="7" ry="3"/>
+              <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/>
+              <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>
+            </svg>
+            <b>Data</b><span>DATA</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-2)">
+              <rect x="3" y="3" width="7" height="6" rx="1.6"/>
+              <rect x="14" y="15" width="7" height="6" rx="1.6"/>
+              <path d="M6.5 9v3a2 2 0 0 0 2 2H16a2 2 0 0 1 2 2"/>
+            </svg>
+            <b>Pipeline</b><span>PIPELINE</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-4)">
+              <rect x="3" y="4" width="18" height="16" rx="2.4"/>
+              <path d="M9 4v16M15 4v16"/>
+            </svg>
+            <b>Color</b><span>COLOR</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-3)">
+              <path d="M4 3v17h17"/>
+              <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="18" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+            <b>Low-dim</b><span>2D</span>
+          </div>
+          <span class="relmap__arrow" aria-hidden="true"></span>
+          <div class="relmap__node">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ch-6)">
+              <path d="M4 3v17h17"/>
+              <path d="M7 16l4-6 3 3 4-7"/>
+            </svg>
+            <b>Temporal</b><span>TEMPORAL</span>
+          </div>
+        </div>
+        <p class="relmap__cap">
+          <span>Prerequisite chain:</span> <b>data</b> is the foundation of every chapter; <b>color</b> and <b>low-dimensional</b> are two sides of the same coin
+        </p>
+        <figcaption class="relmap__caption">Course relationship map (drawn with inline SVG, no bitmaps)</figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= 学习路径 ================= -->
+    <section class="section" id="path">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">LEARNING PATH</span>
+        <h2>Learning path</h2>
+        <p>Walk these 5 steps in order and you will go from “getting data into the browser” all the way to “picking the right graphic for time data at different granularities”. Every step states <strong>what you can do after finishing it</strong> — click a node to jump straight into the chapter.</p>
+      </div>
+
+      <div class="progress-line" id="progress-line" hidden>
+        <span class="progress-line__text">Read <b id="progress-done">0</b> / 27 sections</span>
+        <span class="progress-line__bar" aria-hidden="true"><i id="progress-fill"></i></span>
+        <button type="button" class="progress-line__reset" id="progress-reset">Reset progress</button>
+      </div>
+
+      <ol class="path-map">
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-01/">
+            <span class="path-step__dot">01</span>
+            <span class="path-step__body">
+              <span class="path-step__title">Data</span>
+              <span class="path-step__desc">Fit the real world into a single table</span>
+              <span class="path-step__out">
+                <b>After it you can</b>
+                look at a column of data and tell whether it is a “name” or a “number”, and pick the right visual channels to encode it.
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-02/">
+            <span class="path-step__dot">02</span>
+            <span class="path-step__body">
+              <span class="path-step__title">The visualization pipeline</span>
+              <span class="path-step__desc">From raw data to a chart on screen</span>
+              <span class="path-step__out">
+                <b>After it you can</b>
+                explain what each stage of “raw data → data table → visual structure → view” actually does, and where a mistake can creep in.
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-03/">
+            <span class="path-step__dot">03</span>
+            <span class="path-step__body">
+              <span class="path-step__title">Color in depth</span>
+              <span class="path-step__desc">Color is not decoration — it is a channel</span>
+              <span class="path-step__out">
+                <b>After it you can</b>
+                pick a readable, color-blind-friendly palette that passes contrast checks for any chart.
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-04/">
+            <span class="path-step__dot">04</span>
+            <span class="path-step__body">
+              <span class="path-step__title">Low-dimensional visualization</span>
+              <span class="path-step__desc">Every trick on a two-dimensional plane</span>
+              <span class="path-step__out">
+                <b>After it you can</b>
+                encode two variables, one trend and several outliers in a single chart, and tell where reading error comes from.
+              </span>
+            </span>
+          </a>
+        </li>
+        <li class="path-step">
+          <a class="path-step__link" href="lesson-05/">
+            <span class="path-step__dot">05</span>
+            <span class="path-step__body">
+              <span class="path-step__title">Temporal visualization</span>
+              <span class="path-step__desc">Time is the most common dimension</span>
+              <span class="path-step__out">
+                <b>After it you can</b>
+                choose calendar, spiral or storyline views for time data of different granularity (instant / interval / cycle / span).
+              </span>
+            </span>
+          </a>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ================= 章节卡片墙 ================= -->
+    <section class="section" id="chapters">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">CHAPTERS</span>
+        <h2>Chapters</h2>
+        <p>Every chapter is written for <strong>continuous reading</strong>: each section follows the fixed six-part flow “original case → theory → key code → runnable demo → summary → self-test”, with code folded in place and demos rendered in place as you read.</p>
+      </div>
+
+      <div class="cards">
+
+        <!-- 第 1 章 -->
+        <a class="card" href="lesson-01/" data-lesson="lesson-01" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <ellipse cx="12" cy="6" rx="7" ry="3"/>
+                <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/>
+                <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>
+              </svg>
+              Ch. 1
+            </span>
+            <span class="card__hours">5 sections</span>
+          </span>
+          <h3>Data</h3>
+          <p class="card__desc">Starting from a synthetic freshman dataset: data generation, the DIKW pyramid, Stevens' four scales of measurement, Mackinlay's visual channels, plus D3 data transforms and the three states of Data-Join.</p>
+          <ul class="card__tags">
+            <li>DIKW pyramid</li>
+            <li>Stevens' 4 scales</li>
+            <li>8 D3 transform functions</li>
+            <li>Selection three states</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">Open chapter</span>
+          </span>
+        </a>
+
+        <!-- 第 2 章 -->
+        <a class="card" href="lesson-02/" data-lesson="lesson-02" data-total="4">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="6" rx="1.6"/>
+                <rect x="14" y="15" width="7" height="6" rx="1.6"/>
+                <path d="M6.5 9v3a2 2 0 0 0 2 2H16a2 2 0 0 1 2 2"/>
+              </svg>
+              Ch. 2
+            </span>
+            <span class="card__hours">4 sections</span>
+          </span>
+          <h3>The visualization pipeline</h3>
+          <p class="card__desc">The Card / Mackinlay / van Wijk data-flow models, the complete chain from freshman data to a classification tree to a tree list, the Reingold–Tilford layout and DOM event handling.</p>
+          <ul class="card__tags">
+            <li>Card data-flow model</li>
+            <li>d3.rollup aggregation</li>
+            <li>Reingold–Tilford</li>
+            <li>Event delegation</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 4</span>
+            </span>
+            <span class="card__cta">Open chapter</span>
+          </span>
+        </a>
+
+        <!-- 第 3 章：色彩专题 -->
+        <a class="card card--color" href="lesson-03/" data-lesson="lesson-03" data-total="8">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2.4"/>
+                <path d="M9 4v16M15 4v16"/>
+              </svg>
+              Ch. 3
+            </span>
+            <span class="card__hours">8 sections · Special topic</span>
+          </span>
+          <h3>Color in depth</h3>
+          <p class="card__desc">Color models → three families of colormaps → the CIE Lab gamut → 5 rule sets for color systems → classic scientific palettes → right-vs-wrong cases, plus an interactive palette toolkit: CVD simulation, palette generation, contrast checking.</p>
+          <ul class="card__tags">
+            <li>4 color spaces</li>
+            <li>Sequential / diverging / qualitative</li>
+            <li>Wong &amp; Paul Tol</li>
+            <li>CVD simulator</li>
+            <li>WCAG contrast</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 8</span>
+            </span>
+            <span class="card__cta">Open topic</span>
+          </span>
+        </a>
+
+        <!-- 第 4 章 -->
+        <a class="card" href="lesson-04/" data-lesson="lesson-04" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 3v17h17"/>
+                <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="18" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+              Ch. 4
+            </span>
+            <span class="card__hours">5 sections</span>
+          </span>
+          <h3>Low-dimensional visualization</h3>
+          <p class="card__desc">The three-layer coordinate transform of the crime data, a side-by-side of 10 curve fits, Cleveland's 45° angle perception, and step-by-step contour tracing with Marching Squares.</p>
+          <ul class="card__tags">
+            <li>Three-layer coordinate transform</li>
+            <li>10 curve fits</li>
+            <li>Cleveland 45°</li>
+            <li>Marching Squares</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">Open chapter</span>
+          </span>
+        </a>
+
+        <!-- 第 5 章 -->
+        <a class="card" href="lesson-05/" data-lesson="lesson-05" data-total="5">
+          <span class="card__top">
+            <span class="card__num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 3v17h17"/>
+                <path d="M7 16l4-6 3 3 4-7"/>
+              </svg>
+              Ch. 5
+            </span>
+            <span class="card__hours">5 sections</span>
+          </span>
+          <h3>Temporal visualization</h3>
+          <p class="card__desc">Five properties of time, a French first-name time series, the van Wijk calendar heatmap, the Archimedean spiral calendar, and the Jurassic Park storyline.</p>
+          <ul class="card__tags">
+            <li>Time attribute decomposition</li>
+            <li>Calendar heatmap</li>
+            <li>Polar coordinate transform</li>
+            <li>Storygraph storyline</li>
+          </ul>
+          <span class="card__foot">
+            <span class="card__prog">
+              <span class="card__progtrack"><i class="card__progfill"></i></span>
+              <span class="card__progtext">0 / 5</span>
+            </span>
+            <span class="card__cta">Open chapter</span>
+          </span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ================= 学习工具 ================= -->
+    <section class="section" id="tools">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">STUDY TOOLS</span>
+        <h2>Study tools</h2>
+        <p>Four companion tools: see how the knowledge fits together, look up which chart to draw by task, quiz yourself anytime, and write some D3 code by hand. They share the same design tokens and bilingual mechanism.</p>
+      </div>
+
+      <div class="tools">
+        <a class="tool tool--live" href="graph.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="2.6"/>
+              <circle cx="5" cy="18" r="2.6"/>
+              <circle cx="19" cy="18" r="2.6"/>
+              <path d="M10.2 7.2 6.6 15.7M13.8 7.2l3.6 8.5M7.6 18h8.8"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">Knowledge graph</span>
+            <p class="tool__desc">A relation network of chapters ↔ sections ↔ key points ↔ cases ↔ datasets; draggable, filterable, exportable as an image.</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="topic-chart-guide/">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v5M12 8 6 13v8M12 8l6 5v8"/>
+              <circle cx="12" cy="3" r="1.7"/>
+              <circle cx="6" cy="21" r="1.7"/>
+              <circle cx="18" cy="21" r="1.7"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">Chart selection guide</span>
+            <p class="tool__desc">Answer two questions — “what data do I have, what do I want to express” — walk the decision tree, and get a recommended chart, its main visual channel and its common misuses.</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="quiz.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 4h6v3H9z"/>
+              <path d="M9 5H5.5A1.5 1.5 0 0 0 4 6.5v13A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 18.5 5H15"/>
+              <path d="M8.5 13.6l2.4 2.4 4.6-5"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">Chapter quiz</span>
+            <p class="tool__desc">A 44-question bank covering 5 chapters + the special topic, with balanced per-chapter sampling, instant grading and per-question explanations, plus a wrong-answer notebook and score history.</p>
+          </span>
+        </a>
+
+        <a class="tool tool--live" href="practice.html">
+          <span class="tool__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 6l-5 6 5 6M16 6l5 6-5 6M14 4l-4 16"/>
+            </svg>
+          </span>
+          <span class="tool__body">
+            <span class="tool__title">D3 practice lab</span>
+            <p class="tool__desc">8 steps to draw a bar chart in D3 from scratch: write a little, look once, verify a little — only the effect is judged, never the style, and the result can be exported as SVG.</p>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= 图表速查 ================= -->
+    <section class="section" id="guide">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">CHART CHEAT SHEET</span>
+        <h2>Chart cheat sheet: ask about the task first, then pick the mark</h2>
+        <p>The right-hand column marks the <strong>most commonly misused</strong> spots. The first step in choosing a chart is not “which one looks nice” but “which visual channels my data type allows”.</p>
+      </div>
+
+      <div class="cheat">
+        <table>
+          <caption>Quick-reference matrix: look up charts by “what you want to express” (the full version — 20 rows, an interactive decision tree, right-vs-wrong comparisons and a 6-question quiz — lives in the Chart Selection Guide topic page)</caption>
+          <thead>
+            <tr>
+              <th scope="col">You want to show</th>
+              <th scope="col">Recommended chart</th>
+              <th scope="col">Main visual channel</th>
+              <th scope="col">Use with care / common mistakes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Compare sizes across a few categories</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="4" width="4" height="14" rx="1"/><rect x="8" y="9" width="4" height="9" rx="1"/><rect x="14" y="6" width="4" height="12" rx="1"/></svg></span><span class="cheat__rec">Bar chart</span></td>
+              <td>Length (position)</td>
+              <td class="cheat__no">Don't encode size as area / volume; sort by value when there are many categories</td>
+            </tr>
+            <tr>
+              <td>See the distribution shape of one variable</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="11" width="4" height="7" rx="1"/><rect x="7" y="5" width="4" height="13" rx="1"/><rect x="12" y="13" width="4" height="5" rx="1"/><rect x="16" y="8" width="3" height="10" rx="1"/></svg></span><span class="cheat__rec">Histogram / density plot</span></td>
+              <td>Length (binned counts)</td>
+              <td class="cheat__no">Bin width decides the shape — change the width and you change the story</td>
+            </tr>
+            <tr>
+              <td>See the relationship between two variables</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><circle cx="4" cy="15" r="1.8"/><circle cx="8" cy="11" r="1.8"/><circle cx="11" cy="12" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="17" cy="4" r="1.8"/></svg></span><span class="cheat__rec">Scatter plot</span></td>
+              <td>Position (x, y)</td>
+              <td class="cheat__no">Set transparency when points overlap, or switch to hexagonal binning</td>
+            </tr>
+            <tr>
+              <td>See the trend over time</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16l5-7 4 4 3-6 4 3"/></svg></span><span class="cheat__rec">Line chart</span></td>
+              <td>Position + slope</td>
+              <td class="cheat__no">The time axis must be evenly spaced and continuous; never draw lines across unordered categories</td>
+            </tr>
+            <tr>
+              <td>See composition and shares</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="11" width="16" height="4" rx="1"/><rect x="2" y="5" width="16" height="5" rx="1"/></svg></span><span class="cheat__rec">Stacked bar chart</span></td>
+              <td>Length (totals stay comparable)</td>
+              <td class="cheat__no">A pie with more than 5 slices cannot be read; sort slices by size</td>
+            </tr>
+            <tr>
+              <td>See 2-D density / strength of correlation</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="2" width="5" height="5"/><rect x="8" y="2" width="5" height="5"/><rect x="14" y="2" width="4" height="5"/><rect x="2" y="8" width="5" height="5"/><rect x="8" y="8" width="5" height="5"/><rect x="14" y="8" width="4" height="5"/><rect x="2" y="14" width="5" height="4"/><rect x="8" y="14" width="5" height="4"/><rect x="14" y="14" width="4" height="4"/></svg></span><span class="cheat__rec">Heatmap</span></td>
+              <td>Color lightness (sequential colormap)</td>
+              <td class="cheat__no">Never use a rainbow scale; a color legend is mandatory</td>
+            </tr>
+            <tr>
+              <td>Compare several distributions and find outliers</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="7" width="12" height="7" rx="1"/><path d="M10 2v5M10 14v4M2 10.5h2M16 10.5h2"/></svg></span><span class="cheat__rec">Box plot / violin plot</span></td>
+              <td>Position + length (statistics)</td>
+              <td class="cheat__no">Don't box-plot very small samples — draw the points directly</td>
+            </tr>
+            <tr>
+              <td>See the overall structure across many variables</td>
+              <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3v14h16"/><path d="M4 14h12M6 15V7M9 15V4M12 15V9M15 15v-5"/></svg></span><span class="cheat__rec">Scatterplot matrix / parallel coordinates</span></td>
+              <td>Position (multiple axes)</td>
+              <td class="cheat__no">Beyond 8 dimensions, switch to dimensionality reduction (PCA) or faceting</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="guide-cta">
+        <a class="btn btn--primary" href="topic-chart-guide/">Open the full Chart Selection Guide · decision tree + quick-reference matrix + right-vs-wrong + 6-question quiz</a>
+      </p>
+    </section>
+
+    <!-- ================= 关于 ================= -->
+    <section class="section" id="about">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">ABOUT</span>
+        <h2>About this course</h2>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-item">
+          <h4>📖 Theory sources</h4>
+          <p>Chen Wei, “Introduction to Visualization”; Mackinlay 1986 (ranking of visual channels); Stevens 1946 (scales of measurement); Cleveland 1984 (graphical perception); Card 1999 (data-flow model); Bostock's official D3 documentation.</p>
+        </div>
+        <div class="about-item">
+          <h4>🎯 Design principles</h4>
+          <p><strong>Case-centered</strong>, not theory-centered. Every concept is embedded in a practical case, with ⭐ key-point notes, runnable demos and instant self-tests.</p>
+        </div>
+        <div class="about-item">
+          <h4>🧭 How to study</h4>
+          <p>① Each chapter opens with learning goals; ② read on section by section — demos render in place; ③ use the “code only” switch for quick review; ④ finish each section's self-test before moving to the next.</p>
+        </div>
+        <div class="about-item">
+          <h4>🛠️ Tech stack and constraints</h4>
+          <p>Zero build: plain HTML + CSS + ES Modules + a locally bundled D3 module, <strong>no videos at all</strong>. Every principle diagram is drawn with inline SVG, keeping the site compact and fully offline-capable.</p>
+        </div>
+        <div class="about-item">
+          <h4>🗂️ Appendix · Original Specimens</h4>
+          <p>The <a href="../appendix/">appendix</a> collects the course's original standalone demos plus the Chapter 4 lecture PDF: vanilla D3 kept as-is — read the chapters first, then come here to compare with the source.</p>
+        </div>
+      </div>
+
+      <div class="cheat">
+        <table>
+          <caption>Dataset index: everything ships with the site in the <code>data/</code> directory, read directly by the browser, usable offline</caption>
+          <thead>
+            <tr>
+              <th scope="col">Dataset</th>
+              <th scope="col">Chapter</th>
+              <th scope="col">Size</th>
+              <th scope="col">What it demonstrates</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>newstudent.csv</code></td>
+              <td>Chapters 1–2</td>
+              <td>80 rows × 8 cols</td>
+              <td>Data generation, measurement scales, visual channels, d3.rollup aggregation, tree layout</td>
+            </tr>
+            <tr>
+              <td><code>crime.csv</code></td>
+              <td>Chapter 4</td>
+              <td>50 states × 12 cols</td>
+              <td>Three-layer coordinate transform, curve fitting, Cleveland 45° perception, contours</td>
+            </tr>
+            <tr>
+              <td><code>weather_2024.csv</code></td>
+              <td>Chapter 5</td>
+              <td>366 days × 3 cols</td>
+              <td>Multi-scale time series, calendar heatmap, spiral calendar</td>
+            </tr>
+            <tr>
+              <td><code>french_names.json</code></td>
+              <td>Chapter 5</td>
+              <td>Long table (year × name)</td>
+              <td>Multi-series timelines, Storyline</td>
+            </tr>
+            <tr>
+              <td><code>calendar_data.csv</code></td>
+              <td>Appendix · extended demos</td>
+              <td>1461 rows</td>
+              <td>Date alignment and binning for the van Wijk calendar heatmap</td>
+            </tr>
+            <tr>
+              <td><code>terrain10.csv</code></td>
+              <td>Appendix · extended demos</td>
+              <td>10 × 10 grid</td>
+              <td>Marching Squares contour tracing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      © 2026 Introduction to Visualization course · China University of Petroleum (East China) · Instructor:
+      <a href="https://cinger007.github.io" target="_blank" rel="noopener">Li Xin</a>
+      · Main textbook: Chen Wei, “Introduction to Visualization”
+    </p>
+    <p>Zero-build static site · inline SVG graphics · no videos · bilingual (Chinese / English) with dark mode</p>
+  </footer>
+
+  <!-- 门户交互（进度回填 / 顶栏高亮）；file:// 下模块被 CORS 拦截时静默降级 -->
+  <script type="module" src="../portal.js"></script>
+</body>
+</html>

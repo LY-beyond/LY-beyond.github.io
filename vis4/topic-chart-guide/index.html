@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选图指南 · 从数据到图 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》选图指南专题：三步决策树（任务 → 数据 → 图形）、按五类任务整理的图表速查矩阵、四种最常见的用图错误对照，以及 6 题即时判分的选图小测。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+  <link rel="stylesheet" href="../chart-help.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="course-topbar">
+    <a class="brand" href="../">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">专题 · 选图指南</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="../lesson-01/">第 1 章 数据</a>
+      <a href="../lesson-02/">第 2 章 流程</a>
+      <a href="../lesson-03/">第 3 章 色彩</a>
+      <a href="../lesson-04/">第 4 章 低维</a>
+      <a href="../lesson-05/">第 5 章 时序</a>
+      <a href="./" class="current" aria-current="page">选图指南</a>
+      <a href="../quiz.html">章节测验</a>
+      <a href="../practice.html">实战工作台</a>
+      <a href="../graph.html">知识图谱</a>
+    </nav>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="../en/topic-chart-guide/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 页头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>选图指南 · 从数据到图</h1>
+        <p class="subtitle">「我该画什么图？」—— 这一步不该靠感觉。先问<b>任务</b>，再看<b>数据</b>，最后才挑<b>图形</b>。</p>
+      </div>
+      <div class="header-tip">决策树可交互 · 矩阵可速查 · 小测即时判分</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本页学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说得出「先问任务、再看数据、最后挑图形」的顺序，并解释为什么不能反过来</span></label></li>
+        <li><label><input type="checkbox"><span>拿到一份数据 + 一个表达意图，能沿决策树走到一个具体图形</span></label></li>
+        <li><label><input type="checkbox"><span>说得清常用图形各自的主视觉通道，以及它在什么规模下会失效</span></label></li>
+        <li><label><input type="checkbox"><span>认出四种最常见的误用：拿角度做精确比较、截断数值轴、用面积编码一维大小、彩虹色阶</span></label></li>
+        <li><label><input type="checkbox"><span>遇到「该画什么图」的争论时，用速查矩阵里的通道规则给出理由</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>选图指南 · 目录</h3>
+      <ul>
+        <li><a href="#cg-1" data-chapter="cg-1">1. 三步选图决策树</a></li>
+        <li><a href="#cg-2" data-chapter="cg-2">2. 图表速查矩阵</a></li>
+        <li><a href="#cg-3" data-chapter="cg-3">3. 正误用图对照</a></li>
+        <li><a href="#cg-4" data-chapter="cg-4">4. 选图小测（6 题）</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本页怎么用</b><br>
+        ① 先勾上方的学习目标；<br>
+        ② 在第 1 节里真的走一遍决策树，看看它给你的推荐；<br>
+        ③ 第 2 节的矩阵用来「反查」：知道自己要什么，回来查通道；<br>
+        ④ 做完第 4 节小测再回去看哪一条规则记错了。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 1. 三步选图决策树 ============ -->
+      <article class="chapter" id="cg-1">
+        <h2>1. 三步选图决策树</h2>
+        <p class="chapter-subtitle">挑图形最常见的错误，是「先挑一个好看的，再想办法把数据塞进去」。</p>
+
+        <span class="sec-label"><i>1</i> 为什么不能反过来</span>
+        <p>真正决定「这张图能让人看出什么」的，不是图形好不好看，而是它用了<strong>哪一条视觉通道</strong>；而通道可不可用，由数据的<strong>测量尺度</strong>决定（见 <a href="../lesson-01/#ch-1-3">第 1 章 1.3 数据属性</a>）。</p>
+
+        <div class="theory-card">
+          <h4>通道可读性排序（人眼判断的精确度）</h4>
+          <p><strong>长度 / 位置 &gt; 角度 &gt; 面积 &gt; 颜色亮度 &gt; 体积</strong>。人眼读长度最准，读体积最不准 —— 所以「用两个圆比大小」几乎必然误导，而「用两根条形比长短」几乎不会出错。</p>
+        </div>
+
+        <ul>
+          <li>✅ <strong>序数 / 名义数据</strong> → 长度、位置、颜色（色相只做区分，不做排序）。</li>
+          <li>⚠️ <strong>定量数据</strong> → 位置、长度最稳；面积、体积只能表达「量级」，不能用于精确比较。</li>
+          <li>❌ <strong>把定量数据塞进角度</strong>（饼图）→ 只适合「≤ 5 块、只看主次」的场合。</li>
+        </ul>
+
+        <span class="sec-label"><i>2</i> 三步走</span>
+        <p>把上面的规则收成一条可以照着走的路：<strong>任务 → 数据 → 图形</strong>。前两步是约束，第三步是在约束里做选择。</p>
+
+        <figure class="figure">
+          <svg viewBox="0 0 660 160" role="img" aria-label="三步选图流程：第 1 步问任务，第 2 步看数据，第 3 步挑图形">
+            <defs>
+              <marker id="cgArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0L10 5L0 10Z" style="fill: var(--c-border-2)"/>
+              </marker>
+            </defs>
+
+            <!-- 第 1 步 -->
+            <rect x="4" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-primary) 30%, transparent);"/>
+            <text x="20" y="48" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">第 1 步 · 任务</text>
+            <text x="20" y="74" style="fill: var(--c-text); font-size: 13px;">比较 · 分布 · 关系</text>
+            <text x="20" y="94" style="fill: var(--c-text); font-size: 13px;">变化 · 构成</text>
+            <text x="20" y="118" style="fill: var(--c-muted); font-size: 11.5px;">先问「想让人看到什么」</text>
+
+            <line x1="196" y1="77" x2="232" y2="77" marker-end="url(#cgArrow)"
+                  style="stroke: var(--c-border-2); stroke-width: 1.6;"/>
+
+            <!-- 第 2 步 -->
+            <rect x="236" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-accent) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-accent) 30%, transparent);"/>
+            <text x="252" y="48" style="fill: var(--c-accent); font-size: 12px; font-weight: 800;">第 2 步 · 数据</text>
+            <text x="252" y="74" style="fill: var(--c-text); font-size: 13px;">类别 · 数值 · 时间</text>
+            <text x="252" y="94" style="fill: var(--c-text); font-size: 13px;">层级 · 区间</text>
+            <text x="252" y="118" style="fill: var(--c-muted); font-size: 11.5px;">测量尺度决定可用通道</text>
+
+            <line x1="428" y1="77" x2="464" y2="77" marker-end="url(#cgArrow)"
+                  style="stroke: var(--c-border-2); stroke-width: 1.6;"/>
+
+            <!-- 第 3 步 -->
+            <rect x="468" y="22" width="188" height="110" rx="14"
+                  style="fill: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface)); stroke: color-mix(in srgb, var(--c-success) 30%, transparent);"/>
+            <text x="484" y="48" style="fill: var(--c-success); font-size: 12px; font-weight: 800;">第 3 步 · 图形</text>
+            <text x="484" y="74" style="fill: var(--c-text); font-size: 13px;">在允许的通道里挑一个</text>
+            <text x="484" y="94" style="fill: var(--c-text); font-size: 13px;">再按数据规模做取舍</text>
+            <text x="484" y="118" style="fill: var(--c-muted); font-size: 11.5px;">类别多少 / 样本量 / 跨度</text>
+
+            <text x="330" y="152" text-anchor="middle"
+                  style="fill: var(--c-muted); font-size: 11.5px;">顺序不能颠倒：先定图形再迁就数据，等于先上车再决定去哪</text>
+          </svg>
+          <figcaption>三步选图流程：任务与数据是约束，图形是在约束下的解（示意图为内联 SVG，无位图）</figcaption>
+        </figure>
+
+        <span class="sec-label"><i>3</i> 动手：走一遍决策树</span>
+        <div class="demo-card cg-wizard">
+          <p class="demo-hint">回答 2–3 个问题，向导会给出推荐图形、它的主视觉通道、适用规模与常见误用。中途可以用「上一步」回退，随时「重新开始」。</p>
+          <div class="cg-crumbs" id="cg-crumbs" hidden></div>
+          <div class="cg-stage" id="cg-stage"></div>
+          <div class="cg-wizard__foot">
+            <button type="button" class="demo-btn" id="cg-back" hidden>← 上一步</button>
+            <button type="button" class="demo-btn demo-btn--primary" id="cg-reset">重新开始</button>
+          </div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>选图的第一步不是「哪个好看」，而是「我有什么数据、我想表达什么」。</li>
+            <li>通道可读性：长度 / 位置 &gt; 角度 &gt; 面积 &gt; 颜色亮度 &gt; 体积；数据尺度决定哪些通道可用。</li>
+            <li>图形是在「任务 × 数据」约束下的解，最后还要按规模做取舍（类别多寡、样本量、时间跨度）。</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ============ 2. 图表速查矩阵 ============ -->
+      <article class="chapter" id="cg-2">
+        <h2>2. 图表速查矩阵</h2>
+        <p class="chapter-subtitle">知道自己要什么之后，回来「反查」：这张图用哪条通道？什么时候它会失效？</p>
+
+        <span class="sec-label"><i>1</i> 按五类任务反查</span>
+        <p>下面这张表按最常见的五类表达意图分组。每一行都给出<strong>推荐图形</strong>、它依赖的<strong>主视觉通道</strong>，以及它最容易出错的地方 —— 最后一项往往比前两项更重要，因为它决定了「图会不会骗人」。</p>
+
+        <div class="cheat cg-matrix table-scroll">
+          <table class="theory-table">
+            <caption>速查矩阵：任务 × 图形 × 通道 × 误用（「详见」列可跳到对应章节）</caption>
+            <thead>
+              <tr>
+                <th scope="col">推荐图形</th>
+                <th scope="col">主视觉通道</th>
+                <th scope="col">最适合的场景</th>
+                <th scope="col">慎用 / 常见错误</th>
+                <th scope="col">详见</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">① 比较大小 —— 谁高谁低</th></tr>
+              <tr>
+                <td>条形图（垂直）</td><td>长度 / 位置</td>
+                <td>类别 ≤ 12 个、需要精确读值</td>
+                <td>按字母排序；用面积 / 体积表示大小</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>条形图（水平，按数值排序）</td><td>长度 / 位置</td>
+                <td>类别 &gt; 12 个，或标签很长（省市全称）</td>
+                <td>数值轴放到顶部；排序后又打乱</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>分组条形图</td><td>长度 + 分组色</td>
+                <td>一个类别变量下 2–3 个子类别对比</td>
+                <td>组数 × 类目 &gt; 12 时应改小倍数分面</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>堆叠条形图</td><td>长度（总长 + 分段）</td>
+                <td>同时看总量与内部构成</td>
+                <td>读中间段不可靠；段数 &gt; 6 要归并「其他」</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">② 看分布 —— 一个变量长什么样</th></tr>
+              <tr>
+                <td>直方图</td><td>长度（分箱计数）</td>
+                <td>单个连续变量的形状（偏态、双峰）</td>
+                <td>分箱宽度会「换一个故事」；它不是时间轴</td>
+                <td><a href="../lesson-04/#ch-4-1">4.1</a></td>
+              </tr>
+              <tr>
+                <td>密度图 / 小提琴图</td><td>面积（平滑密度）</td>
+                <td>多组分布叠加比较，不想被分箱干扰</td>
+                <td>面积已归一化，读不出频数</td>
+                <td><a href="../lesson-04/#ch-4-1">4.1</a></td>
+              </tr>
+              <tr>
+                <td>箱线图</td><td>位置 + 长度（统计量）</td>
+                <td>多组分布对比、找离群点（每组 ≥ 30）</td>
+                <td>样本少的组别直接画点；它藏住了双峰</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>抖动点图</td><td>位置（抖动防重叠）</td>
+                <td>每组样本很少（&lt; 10），要看每个观测</td>
+                <td>抖动幅度大到改变分布印象</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">③ 看关系 —— 变量之间有没有联系</th></tr>
+              <tr>
+                <td>散点图</td><td>位置（x, y）</td>
+                <td>两个数值变量的关系、离群点、聚类</td>
+                <td>点重叠严重时不设透明度，或不用六边形分箱</td>
+                <td><a href="../lesson-04/#ch-4-3">4.3</a></td>
+              </tr>
+              <tr>
+                <td>散点 + 拟合趋势线</td><td>位置 + 斜率</td>
+                <td>强调趋势方向、对比拟合模型</td>
+                <td>用拟合线掩盖离群点；非线性数据硬套直线</td>
+                <td><a href="../lesson-04/#ch-4-3">4.3</a></td>
+              </tr>
+              <tr>
+                <td>散点矩阵 / 平行坐标</td><td>位置（多轴）</td>
+                <td>3–8 个变量的整体结构，快速找相关</td>
+                <td>维度 &gt; 8 时应改用降维或分面</td>
+                <td><a href="../lesson-04/#ch-4-2">4.2</a></td>
+              </tr>
+              <tr>
+                <td>热力图（相关矩阵）</td><td>颜色亮度（顺序型 colormap）</td>
+                <td>变量两两相关的强弱，一张图扫完</td>
+                <td>彩虹色阶；缺少颜色图例；数值与颜色不匹配</td>
+                <td><a href="../lesson-03/#ch-3-2">3.2</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">④ 看变化 —— 随时间怎么走</th></tr>
+              <tr>
+                <td>折线图（单 / 多序列）</td><td>位置 + 斜率</td>
+                <td>等间隔连续时间序列、趋势与拐点</td>
+                <td>时间轴必须等距连续；不要给无序类别画折线</td>
+                <td><a href="../lesson-05/#ch-5-2">5.2</a></td>
+              </tr>
+              <tr>
+                <td>日历热图</td><td>颜色亮度（顺序型 colormap）</td>
+                <td>按日发生、需跨年比较（星期几 / 月度模式）</td>
+                <td>必须配颜色图例；缺失日要显式留白</td>
+                <td><a href="../lesson-05/#ch-5-3">5.3</a></td>
+              </tr>
+              <tr>
+                <td>螺旋 / 极坐标日历</td><td>角度（周期）+ 半径（时间）</td>
+                <td>长跨度、明显周期的数据（季节、多年）</td>
+                <td>极坐标下比较长度不精确，只适合看模式</td>
+                <td><a href="../lesson-05/#ch-5-4">5.4</a></td>
+              </tr>
+              <tr>
+                <td>故事线 / 甘特图</td><td>位置（区间起止）</td>
+                <td>有明确起止的事件、阶段、工期</td>
+                <td>时刻型事件不适合；交叉过多要分泳道</td>
+                <td><a href="../lesson-05/#ch-5-5">5.5</a></td>
+              </tr>
+            </tbody>
+
+            <tbody>
+              <tr class="cg-grouprow"><th colspan="5">⑤ 看构成 —— 整体由什么拼成</th></tr>
+              <tr>
+                <td>环形图 / 饼图</td><td>角度 + 面积</td>
+                <td>≤ 5 个部分、只看主次</td>
+                <td>&gt; 5 个扇区读不出差值；别用它做精确比较</td>
+                <td><a href="../lesson-01/#ch-1-3">1.3</a></td>
+              </tr>
+              <tr>
+                <td>100% 堆叠条形图</td><td>长度（份额）</td>
+                <td>&gt; 5 个部分时替代饼图，份额可比</td>
+                <td>部分太多时颜色难以区分，需归并</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+              <tr>
+                <td>百分比堆叠面积图</td><td>面积（占比随时间）</td>
+                <td>构成随时间的演变（份额此消彼长）</td>
+                <td>中间层趋势难读；关心绝对值时改用堆叠面积</td>
+                <td><a href="../lesson-05/#ch-5-2">5.2</a></td>
+              </tr>
+              <tr>
+                <td>矩形树图</td><td>面积（层级构成）</td>
+                <td>多层层级构成、占比悬殊</td>
+                <td>面积比较不精确；层级 &gt; 3 层难读，小项被压没</td>
+                <td><a href="../lesson-02/#ch-2-3">2.3</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>用矩阵的正确姿势：</strong>先用第 1 节的决策树走到一个候选，再回这张表看它的「慎用」一列是否踩中你的数据规模；踩中了就换同一行的相邻图形（例如条形 → 水平条形、饼图 → 100% 堆叠条形）。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3. 正误用图对照 ============ -->
+      <article class="chapter" id="cg-3">
+        <h2>3. 正误用图对照</h2>
+        <p class="chapter-subtitle">同一份数据，画对了看得到结论，画错了看到的是「图形的谎言」。</p>
+
+        <span class="sec-label"><i>1</i> 四组对照</span>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ 误用</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="七个扇区的环形图，很难读出谁大谁小">
+                <path d="M66 11A29 29 0 0 1 87.4 26.4L73.2 34.3A15 15 0 0 0 66 26Z" style="fill: var(--ch-1)"/>
+                <path d="M87.4 26.4A29 29 0 0 1 91.3 51.1L74.9 45.7A15 15 0 0 0 73.2 34.3Z" style="fill: var(--ch-2)"/>
+                <path d="M91.3 51.1A29 29 0 0 1 75.5 65.6L71.8 48.7A15 15 0 0 0 74.9 45.7Z" style="fill: var(--ch-3)"/>
+                <path d="M75.5 65.6A29 29 0 0 1 52.4 66.3L58.3 48.7A15 15 0 0 0 71.8 48.7Z" style="fill: var(--ch-4)"/>
+                <path d="M52.4 66.3A29 29 0 0 1 33.5 53.7L48.1 42.5A15 15 0 0 0 58.3 48.7Z" style="fill: var(--ch-5)"/>
+                <path d="M33.5 53.7A29 29 0 0 1 28.6 30.2L44.1 34.5A15 15 0 0 0 48.1 42.5Z" style="fill: var(--ch-6)"/>
+                <path d="M28.6 30.2A29 29 0 0 1 50.7 12.1L58.3 26.3A15 15 0 0 0 44.1 34.5Z" style="fill: var(--ch-7)"/>
+                <path d="M50.7 12.1A29 29 0 0 1 66 11L66 26A15 15 0 0 0 58.3 26.3Z" style="fill: var(--ch-8)"/>
+              </svg>
+            </div>
+            <p><b>7 个扇区塞进一张环形图。</b>相邻两块的角度差不到 10°，人眼读不出来；两块大小相近的扇区到底谁更大，只能靠猜。</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ 正确</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="按数值排序的水平条形图">
+                <path class="cg-axis" d="M14 8V70M14 70H126"/>
+                <rect x="14" y="12" width="104" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="24" width="82" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="36" width="62" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="48" width="40" height="8" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="60" width="22" height="8" rx="2" style="fill: var(--ch-1)"/>
+              </svg>
+            </div>
+            <p><b>换成按数值排序的水平条形图。</b>长度是最精确的通道，名次与差值一眼可读；类别再多也不会「挤」。</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ 误用</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="截断数值轴的条形图，差异被夸大">
+                <path class="cg-axis" d="M12 70H126"/>
+                <path class="cg-guide" d="M12 46H126"/>
+                <rect x="20" y="46" width="16" height="4" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="48" y="40" width="16" height="10" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="76" y="30" width="16" height="20" rx="1.6" style="fill: var(--ch-6)"/>
+                <rect x="104" y="16" width="16" height="34" rx="1.6" style="fill: var(--ch-6)"/>
+                <text class="cg-lbl" x="20" y="76">3.4</text>
+                <text class="cg-lbl" x="76" y="76">4.1</text>
+                <text class="cg-lbl" x="98" y="76">4.6</text>
+              </svg>
+            </div>
+            <p><b>数值轴从 3.4 起，不从 0 起。</b>3.4 与 4.6 只差 35%，画出来却像差了三倍 —— 条形图的长度一旦失去零点，长度就不再可信。</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ 正确</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="从零起的条形图，差异真实">
+                <path class="cg-axis" d="M12 8V70M12 70H126"/>
+                <rect x="20" y="33" width="16" height="37" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="48" y="29" width="16" height="41" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="76" y="25" width="16" height="45" rx="1.6" style="fill: var(--ch-1)"/>
+                <rect x="104" y="20" width="16" height="50" rx="1.6" style="fill: var(--ch-1)"/>
+                <text class="cg-lbl" x="126" y="12" text-anchor="end">从 0 起</text>
+              </svg>
+            </div>
+            <p><b>从 0 起画。</b>看上去「差异变小」了，但那是真实的差异。想强调相对变化，请改用折线图或直接标出百分比，而不是偷偷截断轴。</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ 误用</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="用圆面积编码一维数值，造成严重夸大">
+                <circle cx="30" cy="42" r="9" style="fill: var(--ch-6)" opacity=".85"/>
+                <circle cx="68" cy="42" r="12.7" style="fill: var(--ch-6)" opacity=".85"/>
+                <circle cx="112" cy="42" r="18" style="fill: var(--ch-6)" opacity=".85"/>
+                <text class="cg-lbl" x="30" y="72" text-anchor="middle">10</text>
+                <text class="cg-lbl" x="68" y="72" text-anchor="middle">20</text>
+                <text class="cg-lbl" x="112" y="72" text-anchor="middle">40</text>
+              </svg>
+            </div>
+            <p><b>用圆的面积表示一维数值。</b>数值翻到 4 倍时，半径只该翻 2 倍，但读者的第一反应是「半径大了 4 倍」—— 视觉上被放大了约 16 倍。</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ 正确</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="用长度编码同一组数值，比例真实">
+                <path class="cg-axis" d="M14 8V70M14 70H126"/>
+                <rect x="14" y="14" width="26" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="32" width="52" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <rect x="14" y="50" width="104" height="10" rx="2" style="fill: var(--ch-1)"/>
+                <text class="cg-lbl" x="126" y="70" text-anchor="end">长度 ⇄ 数值 1:1</text>
+              </svg>
+            </div>
+            <p><b>改用长度。</b>长度与数值一一对应，4 倍就是 4 倍。如果确实需要「大小感」，也必须同时标出数值并说明映射规则。</p>
+          </div>
+        </div>
+
+        <div class="cg-vs">
+          <div class="cg-vs__col cg-vs__col--bad">
+            <span class="cg-vs__tag">✗ 误用</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="彩虹色阶热图，颜色亮度与数值不对应">
+                <!-- 故意演示「错误配色」：彩虹色阶的亮度与数值不同向，因此此处直接写 hsl() 色值 -->
+                <rect x="4" y="10" width="20" height="20" style="fill: hsl(210, 90%, 40%)"/>
+                <rect x="26" y="10" width="20" height="20" style="fill: hsl(120, 90%, 45%)"/>
+                <rect x="48" y="10" width="20" height="20" style="fill: hsl(280, 90%, 55%)"/>
+                <rect x="70" y="10" width="20" height="20" style="fill: hsl(45, 95%, 55%)"/>
+                <rect x="92" y="10" width="20" height="20" style="fill: hsl(0, 90%, 48%)"/>
+                <rect x="4" y="34" width="20" height="20" style="fill: hsl(160, 90%, 42%)"/>
+                <rect x="26" y="34" width="20" height="20" style="fill: hsl(310, 85%, 60%)"/>
+                <rect x="48" y="34" width="20" height="20" style="fill: hsl(20, 92%, 52%)"/>
+                <rect x="70" y="34" width="20" height="20" style="fill: hsl(240, 85%, 45%)"/>
+                <rect x="92" y="34" width="20" height="20" style="fill: hsl(90, 90%, 45%)"/>
+              </svg>
+            </div>
+            <p><b>彩虹（jet）色阶。</b>色相在变、亮度忽高忽低，读者会把「最亮的黄」误当成最大；两侧的蓝与红还会被看成两个极端，凭空造出不存在的中点。</p>
+          </div>
+          <div class="cg-vs__col cg-vs__col--good">
+            <span class="cg-vs__tag">✓ 正确</span>
+            <div class="cg-vs__svg">
+              <svg viewBox="0 0 132 80" role="img" aria-label="顺序型单色阶热图，亮度与数值同向">
+                <rect x="4" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".16"/>
+                <rect x="26" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".34"/>
+                <rect x="48" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".52"/>
+                <rect x="70" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity=".72"/>
+                <rect x="92" y="10" width="20" height="20" style="fill: var(--ch-1)" opacity="1"/>
+                <rect x="4" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".28"/>
+                <rect x="26" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".6"/>
+                <rect x="48" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".88"/>
+                <rect x="70" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".44"/>
+                <rect x="92" y="34" width="20" height="20" style="fill: var(--ch-1)" opacity=".2"/>
+                <text class="cg-lbl" x="4" y="68">浅 = 小</text>
+                <text class="cg-lbl" x="112" y="68">深 = 大</text>
+              </svg>
+            </div>
+            <p><b>顺序型单色阶（浅 → 深）。</b>亮度与数值同向变化，顺序可读；需要「偏离中点」时再用发散型色阶（见 <a href="../lesson-03/#ch-3-2">3.2 colormap 三类选择</a>）。</p>
+          </div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>用角度做精确比较（饼图扇区）、截断数值轴、用面积编码一维数值，是三种最隐蔽的「图形谎言」。</li>
+            <li>条形图的长度必须从 0 起算；想强调相对变化就用折线或直接标注百分比。</li>
+            <li>颜色是通道不是装饰：顺序型数据用顺序色阶、偏离中心用发散色阶、纯类别才用定性色阶。</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ============ 4. 选图小测 ============ -->
+      <article class="chapter" id="cg-4">
+        <h2>4. 选图小测（6 题）</h2>
+        <p class="chapter-subtitle">每题都是「给一份数据和意图，问你画什么」——和真实工作里的问题一模一样。</p>
+
+        <span class="sec-label"><i>1</i> 开始作答</span>
+        <div class="cg-score">
+          <span>本页得分</span>
+          <span class="cg-score__num" id="cg-score-num">已答 0 / 6 题 · 正确 0 题</span>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">第 1 题</div>
+          <p class="selftest__q">手上有 30 个省级行政区的 GDP 数据，想让读者一眼看出「谁高谁低」，并且不用逐个比较也能排出名次。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="a"><span>饼图 —— 一眼看清各省占比</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="b"><span>水平条形图，并按数值从大到小排序</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="c"><span>折线图 —— 各省 GDP 连成一条线</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="d"><span>面积图 —— 用面积表示各省体量</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>类别多达 30 个、标签又是「省 / 自治区全称」，竖排会挤在一起。水平条形图把标签放到 y 轴、长度从 0 起算，是<strong>长度</strong>这条最精确的通道；再按数值排序，读者的眼睛只需从上往下扫。饼图 30 个扇区根本读不出差值。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">第 2 题</div>
+          <p class="selftest__q">一个兴趣小组只有 7 名同学，你想看每个人各自的身高。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="a"><span>箱线图 —— 直接看五个统计量</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="b"><span>密度图 —— 把分布平滑成曲线</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="c"><span>抖动点图 —— 直接画出 7 个观测值</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="d"><span>直方图 —— 分 5 个箱看分布</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>样本只有 7 个，四分位、极值这类<strong>统计量本身就不稳</strong>，箱线图会把「一个人的偶然值」画成「一组人的特征」；直方图分箱后每箱只剩一两个人。样本很少时最诚实的做法是把每个观测值都画出来（抖动点图）。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">第 3 题</div>
+          <p class="selftest__q">你想表达「各省犯罪构成随时间的变化」，重点看各类犯罪的<strong>份额</strong>此消彼长，而不是绝对数量。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="a"><span>堆叠条形图 —— 每年画三根条形</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="b"><span>百分比堆叠面积图 —— 每年归一成 100%</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="c"><span>环形图 —— 每年画一个环</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="d"><span>散点图 —— 犯罪率作为两个坐标</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>关键词是「<strong>份额随时间变化</strong>」。把每年的构成归一成 100%，堆叠面积的高度差就只剩份额变化，这正是百分比堆叠面积图的用途。堆叠条形图更适合比较「某几个时间点」的总量与构成，环形图则读不出连续趋势。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="d">
+          <div class="selftest__head">第 4 题</div>
+          <p class="selftest__q">手上有某地 30 年、逐日的气温记录，你想看出「季节的周期性重复」。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="a"><span>折线图 —— 30 年画成一条线</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="b"><span>日历热图 —— 按星期 × 周排成网格</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="c"><span>抖动点图 —— 每天画一个点</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="d"><span>螺旋 / 极坐标日历 —— 周期折到角度、时间放半径</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>30 年 × 365 天 ≈ 一万个点，画成折线会糊成一片色带，周期性完全看不出来。螺旋图把<strong>周期映射到角度</strong>（同一季节落在同一方向上）、把<strong>时间映射到半径</strong>，于是「每年同期同角度、逐年向外扩散」，周期性一眼可见。日历热图更适合「按日发生、跨年看星期几 / 月份模式」，跨度太长会过于稀疏。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">第 5 题</div>
+          <p class="selftest__q">一份数据里有 6 个数值变量（年龄、成绩、身高、体重、通勤距离、每周学习时长），你想一次看出它们的<strong>整体结构</strong>，而不只是两两关系。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="a"><span>一张散点图 —— 挑两个变量画</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="b"><span>分组条形图 —— 每个变量一根条形</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="c"><span>散点矩阵 / 平行坐标 —— 多轴一起看</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="d"><span>箱线图 —— 六个变量各一只箱子</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>6 个变量两两组合有 15 对，逐个画散点图看不过来。散点矩阵把所有变量两两铺成一张小图矩阵，能一次扫出哪些变量对相关；平行坐标则把每个观测画成一条折线，适合看整体簇结构。箱线图只能逐个变量看，看不出<strong>变量之间</strong>的关系。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">第 6 题</div>
+          <p class="selftest__q">你要展示「每位学生从入学到毕业的在校时间」，数据是<strong>有起止日期的区间</strong>，而不是某一时刻。选哪个？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="a"><span>折线图 —— 把入学日期连起来</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="b"><span>故事线 / 甘特图 —— 每人一条区间线段</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="c"><span>直方图 —— 统计入学年份的人数</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="d"><span>日历热图 —— 把在校的每一天涂色</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>数据本身是<strong>区间</strong>（开始 → 结束），而不是时刻。甘特 / 故事线用一条线段表达「起止」，与数据的本质一一对应；折线图会把区间硬压成点、丢掉跨度信息。日历热图虽然也能涂出这段区间，但每个学生占一整片格子，反而读不出「谁跨得更久」。</p>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>答完之后：</strong>把错题的规则回到 <a href="#cg-2">第 2 节速查矩阵</a> 里找一遍 —— 矩阵的「慎用」一列，基本就是这些题目的命题点。</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一页 / 下一页 ================= -->
+  <nav class="chapter-pager" aria-label="页面翻页">
+    <a class="pager-prev" href="../lesson-05/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 5 章 时序数据可视化</span>
+    </a>
+    <a class="pager-portal" href="../">返回门户</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 本页交互（决策树 / 小测 / 滚动高亮；ES Module，file:// 下会被 CORS 拦截，页面仍可阅读） -->
+    <script src="../chart-help-ui.js"></script>
+  <script type="module" src="../chart-help.js"></script>
+</body>
+</html>

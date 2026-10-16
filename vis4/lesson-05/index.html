@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 5 章 时序数据可视化 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》第 5 章：时间属性（时刻/间隔/跨度/频率/周期）、标准折线图与聚合尺度、van Wijk 日历热图、阿基米德螺旋周期可视化、Storyline 故事线（侏罗纪公园）。含 5 个可交互内联 SVG 演示与即时自测。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 章节顶栏 ================= -->
+  <header class="course-topbar" data-current="5">
+    <a class="brand" href="../">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">第 5 章 · 时序数据可视化</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="../lesson-01/">第 1 章 数据</a>
+      <a href="../lesson-02/">第 2 章 流程</a>
+      <a href="../lesson-03/">第 3 章 色彩</a>
+      <a href="../lesson-04/">第 4 章 低维</a>
+      <a href="./">第 5 章 时序</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      只看代码
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="../en/lesson-05/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 章节头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>第 5 章 · 时序数据可视化</h1>
+        <p class="subtitle">时间不是普通的一列数字 —— <b>属性 · 折线 · 日历热图 · 螺旋 · Storyline</b></p>
+      </div>
+      <div class="header-tip">读到哪里看到哪里 · 演示就地渲染 · 自测即时判分</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本章学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说得出时刻 / 间隔 / 跨度 / 频率 / 周期这 5 个时间属性的差别，并为每个属性挑一种合适的图形</span></label></li>
+        <li><label><input type="checkbox"><span>会用 timeParse 与 scaleTime 画出标准折线图，并解释聚合尺度如何改变图形的形态与结论</span></label></li>
+        <li><label><input type="checkbox"><span>讲清 van Wijk 日历热图的「周 × 星期」布局，以及 isMonthDivider 月份分隔算法为什么巧妙</span></label></li>
+        <li><label><input type="checkbox"><span>用阿基米德螺旋 r = a + bθ 把周期铺到极坐标上，并解释动态 Δθ 为何能让每段弧长近似相等</span></label></li>
+        <li><label><input type="checkbox"><span>说得出 Storyline 的三大元素（时间尺度映射 / Catmull-Rom 样条 / 事件层），并用它画出多角色生命线</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>第 5 章 · 目录</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 5 小节</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-5-1" data-chapter="ch-5-1">5.1 时间属性</a></li>
+        <li><a href="#ch-5-2" data-chapter="ch-5-2">5.2 标准时间可视化（折线图）</a></li>
+        <li><a href="#ch-5-3" data-chapter="ch-5-3">5.3 日历热图（van Wijk）</a></li>
+        <li><a href="#ch-5-4" data-chapter="ch-5-4">5.4 周期时间可视化（阿基米德螺旋）</a></li>
+        <li><a href="#ch-5-5" data-chapter="ch-5-5">5.5 Storyline 时间线（侏罗纪公园）</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本章怎么学</b><br>
+        ① 先勾上方的学习目标；<br>
+        ② 按小节连续往下读，演示会就地渲染；<br>
+        ③ 做完每节自测再进下一节；<br>
+        ④ 复习时点右上角「只看代码」。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 5.1 时间属性 ============ -->
+      <article class="chapter" id="ch-5-1">
+        <h2>5.1 时间属性</h2>
+        <p class="chapter-subtitle">动手画时序图之前，先回答一个问题：我手上这条「时间」，到底是时刻、间隔，还是周期？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 6.1 节把时间属性列成了一张「名词解释表」，读完还是不知道该怎么用。本节把它们搬上一个<strong>环形轮盘</strong>：点某个属性，旁边立刻显示它的定义、一个生活例子，以及它最典型的可视化方式。</p>
+        <p>轮盘上放的是 5 个可以直接落到坐标轴上的属性：<strong>时刻（instant）</strong>、<strong>间隔（interval）</strong>、<strong>跨度（span）</strong>、<strong>频率（frequency）</strong>、<strong>周期（cycle）</strong>。它们不是互相排斥的 5 类数据，而是「同一列时间」可以被提问的 5 个角度 —— 电话号码表要问时刻，心率曲线要问间隔，销售额月报要问周期。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>陈为教材：时间是有结构的量纲</h4>
+          <p>教材强调时间<strong>不是普通的数值轴</strong>，它自带 5 个性质：<strong>有序性</strong>（任意两个事件可比较先后，与因果紧密相连）、<strong>连续性</strong>（两个时刻之间永远还有时刻）、<strong>周期性</strong>（自然过程常有循环，如昼夜与季节，可用循环时间域表达）、<strong>独立于空间</strong>（时间与空间紧相关，但科学过程大多把二者分开处理）、<strong>结构性</strong>（年 / 月 / 日 / 时 / 分 / 秒 的层级切分，既有自然的昼夜，也有人为约定的 60 秒）。</p>
+        </div>
+        <ul>
+          <li>把「<strong>时刻</strong>」当作点 → 散点图、事件标记；把「<strong>间隔</strong>」当作长度 → 甘特图、时间线括号。</li>
+          <li>把「<strong>跨度</strong>」当作区间 → 面积图、时间轴范围高亮。</li>
+          <li>忽略「<strong>周期性</strong>」→ 季节趋势会被线性时间轴「抹平」，只剩一条看不出规律的锯齿线。</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 276" role="img" aria-label="时间属性分解示意图：上半部分在一条时间轴上标出时刻、间隔与跨度；中段用等距刻度表示频率；下段用首尾相接的圆环表示周期">
+            <!-- ① 时刻 / 间隔 / 跨度 -->
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">① 时刻 · 间隔 · 跨度</text>
+            <line x1="40" y1="86" x2="600" y2="86" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <g style="stroke: var(--c-line-2);">
+              <line x1="40" y1="81" x2="40" y2="91"/><line x1="140" y1="81" x2="140" y2="91"/>
+              <line x1="240" y1="81" x2="240" y2="91"/><line x1="340" y1="81" x2="340" y2="91"/>
+              <line x1="440" y1="81" x2="440" y2="91"/><line x1="540" y1="81" x2="540" y2="91"/>
+            </g>
+            <circle cx="140" cy="86" r="5.5" style="fill: var(--c-primary);"/>
+            <text x="140" y="52" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 700;">时刻 instant</text>
+            <text x="140" y="68" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">一个瞬时读数</text>
+            <path d="M140 100 L240 100" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <path d="M140 96 L140 104 M240 96 L240 104" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <text x="190" y="118" text-anchor="middle" style="fill: var(--c-accent); font-size: 11.5px; font-weight: 700;">间隔 interval</text>
+            <rect x="40" y="138" width="500" height="7" rx="3.5" style="fill: color-mix(in srgb, var(--c-primary) 22%, transparent);"/>
+            <text x="40" y="164" style="fill: var(--c-text-soft); font-size: 11.5px;">跨度 span —— 整段覆盖的范围，用一条带表达</text>
+
+            <!-- ② 频率 -->
+            <text x="0" y="192" style="fill: var(--c-muted); font-size: 12px;">② 频率 frequency</text>
+            <g style="stroke: var(--c-primary); stroke-width: 1.4;">
+              <line x1="40" y1="222" x2="40" y2="238"/><line x1="80" y1="222" x2="80" y2="238"/>
+              <line x1="120" y1="222" x2="120" y2="238"/><line x1="160" y1="222" x2="160" y2="238"/>
+              <line x1="200" y1="222" x2="200" y2="238"/><line x1="240" y1="222" x2="240" y2="238"/>
+            </g>
+            <text x="256" y="234" style="fill: var(--c-text-soft); font-size: 11.5px;">等距刻度：单位时间内重复的次数（λ）</text>
+
+            <!-- ③ 周期 -->
+            <text x="0" y="266" style="fill: var(--c-muted); font-size: 12px;">③ 周期 cycle</text>
+            <circle cx="470" cy="248" r="20" fill="none" style="stroke: var(--c-success); stroke-width: 2;" stroke-dasharray="44 82"/>
+            <path d="M486 234 l-9 -3 l3 9" style="stroke: var(--c-success); stroke-width: 2; fill: none;" stroke-linecap="round"/>
+            <text x="500" y="252" style="fill: var(--c-text-soft); font-size: 11.5px;">回到起点、可循环重复的一段</text>
+          </svg>
+          <figcaption>同一个「时间」可以被问成 5 个不同的量 —— 用哪一个，决定了你该画点、画括号、画带、画等距刻度，还是画圈。</figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p>把这 5 个属性想清楚，能挡掉四类常见错误：<strong>有序性</strong>缺失（散点图错位成噪声）、<strong>连续性</strong>混淆（离散事件却硬连成线）、<strong>周期性</strong>忽略（季节趋势被抹平）、<strong>结构性</strong>不匹配（工作日 / 周末、闰年统统计错）。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 单一数据源：5 个属性用对象数组组织</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 一份数据，多处使用：轮盘节点、详情面板、图例都从它派生</span>
+const TIME_ATTRIBUTES = [
+  { key: <span class="str">'instant'</span>,   name: <span class="str">'时刻'</span>, icon: <span class="str">'•'</span>, token: <span class="str">'--c-primary'</span>,
+    desc:  <span class="str">'时间轴上的一个点，如某次传感器读数。'</span>,
+    viz:   <span class="str">'散点图、事件标记'</span> },
+  { key: <span class="str">'interval'</span>,  name: <span class="str">'间隔'</span>, icon: <span class="str">'↔'</span>, token: <span class="str">'--c-accent'</span>,
+    desc:  <span class="str">'两个时刻之差，如工期、等待时长。'</span>,
+    viz:   <span class="str">'甘特图、时间线括号'</span> },
+  { key: <span class="str">'span'</span>,      name: <span class="str">'跨度'</span>, icon: <span class="str">'▭'</span>, token: <span class="str">'--ch-1'</span>,
+    desc:  <span class="str">'一段连续覆盖的范围，如赛季、任期。'</span>,
+    viz:   <span class="str">'面积图、范围高亮'</span> },
+  { key: <span class="str">'frequency'</span>, name: <span class="str">'频率'</span>, icon: <span class="str">'λ'</span>, token: <span class="str">'--ch-3'</span>,
+    desc:  <span class="str">'单位时间内重复的次数。'</span>,
+    viz:   <span class="str">'柱状图、直方图'</span> },
+  { key: <span class="str">'cycle'</span>,     name: <span class="str">'周期'</span>, icon: <span class="str">'⟳'</span>, token: <span class="str">'--c-success'</span>,
+    desc:  <span class="str">'回到起点、可循环重复的一段，如昼夜、季节。'</span>,
+    viz:   <span class="str">'螺旋图、日历热图、极坐标'</span> },
+];</code></pre>
+              <div class="key-point">
+                <p><strong>为什么用对象数组：</strong>轮盘、详情、图例三处都要读同一批属性。写成一份数据源后，改一处即可全站生效，不会「改了卡片忘了图例」。<strong>顺带一提：</strong>颜色<em>不写死</em>色值，而是记下载令牌名（<code>'--c-primary'</code>），运行时再取 <code>getComputedStyle</code> —— 这样深色模式会自动跟随。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 环形轮盘的布局：角度 → 极坐标 → 笛卡尔</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 5 个节点均分 360°：从正上方（-90°）开始，每格 72°</span>
+const N = <span class="num">5</span>;
+const nodeAt = (i) =&gt; {
+  const deg = -<span class="num">90</span> + i * (<span class="num">360</span> / N);
+  const rad = deg * Math.PI / <span class="num">180</span>;
+  return {
+    x: CX + R * Math.cos(rad),   <span class="cmt">// 极坐标 = (R, θ)</span>
+    y: CY + R * Math.sin(rad),   <span class="cmt">// 转成笛卡尔 = (x, y)</span>
+    rad,
+  };
+};
+<span class="cmt">// 相邻两点的夹角恒为 72°，所以「节点间距」天然均匀</span></code></pre>
+              <div class="key-point">
+                <p><strong>极性布局的通用套路：</strong>先定角度（<code>θ = 起点 + i·360/N</code>），再乘半径换成 <code>x / y</code>。前几章画金字塔用的是 <code>M</code> / <code>L</code> / <code>Z</code> 直线指令，这里换成 <code>cos / sin</code> —— 极坐标是「圆周类图形」（轮盘、雷达图、螺旋、饼图）的通用入口。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点轮盘上的任意一个属性（或按 <span class="kbd">Tab</span> 选中后回车）—— 右侧会显示它的定义、生活例子、典型图形与一句话设计提醒。</p>
+          <div class="demo-mount" data-demo="d-5-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>时间可以被问成 5 个角度：时刻（点）、间隔（长度）、跨度（区间）、频率（重复次数）、周期（循环）。</li>
+            <li>教材强调时间的 5 个性质：有序、连续、周期、独立于空间、结构性 —— 每条都对应一类设计禁忌。</li>
+            <li>极性布局（<code>θ → (x, y)</code>）是圆周类图形的通用入口，圆周类图形正是表达「周期」的起点。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">「2024 年 3 月 1 日 08:00 的气温读数」这一条数据，在时间属性里属于？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="a"><span>间隔 interval</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="b"><span>时刻 instant</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="c"><span>跨度 span</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="d"><span>周期 cycle</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>它落在一个<strong>瞬时</strong>上，是一个点，所以是<strong>时刻</strong>。间隔要两个时刻相减（如「从 08:00 到 12:00 共 4 小时」）；跨度是一整段连续覆盖的范围；周期是回到起点的重复段 —— 三者都不是这一条数据本身的属性。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q">在设计时序图时<strong>忽略「周期性」</strong>，最可能造成的后果是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="a"><span>散点图错位成噪声</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="b"><span>离散事件被错误地连成折线</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="c"><span>季节趋势被「抹平」，看不出循环规律</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="d"><span>闰年与工作日 / 周末全部算错</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>线性时间轴把每一年或每一天并排铺开，周期性信号会被拉成一条看不出规律的锯齿线；这正是不用折线、改用<strong>日历热图</strong>（5.3）或<strong>螺旋图</strong>（5.4）的原因。选项 a 对应「有序性缺失」，b 对应「连续性混淆」，d 对应「结构性不匹配」。</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.2 标准时间可视化 ============ -->
+      <article class="chapter" id="ch-5-2">
+        <h2>5.2 标准时间可视化（折线图）</h2>
+        <p class="chapter-subtitle">x 轴 = 时间，y 轴 = 度量。最常见的时序图，也是最能被「聚合尺度」左右结论的一张图。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 6.2.1 节用折线图展示法国人名（Marie / Jean / Camille）在 1900–2020 年的使用频率变化。原始页面还配了「词云 + 鼠标高亮 + 时间段筛选」，但代码只给出了关键折线那几行。</p>
+        <table class="theory-table">
+          <caption>三类数据 → 三种尺度的折线：本节把「同一份序列」放到不同聚合尺度下并排对照</caption>
+          <thead>
+            <tr><th>聚合尺度</th><th>点数（2024 日气温）</th><th>看得出的东西</th><th>会丢掉的东西</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>原始日数据</td><td>366</td><td>逐日抖动、极端天气</td><td>长期趋势（被噪声淹没）</td></tr>
+            <tr><td>按周聚合</td><td>约 53</td><td>周级别的起伏、短期趋势</td><td>周内的具体某天</td></tr>
+            <tr><td>按月聚合</td><td>12</td><td>全年季节曲线，一目了然</td><td>月内所有细节</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>标准时序图 = 二维线图</h4>
+          <p>本质是「x = 时间、y = 度量」的二维线图，优势是<strong>在线性时间域中的变化趋势一目了然</strong>；代价是<strong>难以表达周期性</strong> —— 这也是 5.3 日历热图与 5.4 螺旋图存在的理由。交互上，hover 高亮、tip 显示、时间段筛选已经是数据新闻的标配。</p>
+        </div>
+        <ul>
+          <li><strong>曲线选型：</strong>点数 ≤ 50 用 <code>linear</code>（忠实于数据）；50–500 用 <code>monotoneX</code> / <code>curveCatmullRom</code>（平滑但不过冲）；&gt; 500 才考虑面积图或箱形图。</li>
+          <li><strong>聚合权衡：</strong>聚合能降噪、更能看清趋势，但每一步聚合都在「用细节换清晰」，结论可能因此变化。</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 176" role="img" aria-label="同一份日序列在三种聚合尺度下的形态对比：原始日数据锯齿剧烈，按周聚合起伏平缓，按月聚合呈现清晰的季节曲线">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">同一份 2024 日气温序列 · 三种聚合尺度</text>
+
+            <!-- 原始日数据 -->
+            <text x="20" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">原始日数据（366 点）</text>
+            <polyline points="20,100 28,58 36,96 44,52 52,92 60,64 68,88 76,48 84,84 92,70 100,90 108,44 116,86 124,66 132,92 140,56 148,80 156,72 164,88 172,60 180,84 188,50"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 1.6;"/>
+            <line x1="20" y1="128" x2="188" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <!-- 按周聚合 -->
+            <text x="215" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">按周聚合（约 53 点）</text>
+            <polyline points="215,94 232,76 249,86 266,68 283,78 300,64 317,70 334,54 351,60 368,46 385,54 402,42"
+              fill="none" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <line x1="215" y1="128" x2="402" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <!-- 按月聚合 -->
+            <text x="430" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">按月聚合（12 点）</text>
+            <polyline points="430,104 447,98 464,88 481,74 498,58 515,46 532,42 549,52 566,68 583,82 600,94 617,104"
+              fill="none" style="stroke: var(--c-success); stroke-width: 2.2;"/>
+            <line x1="430" y1="128" x2="617" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <text x="20" y="150" style="fill: var(--c-text-soft); font-size: 11.5px;">左 → 右：点数越来越少，曲线越来越「顺」，但每丢掉一个点，也丢掉一部分信息。形态变了，结论往往也跟着变。</text>
+            <text x="20" y="168" style="fill: var(--c-muted); font-size: 11.5px;">同一份数据、同一个折线图，只是换了聚合尺度 —— 这就是「尺度决定形态与结论」。</text>
+          </svg>
+          <figcaption>聚合尺度三连：原始（噪声大）→ 按周（趋势初现）→ 按月（季节曲线清晰）。</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p>经验法则是<strong>先看目标再选尺度</strong>：要回答「某天下没下雨」就用日数据；要回答「这个夏天热不热」就用月聚合；要同时回答两者，就并排放（本节演示就是这个做法）。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 时间字符串 → Date，再交给时间轴</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ CSV 里的年份是字符串 '1965'，先解析成 Date</span>
+const parseYear = d3.timeParse(<span class="str">'%Y'</span>);      <span class="cmt">// '1965' → Date</span>
+const formatYear = d3.timeFormat(<span class="str">'%Y'</span>);     <span class="cmt">// Date → '1965'</span>
+<span class="cmt">// 常用 token：%Y 四位年 · %m 月 01-12 · %d 日 · %H 时 · %M 分</span>
+
+<span class="cmt">// 时间轴 = 数值轴的特化版（Date 在底层就是数字）</span>
+const x = d3.scaleTime()
+  .domain([<span class="kw">new</span> Date(<span class="num">1900</span>, <span class="num">0</span>, <span class="num">1</span>), <span class="kw">new</span> Date(<span class="num">2020</span>, <span class="num">11</span>, <span class="num">31</span>)])
+  .range([<span class="num">0</span>, innerW]);
+
+svg.append(<span class="str">'g'</span>)
+  .attr(<span class="str">'transform'</span>, <span class="str">`translate(${M.l},${M.t + innerH})`</span>)
+  .call(d3.axisBottom(x).ticks(<span class="num">10</span>));</code></pre>
+              <div class="key-point">
+                <p><code>parseYear</code> 处理<strong>字符串 → Date</strong>，是所有时序数据的第一步（CSV 里几乎没有真正的日期类型）。<code>scaleTime</code> 比 <code>scaleLinear</code> 多两个能力：① 自动按时间跨度挑 tick 间隔（10 年 / 12 月 / 30 天）；② 时区处理（真实项目记得加 <code>.utc()</code>）。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 聚合：把日序列 rollup 成周均值 / 月均值</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 按「所属周 / 月」分组，再求均值 —— 一份代码换三种尺度</span>
+const byWeek = d3.rollup(
+  daily,
+  (v) =&gt; d3.mean(v, (d) =&gt; d.temp),         <span class="cmt">// reducer：均值</span>
+  (d) =&gt; d3.timeWeek.floor(d.date)           <span class="cmt">// key：这一天的“周起点”</span>
+);
+const byMonth = d3.rollup(
+  daily,
+  (v) =&gt; d3.mean(v, (d) =&gt; d.temp),
+  (d) =&gt; d3.timeMonth.floor(d.date)          <span class="cmt">// key：这一天的“月起点”</span>
+);
+<span class="cmt">// rollup 返回 Map(Date → 均值)，再 [ ...map ] 展开即可画图</span></code></pre>
+              <div class="key-point">
+                <p><strong>关键在 key 提取函数：</strong><code>timeWeek.floor(date)</code> 把「这周的任意一天」都折回同一个周起点，于是同周的点自然归为一组。第 1 章学的 <code>rollup</code>（分组聚合）在这里终于派上正用 —— <em>聚合尺度的切换，本质只是换一个 key 函数</em>。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 通用 hover 模板：透明覆盖层 + 焦点组</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 三层结构：透明矩形捕获事件 / focus 组显示 / text 显示数值</span>
+const focus = svg.append(<span class="str">'g'</span>).style(<span class="str">'display'</span>, <span class="str">'none'</span>);
+focus.append(<span class="str">'line'</span>).attr(<span class="str">'class'</span>, <span class="str">'hover-line'</span>);   <span class="cmt">// 垂直参考线</span>
+focus.append(<span class="str">'circle'</span>).attr(<span class="str">'r'</span>, <span class="num">4</span>);                <span class="cmt">// 圆点</span>
+focus.append(<span class="str">'text'</span>).attr(<span class="str">'class'</span>, <span class="str">'tip'</span>);              <span class="cmt">// 数值</span>
+
+svg.append(<span class="str">'rect'</span>)                                  <span class="cmt">// 覆盖层</span>
+  .attr(<span class="str">'width'</span>, innerW).attr(<span class="str">'height'</span>, innerH)
+  .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>).attr(<span class="str">'pointer-events'</span>, <span class="str">'all'</span>)
+  .on(<span class="str">'mousemove'</span>, (event) =&gt; {
+    const [mx] = d3.pointer(event);
+    const date = x.invert(mx - M.l);              <span class="cmt">// 像素 → 数据</span>
+    const i = d3.bisector((d) =&gt; d.date).left(series, date);  <span class="cmt">// 找最近点</span>
+    focus.attr(<span class="str">'transform'</span>, <span class="str">`translate(${x(series[i].date)},0)`</span>);
+  });</code></pre>
+              <div class="key-point">
+                <p><strong>记住这三件套</strong>（透明矩形 + 焦点组 + <code>bisector</code>），几乎能套用到所有时序图上。<code>x.invert()</code> 把鼠标像素反算成数据值，<code>d3.bisector</code> 用二分查找找最近点 —— 比手写循环又快又准。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">上方是原案例的标准折线图（法国人名，可勾选切换、鼠标移上去看数值）；下方是同一份 2024 日气温的<strong>多尺度对照</strong> —— 点「原始日数据 / 按周聚合 / 按月聚合」比较形态与点数。</p>
+          <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>标准时序图就是「x = 时间、y = 度量」的二维线图；它擅长趋势，不擅长周期。</li>
+            <li>聚合尺度（原始 / 周 / 月）会显著改变图形形态与结论 —— 换尺度，本质只是换 <code>rollup</code> 的 key 函数。</li>
+            <li>曲线平滑度按点数选：≤ 50 用 linear，50–500 用 monotoneX / Catmull-Rom，&gt; 500 考虑面积图。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">把 366 天的日气温序列<strong>按周聚合</strong>后再画折线，最直接的效果是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="a"><span>点数变多，能看出更多细节</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="b"><span>点数减少、日间噪声被平滑，趋势更清晰，但周内细节被抹掉</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="c"><span>数据总量不变，只是排列顺序变了</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="d"><span>把时间轴从线性域变成了循环域</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>聚合是「用细节换清晰」：366 个点被折成约 53 个点，噪声被平均掉、趋势更明显，代价是周内每一天的差异看不到了。它<strong>不会</strong>把时间域变成循环域 —— 那是 5.4 螺旋图做的事。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q"><code>d3.scaleTime</code> 相比 <code>d3.scaleLinear</code>，多出来的核心能力是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="a"><span>能把字符串自动转成 Date，不必再写 timeParse</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="b"><span>能自动把日数据聚合成月数据</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="c"><span>能按时间跨度自动挑选刻度间隔（如 10 年 / 12 月 / 30 天）并处理时区</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="d"><span>能把折线自动画成平滑曲线</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden><code>scaleTime</code> 在数值轴之上加了「时间语义」：自动按跨度选刻度间隔（十年 / 十二月 / 三十天），并提供 <code>.utc()</code> 处理时区。字符串转 Date 靠 <code>timeParse</code>，聚合靠 <code>rollup</code>，画平滑曲线靠 <code>curve*</code> —— 都不是比例尺的职责。</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.3 日历热图 ============ -->
+      <article class="chapter" id="ch-5-3">
+        <h2>5.3 日历热图（van Wijk）</h2>
+        <p class="chapter-subtitle">把「一整年」摊成一张网格：x = 周、y = 星期、颜色 = 数值 —— 季节性一下就浮出来了。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 6.2.2 节用日历热图展示 2024 年北京每日最高温度，每月之间用一条红线分隔。本节沿用同一份数据（<code>data/weather_2024.csv</code>，366 天），并把「为什么这样排比折线更易读」讲透。</p>
+        <p>折线图回答的是「<strong>随时间变化</strong>」；日历热图回答的是「<strong>随季节 / 星期变化</strong>」。同一份 366 天的数据，在折线图里是 366 个此起彼伏的锯齿，在日历里却能一眼看出：冬季整片偏蓝、夏季整片偏红，以及每 7 天重复一次的列节律。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>van Wijk 2008：日历热图的坐标约定</h4>
+          <p>日历热图由 van Wijk 在 2008 年提出：<strong>x = 周（年内的第几周），y = 星期几，颜色 = 数值</strong>。它特别适合三类任务：① 长时序（跨年）+ ② 周期性（星期 / 月）+ ③ 异常检测（节假日、工作日 vs 周末）。</p>
+        </div>
+        <ul>
+          <li><strong>周起点选谁：</strong>每周从周日或周一开始，会直接改变「周末」在视觉上的位置 —— 中文场景常改用周一起点。</li>
+          <li><strong>月份分隔：</strong>用红线把月份切开，比一个 7 × 53 的裸网格易读得多。</li>
+          <li><strong>配色：</strong>用顺序型 colormap（如 Viridis），因为「温度高低」是有顺序的 —— 参见第 3 章 3.2 colormap。</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="折线图与日历热图的对比：折线图中季节信号被日间噪声淹没，日历网格中同一季节的格子连成色带，周期性一目了然">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">同一份数据，两种排法</text>
+
+            <!-- 左：折线 -->
+            <text x="10" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">折线图：季节信号被日间噪声淹没</text>
+            <polyline points="10,140 20,96 30,132 40,88 50,126 60,102 70,138 80,92 90,120 100,86 110,128 120,108 130,140 140,100 150,118 160,84 170,130 180,106 190,136 200,94 210,116 220,100"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 1.5;"/>
+            <line x1="10" y1="150" x2="220" y2="150" style="stroke: var(--c-line-2);"/>
+            <text x="10" y="172" style="fill: var(--c-text-soft); font-size: 11px;">一条线上同时挤着「季节」与「每天天气」两种信号</text>
+
+            <!-- 右：日历网格 -->
+            <text x="330" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">日历热图：同季格子连成色带</text>
+            <g>
+              <text x="318" y="58" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">一</text>
+              <text x="318" y="70" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">二</text>
+              <text x="318" y="82" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">三</text>
+              <text x="318" y="94" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">四</text>
+              <text x="318" y="106" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">五</text>
+              <text x="318" y="118" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">六</text>
+              <text x="318" y="130" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">日</text>
+            </g>
+            <g>
+              <!-- 每列一格：颜色由「时令」派生（color-mix 混两条令牌色），非写死色值 -->
+              <rect x="330" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 95%, var(--ch-6));"/>
+              <rect x="351" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 91%, var(--ch-6));"/>
+              <rect x="372" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 82%, var(--ch-6));"/>
+              <rect x="393" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 73%, var(--ch-6));"/>
+              <rect x="414" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 64%, var(--ch-6));"/>
+              <rect x="435" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 55%, var(--ch-6));"/>
+              <rect x="456" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 45%, var(--ch-6));"/>
+              <rect x="477" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 36%, var(--ch-6));"/>
+              <rect x="498" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 27%, var(--ch-6));"/>
+              <rect x="519" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 18%, var(--ch-6));"/>
+              <rect x="540" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 9%, var(--ch-6));"/>
+              <rect x="561" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 5%, var(--ch-6));"/>
+              <!-- 每周一行的分隔线：把色带切成「日历格」 -->
+              <g style="stroke: var(--c-surface); stroke-width: 1.2;">
+                <line x1="330" y1="64" x2="582" y2="64"/><line x1="330" y1="76" x2="582" y2="76"/>
+                <line x1="330" y1="88" x2="582" y2="88"/><line x1="330" y1="100" x2="582" y2="100"/>
+                <line x1="330" y1="112" x2="582" y2="112"/><line x1="330" y1="124" x2="582" y2="124"/>
+              </g>
+            </g>
+            <g>
+              <line x1="414" y1="50" x2="414" y2="137" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+              <line x1="498" y1="50" x2="498" y2="137" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+              <text x="330" y="46" style="fill: var(--c-muted); font-size: 9.5px;">1 月</text>
+              <text x="418" y="46" style="fill: var(--c-muted); font-size: 9.5px;">2 月</text>
+              <text x="502" y="46" style="fill: var(--c-muted); font-size: 9.5px;">3 月</text>
+            </g>
+            <text x="330" y="158" style="fill: var(--c-text-soft); font-size: 11px;">颜色只用「深浅 / 色相」一个通道，季节趋势便成片显现</text>
+            <text x="330" y="176" style="fill: var(--c-text-soft); font-size: 11px;">红线 = 月份分隔：把 7×53 的裸网格切成可读的月份块</text>
+          </svg>
+          <figcaption>折线看趋势、日历看周期。同一份数据，换个排法，看到的规律完全不同（示意图形为内联 SVG，无位图）。</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>isMonthDivider 的巧妙之处：</strong>不必循环「找每个月的第一天」，只要判断<strong>「7 天前与今天是否同月」</strong>：同月就不画线，跨月就画一条分隔线。一次 O(n) 扫描即可，且天然正确。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.timeDay.range 把「一年」拆成「一天一天」</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 自动按日粒度切分整年，闰年 366 / 平年 365 自动正确</span>
+const days = d3.timeDay.range(
+  <span class="kw">new</span> Date(<span class="num">2024</span>, <span class="num">0</span>, <span class="num">1</span>),      <span class="cmt">// 2024-01-01</span>
+  <span class="kw">new</span> Date(<span class="num">2025</span>, <span class="num">0</span>, <span class="num">1</span>)       <span class="cmt">// 2025-01-01</span>
+).map((d) =&gt; ({
+  date: d,
+  value: byKey.get(d3.timeFormat(<span class="str">'%Y-%m-%d'</span>)(d)) ?? <span class="num">0</span>,
+}));
+console.log(days.length);   <span class="cmt">// 366（2024 是闰年）</span></code></pre>
+              <div class="key-point">
+                <p><code>d3.timeDay.range(start, stop)</code> 一次命中「连续性 + 结构性」两个属性：既按日内粒度连续铺开，又自动处理月份与闰年。<strong>小坑：</strong><code>timeFormat('%Y-%m-%d')</code> 与 CSV 里的日期字符串键必须完全一致，否则整天对不上、热图出现空洞。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 周日为起点的「周列 / 星期行」布局</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 列 = 这是今年的第几周（把天数除以 7）；行 = 星期几</span>
+function weekCol(date) {
+  return Math.floor(d3.timeDay.count(d3.timeYear.floor(date), date) / <span class="num">7</span>);
+}
+function dayRow(date) {
+  return date.getDay();     <span class="cmt">// 0=周日, 1=周一, … 6=周六</span>
+}
+
+g.selectAll(<span class="str">'rect.cell'</span>)
+  .data(days).join(<span class="str">'rect'</span>)
+  .attr(<span class="str">'x'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'y'</span>, (d) =&gt; dayRow(d.date) * cellSize)
+  .attr(<span class="str">'width'</span>, cellSize).attr(<span class="str">'height'</span>, cellSize)
+  .attr(<span class="str">'fill'</span>, (d) =&gt; color(d.value));</code></pre>
+              <div class="key-point">
+                <p><strong>周日 vs 周一</strong>是日历热图的设计分歧：<code>getDay()</code> 以周日为 0，是英文日历传统；中文场景常把行序改成 <code>(getDay() + 6) % 7</code> 让周一排第一行。<em>本轮演示提供「周日起 / 周一起」开关，切换即可看到「周末」在网格里换位置。</em></p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> isMonthDivider：月份分隔线的一遍扫描</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 判断「7 天前与今天是否同月」：同月不划线，跨月画线</span>
+function isMonthDivider(date) {
+  const sevenDaysAgo = d3.timeDay.offset(date, -<span class="num">7</span>);
+  return date.getFullYear() !== sevenDaysAgo.getFullYear()
+      || date.getMonth()    !== sevenDaysAgo.getMonth();
+}
+
+<span class="cmt">// 画竖线：跨月的那一列，从上到下切一刀</span>
+g.selectAll(<span class="str">'line.mdiv'</span>)
+  .data(days.filter((d) =&gt; isMonthDivider(d.date))).join(<span class="str">'line'</span>)
+  .attr(<span class="str">'x1'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'x2'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'y1'</span>, (d) =&gt; dayRow(d.date) * cellSize)
+  .attr(<span class="str">'y2'</span>, (d) =&gt; dayRow(d.date) * cellSize + cellSize);</code></pre>
+              <div class="key-point">
+                <p>换成「找每月第一天」的直觉写法，就得处理 28 / 29 / 30 / 31 天的差异，还容易漏掉「列交叉」的情况。<strong>「回看 7 天」的写法只用一次 O(n) 扫描</strong>，天然覆盖所有月长与闰年 —— 这是 van Wijk 算法的精妙之处。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">2024 全年日气温铺成「周 × 星期」热图（蓝=冷 / 红=热），月份之间用红线分隔。可切换「周一起 / 周日起」，鼠标悬停任一格看日期与温度。</p>
+          <div class="demo-mount" data-demo="d-5-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>日历热图 = 周列 × 星期行 × 颜色编码，由 van Wijk 2008 提出，专治「长时序 + 周期性 + 异常检测」。</li>
+            <li>月份分隔用「7 天前是否同月」判断，O(n) 一遍扫描即可，不必找每月第一天。</li>
+            <li>它和折线图回答不同问题：折线看「随时间变化」，日历看「随季节 / 星期变化」。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q"><code>isMonthDivider(date)</code> 用「7 天前是否同月」来判断是否画月份分隔线，这样写的好处是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="a"><span>比直接比较月份数字更精确，能识别闰年</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="b"><span>可以顺便算出这一周的总温度</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="c"><span>只需一次 O(n) 扫描，天然覆盖 28–31 天与闰年，不必逐月查找「每月第一天」</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="d"><span>可以直接确定每天应该填什么颜色</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>把「判断是否跨月」交给相邻两周的对比，就绕开了「每月有多少天」这件事：不管 28 / 29 / 30 / 31 天，只要向前看 7 天即可，一次遍历完成。它不负责算温度，也不决定颜色 —— 那是 reducer 与 colormap 的活。</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.4 周期时间可视化 ============ -->
+      <article class="chapter" id="ch-5-4">
+        <h2>5.4 周期时间可视化（阿基米德螺旋）</h2>
+        <p class="chapter-subtitle">直线表达趋势，圆圈表达周期，螺旋 = 圆 + 持续展开 —— 把一年卷成螺旋，周期性一眼可见。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 6.2.3 节用阿基米德螺旋（等速螺旋）布局日期：每个回路代表 1 年 / 1 月 / 1 周，每个日期对应螺旋上的一个扇环。本节继续用 2024 日气温，并提供「每圈 = 1 年 / 1 季 / 1 月」三档切换 —— 同一份数据，卷的圈数不同，能看出的周期层级也不同。</p>
+        <table class="theory-table">
+          <thead>
+            <tr><th>每圈代表</th><th>圈数（2024 一年）</th><th>能看出的周期</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 年</td><td>1 圈</td><td>全年一次的季节循环</td></tr>
+            <tr><td>1 季</td><td>4 圈</td><td>四季的进退层级</td></tr>
+            <tr><td>1 月</td><td>约 12 圈</td><td>月内到月间的短周期起伏</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>螺旋 vs 折线：两种时间域</h4>
+          <p>折线把时间铺在<strong>线性时间域</strong>上，擅长表现「趋势」；螺旋把时间铺在<strong>循环时间域</strong>上，沿圆周重复，擅长表现「周期」。<strong>阿基米德螺旋</strong>的公式是 <code>r = a + bθ</code>：<strong>等速展开</strong>，每转一圈半径就增加一个常量 b —— 如果 b = 0，它就退化成普通的圆。</p>
+        </div>
+        <ul>
+          <li><strong>动态 Δθ 算法：</strong>原文档的精妙点 <code>Δθ = boxSize / √(b² + r²)</code>，让每个扇环的<strong>弧长近似相等</strong>，从而在半径不断增大时仍保持视觉一致。</li>
+          <li><strong>实战取舍：</strong>螺旋适合「年 / 季节 / 周」这类有明确循环的周期，<strong>不适合「无周期」或「周期太长」</strong>的数据。</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 300" role="img" aria-label="阿基米德螺旋几何：从中心向外等速展开的螺旋，标注半径 r 与角度 θ，并标出第一圈与第二圈各自的周期">
+            <!-- 螺旋（r = a + bθ 的采样点） -->
+            <path d="M 232 170 L 228.6 188.6 L 210 200.6 L 185.3 194.7 L 170.7 170 L 179.2 139.2 L 210 122.1 L 246.9 133.1 L 266.6 170 L 253.1 213.1 L 210 235.2 L 160.9 219.1 L 136.2 170 L 154.7 114.7 L 210 87.5 L 271.4 108.6 L 301.1 170 L 277.5 237.5 L 210 269.8 L 136.4 96.4"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+            <circle cx="210" cy="170" r="3" style="fill: var(--c-text);"/>
+
+            <!-- 半径向量 r -->
+            <path d="M210 170 L232 170" style="stroke: var(--c-accent); stroke-width: 2;"/>
+            <text x="218" y="164" style="fill: var(--c-accent); font-size: 12px; font-weight: 700;">r</text>
+            <text x="120" y="146" style="fill: var(--c-muted); font-size: 11px;">中心</text>
+
+            <!-- 角度 θ -->
+            <path d="M262 170 A 52 52 0 0 1 210 222" fill="none" style="stroke: var(--c-success); stroke-width: 1.8;" stroke-dasharray="3 3"/>
+            <text x="266" y="200" style="fill: var(--c-success); font-size: 12px; font-weight: 700;">θ</text>
+
+            <!-- 圈标注 -->
+            <text x="272" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">第 1 圈</text>
+            <text x="272" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= 第 1 个周期</text>
+            <text x="306" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">第 2 圈</text>
+            <text x="306" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= 第 2 个周期</text>
+
+            <!-- 公式与说明 -->
+            <text x="360" y="60" style="fill: var(--c-primary); font-size: 15px; font-weight: 800;">r = a + bθ</text>
+            <text x="360" y="84" style="fill: var(--c-text-soft); font-size: 12px;">θ 每增加 2π，r 就增加一个常量 b</text>
+            <text x="360" y="102" style="fill: var(--c-text-soft); font-size: 12px;">→ 每转一圈，向外扩 b，形成螺旋</text>
+            <text x="360" y="130" style="fill: var(--c-text-soft); font-size: 12px;">b = 0 时退化为普通的圆</text>
+            <text x="360" y="158" style="fill: var(--c-text-soft); font-size: 12px;">半径越大 → 相同角度的弧长越长</text>
+            <text x="360" y="176" style="fill: var(--c-text-soft); font-size: 12px;">所以要动态减小 Δθ（见关键代码）</text>
+            <text x="360" y="212" style="fill: var(--c-muted); font-size: 11.5px;">螺旋 = 圆 + 持续展开：</text>
+            <text x="360" y="230" style="fill: var(--c-muted); font-size: 11.5px;">「周期」被一遍遍重复在同一张图上</text>
+          </svg>
+          <figcaption>阿基米德螺旋的几何：半径随转角等速增长，于是「每个回路 = 一个周期」。</figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p>螺旋会把「相邻两圈」在视觉上贴得很近，读者容易误读成「同时发生」。所以务必给<strong>每圈的起点加标记</strong>（本演示用月份标签），并让读者知道「一圈 = 多久」。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 极坐标 → 笛卡尔：r = a + bθ</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 每环的宽度与圈间距</span>
+const boxSize = <span class="num">22</span>;
+const coilGap = boxSize * <span class="num">1.4</span>;            <span class="cmt">// 相邻两圈的径向间距</span>
+const b = coilGap / (<span class="num">2</span> * Math.PI);          <span class="cmt">// 每转一圈，r 增加的常量</span>
+const startRadius = <span class="num">60</span>;
+let theta = (startRadius - <span class="num">0</span>) / b;         <span class="cmt">// 起始角度</span>
+
+function pos(t) {                       <span class="cmt">// t: 角度（弧度）</span>
+  const r = <span class="num">0</span> + b * t;                    <span class="cmt">// 阿基米德螺旋：r 与 θ 成正比</span>
+  return { x: r * Math.cos(t), y: r * Math.sin(t), r };
+}</code></pre>
+              <div class="key-point">
+                <p>极坐标是 <code>(r, θ)</code>，笛卡尔是 <code>(x, y)</code>：<strong>θ 每增 2π，r 就增 b</strong>，这正是「每转一圈外扩一格」。b 越大，圈与圈之间越松散、螺旋越「舒展」；b = 0 则完全退化成圆 —— 这也说明「圆」是螺旋的特例。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 动态角度增量：让每段弧长近似相等</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 弧长 = r · Δθ。r 越大，同样 Δθ 对应的弧长越长</span>
+function angleDelta(currentR) {
+  return boxSize / Math.sqrt(b * b + currentR * currentR);
+}
+<span class="cmt">// 等价于「弧长 ≈ boxSize」：让每一格在视觉上一样大</span>
+
+let t = theta;
+for (let day = <span class="num">0</span>; day &lt; dayCount; day++) {
+  const p = pos(t);
+  <span class="cmt">// … 画第 day 天的扇环（t → t + Δθ）</span>
+  t += angleDelta(p.r);          <span class="cmt">// 角度增量随半径动态减小</span>
+}</code></pre>
+              <div class="key-point">
+                <p><strong>这是原文档的核心洞察：</strong>外圈半径大，若角度增量恒定，格子就会被「拉长」。把 Δθ 写成 <code>取整宽度 / √(b² + r²)</code>，就相当于<strong>让每一格的弧长都约等于 boxSize</strong>，内外圈看起来一样整齐。<em>代价：一圈不再严格等于 2π，所以「每圈 = 一个周期」要按圈索引来读，而不是按角度读。</em></p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 扇环路径：一个格子四个顶点的 M / L / Z</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 4 个关键点：起点外 → 终点外 → 终点内 → 起点内，闭合回起点</span>
+function segmentPath(t0, t1, r0, r1, halfWidth) {
+  const at = (t, rr) =&gt; [rr * Math.cos(t), rr * Math.sin(t)];
+  const [x0o, y0o] = at(t0, r0 + halfWidth);     <span class="cmt">// 起点 · 外</span>
+  const [x1o, y1o] = at(t1, r1 + halfWidth);     <span class="cmt">// 终点 · 外</span>
+  const [x1i, y1i] = at(t1, r1 - halfWidth);     <span class="cmt">// 终点 · 内</span>
+  const [x0i, y0i] = at(t0, r0 - halfWidth);     <span class="cmt">// 起点 · 内</span>
+  return <span class="str">`M ${x0o} ${y0o} L ${x1o} ${y1o} L ${x1i} ${y1i} L ${x0i} ${y0i} Z`</span>;
+}</code></pre>
+              <div class="key-point">
+                <p>一个扇环就是一条 <code>M / L / L / L / Z</code> 的路径 —— 和 5.1 学到的直线指令完全一样。<strong>为什么不用 <code>d3.arc()</code>：</strong>它是按「圆弧角度」算的，对半径持续变化的螺旋无法直接套用，手算 4 个顶点反而更灵活。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">同一份 2024 日气温：先切换「每圈 = 1 年 / 1 季 / 1 月」，看圈数与半径增长如何变化；再勾选「等弧长 Δθ」，对比「外圈格子被拉长」与「内外圈宽度一致」两种效果。鼠标悬停任一格看日期与温度。</p>
+          <div class="demo-mount" data-demo="d-5-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>螺旋把时间放进「循环时间域」：<code>r = a + bθ</code>，每转一圈半径增加常量 b，b = 0 就退化成圆。</li>
+            <li>动态 Δθ = boxSize / √(b² + r²) 让每段弧长近似相等，解决「外圈格子被拉长」的视觉不一致。</li>
+            <li>每个日期 = 一个扇环，路径就是 <code>M / L / L / L / Z</code> 四个顶点 —— 不必依赖 d3.arc()。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">为什么要用动态角度增量 <code>Δθ = boxSize / √(b² + r²)</code>，而不是固定的 Δθ？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="a"><span>因为固定的 Δθ 无法算出极坐标的 x、y</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="b"><span>因为半径越大、相同角度对应的弧长越长，动态减小 Δθ 才能让每格弧长近似相等</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="c"><span>因为这样可以让螺旋正好停在整数圈上，便于对齐月份</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="d"><span>因为动态 Δθ 能自动完成颜色映射</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>弧长 ≈ r · Δθ，半径 r 越大弧长越长。让 Δθ 随 r 增大而减小，就能把每一格的弧长稳定在 boxSize 附近，内外圈视觉一致。代价是「一圈」不再严格等于 2π —— 所以周期要靠<strong>圈索引</strong>来读，而不是靠角度。</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.5 Storyline 时间线 ============ -->
+      <article class="chapter" id="ch-5-5">
+        <h2>5.5 Storyline 时间线（侏罗纪公园）</h2>
+        <p class="chapter-subtitle">多条「生命线」并排铺在时间轴上：线靠近 = 相遇 / 冲突，线分开 = 分离 —— 把叙事画成一张图。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 6.2.4 节用《侏罗纪公园》的 5 个角色（Alan &amp; Kids / T-REX / Raptors / Malcolm / Dilophosaurus）做 Storyline 时间线，事件层用红色半透明圆圈标注关键冲突。本节沿用这份叙事数据（改写成 <code>lesson.js</code> 内的中文注释常量），并把「点击一条线就能读它的出场区间与关键节点」补上。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>Ogawa &amp; Ma 2008：把叙事拆成生命线</h4>
+          <p>Storyline 由斯坦福大学的 Ogawa &amp; Ma 在 2008 年提出，最初用于电影与学术合作者关系网。核心是把每个角色 / 组织 / 进程抽象成一条<strong>生命线</strong>：<strong>线靠近 = 角色相遇或冲突，线分开 = 角色分离</strong> —— 于是「谁在什么时候和谁在一起」变成可读的几何。</p>
+        </div>
+        <ol>
+          <li><strong>时间尺度映射：</strong>电影时长 → SVG 宽度，x 轴严格按比例对齐（0–127 分钟）。</li>
+          <li><strong>样条平滑：</strong>用 Catmull-Rom 曲线，张力系数 0.5 —— 「自然流动」但不「过度弯曲」。</li>
+          <li><strong>事件层：</strong>半透明红圈 + 文字，标注关键转折点，与线层解耦。</li>
+        </ol>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 250" role="img" aria-label="Storyline 示意图：三条角色生命线在时间轴上向一个事件点聚拢后又分开，事件点用半透明圆圈标注">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">Storyline 示意 · 三条生命线 = 三个角色</text>
+
+            <!-- 网格 -->
+            <line x1="40" y1="40" x2="40" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="180" y1="40" x2="180" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="320" y1="40" x2="320" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="460" y1="40" x2="460" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="600" y1="40" x2="600" y2="200" style="stroke: var(--c-line);"/>
+
+            <!-- 三条曲线 -->
+            <path d="M 50 70 Q 200 90 330 110 Q 460 130 590 70" fill="none" style="stroke: var(--ch-1); stroke-width: 3;"/>
+            <path d="M 260 190 Q 300 150 330 110 Q 360 70 400 44" fill="none" style="stroke: var(--c-danger); stroke-width: 3;"/>
+            <path d="M 80 160 Q 200 140 330 110 Q 470 80 600 120" fill="none" style="stroke: var(--ch-3); stroke-width: 3;"/>
+
+            <!-- 事件点 -->
+            <circle cx="330" cy="110" r="17" style="fill: color-mix(in srgb, var(--c-danger) 18%, transparent);"/>
+            <circle cx="330" cy="110" r="4.5" style="fill: var(--c-danger);"/>
+            <text x="330" y="86" text-anchor="middle" style="fill: var(--c-danger); font-size: 11px; font-weight: 700;">事件：相遇 / 冲突</text>
+
+            <!-- 标签 -->
+            <text x="50" y="60" style="fill: var(--ch-1); font-size: 11px; font-weight: 700;">主角</text>
+            <text x="404" y="40" style="fill: var(--c-danger); font-size: 11px; font-weight: 700;">威胁</text>
+            <text x="80" y="176" style="fill: var(--ch-3); font-size: 11px; font-weight: 700;">反派</text>
+
+            <!-- 时间轴 -->
+            <line x1="40" y1="212" x2="600" y2="212" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <text x="40" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">0</text>
+            <text x="180" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">30</text>
+            <text x="320" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">60</text>
+            <text x="460" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">90</text>
+            <text x="600" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">120</text>
+            <text x="320" y="246" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">电影时间（分钟）→</text>
+          </svg>
+          <figcaption>三条生命线在 t≈60 附近聚拢到同一个事件点（相遇 / 冲突），再各自分开 —— y 轴位置表达的是「关系」，不是数值。</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>为什么用 Catmull-Rom 而不是 monotoneX？</strong> monotoneX 保证「不过度弯曲」，但会把线画得<em>过于直</em>，丢掉叙事的「河流感」。Catmull-Rom 的张力 0.5 是经验值：比 0 更软（有故事感），比 1.0 更稳（不震荡）。做科学曲线拟合时才把张力调到 0.2–0.3。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 每个角色 = 一条 path（时间尺度映射）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 横轴：0–127 分钟 → 屏幕宽度；每条线用 y 表达“关系”</span>
+const x = d3.scaleLinear().domain([<span class="num">0</span>, <span class="num">127</span>]).range([M.l, W - M.r]);
+
+const characters = [
+  { name: <span class="str">'Alan &amp; Kids'</span>, token: <span class="str">'--ch-1'</span>, points: [
+    { time: <span class="num">5</span>,  y: <span class="num">80</span> }, { time: <span class="num">18</span>, y: <span class="num">130</span> },
+    { time: <span class="num">78</span>, y: <span class="num">80</span> }, { time: <span class="num">125</span>, y: <span class="num">40</span> },
+  ]},
+  { name: <span class="str">'T-REX'</span>,       token: <span class="str">'--c-danger'</span>, points: [
+    { time: <span class="num">75</span>, y: <span class="num">280</span> }, { time: <span class="num">78</span>, y: <span class="num">130</span> },
+    { time: <span class="num">120</span>, y: <span class="num">290</span> },
+  ]},
+];
+
+const line = d3.line()
+  .x((d) =&gt; x(d.time))
+  .y((d) =&gt; yScale(d.y))
+  .curve(d3.curveCatmullRom.alpha(<span class="num">0.5</span>));   <span class="cmt">// 张力 0.5</span>
+
+characters.forEach((c) =&gt; {
+  svg.append(<span class="str">'path'</span>).datum(c.points)
+    .attr(<span class="str">'d'</span>, line)
+    .attr(<span class="str">'stroke'</span>, getToken(c.token))
+    .attr(<span class="str">'stroke-width'</span>, <span class="num">3</span>)
+    .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>);
+});</code></pre>
+              <div class="key-point">
+                <p><strong>用 y 值表达「关系」是关键：</strong>T-REX 与 Alan 都把自己的线画到 <code>y = 130</code>（同一时刻 <code>t = 78</code>），两条线就<strong>视觉聚拢</strong> —— 表达「T-REX 在 78 分钟攻击了 Alan」。这不是算法生成的，而是<strong>手工叙事设计</strong>；库只是提供了「手工调 y」的工具。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 事件层：与线层解耦的叙事锚点</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ 事件层单独一个 &lt;g&gt;：半透明红圈 + 圆点 + 文字</span>
+const events = [
+  { time: <span class="num">78</span>, y: <span class="num">105</span>, name: <span class="str">'T-REX 攻击'</span>,
+    desc: <span class="str">'T-REX 冲出围栏，攻击 Alan 与孩子们的车'</span> },
+  { time: <span class="num">48</span>, y: <span class="num">335</span>, name: <span class="str">'Nedry 事件'</span>,
+    desc: <span class="str">'Dilophosaurus 攻击断电的 Nedry'</span> },
+];
+
+const layer = svg.append(<span class="str">'g'</span>).attr(<span class="str">'class'</span>, <span class="str">'event-layer'</span>);
+events.forEach((ev) =&gt; {                       <span class="cmt">// 只读渲染，事件本身不改线</span>
+  const g = layer.append(<span class="str">'g'</span>).attr(<span class="str">'tabindex'</span>, <span class="num">0</span>);   <span class="cmt">// 可聚焦，键盘也能看</span>
+  g.append(<span class="str">'circle'</span>).attr(<span class="str">'cx'</span>, x(ev.time)).attr(<span class="str">'cy'</span>, yScale(ev.y))
+    .attr(<span class="str">'r'</span>, <span class="num">18</span>).attr(<span class="str">'fill'</span>, <span class="str">'color-mix(in srgb, var(--c-danger) 18%, transparent)'</span>);
+  g.append(<span class="str">'text'</span>).attr(<span class="str">'x'</span>, x(ev.time)).attr(<span class="str">'y'</span>, yScale(ev.y) - <span class="num">9</span>)
+    .attr(<span class="str">'text-anchor'</span>, <span class="str">'middle'</span>).text(ev.name);
+});</code></pre>
+              <div class="key-point">
+                <p><strong>双层结构的价值：</strong>线层负责「关系的流动」，事件层负责「叙事的锚点」。两层解耦后，可以各自独立动画、独立筛选，互不干扰 —— 这也是 Storyline 能扩展成「案件多人时间线」「项目任务交接」的原因。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> alpha(0.5)：张力系数怎么选</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// curveCatmullRom.alpha(t)，t 取值 0 → 1</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">0.0</span>));  <span class="cmt">// 接近直线（最“硬”）</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">0.5</span>));  <span class="cmt">// 标准 Catmull-Rom（推荐）</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">1.0</span>));  <span class="cmt">// 高度曲线化（易震荡）</span>
+
+<span class="cmt">// 无 d3 依赖的等价近似：在「直线 ↔ Catmull-Rom」之间插值控制点</span>
+<span class="cmt">// 曲线段 p1→p2 的两个控制点：</span>
+<span class="cmt">//   直线版    c1 = p1 + (p2 - p1)/3,  c2 = p2 - (p2 - p1)/3</span>
+<span class="cmt">//   Catmull 版 c1 = p1 + (p2 - p0)/6,  c2 = p2 - (p3 - p1)/6</span>
+<span class="cmt">// c = lerp(直线版, Catmull 版, t)  → 三次贝塞尔近似</span></code></pre>
+              <div class="key-point">
+                <p>0.5 是经验值：<strong>比 0 更「软」（看起来有故事感），比 1.0 更「稳」（不会过山车）</strong>。做时间叙事就用 0.5；做科学曲线拟合用 0.2–0.3，让线更贴近数据。本页演示用「分段三次贝塞尔」近似 Catmull-Rom（不引 d3），并用滑块调节张力，效果与 <code>alpha</code> 一致。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点击任意一条生命线（或左侧角色名）—— 该线高亮加粗，其余变淡，右侧显示它的出场区间与关键节点。拖动「张力」滑块可实时改变曲线弯曲度。</p>
+          <div class="demo-mount" data-demo="d-5-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>Storyline 把角色 / 组织 / 进程抽象成生命线：线靠近 = 相遇 / 冲突，线分开 = 分离。</li>
+            <li>三大元素缺一不可：时间尺度映射、Catmull-Rom 样条、与线层解耦的事件层。</li>
+            <li>张力 0.5 是叙事的经验值；要忠于数据时把张力降到 0.2–0.3，或直接用 monotoneX。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">在 Storyline 时间线里，一条生命线的 <strong>y 轴位置</strong>表达的是什么？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="a"><span>该角色出场时长的数值大小</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="b"><span>该角色与其他角色的聚散关系（靠近 = 相遇 / 冲突，分开 = 分离）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="c"><span>事件的重要程度（越靠上越关键）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="d"><span>该角色在电影中的出场次序</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Storyline 的 y 轴不是数值轴，而是<strong>关系轴</strong>：两条线画到同一高度，读者就读到「这两个角色此刻在一起或起了冲突」。x 轴才是时间（严格按比例映射），出场次序与数值大小都由 x 表达。</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一章 / 下一章 ================= -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-04/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 4 章 低维数据可视化</span>
+    </a>
+    <a class="pager-portal" href="../">返回门户</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 本章演示与交互（ES Module；file:// 下会被 CORS 拦截，页面仍可阅读） -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

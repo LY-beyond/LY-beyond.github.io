@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3 · Color — Introduction to Visualization</title>
+  <meta name="description" content="Chapter 3 of Introduction to Visualization: color models (RGB / HSL / CIE Lab), how to choose among the three colormap families, the CIE Lab gamut diagram, five color-harmony rules, classic scientific palettes, right-vs-wrong case studies, a vivid + low-saturation palette generator, and a CVD (color vision deficiency) simulator. Includes 8 runnable demos and instant self-checks.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+
+  <!-- The theme script must run as early as possible: write data-theme before first paint so switching never flickers -->
+  <script src="../../theme.js"></script>
+
+  <link rel="stylesheet" href="../../tokens.css">
+  <link rel="stylesheet" href="../../theme.css">
+  <link rel="stylesheet" href="../../i18n.css">
+  <link rel="stylesheet" href="../../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= Chapter top bar ================= -->
+  <header class="course-topbar" data-current="3">
+    <a class="brand" href="../">
+      <span class="back">←</span> Introduction to Visualization
+      <span class="brand__sub">Chapter 3 · Color</span>
+    </a>
+
+    <nav class="tabs" aria-label="Chapter navigation">
+      <a href="../lesson-01/">Ch. 1 Data</a>
+      <a href="../lesson-02/">Ch. 2 Process</a>
+      <a href="./">Ch. 3 Color</a>
+      <a href="../lesson-04/">Ch. 4 Low-Dim</a>
+      <a href="../lesson-05/">Ch. 5 Time</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      Code only
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      <a class="lang-switch-item" href="../../lesson-03/" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+    </div>
+  </header>
+
+  <!-- ================= Chapter header ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>Chapter 3 · Color</h1>
+        <p class="subtitle">The same data, and the palette decides whether it gets understood — <b>color models · colormaps · gamut · harmony · CVD</b></p>
+      </div>
+      <div class="header-tip">Read to where you look · Demos render in place · Self-checks score instantly</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>Learning goals for this chapter</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>State what RGB / HSL / CIE Lab are each good at, and explain why colormaps should be interpolated in Lab</span></label></li>
+        <li><label><input type="checkbox"><span>Given a dataset, tell which family of colormap it needs — sequential, diverging, or qualitative — and say what goes wrong if you pick the wrong one</span></label></li>
+        <li><label><input type="checkbox"><span>Read the Lab a*b* gamut diagram and point out the nesting of sRGB / Adobe RGB / Rec.2020 and the “out-of-gamut gets clamped” effect</span></label></li>
+        <li><label><input type="checkbox"><span>Build a palette with the five color-harmony rules, and use the WCAG contrast formula to judge whether it works for body text</span></label></li>
+        <li><label><input type="checkbox"><span>Use CVD simulation to check whether a figure is still distinguishable to protanopes / deuteranopes / tritanopes, and point out which palettes fail</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= Body ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>Chapter 3 · Contents</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 8 sections</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-3-1" data-chapter="ch-3-1">3.1 Color model basics</a></li>
+        <li><a href="#ch-3-2" data-chapter="ch-3-2">3.2 Choosing among the three colormap families</a></li>
+        <li><a href="#ch-3-3" data-chapter="ch-3-3">3.3 The CIE Lab gamut diagram</a></li>
+        <li><a href="#ch-3-4" data-chapter="ch-3-4">3.4 Color harmony rules (5 families)</a></li>
+        <li><a href="#ch-3-5" data-chapter="ch-3-5">3.5 Classic scientific palettes</a></li>
+        <li><a href="#ch-3-6" data-chapter="ch-3-6">3.6 Right vs. wrong case comparison</a></li>
+        <li><a href="#ch-3-7" data-chapter="ch-3-7">3.7 The vivid + low-saturation philosophy generator</a></li>
+        <li><a href="#ch-3-8" data-chapter="ch-3-8">3.8 CVD testing of paper figures</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>How to study this chapter</b><br>
+        ① Tick the learning goals above first;<br>
+        ② Read straight down, section by section; demos render in place;<br>
+        ③ Finish each section's self-check before moving on;<br>
+        ④ When reviewing, click “Code only” in the top-right corner.
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 3.1 Color model basics ============ -->
+      <article class="chapter" id="ch-3-1">
+        <h2>3.1 Color model basics</h2>
+        <p class="chapter-subtitle">Why do we need four color spaces? What is each of them good at? And what does the world look like to a color-blind viewer?</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>This chapter uses exactly one dataset from beginning to end: <strong>crime statistics by U.S. state (<code>data/crime.csv</code>)</strong>, with 50 states and 13 columns (population, robbery, murder, arson, and so on). The data itself is not the point — the point is that <strong>with the same data, swapping the palette changes how readers understand it entirely</strong>.</p>
+
+        <table class="theory-table">
+          <caption>The four palette questions of this chapter, mapped to four knowledge blocks</caption>
+          <thead>
+            <tr><th>Question</th><th>Answered in</th><th>Key conclusion</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Can colors simply be interpolated in RGB?</td><td>3.1 / 3.3</td><td>No — RGB is not perceptually uniform; interpolate in CIE Lab</td></tr>
+            <tr><td>Which kind of color scale for continuous values?</td><td>3.2</td><td>Ordered → sequential; has a midpoint → diverging; unordered → qualitative</td></tr>
+            <tr><td>A few categories — how to combine colors without glare?</td><td>3.4 / 3.7</td><td>≤ 7 categories; hues at least 30° apart; supporting colors S 30–50%</td></tr>
+            <tr><td>Can color-blind readers still follow it?</td><td>3.5 / 3.8</td><td>Check yourself with CVD simulation; red-green contrast is the most dangerous</td></tr>
+          </tbody>
+        </table>
+
+        <p>For example, plot each state's <code>murder</code> (murder count) as a bar chart: with “light blue → dark blue” readers can read magnitude; with a “red → yellow → green” rainbow scale they only see a patchwork of colors — the yellow in the middle is neither the “maximum” nor the “minimum”, it carries no semantics at all.</p>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>Four color spaces, four kinds of “good at”</h4>
+          <table class="theory-table">
+            <thead><tr><th>Space</th><th>Model</th><th>Good at</th><th>Perceptually uniform?</th></tr></thead>
+            <tbody>
+              <tr><td><b>RGB</b></td><td>Additive (three beams of light added together)</td><td>How screens emit light, native device storage</td><td>✗ No</td></tr>
+              <tr><td><b>HSL</b></td><td>Hue / Saturation / Lightness</td><td>Intuitive color picking for people (designers especially)</td><td>✗ No</td></tr>
+              <tr><td><b>CIE Lab</b></td><td>L* lightness + a* / b* opponent channels</td><td>Measuring “how different it looks”</td><td>✓ Yes (gold standard)</td></tr>
+              <tr><td><b>CMYK</b></td><td>Subtractive (ink absorbs light)</td><td>Printing / publishing</td><td>✗ No</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Core conclusion:</strong> RGB is the “device space”, Lab is the “thinking space”. When designing a colormap you interpolate in Lab and clamp only when converting to RGB for display — which is why gradients from <code>d3.interpolateLab</code> are smoother than those from <code>d3.interpolateRgb</code>.</p>
+        </div>
+
+        <div class="callout callout--warn">
+          <p><strong>CVD (color vision deficiency):</strong> about <b>8% of men</b> and 0.5% of women have some color vision deficiency. The three common types are protanopia (red-blind, about 1% of men), <strong>deuteranopia (green-blind, about 6% of men, the most common)</strong>, and tritanopia (blue-blind, extremely rare). In other words, one page of your slides almost certainly has at least one reader who cannot tell red from green.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 236" role="img" aria-label="Four color spaces side by side: RGB adding three beams of light, the HSL hue ring with a lightness axis, the CIE Lab a*b* plane with the L* axis, and CMYK four-ink overprint">
+            <!-- Panel 1: RGB -->
+            <rect x="2" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="12" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① RGB · additive</text>
+            <circle cx="56" cy="94" r="30" style="fill: color-mix(in srgb, var(--c-danger) 55%, transparent);"/>
+            <circle cx="98" cy="94" r="30" style="fill: color-mix(in srgb, var(--c-success) 55%, transparent);"/>
+            <circle cx="77" cy="132" r="30" style="fill: color-mix(in srgb, var(--ch-1) 55%, transparent);"/>
+            <text x="52" y="180" style="fill: var(--c-muted); font-size: 11px;">R / G / B added together</text>
+            <text x="12" y="200" style="fill: var(--c-text-soft); font-size: 11px;">Device-dependent · not perceptually uniform</text>
+
+            <!-- Panel 2: HSL -->
+            <rect x="164" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="174" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② HSL · intuition</text>
+            <circle cx="239" cy="104" r="42" fill="none" style="stroke: var(--c-border-2); stroke-width: 8;"/>
+            <circle cx="239" cy="104" r="30" fill="none" stroke-dasharray="3 4" style="stroke: var(--c-primary); stroke-width: 1.4;"/>
+            <line x1="239" y1="104" x2="239" y2="66" style="stroke: var(--c-primary); stroke-width: 2;"/>
+            <circle cx="239" cy="66" r="4.5" style="fill: var(--c-primary);"/>
+            <line x1="281" y1="104" x2="239" y2="104" style="stroke: var(--c-accent); stroke-width: 2;"/>
+            <circle cx="281" cy="104" r="4.5" style="fill: var(--c-accent);"/>
+            <text x="174" y="176" style="fill: var(--c-muted); font-size: 11px;">H = angle on the ring · S = radius · L = lightness axis</text>
+            <text x="174" y="200" style="fill: var(--c-text-soft); font-size: 11px;">Matches human intuition · still not uniform</text>
+
+            <!-- Panel 3: CIE Lab -->
+            <rect x="326" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="336" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ CIE Lab · perception</text>
+            <line x1="348" y1="120" x2="456" y2="120" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <line x1="402" y1="66" x2="402" y2="174" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <text x="452" y="110" text-anchor="end" style="fill: var(--c-danger); font-size: 11px;">+a* red</text>
+            <text x="352" y="110" style="fill: var(--c-success); font-size: 11px;">green -a*</text>
+            <text x="406" y="78" style="fill: var(--c-warn); font-size: 11px;">+b* yellow</text>
+            <text x="406" y="172" style="fill: var(--ch-1); font-size: 11px;">-b* blue</text>
+            <circle cx="424" cy="100" r="6" style="fill: var(--c-primary);"/>
+            <text x="336" y="196" style="fill: var(--c-text-soft); font-size: 11px;">distance ≈ perceived difference (L* axis points out of the page)</text>
+
+            <!-- Panel 4: CMYK -->
+            <rect x="488" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="498" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">④ CMYK · subtractive</text>
+            <rect x="512" y="60" width="46" height="46" style="fill: color-mix(in srgb, var(--ch-1) 50%, transparent);"/>
+            <rect x="540" y="60" width="46" height="46" style="fill: color-mix(in srgb, var(--ch-4) 50%, transparent);"/>
+            <rect x="512" y="88" width="46" height="46" style="fill: color-mix(in srgb, var(--c-accent-2) 50%, transparent);"/>
+            <rect x="540" y="88" width="46" height="46" style="fill: color-mix(in srgb, var(--c-text) 40%, transparent);"/>
+            <text x="498" y="156" style="fill: var(--c-muted); font-size: 11px;">Cyan · Magenta · Yellow · Black overprint</text>
+            <text x="498" y="180" style="fill: var(--c-text-soft); font-size: 11px;">Used for print; not needed in web visualization</text>
+
+            <text x="0" y="12" style="fill: var(--c-muted); font-size: 11.5px;">One and the same color is accounted for differently by four spaces — the “live” picking and conversion happens in the demos</text>
+          </svg>
+          <figcaption>Four color spaces side by side: RGB speaks of devices, HSL of intuition, CIE Lab of perception, CMYK of print</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> RGB → HSL by hand: the largest channel decides the hue</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// input 0-255, output h∈[0,360) s,l∈[0,100]</span>
+<span class="kw">function</span> rgbToHsl(r, g, b) {
+  r /= <span class="num">255</span>; g /= <span class="num">255</span>; b /= <span class="num">255</span>;
+  <span class="kw">const</span> max = Math.max(r, g, b), min = Math.min(r, g, b);
+  <span class="kw">let</span> h, s, l = (max + min) / <span class="num">2</span>;
+  <span class="kw">if</span> (max === min) { h = s = <span class="num">0</span>; }          <span class="cmt">// grey: no hue</span>
+  <span class="kw">else</span> {
+    <span class="kw">const</span> d = max - min;                     <span class="cmt">// max − min → saturation</span>
+    s = l &gt; <span class="num">0.5</span> ? d / (<span class="num">2</span> - max - min) : d / (max + min);
+    <span class="kw">switch</span> (max) {                          <span class="cmt">// whichever is largest → decides where the hue lands</span>
+      <span class="kw">case</span> r: h = (g - b) / d + (g &lt; b ? <span class="num">6</span> : <span class="num">0</span>); <span class="kw">break</span>;
+      <span class="kw">case</span> g: h = (b - r) / d + <span class="num">2</span>; <span class="kw">break</span>;
+      <span class="kw">case</span> b: h = (r - g) / d + <span class="num">4</span>; <span class="kw">break</span>;
+    }
+    h /= <span class="num">6</span>;
+  }
+  <span class="kw">return</span> [h * <span class="num">360</span>, s * <span class="num">100</span>, l * <span class="num">100</span>];
+}</code></pre>
+              <div class="key-point">
+                <p>Writing it out yourself is how the three physical steps become clear: <strong>the largest channel decides the hue, max minus min decides the saturation, and max plus min decides the lightness</strong>. It also explains why hue is a 0–360° circular quantity — when adding an offset you must use <code>(h + 30 + 360) % 360</code> so it never runs off.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> CVD simulation: one line of matrix multiplication swaps a pair of eyes</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// A Machado-2009-style approximation matrix: multiply RGB once and you get the color "seen by a color-blind eye"</span>
+<span class="kw">const</span> CVD_MATRICES = {
+  protanopia:   [[<span class="num">0.567</span>, <span class="num">0.433</span>, <span class="num">0</span>], [<span class="num">0.558</span>, <span class="num">0.442</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.242</span>, <span class="num">0.758</span>]],
+  deuteranopia: [[<span class="num">0.625</span>, <span class="num">0.375</span>, <span class="num">0</span>], [<span class="num">0.700</span>, <span class="num">0.300</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.300</span>, <span class="num">0.700</span>]],
+  tritanopia:   [[<span class="num">0.950</span>, <span class="num">0.050</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.433</span>, <span class="num">0.567</span>], [<span class="num">0</span>, <span class="num">0.475</span>, <span class="num">0.525</span>]],
+};
+
+<span class="kw">function</span> simulateCVD([r, g, b], type) {
+  <span class="kw">const</span> m = CVD_MATRICES[type];
+  <span class="kw">return</span> [
+    r * m[<span class="num">0</span>][<span class="num">0</span>] + g * m[<span class="num">0</span>][<span class="num">1</span>] + b * m[<span class="num">0</span>][<span class="num">2</span>],
+    r * m[<span class="num">1</span>][<span class="num">0</span>] + g * m[<span class="num">1</span>][<span class="num">1</span>] + b * m[<span class="num">1</span>][<span class="num">2</span>],
+    r * m[<span class="num">2</span>][<span class="num">0</span>] + g * m[<span class="num">2</span>][<span class="num">1</span>] + b * m[<span class="num">2</span>][<span class="num">2</span>],
+  ].map((v) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">255</span>, v)));
+}</code></pre>
+              <div class="key-point">
+                <p>All three deficiencies are <strong>linear transforms</strong>: the responses of the three cone types are simply “merged”. The matrices show at a glance why deuteranopia is the most dangerous — the first row <code>0.625 / 0.375</code> and the second row <code>0.700 / 0.300</code> are almost identical, so red and green are projected onto nearly the same direction.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> How we do it here: colors always come from design tokens</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// This site builds nothing and works offline, so it pulls in no D3 and no color library;
+// when "real color numbers" are needed, read them out of the CSS design tokens and compute.</span>
+<span class="kw">const</span> token = (name) =&gt;
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+<span class="kw">const</span> rgb = parseColorCss(token(<span class="str">'--c-primary'</span>));   <span class="cmt">// → [67, 56, 202]</span>
+<span class="kw">const</span> hsl = rgbToHsl(...rgb);                      <span class="cmt">// then do hue rotation, Lab conversion…</span></code></pre>
+              <div class="key-point">
+                <p><strong>Three benefits:</strong> ① no hard-coded color values appear anywhere in the page, so re-theming touches only <code>tokens.css</code>; ② after switching to dark mode the demos adapt automatically (tokens hold a different set of values in the dark theme); ③ demos and inline figures share one palette, so what is explained and what is seen match exactly.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Four panels for four color spaces: <strong>click any panel and the right side reads out that space's values and use cases</strong> — pick a face on the RGB cube, drag the “azimuth” to rotate the projection, click an angle on the HSL wheel to change hue, click a position on the a*b* plane to change color — all four are editing the same color.</p>
+          <div class="demo-mount" data-demo="d-3-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>RGB is the device space, HSL the intuitive space, CIE Lab the perceptual space, CMYK the print space — <strong>design colormaps by interpolating in Lab</strong>.</li>
+            <li>Hue is a 0–360° circular quantity, so any offset must take <code>mod 360</code>; saturation comes from “max minus min”.</li>
+            <li>About 8% of men have a color vision deficiency, deuteranopia being the most common — a palette must pass the CVD test (there is a simulator in 3.8).</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">To design a colormap gradient that is smooth with a natural light-to-dark transition, in which color space should you interpolate?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="a"><span>RGB — native to the device, fastest to compute</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="b"><span>HSL — intuitive hue, convenient for color picking</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="c"><span>CIE Lab — perceptually uniform, so the interpolation shows no light/dark jump</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="d"><span>CMYK — the print standard, closest to the human eye</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Neither RGB nor HSL is perceptually uniform: interpolating linearly in RGB produces a fake step in the middle that “looks darker/brighter than both ends”. Euclidean distance in CIE Lab ≈ perceived difference, so a gradient built with equal steps in Lab looks like equal steps to a human eye — that is the reason <code>d3.interpolateLab</code> exists.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.2 Choosing among the three colormap families ============ -->
+      <article class="chapter" id="ch-3-2">
+        <h2>3.2 Choosing among the three colormap families</h2>
+        <p class="chapter-subtitle">Sequential / diverging / qualitative — picking the wrong family is not “ugly”, it misleads the reader.</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <table class="theory-table">
+          <caption>Three colormap families for three kinds of data semantics</caption>
+          <thead><tr><th>Family</th><th>Data semantics</th><th>Color characteristics</th><th>Typical schemes</th></tr></thead>
+          <tbody>
+            <tr><td><b>Sequential</b></td><td>A natural order: population, temperature, murder count</td><td>Monotone lightness + monotone hue</td><td>Viridis / Plasma / Cividis</td></tr>
+            <tr><td><b>Diverging</b></td><td>A genuine, meaningful midpoint: 0, positive/negative deviation, relative to the median</td><td>Different colors at the two ends, lightest in the middle</td><td>RdBu / BrBG / PiYG</td></tr>
+            <tr><td><b>Qualitative</b></td><td>Unordered categories: states, product lines, experimental groups</td><td>Hues widely separated, lightnesses close</td><td>Tableau10 / Set1 / Okabe–Ito</td></tr>
+          </tbody>
+        </table>
+        <p>Back to <code>crime.csv</code>: <code>murder</code> is a value with a “natural order” → sequential; if you first compute “each state's murder rate minus that state's historical mean”, the difference is positive or negative and 0 is meaningful → diverging; if you only want to tell 5 regions' <em>categories</em> apart → qualitative.</p>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>Picking the wrong family = lying</h4>
+          <p>Use the <strong>diverging RdBu to plot the ordered “murder rate of 50 states”</strong>: the middle of the scale is nearly white, and readers instinctively read the “nearly white” states as “middling, normal” — but the value 100 has no such semantics at all; it is pure misdirection. Conversely, use the <strong>sequential Viridis to show a positive/negative deviation</strong> and readers will assume the white area is the zero point, when Viridis's midpoint is in fact a deep purple. So ask about the data semantics first, and only then pick the scale family.</p>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>CVD-friendly checklist:</strong> Viridis / Cividis ✅ good (recommended by Nature Methods); RdBu / BrBG △ fair (the red and green ends are unfriendly to color-blind readers); Tableau10 △ hue-dependent; <strong>Jet / Rainbow ⚠ outright banned</strong>.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 214" role="img" aria-label="Comparison strips for the three colormap families: sequential with monotonically increasing lightness, diverging with different colors at the ends and lightest in the middle, qualitative with eight hues side by side">
+            <defs>
+              <linearGradient id="l3-seq-g" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" style="stop-color: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));"/>
+                <stop offset="100%" style="stop-color: var(--c-primary);"/>
+              </linearGradient>
+              <linearGradient id="l3-div-g" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" style="stop-color: var(--c-danger);"/>
+                <stop offset="50%" style="stop-color: var(--c-surface);"/>
+                <stop offset="100%" style="stop-color: var(--c-primary);"/>
+              </linearGradient>
+            </defs>
+
+            <text x="0" y="16" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Sequential</text>
+            <text x="176" y="16" style="fill: var(--c-muted); font-size: 11.5px;">→ deepens monotonically in one direction: you can read “who is larger”</text>
+            <rect x="0" y="24" width="600" height="26" rx="6" style="fill: url(#l3-seq-g); stroke: var(--c-line);"/>
+            <text x="606" y="42" style="fill: var(--c-muted); font-size: 11px;">low → high</text>
+
+            <text x="0" y="82" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Diverging</text>
+            <text x="176" y="82" style="fill: var(--c-muted); font-size: 11.5px;">← deepens toward both ends away from the midpoint: you can read “which side and by how much”</text>
+            <rect x="0" y="90" width="600" height="26" rx="6" style="fill: url(#l3-div-g); stroke: var(--c-line);"/>
+            <text x="4" y="110" style="fill: var(--c-on-primary); font-size: 11px; font-weight: 700;">negative</text>
+            <text x="296" y="110" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11px; font-weight: 700;">midpoint = 0</text>
+            <text x="596" y="110" text-anchor="end" style="fill: var(--c-on-primary); font-size: 11px; font-weight: 700;">positive</text>
+
+            <text x="0" y="148" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Qualitative</text>
+            <text x="176" y="148" style="fill: var(--c-muted); font-size: 11.5px;">similar lightness, hues pulled far apart: only distinguishes “which one”, never magnitude</text>
+            <rect x="0" y="156" width="76" height="26" rx="6" style="fill: var(--ch-1);"/>
+            <rect x="86" y="156" width="76" height="26" rx="6" style="fill: var(--ch-2);"/>
+            <rect x="172" y="156" width="76" height="26" rx="6" style="fill: var(--ch-3);"/>
+            <rect x="258" y="156" width="76" height="26" rx="6" style="fill: var(--ch-4);"/>
+            <rect x="344" y="156" width="76" height="26" rx="6" style="fill: var(--ch-5);"/>
+            <rect x="430" y="156" width="76" height="26" rx="6" style="fill: var(--ch-6);"/>
+            <rect x="516" y="156" width="76" height="26" rx="6" style="fill: var(--ch-7);"/>
+            <text x="0" y="202" style="fill: var(--c-muted); font-size: 11.5px;">The colors of this strip and the two above are all computed by mixing tokens (<tspan style="font-family: var(--font-mono);">color-mix(in srgb, var(--c-primary) x%, var(--c-surface))</tspan>); no color value is hard-coded anywhere in the page.</text>
+          </svg>
+          <figcaption>Comparison strips for the three colormap families: sequential moves one way, diverging leaves the midpoint in both directions, qualitative sits side by side</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> A quick mnemonic for the three scale types</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// sequential: [0, 1] → color (monotone lightness)</span>
+<span class="kw">const</span> seq = d3.scaleSequential(d3.interpolateViridis);
+
+<span class="cmt">// diverging: t=0 one end, t=0.5 the midpoint, t=1 the other end</span>
+<span class="kw">const</span> div = d3.interpolateRdBu;
+
+<span class="cmt">// qualitative: category → color (they must not sit next to each other or they clash)</span>
+<span class="kw">const</span> cat = d3.scaleOrdinal(d3.schemeTableau10);</code></pre>
+              <div class="key-point">
+                <p>The three share exactly the same interface (input [0,1], output a color); the only difference is the <strong>semantic contract</strong>: sequential promises “larger is darker”, diverging promises “lightest at the midpoint”, qualitative promises “similar lightness”. As soon as a contract is used on data that does not satisfy its premise, the colors start lying.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Decision table: ask the data first, then pick the scale</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">function</span> pickColormap(data) {
+  <span class="kw">if</span> (data.hasMeaningfulMidpoint) <span class="kw">return</span> <span class="str">'diverging'</span>;   <span class="cmt">// has a true midpoint (0 / mean)</span>
+  <span class="kw">if</span> (data.isOrdered)              <span class="kw">return</span> <span class="str">'sequential'</span>;  <span class="cmt">// has a natural order</span>
+  <span class="kw">return</span> <span class="str">'categorical'</span>;                                  <span class="cmt">// otherwise: unordered categories</span>
+}</code></pre>
+              <div class="key-point">
+                <p>The order of the two questions cannot be swapped: <strong>“does 0 mean anything” comes before “is the data ordered”</strong>. Data that is ordered but has 0 as its midpoint (month-over-month growth, say) should go to diverging — this is precisely the watershed between the murder rate and the “murder-rate deviation” in <code>crime.csv</code>.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> How we do it here: compute the gradient by mixing tokens</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// sequential: step from "5% primary + 95% surface" to "100% primary", mixing level by level</span>
+<span class="kw">const</span> cells = <span class="num">16</span>;
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; cells; i++) {
+  <span class="kw">const</span> p = Math.round(i / (cells - <span class="num">1</span>) * <span class="num">100</span>);
+  strip.append(el.style.background =
+    <span class="str">`color-mix(in srgb, var(--c-primary) ${p}%, var(--c-surface))`</span>);
+}
+
+<span class="cmt">// diverging: left half danger color → surface color, right half surface color → primary</span>
+<span class="cmt">// the midpoint naturally lands on "surface color", matching the semantics of "midpoint = 0"</span></code></pre>
+              <div class="key-point">
+                <p><strong>Why not a hard-coded array of hex values:</strong> this site has to support light and dark themes. <code>var(--c-primary)</code> is indigo on a light background and pale indigo on a dark one, and <code>var(--c-surface)</code> changes with it — the whole scale computed by mixing adapts to the theme automatically, something hard-coded hex cannot do.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">The three strips above are <strong>computed</strong> (the sequential and diverging ones are generated level by level by mixing tokens — they are not images); below, the murder counts from <code>crime.csv</code> are drawn as a real bar chart, and you can switch between “sequential / diverging” to see how diverging tells the story of ordered data wrong.</p>
+          <div class="demo-mount" data-demo="d-3-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Each colormap family matches one kind of data semantics: ordered → sequential, genuine midpoint → diverging, unordered categories → qualitative.</li>
+            <li>Picking the wrong family is not an aesthetic issue: diverging on ordered data invents a “normal midpoint” out of nothing, and sequential on a positive/negative deviation makes people mistake deep purple for the zero point.</li>
+            <li>The rainbow family (Jet) is none of the three: not perceptually uniform, unfriendly to CVD, unfriendly to print — it should simply be banned.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">One dataset is “each state's crime rate relative to the U.S. median” (positive and negative, with 0 as a meaningful midpoint). Which colormap family fits best?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="a"><span>Sequential: find a perceptually uniform one-directional scale</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="b"><span>Diverging: different colors at the two ends, lightest in the middle, so that 0 becomes the visual anchor</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="c"><span>Qualitative: treat positive and negative as two categories</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="d"><span>Rainbow: more colors, more information</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Deviation data has a “midpoint 0” with clear semantics, so you want <strong>diverging</strong>: lightest at the midpoint, different colors at the ends, and readers see at a glance whether a state is “above the median” or “below the median” and by how much. Sequential would hide the 0 in the middle of the scale, while qualitative would throw away the <em>degree</em> of the deviation.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.3 The CIE Lab gamut diagram ============ -->
+      <article class="chapter" id="ch-3-3">
+        <h2>3.3 The CIE Lab gamut diagram</h2>
+        <p class="chapter-subtitle">In a perceptually uniform color space, what exactly do “the colors a display can show” look like?</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>You want to give <code>crime.csv</code> a “highly saturated pure green → pure red” scale. The colors you compute in Lab look lovely, but the green rendered on an LCD screen comes out “muted” — because <strong>the green you computed has run outside the screen's gamut</strong>.</p>
+        <table class="theory-table">
+          <thead><tr><th>Gamut</th><th>Standard / scenario</th><th>Relative size</th><th>Use in this course</th></tr></thead>
+          <tbody>
+            <tr><td><b>sRGB</b></td><td>Web / PPT / general scientific figures</td><td>Smallest (baseline)</td><td>The target gamut of this rebuild</td></tr>
+            <tr><td><b>Adobe RGB</b></td><td>Photography / print</td><td>Medium (wider green region)</td><td>Worth noting when submitting a print version</td></tr>
+            <tr><td><b>Rec.2020</b></td><td>4K / HDR television</td><td>Largest</td><td>Out of reach for the web today</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>Why “nested”, and why it gets clamped</h4>
+          <p>The three gamuts are <strong>nested</strong>: sRGB ⊂ Adobe RGB ⊂ Rec.2020. If a color computed from Lab coordinates falls outside sRGB, the standard conversion pipeline <strong>clamps</strong> it back to the sRGB boundary — the result is not an error but “the color looks different”, and it changes without your noticing at all.</p>
+          <p><strong>Three practical points:</strong> ① <code>d3.lab(L, a, b).rgb()</code> clamps silently; ② when designing a colormap use <code>d3.interpolateLab</code>, which is smoother than <code>interpolateRgb</code>; ③ highly saturated colors “really exist” only on print / 4K screens, and may not be accurate on the web.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Three nested gamuts on the Lab a*b* plane: Rec.2020 outermost, Adobe RGB in the middle, sRGB innermost; colors outside the inner one are clamped back to the boundary">
+            <rect x="150" y="14" width="290" height="212" rx="8" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <ellipse cx="295" cy="120" rx="138" ry="99" style="fill: color-mix(in srgb, var(--c-info) 10%, transparent); stroke: var(--c-info); stroke-width: 1.6; stroke-dasharray: 6 4;"/>
+            <ellipse cx="295" cy="120" rx="112" ry="80" style="fill: color-mix(in srgb, var(--c-accent) 12%, transparent); stroke: var(--c-accent); stroke-width: 1.6; stroke-dasharray: 5 4;"/>
+            <ellipse cx="295" cy="120" rx="88" ry="62" style="fill: color-mix(in srgb, var(--c-primary) 16%, transparent); stroke: var(--c-primary); stroke-width: 1.8;"/>
+
+            <circle cx="352" cy="84" r="6" style="fill: var(--c-danger);"/>
+            <line x1="352" y1="84" x2="386" y2="70" style="stroke: var(--c-danger); stroke-width: 1.4; stroke-dasharray: 3 3;"/>
+            <text x="390" y="68" style="fill: var(--c-danger); font-size: 11.5px; font-weight: 700;">sample outside sRGB → clamped to the boundary</text>
+            <circle cx="330" cy="106" r="5" style="fill: var(--c-success);"/>
+            <text x="340" y="112" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">inside → shown as is</text>
+
+            <line x1="150" y1="120" x2="440" y2="120" style="stroke: var(--c-border-2); stroke-width: 1;"/>
+            <line x1="295" y1="14" x2="295" y2="226" style="stroke: var(--c-border-2); stroke-width: 1;"/>
+            <text x="436" y="112" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">a* (green ↔ red)</text>
+            <text x="299" y="26" style="fill: var(--c-muted); font-size: 11px;">b* (blue ↔ yellow)</text>
+
+            <text x="0" y="40" style="fill: var(--c-primary); font-size: 13px; font-weight: 700;">sRGB</text>
+            <text x="0" y="60" style="fill: var(--c-muted); font-size: 11px;">Web / PPT</text>
+            <text x="0" y="104" style="fill: var(--c-accent); font-size: 13px; font-weight: 700;">Adobe RGB</text>
+            <text x="0" y="124" style="fill: var(--c-muted); font-size: 11px;">photo / print · wider green region</text>
+            <text x="0" y="168" style="fill: var(--c-info); font-size: 13px; font-weight: 700;">Rec.2020</text>
+            <text x="0" y="188" style="fill: var(--c-muted); font-size: 11px;">4K / HDR · the largest today</text>
+            <text x="0" y="216" style="fill: var(--c-text-soft); font-size: 11px;">At a fixed L*, the three gamuts are three nested closed regions on the a*b* plane.</text>
+          </svg>
+          <figcaption>The a*b* plane of Lab: three gamuts nested one inside the other, and colors beyond sRGB are silently clamped</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Lab ↔ sRGB: only without clamping can you detect out-of-gamut</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// γ decode: sRGB value → linear light</span>
+<span class="kw">const</span> toLinear = (v) =&gt; (v /= <span class="num">255</span>) &lt;= <span class="num">0.04045</span>
+  ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+
+<span class="kw">function</span> labToRgb(L, a, b) {
+  <span class="kw">const</span> fy = (L + <span class="num">16</span>) / <span class="num">116</span>;                     <span class="cmt">// Lab → XYZ (D65 white point)</span>
+  <span class="kw">const</span> fx = a / <span class="num">500</span> + fy, fz = fy - b / <span class="num">200</span>;
+  <span class="kw">const</span> xyz = [fx * fx * fx * <span class="num">0.95047</span>, fy * fy * fy, fz * fz * fz];
+  <span class="cmt">// XYZ → linear RGB (the inverse of the standard sRGB matrix)</span>
+  <span class="kw">const</span> lin = xyzToLinearSrgb(xyz);
+  <span class="cmt">// note: we deliberately do NOT clamp here — out-of-range values stay as they are, so we can tell whether the color is out of gamut</span>
+  <span class="kw">return</span> lin.map((v) =&gt; v &lt;= <span class="num">0.0031308</span>
+    ? v * <span class="num">12.92</span> : <span class="num">1.055</span> * Math.pow(v, <span class="num">1</span> / <span class="num">2.4</span>) - <span class="num">0.055</span>) .map((v) =&gt; v * <span class="num">255</span>);
+}</code></pre>
+              <div class="key-point">
+                <p><strong>The crux is precisely this “do not clamp” step.</strong> If the conversion function clipped its result into [0,255] internally, you would never discover that a color you computed has left sRGB. The demo here uses “convert without clamping, then test afterwards” to find the gamut boundary, and the boundary line it draws is obtained exactly that way.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Testing whether a color is in gamut (and finding the boundary along the way)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// in gamut ⟺ all three channels lie in [0, 255] (with a little float tolerance)</span>
+<span class="kw">const</span> inGamut = (rgb) =&gt; rgb.every((v) =&gt; v &gt;= -<span class="num">0.5</span> &amp;&amp; v &lt;= <span class="num">255.5</span>);
+
+<span class="cmt">// how to find the boundary: fix L* and, along each hue angle, binary-search for "the farthest radius still in gamut"</span>
+<span class="kw">function</span> outline(L, angles = <span class="num">180</span>) {
+  <span class="kw">const</span> pts = [];
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; angles; i++) {
+    <span class="kw">const</span> th = i / angles * Math.PI * <span class="num">2</span>;
+    <span class="kw">let</span> lo = <span class="num">0</span>, hi = <span class="num">200</span>;                 <span class="cmt">// 18 bisections are enough to locate it</span>
+    <span class="kw">for</span> (<span class="kw">let</span> k = <span class="num">0</span>; k &lt; <span class="num">18</span>; k++) {
+      <span class="kw">const</span> mid = (lo + hi) / <span class="num">2</span>;
+      <span class="kw">if</span> (inGamut(labToRgb(L, mid * Math.cos(th), mid * Math.sin(th)))) lo = mid; <span class="kw">else</span> hi = mid;
+    }
+    pts.push([lo * Math.cos(th), lo * Math.sin(th)]);
+  }
+  <span class="kw">return</span> pts;                                  <span class="cmt">// connect them and you have the gamut polygon</span>
+}</code></pre>
+              <div class="key-point">
+                <p>The same <code>labToRgb</code> + <code>inGamut</code> pair does three jobs: telling whether a color <em>can be displayed</em>, finding the <em>shape of the gamut boundary</em>, and comparing the <em>size difference</em> between sRGB and Adobe RGB (the three nested outlines in the demo come from exactly this).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Interpolating in Lab vs. interpolating in RGB</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ✅ interpolate in Lab: the middle point is perceptually "the true middle"</span>
+<span class="kw">const</span> mid = rgb2lab(mix(rgb2lab(c1), rgb2lab(c2), <span class="num">0.5</span>));
+
+<span class="cmt">// ❌ linear interpolation straight in RGB: the middle sags (looks darker)</span>
+<span class="kw">const</span> bad = [c1, c2].map((c, i) =&gt; c * (<span class="num">1</span> - i) + c * i);
+
+<span class="cmt">// the two corresponding functions in d3 (c1, c2 being any two endpoint colors)</span>
+<span class="cmt">// d3.interpolateLab(c1, c2)(0.5)   ← perceptually uniform</span>
+<span class="cmt">// d3.interpolateRgb(c1, c2)(0.5)   ← not the perceptual midpoint</span></code></pre>
+              <div class="key-point">
+                <p>The three nested gamuts and the array of in-gamut color patches in the demo are all <strong>computed live</strong> (not images), so when you drag L* you can watch the gamut area shrink as a whole — which is the visual evidence for the statement “dark colors have a narrower saturable range”.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Drag the L* slider to watch the gamut shrink; <strong>drag the sample point on the diagram with the mouse</strong> and the right side reads out its Lab values and whether it is “inside sRGB”. Tick the outer two layers to see the relative sizes of Adobe RGB / Rec.2020.</p>
+          <div class="demo-mount" data-demo="d-3-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Gamuts are nested: sRGB ⊂ Adobe RGB ⊂ Rec.2020; a color computed in Lab may fall outside sRGB.</li>
+            <li>Colors beyond sRGB are <strong>silently clamped</strong> back to the boundary — no error, just a color that “quietly changed”.</li>
+            <li>For a smooth gradient interpolate in Lab, and let the browser clamp when converting to RGB for display; to judge “can it be displayed” you must first convert <em>without</em> clamping.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">You construct a highly saturated pure green in Lab (outside sRGB) and then convert it to RGB to display on an ordinary LCD. What happens?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="a"><span>The screen shows the more vivid green as is</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="b"><span>It is clamped to the sRGB boundary, the color is distorted, and no error is raised at all</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="c"><span>The browser throws an exception saying the color is out of range</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="d"><span>It automatically switches to CMYK four-ink overprint for display</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>The conversion pipeline squeezes each channel into [0, 1] and simply discards the excess — so “an oversaturated green” becomes “the most saturated green sRGB can express”. Nothing is reported, so the only way to catch it in advance is the gamut diagram of this section: the green sample point has crossed the sRGB outline.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.4 Color harmony rules ============ -->
+      <article class="chapter" id="ch-3-4">
+        <h2>3.4 Color harmony rules (5 families)</h2>
+        <p class="chapter-subtitle">Monochromatic / analogous / complementary / triadic / split-complementary — when should you use which?</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>Still <code>crime.csv</code>: you plan to draw the four regions “Northeast / Midwest / South / West” as four groups of bars. Four categories, no order — so now you have to “pick angles” on the color wheel: pick the wrong angles and the four groups of bars fight each other; pick the right ones and it clicks with the legend at a glance.</p>
+        <table class="theory-table">
+          <thead><tr><th>Rule</th><th>Hue relationship</th><th>Characteristics</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><b>Monochromatic</b></td><td>One hue, changing only lightness / saturation</td><td>Safest, least glaring</td><td>Serious scientific figures (Nature-style economical palettes)</td></tr>
+            <tr><td><b>Analogous</b></td><td>Adjacent on the color wheel, ±30°</td><td>Harmonious, but weak contrast</td><td>Expressing “hierarchy / grouping”</td></tr>
+            <tr><td><b>Complementary</b></td><td>Opposite on the color wheel, 180°</td><td>Strongest contrast, easily glaring</td><td>Highlighting: treatment group vs. control group</td></tr>
+            <tr><td><b>Triadic</b></td><td>120° apart on the color wheel</td><td>All three colors separate cleanly from one another</td><td>Exactly 3 categories</td></tr>
+            <tr><td><b>Split-complementary</b></td><td>150° to either side of the opposite</td><td>A gentler version of complementary</td><td>The default choice when unsure</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>After picking the angles, you still have to pass “readability”</h4>
+          <p>Whether a color combination looks good is a question of <strong>hue difference</strong>; whether text can be read is a question of <strong>contrast</strong> — and the latter can be quantified with the WCAG contrast formula: <code>contrast = (L1 + 0.05) / (L2 + 0.05)</code>, where L is relative luminance.</p>
+          <table class="theory-table">
+            <thead><tr><th>WCAG 2.1 level</th><th>Body text (<b>~14px regular</b>)</th><th>Large text (≥18.66px bold / ≥24px)</th></tr></thead>
+            <tbody>
+              <tr><td>AA</td><td>≥ 4.5 : 1</td><td>≥ 3 : 1</td></tr>
+              <tr><td>AAA</td><td>≥ 7 : 1</td><td>≥ 4.5 : 1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--warn">
+          <p><strong>The most common trap:</strong> using “complementary colors” directly as “text color + background color”. Complementary colors sit 180° apart in hue, but their <em>luminance</em> may be very close — however large the hue difference, the contrast may be only 2:1 and the text reads as a blur. Hue difference governs “can they be told apart”, luminance difference governs “can they be read”.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 220" role="img" aria-label="Angle relationships of the five harmony rules on the color wheel: monochromatic 0°, analogous ±30°, complementary 180°, triadic 120°, split-complementary ±150°">
+            <circle cx="130" cy="110" r="86" fill="none" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <circle cx="130" cy="110" r="78" fill="none" stroke-dasharray="2 5" style="stroke: var(--c-line-2); stroke-width: 1;"/>
+            <circle cx="130" cy="110" r="4" style="fill: var(--c-text-soft);"/>
+            <line x1="130" y1="110" x2="130" y2="32" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+            <circle cx="130" cy="32" r="7" style="fill: var(--c-primary);"/>
+            <text x="130" y="22" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">primary 0°</text>
+            <text x="130" y="200" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">The angle relationships are the point — check every angle difference against the table on the right</text>
+
+            <!-- analogous ±30 -->
+            <line x1="130" y1="110" x2="172" y2="47" style="stroke: var(--c-accent); stroke-width: 1.6;"/>
+            <line x1="130" y1="110" x2="88" y2="47" style="stroke: var(--c-accent); stroke-width: 1.6;"/>
+            <circle cx="172" cy="47" r="6" style="fill: var(--c-accent);"/><circle cx="88" cy="47" r="6" style="fill: var(--c-accent);"/>
+            <text x="182" y="52" style="fill: var(--c-accent); font-size: 11px;">+30°</text>
+            <text x="80" y="42" text-anchor="end" style="fill: var(--c-accent); font-size: 11px;">-30° analogous</text>
+
+            <line x1="130" y1="110" x2="119" y2="188" style="stroke: var(--c-danger); stroke-width: 1.6;"/>
+            <circle cx="119" cy="188" r="6" style="fill: var(--c-danger);"/>
+            <text x="126" y="196" style="fill: var(--c-danger); font-size: 11px;">180° complementary</text>
+
+            <line x1="130" y1="110" x2="204" y2="146" style="stroke: var(--c-info); stroke-width: 1.6;"/>
+            <circle cx="204" cy="146" r="6" style="fill: var(--c-info);"/>
+            <text x="212" y="152" style="fill: var(--c-info); font-size: 11px;">120° triadic</text>
+
+            <line x1="130" y1="110" x2="73" y2="160" style="stroke: var(--c-success); stroke-width: 1.6;"/>
+            <circle cx="73" cy="160" r="6" style="fill: var(--c-success);"/>
+            <text x="66" y="168" text-anchor="end" style="fill: var(--c-success); font-size: 11px;">150° split-complementary</text>
+
+            <line x1="300" y1="34" x2="300" y2="200" style="stroke: var(--c-line); stroke-width: 1;"/>
+
+            <text x="324" y="46" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Compare: the same “four-region bar chart”</text>
+            <rect x="324" y="60" width="34" height="52" style="fill: var(--c-primary);"/>
+            <rect x="360" y="60" width="34" height="34" style="fill: var(--c-accent);"/>
+            <rect x="396" y="60" width="34" height="66" style="fill: var(--c-danger);"/>
+            <rect x="432" y="60" width="34" height="44" style="fill: var(--c-info);"/>
+            <text x="324" y="132" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">✓ All four colors pop, none of them clash</text>
+
+            <text x="324" y="158" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Counter-example: two complementary colors as “text color + background color”</text>
+            <rect x="324" y="170" width="200" height="30" rx="5" style="fill: var(--c-primary);"/>
+            <text x="334" y="190" style="fill: var(--c-on-primary); font-size: 12px; font-weight: 700;">Body text on a complementary pair</text>
+            <text x="532" y="190" style="fill: var(--c-muted); font-size: 11px;">← whether the contrast suffices has to be computed</text>
+          </svg>
+          <figcaption>All five harmony rules are about “angle differences on the color wheel”; but looking good ≠ being readable — readability has to be computed with the contrast formula</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> The essence of the five families: a set of hue offsets</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">const</span> HUE_OFFSETS = {
+  monochromatic: <span class="num">0</span>,    <span class="cmt">// same hue, only S / L change</span>
+  analogous:     <span class="num">30</span>,   <span class="cmt">// adjacent ±30°</span>
+  triadic:       <span class="num">120</span>,  <span class="cmt">// triadic</span>
+  split:         <span class="num">150</span>,  <span class="cmt">// split-complementary</span>
+  complementary: <span class="num">180</span>,  <span class="cmt">// opposite</span>
+};
+
+<span class="kw">function</span> swatches(baseH, offset, n = <span class="num">5</span>) {
+  <span class="kw">return</span> Array.from({ length: n }, (_, i) =&gt; {
+    <span class="kw">const</span> h = (baseH + i * offset + <span class="num">360</span>) % <span class="num">360</span>;   <span class="cmt">// ← mod 360 must not be forgotten</span>
+    <span class="kw">return</span> hsl2rgb(h, <span class="num">60</span>, <span class="num">55</span>);                     <span class="cmt">// convert to RGB and draw directly</span>
+  });
+}</code></pre>
+              <div class="key-point">
+                <p>The five rules differ in <strong>only one parameter</strong>: the hue difference between neighboring colors. Remember that sentence and you don't have to memorize five blocks of code — <code>0 / 30 / 120 / 150 / 180</code> is all of it.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> WCAG contrast: turning “can't read it” into a number</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// relative luminance: γ-decode first, then weight and sum (the eye is most sensitive to green)</span>
+<span class="kw">function</span> luminance([r, g, b]) {
+  <span class="kw">const</span> lin = [r, g, b].map((v) =&gt; {
+    v /= <span class="num">255</span>;
+    <span class="kw">return</span> v &lt;= <span class="num">0.03928</span> ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+  });
+  <span class="kw">return</span> <span class="num">0.2126</span> * lin[<span class="num">0</span>] + <span class="num">0.7152</span> * lin[<span class="num">1</span>] + <span class="num">0.0722</span> * lin[<span class="num">2</span>];
+}
+
+<span class="cmt">// contrast ratio: always "brighter over darker", so the result is ≥ 1</span>
+<span class="kw">const</span> ratio = (c1, c2) =&gt; {
+  <span class="kw">const</span> [a, b] = [luminance(c1), luminance(c2)].sort((x, y) =&gt; y - x);
+  <span class="kw">return</span> (a + <span class="num">0.05</span>) / (b + <span class="num">0.05</span>);
+};</code></pre>
+              <div class="key-point">
+                <p>Three thresholds are all you need to remember: <strong>3 : 1</strong> (large text AA / boundaries of graphical elements), <strong>4.5 : 1</strong> (body text AA), <strong>7 : 1</strong> (body text AAA). The verdicts in the demo are exactly these three numbers being compared.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Using contrast to constrain the palette in reverse</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// generate candidate colors by the harmony rules, then filter out those that cannot serve as text</span>
+<span class="kw">function</span> pickTextColor(bg, candidates) {
+  <span class="kw">const</span> ok = candidates.filter((c) =&gt; ratio(bg, c) &gt;= <span class="num">4.5</span>);
+  <span class="kw">if</span> (ok.length) <span class="kw">return</span> ok[<span class="num">0</span>];
+  <span class="cmt">// none qualifies → don't change the color, change the background (or switch to large, bold text)</span>
+  <span class="kw">return</span> <span class="kw">null</span>;
+}</code></pre>
+              <div class="key-point">
+                <p>The palette workflow should be <strong>“decide the semantic hue first, then converge on contrast”</strong>. The other way round (pick pretty colors first, worry about readability later) is exposed by the demo in one calculation: many “pretty complementary pairs” have a body-text contrast of only 2–3 : 1.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">The top half is a <strong>five-family harmony builder</strong>: drag the base hue offset and the swatches and mini-figures of all five rules refresh together — click a card to see its use cases. The bottom half is a <strong>contrast checker</strong>: pick two colors from the dropdowns (the options are all design tokens from this site), and it computes the WCAG ratio and the AA / AAA verdicts live, then shows how readable the pair is on a light and on a dark background.</p>
+          <div class="demo-mount" data-demo="d-3-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>The five harmony rules differ in one parameter only: the hue difference between neighbors, <code>0 / 30 / 120 / 150 / 180</code>, for monochromatic / analogous / triadic / split-complementary / complementary.</li>
+            <li>How to choose: monochromatic for serious science, analogous for grouping, complementary to highlight, triadic when there are exactly 3 categories, split-complementary when unsure.</li>
+            <li>Hue difference decides “can they be told apart”, luminance difference decides “can they be read”; the AA threshold is <b>4.5 : 1</b> for body text and <b>3 : 1</b> for large text.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">What minimum contrast does WCAG 2.1 require at level AA for “body text” (about 14px at regular weight)?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="a"><span>2 : 1 — enough to see that the colors differ</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="b"><span>3 : 1 — the same lenient standard as graphical elements</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="c"><span>4.5 : 1 — the hard threshold for body text at AA</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="d"><span>7 : 1 — AA and AAA use the same number</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>4.5 : 1 is the threshold for <strong>body text at AA</strong>; 3 : 1 is the standard for <em>large text at AA</em> (and for the boundaries of graphical elements); 7 : 1 is what body text needs for AAA. Don't mix up the three numbers — the verdict labels in the demo are given live against exactly these thresholds.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.5 Classic scientific palettes ============ -->
+      <article class="chapter" id="ch-3-5">
+        <h2>3.5 Classic scientific palettes</h2>
+        <p class="chapter-subtitle">Wong / Paul Tol / Okabe–Ito / Tableau / Paired / Viridis — which set are top journals actually using?</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>You draw a five-region comparison chart from <code>crime.csv</code> and need 5 colors. There are too many options: Tableau 10 is attractive, Paired 12 has a full set, rainbow is the most “eye-catching” — but what top journals actually use are those palettes that look “a bit dull”. Why?</p>
+        <table class="theory-table">
+          <thead><tr><th>Palette</th><th>Source</th><th>Colors</th><th>Characteristics / risks</th></tr></thead>
+          <tbody>
+            <tr><td><b>Wong 2011</b></td><td>Nature Methods 8:441</td><td>8</td><td>CVD-friendly + grayscale-print friendly</td></tr>
+            <tr><td><b>Okabe–Ito</b></td><td>Okabe &amp; Ito 2002</td><td>8</td><td>Early Nature / Science default; this course's <code>--ch-1..8</code></td></tr>
+            <tr><td><b>Paul Tol</b></td><td>SRON Tech Note</td><td>7~8</td><td>Provides bright / muted / high-contrast versions for three scenarios</td></tr>
+            <tr><td><b>Tableau 10</b></td><td>Tableau commercial default</td><td>10</td><td>Generally attractive, but red-green is unfriendly to color-blind readers</td></tr>
+            <tr><td><b>Paired (12)</b></td><td>ColorBrewer</td><td>12</td><td>Designed for paired comparisons; 12 colors already overload the eye</td></tr>
+            <tr><td><b>Viridis / Cividis</b></td><td>matplotlib / d3 default</td><td>continuous</td><td>Perceptually uniform + CVD-friendly; only applies to continuous values</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>The three hard criteria journals use to pick a palette</h4>
+          <ul>
+            <li><strong>Category count ≤ 7</strong>: beyond 7 the eye can no longer tell them apart — with many categories, switch to a continuous colormap or use small multiples.</li>
+            <li><strong>Passes CVD simulation</strong>: still distinguishable from the protanopia / deuteranopia / tritanopia viewpoints (see 3.8).</li>
+            <li><strong>Distinguishable in grayscale</strong>: papers are often printed in black and white, so after converting the colors to lightness they <em>must still be distinguishable</em>. This criterion rules out a great many pretty palettes with “different hues, identical lightness”.</li>
+          </ul>
+          <p><strong>That is why Okabe–Ito / Wong style palettes look “not vivid enough”: it is precisely to satisfy the three criteria above that they pull the hues apart while also deliberately drawing out a lightness gradient.</strong></p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="The same set of categories under four palettes: the course token qualitative palette, a primary lightness ramp, a diverging ramp, and how they look converted to lightness for a grayscale comparison">
+            <text x="0" y="16" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① Token qualitative palette (Okabe–Ito family, CVD-friendly)</text>
+            <rect x="0" y="24" width="70" height="26" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="76" y="24" width="70" height="26" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="152" y="24" width="70" height="26" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="228" y="24" width="70" height="26" rx="5" style="fill: var(--ch-4);"/>
+            <rect x="304" y="24" width="70" height="26" rx="5" style="fill: var(--ch-5);"/>
+            <rect x="380" y="24" width="70" height="26" rx="5" style="fill: var(--ch-6);"/>
+            <rect x="456" y="24" width="70" height="26" rx="5" style="fill: var(--ch-7);"/>
+            <rect x="532" y="24" width="70" height="26" rx="5" style="fill: var(--ch-8);"/>
+
+            <text x="0" y="76" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② Monochromatic ramp (one hue, varying lightness, for hierarchy)</text>
+            <rect x="0" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 100%, var(--c-surface));"/>
+            <rect x="76" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 74%, var(--c-surface));"/>
+            <rect x="152" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 52%, var(--c-surface));"/>
+            <rect x="228" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 34%, var(--c-surface));"/>
+            <rect x="304" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 20%, var(--c-surface));"/>
+            <rect x="380" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 9%, var(--c-surface));"/>
+            <text x="470" y="102" style="fill: var(--c-muted); font-size: 11px;">For “one measure across different years / levels”</text>
+
+            <text x="0" y="136" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ Grayscale print self-check (convert the two rows above to lightness and see whether they still separate)</text>
+            <rect x="0" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 92%, var(--c-surface));"/>
+            <rect x="76" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 66%, var(--c-surface));"/>
+            <rect x="152" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 78%, var(--c-surface));"/>
+            <rect x="228" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 54%, var(--c-surface));"/>
+            <rect x="304" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 84%, var(--c-surface));"/>
+            <rect x="380" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 46%, var(--c-surface));"/>
+            <rect x="456" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 62%, var(--c-surface));"/>
+            <rect x="532" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 74%, var(--c-surface));"/>
+            <text x="0" y="192" style="fill: var(--c-muted); font-size: 11.5px;">If adjacent cells in the grayscale row remain distinguishable ⇒ the palette is “grayscale-print friendly”; if adjacent cells blur into one, you must switch palettes.</text>
+          </svg>
+          <figcaption>The same set of categories as a token qualitative palette, a monochromatic ramp, and under grayscale self-check</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Define palettes with tokens instead of hard-coded hex</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ❌ old style: hard-copy 8 hex values into the JS, so nothing moves when the theme changes</span>
+<span class="cmt">// const WONG = ['&lt;hex-1&gt;', '&lt;hex-2&gt;', ... ];</span>
+
+<span class="cmt">// ✅ our style: a palette = a set of design tokens (mixing allowed)</span>
+<span class="kw">const</span> SCHEMES = {
+  <span class="str">'course qualitative'</span>: [<span class="str">'var(--ch-1)'</span>, <span class="str">'var(--ch-2)'</span>, <span class="str">'var(--ch-3)'</span>, <span class="str">'var(--ch-4)'</span>],
+  <span class="str">'primary ramp'</span>:   [<span class="num">100</span>, <span class="num">74</span>, <span class="num">52</span>, <span class="num">34</span>].map(
+    (p) =&gt; <span class="str">`color-mix(in srgb, var(--c-primary) ${p}%, var(--c-surface))`</span>),
+};</code></pre>
+              <div class="key-point">
+                <p>A palette itself becomes “a combination of tokens”, and the benefit is <strong>one-click switching between light and dark themes</strong>: in dark mode <code>--ch-1..8</code> are a specially brightened set, since a palette that reads well on a light background is often too dark on a dark one — tokens solve that automatically.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Grayscale friendliness self-check: convert to lightness and sort</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// sort every color of the palette by WCAG relative luminance,
+// then check whether the luminance gap between adjacent colors is large enough
+// — too small ⇒ everything blurs together when printed in black and white</span>
+<span class="kw">const</span> lums = palette.map(luminance);
+<span class="kw">const</span> gaps = lums.slice(<span class="num">1</span>).map((v, i) =&gt; Math.abs(v - lums[i]));
+<span class="kw">const</span> minGap = Math.min(...gaps);           <span class="cmt">// rule of thumb: ≥ 0.06 is fairly safe</span>
+<span class="kw">const</span> grayscaleSafe = minGap &gt;= <span class="num">0.06</span>;</code></pre>
+              <div class="key-point">
+                <p><code>luminance()</code> is the same WCAG formula as in 3.4: <strong>one function, two uses</strong> — judging text contrast and judging grayscale-print distinguishability. This is also why “top-journal palettes look plain”: to get the luminance gaps they give up part of their freedom in hue.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> A fallback when the category count overshoots</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// categories ≤ 7: use a qualitative palette; 8–10: a qualitative palette just about works but must pass CVD;
+// &gt; 10: switch to "continuous colormap + ordering" or small multiples, don't force in more colors</span>
+<span class="kw">function</span> paletteFor(n) {
+  <span class="kw">if</span> (n &lt;= <span class="num">8</span>) <span class="kw">return</span> { type: <span class="str">'qualitative'</span>, note: <span class="str">'just pass the CVD and grayscale checks'</span> };
+  <span class="kw">if</span> (n &lt;= <span class="num">12</span>) <span class="kw">return</span> { type: <span class="str">'qualitative+'</span>, note: <span class="str">'borderline; better to merge categories first'</span> };
+  <span class="kw">return</span> { type: <span class="str">'redesign'</span>, note: <span class="str">'switch to a continuous colormap / small multiples / grouping'</span> };
+}</code></pre>
+              <div class="key-point">
+                <p><strong>Do not force “one color per category”.</strong> Better moves are: merge the minor categories into “other”, split one chart into small multiples, or simply map categories onto position (facets) instead of color.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Six <strong>palette cards</strong>: each lists the color strips, the use cases, and two self-check verdicts (CVD / grayscale). Click any card and the “mini preview” in the lower right draws the same data with that palette — the same set of numbers, and with a different palette it reads completely differently.</p>
+          <div class="demo-mount" data-demo="d-3-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>The three hard criteria of top journals: category count ≤ 7, passes CVD simulation, still distinguishable in grayscale print — palettes that satisfy all three all look “less vivid”.</li>
+            <li>Okabe–Ito / Wong / Paul Tol are the three gold standards for scientific work; Tableau 10 is attractive but red-green unfriendly; Paired's 12 colors are already overloaded.</li>
+            <li>Every palette in this chapter's demos is defined as “a combination of tokens”, so switching between light and dark themes adapts the whole palette automatically.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">Top journals have largely switched to “plain-looking” palettes such as Okabe–Ito / Wong. What is the most central reason?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="a"><span>They are prettier and more modern than rainbow colors</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="b"><span>Fewer colors, so plotting is less work</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="c"><span>They are friendly to readers with color vision deficiency, and remain distinguishable in black-and-white print</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="d"><span>They are the defaults of certain plotting libraries and are hard to change</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>These palettes constrain <strong>hue difference</strong> and <strong>luminance gradient</strong> at the same time by design: pulling the hues apart keeps CVD readers able to distinguish, and pulling the luminance apart keeps them distinguishable after conversion to grayscale. On screen they are indeed less “attention-grabbing” than a rainbow, but for a paper that may be printed in black and white and read by color-blind readers, those two constraints matter far more than “looking good”.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.6 Right vs. wrong case comparison ============ -->
+      <article class="chapter" id="ch-3-6">
+        <h2>3.6 Right vs. wrong case comparison</h2>
+        <p class="chapter-subtitle">One dataset, two palettes — click to switch and see for yourself how a wrong palette tells the data wrong.</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>Take the murder counts of 8 states from <code>crime.csv</code> and draw a bar chart; the data stays the same and only the palette changes:</p>
+        <table class="theory-table">
+          <thead><tr><th>Option</th><th>Palette approach</th><th>Verdict</th><th>What is wrong</th></tr></thead>
+          <tbody>
+            <tr><td>A Rainbow spectrum (Jet type)</td><td>Hue sweeping from red to purple</td><td>⚠ wrong</td><td>Not perceptually uniform, CVD-unfriendly, print-unfriendly; already banned by Nature</td></tr>
+            <tr><td>B Red-green contrast</td><td>Alternating “danger color / success color”</td><td>⚠ wrong</td><td>Nearly the same color to protanopes and deuteranopes — the most serious accessibility problem</td></tr>
+            <tr><td>C 12 colors, overloaded</td><td>One hue per bar</td><td>⚠ wrong</td><td>More than 7 colors, and the eye can no longer tell which is which</td></tr>
+            <tr><td>D Token qualitative palette</td><td>8 colors, both hue and lightness pulled apart</td><td>✅ right</td><td>CVD-friendly + grayscale-print friendly + category count ≤ 8</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>Why “rainbow” is outright banned by top journals</h4>
+          <p>A rainbow scale has a cyclic hue, and the human eye's <strong>perception of lightness is not monotone</strong> across the blue→green→yellow stretch: a single gently rising dataset drawn in rainbow shows a patch in the middle that “looks brighter” — a fake step. Readers take that fake step as “the data changes abruptly here” — <strong>the figure manufactures structure that does not exist in the data</strong>, which is far more serious than “looking bad”.</p>
+        </div>
+
+        <div class="callout callout--ok">
+          <p><strong>Teaching point:</strong> reading the theory is no substitute for getting it wrong once yourself. This section's demo deliberately lets you switch among three wrong options, and each time it tells you “what is wrong” — seeing red and green blur together under deuteranopia simulation with your own eyes sticks better than reading the rules a hundred times.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 208" role="img" aria-label="Two rows compared: the first row has eight distinguishable colors from the token qualitative palette, the second alternates danger red and success green, showing that they collapse into the same color to a color-blind eye">
+            <text x="0" y="16" style="fill: var(--c-success); font-size: 12.5px; font-weight: 700;">✅ right: token qualitative palette (hue and lightness both pulled apart)</text>
+            <rect x="0" y="24" width="76" height="30" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="86" y="24" width="76" height="30" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="172" y="24" width="76" height="30" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="258" y="24" width="76" height="30" rx="5" style="fill: var(--ch-4);"/>
+            <rect x="344" y="24" width="76" height="30" rx="5" style="fill: var(--ch-5);"/>
+            <rect x="430" y="24" width="76" height="30" rx="5" style="fill: var(--ch-6);"/>
+            <rect x="516" y="24" width="76" height="30" rx="5" style="fill: var(--ch-7);"/>
+            <text x="0" y="70" style="fill: var(--c-muted); font-size: 11px;">Adjacent colors differ in both hue and lightness ⇒ distinguishable under all three CVD types and in grayscale print</text>
+
+            <line x1="0" y1="88" x2="640" y2="88" style="stroke: var(--c-line); stroke-width: 1;"/>
+
+            <text x="0" y="110" style="fill: var(--c-danger); font-size: 12.5px; font-weight: 700;">⚠ wrong: alternating danger red / success green</text>
+            <rect x="0" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="86" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <rect x="172" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="258" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <rect x="344" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="430" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <text x="0" y="164" style="fill: var(--c-text-soft); font-size: 11px;">Normal vision: separate at a glance</text>
+
+            <rect x="0" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="86" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <rect x="172" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="258" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <rect x="344" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="430" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <text x="516" y="184" style="fill: var(--c-warn); font-size: 11px;">← to a deuteranope: almost the same color</text>
+            <text x="516" y="198" style="fill: var(--c-muted); font-size: 10.5px;">(approximated here with a single hue family)</text>
+          </svg>
+          <figcaption>The same set of categories: the token qualitative palette stands up under CVD and grayscale, while red-green alternation collapses</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Wrong example: a rainbow scale (deliberately wrong)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⚠ this deliberately uses a rainbow scale, precisely to demonstrate a mismatch:
+//   the hue sweeps through 0→320°, producing a "rainbow Jet"-style scale.
+//   Its defect is not ugliness but non-uniform perception — it invents a fake bright step where the data is flat.</span>
+<span class="kw">const</span> rainbowAt = (t) =&gt; {
+  <span class="kw">const</span> h = t * <span class="num">320</span>;                 <span class="cmt">// 0° red → 320° purple</span>
+  <span class="kw">return</span> hsl2rgb(h, <span class="num">95</span>, <span class="num">55</span>);     <span class="cmt">// high saturation, medium lightness</span>
+};
+
+<span class="cmt">// the same holds for the 12-color overload: split the hue into 12 equal parts and the eye can no longer tell neighbors apart</span>
+<span class="kw">const</span> overloaded = (i) =&gt; hsl2rgb(i * <span class="num">30</span>, <span class="num">72</span>, <span class="num">52</span>);</code></pre>
+              <div class="key-point">
+                <p><strong>Apart from this spot, every demo in this chapter uses token colors only.</strong> This block is kept because it demonstrates exactly “what you should not do”: you can switch the same data onto this option and see with your own eyes the fake steps of the rainbow scale and the red-green collapse. Check it against the CVD simulation in 3.8.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Right example: a token qualitative palette indexed by category</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// category → color: fixed order, distinguishable lightness, auto-brightened in the dark theme</span>
+<span class="kw">const</span> QUALITATIVE = [
+  <span class="str">'var(--ch-1)'</span>, <span class="str">'var(--ch-2)'</span>, <span class="str">'var(--ch-3)'</span>, <span class="str">'var(--ch-4)'</span>,
+  <span class="str">'var(--ch-5)'</span>, <span class="str">'var(--ch-6)'</span>, <span class="str">'var(--ch-7)'</span>, <span class="str">'var(--ch-8)'</span>,
+];
+
+<span class="kw">const</span> colorOf = (i) =&gt; QUALITATIVE[i % QUALITATIVE.length];   <span class="cmt">// beyond 8 categories you should change the approach</span>
+
+<span class="cmt">// the wrong way to do red-green: using "semantic colors" as category colors</span>
+<span class="cmt">// const bad = (i) =&gt; i % 2 ? 'var(--c-success)' : 'var(--c-danger)';</span></code></pre>
+              <div class="key-point">
+                <p>Tokens such as <code>--c-danger</code> / <code>--c-success</code> are <strong>semantic colors</strong>: they carry the meaning “danger / success” and should not be used to distinguish neutral categories. Mixing semantic colors in as category colors both misleads the semantics and fails under CVD — which is exactly the two ways of writing this that the demo compares.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Side by side: write the “conclusion” straight onto the figure</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// the left column is always the correct token palette; the right column switches to one wrong option per button</span>
+<span class="kw">const</span> CASES = {
+  rainbow: { label: <span class="str">'rainbow spectrum'</span>,   color: rainbowAt,      why: <span class="str">'not perceptually uniform, invents fake steps'</span> },
+  redgreen:{ label: <span class="str">'red-green contrast'</span>,   color: redGreen,       why: <span class="str">'almost the same color to a deuteranope'</span> },
+  twelve:  { label: <span class="str">'12 colors, overloaded'</span>,  color: overloaded,     why: <span class="str">'more than 7 colors, the eye cannot tell them apart'</span> },
+};
+
+<span class="kw">function</span> render(key) {
+  right.innerHTML = bars(CASES[key].color);        <span class="cmt">// same data, only the color function changes</span>
+  why.textContent = CASES[key].why;
+}</code></pre>
+              <div class="key-point">
+                <p>Putting “the same data + two palettes” side by side is the fastest way to teach someone about color: the data is identical yet the conclusion is completely different — they immediately understand that <strong>a palette is not decoration, it is part of the argument</strong>.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">The left side is always the <strong>correct</strong> token palette, while the buttons on the right switch among three <strong>wrong</strong> palettes; every switch spells out “what is wrong” underneath. One dataset — the murder counts of 8 states — and the only difference between the two sides is the color function.</p>
+          <div class="demo-mount" data-demo="d-3-6"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Three typical mismatches: rainbow spectrum (not perceptually uniform), red-green contrast (collapses under CVD), too many colors (more than 7 and they cannot be told apart).</li>
+            <li>The harm of a rainbow scale is that it <strong>manufactures structure that is not in the data</strong> — a fake bright step on a flat stretch gets read as an “abrupt change”.</li>
+            <li>Don't use semantic colors (danger / success) as category colors; for categories use a qualitative palette and pick colors by a fixed index.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">Nature-family journals ban rainbow / Jet color scales. What is the most fundamental reason?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="a"><span>The colors are not vivid enough, so the figure does not look good</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="b"><span>CMYK four-color printing is too expensive</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="c"><span>It is not perceptually uniform and invents fake structures such as a “bright step” where the data is flat</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="d"><span>It is “too friendly” to readers with color vision deficiency and breaks consistency with other figures</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>A rainbow scale's lightness perception is not monotone (especially across blue→green→yellow), so “the color looks brighter” does not mean “the value is larger”. Readers read the fake lightness step as a real structural change — the figure is manufacturing information that is not in the data, which is a question of academic integrity rather than mere aesthetics. The CVD and print problems are additional drawbacks.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.7 The vivid + low-saturation philosophy generator ============ -->
+      <article class="chapter" id="ch-3-7">
+        <h2>3.7 The vivid + low-saturation philosophy generator</h2>
+        <p class="chapter-subtitle">Fewer than 7 colors, vivid hues + low saturation — good looking, and it wears well.</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>You want to give each of the five regions in <code>crime.csv</code> a color, and you want the whole figure to look “designed”. Turning saturation all the way up (S=100%) glares, and turning everything down goes grey — hence this chapter's set of rules of thumb:</p>
+        <table class="theory-table">
+          <thead><tr><th>Rule</th><th>Parameter</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Keep the count small</td><td>Colors ≤ 7</td><td>Beyond 7 the eye can no longer separate neighboring categories</td></tr>
+            <tr><td>Pull the hues apart</td><td>Hue difference between neighbors ≥ 30°</td><td>Use hue to open up the “inter-class distance” so categories pop</td></tr>
+            <tr><td>Push saturation down</td><td>Supporting colors S = 30–50%</td><td>No single color should be too “loud”, so the whole page wears well</td></tr>
+            <tr><td>Keep the primary slightly vivid</td><td>Primary S = 70–80%</td><td>Distinct but not glaring; it carries the “lead role”</td></tr>
+            <tr><td>Keep highlights very pale</td><td>Highlight L = 85–90%</td><td>For backgrounds, annotations, reference lines</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>The 7-color generation rule: a recipe of “one primary + two neighbors + one opposite + one highlight level”</h4>
+          <p>Primary + 2 analogous (±30°) + 1 analogous low-saturation + 1 complementary + 1 complementary low-saturation + 1 highlight = <strong>7 colors</strong>. It satisfies “≤ 7” and “hues at least 30° apart” at the same time, while the low-saturation levels are what “hold the whole page down” and make the primary stand out more.</p>
+          <p><strong>Why split primary / supporting colors:</strong> in one figure only one or two series really need to “pop”, and the rest are supporting parts. Making every color vivid is the same as having no emphasis; making every color low-saturation is also the same as having no emphasis — a clear hierarchy is what looks good.</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="Angular distribution of the seven generated colors on the hue ring: primary at 0°, two analogous at plus and minus 30°, complementary at 180°, and the corresponding low-saturation and highlight levels">
+            <circle cx="150" cy="112" r="80" fill="none" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <circle cx="150" cy="112" r="3" style="fill: var(--c-text-soft);"/>
+
+            <line x1="150" y1="112" x2="150" y2="32" style="stroke: var(--c-primary); stroke-width: 2.6;"/>
+            <circle cx="150" cy="32" r="8" style="fill: var(--c-primary);"/>
+            <text x="150" y="22" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">primary S70–80%</text>
+
+            <line x1="150" y1="112" x2="190" y2="43" style="stroke: var(--c-primary); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <circle cx="190" cy="43" r="6" style="fill: color-mix(in srgb, var(--c-primary) 62%, var(--c-surface));"/>
+            <text x="198" y="40" style="fill: var(--c-text-soft); font-size: 10.5px;">+30° analogous</text>
+            <line x1="150" y1="112" x2="110" y2="43" style="stroke: var(--c-primary); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <circle cx="110" cy="43" r="6" style="fill: color-mix(in srgb, var(--c-primary) 62%, var(--c-surface));"/>
+            <text x="102" y="38" text-anchor="end" style="fill: var(--c-text-soft); font-size: 10.5px;">-30° analogous</text>
+
+            <line x1="150" y1="112" x2="139" y2="192" style="stroke: var(--c-danger); stroke-width="1.8"/>
+            <circle cx="139" cy="192" r="7" style="fill: var(--c-danger);"/>
+            <text x="146" y="200" style="fill: var(--c-danger); font-size: 10.5px;">180° complementary (accent)</text>
+
+            <text x="270" y="40" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">⑦ Highlight level (L 85–90%, very low S)</text>
+            <rect x="270" y="50" width="300" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));"/>
+            <text x="278" y="67" style="fill: var(--c-text-soft); font-size: 11px;">background / annotations / reference lines</text>
+
+            <text x="270" y="98" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Supporting colors (S 30–50%, restrained)</text>
+            <rect x="270" y="108" width="92" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 52%, var(--c-surface));"/>
+            <rect x="372" y="108" width="92" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-accent) 62%, var(--c-surface));"/>
+            <rect x="474" y="108" width="96" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-danger) 58%, var(--c-surface));"/>
+
+            <text x="270" y="158" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Primary (S 70–80%, lead role)</text>
+            <rect x="270" y="168" width="140" height="24" rx="5" style="fill: var(--c-primary);"/>
+            <text x="420" y="184" style="fill: var(--c-muted); font-size: 11px;">Clear hierarchy: one vivid + several pale = focused and easy on the eye</text>
+          </svg>
+          <figcaption>The “vivid + low-saturation” recipe: pulling hues apart guarantees separability, grading saturation guarantees hierarchy and stamina</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> The 7-color generation rule</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// input base hue H, primary saturation S, primary lightness L; output 7 colors (S / L are adjusted by level)</span>
+<span class="kw">function</span> genPalette(H, S, L) {
+  <span class="kw">const</span> rotate = (d) =&gt; (H + d + <span class="num">360</span>) % <span class="num">360</span>;   <span class="cmt">// safe circular hue</span>
+  <span class="kw">const</span> s = (k) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">100</span>, S * k));
+  <span class="kw">const</span> l = (k) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">100</span>, L * k));
+  <span class="kw">return</span> [
+    hsl2rgb(rotate(-<span class="num">30</span>), s(<span class="num">0.6</span>), l(<span class="num">1.10</span>)),   <span class="cmt">// analogous 1 · low saturation</span>
+    hsl2rgb(rotate(-<span class="num">30</span>), s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// analogous 1</span>
+    hsl2rgb(H,            s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// primary ★</span>
+    hsl2rgb(rotate(<span class="num">30</span>),  s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// analogous 2</span>
+    hsl2rgb(rotate(<span class="num">30</span>),  s(<span class="num">0.6</span>), l(<span class="num">1.10</span>)),   <span class="cmt">// analogous 2 · low saturation</span>
+    hsl2rgb(rotate(<span class="num">180</span>), s(<span class="num">0.8</span>), l(<span class="num">0.95</span>)),   <span class="cmt">// complementary · accent</span>
+    hsl2rgb(H,            s(<span class="num">0.2</span>), l(<span class="num">1.40</span>)),   <span class="cmt">// highlight (very low saturation)</span>
+  ];
+}</code></pre>
+              <div class="key-point">
+                <p>In the recipe every color is determined by a triple of (hue offset, saturation factor, lightness factor) — <strong>change these three coefficients and you can recolor the whole batch</strong>. Note <code>rotate()</code>: hue is circular, so an offset must be taken mod 360, otherwise you get negative angles or values above 360.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> HSL → RGB and the hex output</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// standard HSL → RGB (s, l are percentages)</span>
+<span class="kw">function</span> hsl2rgb(h, s, l) {
+  s /= <span class="num">100</span>; l /= <span class="num">100</span>;
+  <span class="kw">const</span> k = (n) =&gt; (n + h / <span class="num">30</span>) % <span class="num">12</span>;
+  <span class="kw">const</span> a = s * Math.min(l, <span class="num">1</span> - l);
+  <span class="kw">const</span> f = (n) =&gt; l - a * Math.max(-<span class="num">1</span>, Math.min(k(n) - <span class="num">3</span>, Math.min(<span class="num">9</span> - k(n), <span class="num">1</span>)));
+  <span class="kw">return</span> [f(<span class="num">0</span>) * <span class="num">255</span>, f(<span class="num">8</span>) * <span class="num">255</span>, f(<span class="num">4</span>) * <span class="num">255</span>].map((v) =&gt; Math.round(v));
+}
+
+<span class="cmt">// for "copy hex": convert to #rrggbb text</span>
+<span class="kw">const</span> hexOf = ([r, g, b]) =&gt;
+  <span class="str">'#'</span> + [r, g, b].map((v) =&gt; v.toString(<span class="num">16</span>).padStart(<span class="num">2</span>, <span class="str">'0'</span>)).join(<span class="str">''</span>);</code></pre>
+              <div class="key-point">
+                <p>The hex shown on the demo page is there to be <strong>copyable and deliverable</strong>: the colors eventually go into someone else's paper or another chart. Note, though, that once a hex is hard-coded it loses the ability to adapt to the theme — so the body text and figures on this site still use tokens, and hex is only an “export result”.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> “Copy all hex”: clipboard + fallback on failure</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">async</span> <span class="kw">function</span> copyAll(hexes) {
+  <span class="kw">const</span> text = hexes.join(<span class="str">', '</span>);
+  <span class="kw">try</span> {
+    <span class="kw">await</span> navigator.clipboard.writeText(text);       <span class="cmt">// first choice: the async clipboard API</span>
+    <span class="kw">return</span> <span class="str">'7 hex values copied'</span>;
+  } <span class="kw">catch</span> (err) {
+    <span class="cmt">// fallback 1: in a non-secure context / without permission, use a temporary textarea + execCommand</span>
+    <span class="kw">try</span> {
+      <span class="kw">const</span> ta = document.createElement(<span class="str">'textarea'</span>);
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      <span class="kw">const</span> ok = document.execCommand(<span class="str">'copy'</span>);
+      ta.remove();
+      <span class="kw">if</span> (ok) <span class="kw">return</span> <span class="str">'copied (fallback mode)'</span>;
+    } <span class="kw">catch</span> (e) { <span class="cmt">/* fall through to fallback 2 */</span> }
+    showSelectable(text);                             <span class="cmt">// fallback 2: show a selectable text box</span>
+    <span class="kw">return</span> <span class="str">'auto-copy was blocked by the browser; please select all and copy manually'</span>;
+  }
+}</code></pre>
+              <div class="key-point">
+                <p><code>navigator.clipboard</code> is only available in a <strong>secure context</strong> (https or localhost); when you open the page locally over <code>file://</code> it throws immediately. The three layers of protection (API → <code>execCommand</code> → selectable text box) guarantee that nothing ever “does nothing when clicked”, in any environment.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Drag the three sliders <strong>base hue offset / saturation / lightness</strong> and the right side generates a 7-color scheme live, lists each color's hex, and draws a real chart with that palette. Click “Copy all hex” to take all 7 values at once (if auto-copy fails you get a text box you can select manually).</p>
+          <div class="demo-mount" data-demo="d-3-7"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>The 7-color recipe = primary + 2 analogous (±30°) + 1 analogous low-saturation + 1 complementary + 1 complementary low-saturation + 1 highlight.</li>
+            <li>The point of “vivid + low-saturation” is <strong>grading</strong>: vivid primary, pale supporting colors — only with a clear hierarchy is it both attractive and easy on the eye.</li>
+            <li>A hue offset must take <code>mod 360</code>; export the generated colors as hex, but the page itself should still use tokens so that theme adaptation holds.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">Under the “vivid + low-saturation” palette philosophy, what saturation range is recommended for the <strong>supporting colors</strong> of a scheme?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="a"><span>0–10%, the greyer the safer</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="b"><span>30–50%, low saturation and easy on the eye</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="c"><span>70–80%, matching the primary is the most consistent</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="d"><span>90–100%, being vivid means maxing out saturation</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Supporting colors are the backing cast, so keep S at <strong>30–50%</strong>: not so grey that the hue disappears, and not competing with the primary for attention. 70–80% is the level for the <em>primary</em>, and 90–100% glares — a page full of highly saturated colors means no emphasis at all.</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.8 CVD paper-figure test ============ -->
+      <article class="chapter" id="ch-3-8">
+        <h2>3.8 CVD paper-figure test</h2>
+        <p class="chapter-subtitle">Does your figure still make sense to a color-blind reader? Test it on the spot with real data.</p>
+
+        <span class="sec-label"><i>1</i> Your original case</span>
+        <p>You submit a paper figure and the reviewer replies “figure 2 is hard to read”. You check the layout, font sizes, legend — all fine. Could it be that the reviewer has a color vision deficiency (CVD)? About 8% of men cannot distinguish the categories you encoded by color. First look at measured results for the three most common “paper figures” under CVD:</p>
+        <table class="theory-table">
+          <thead><tr><th>Paper figure</th><th>Palette</th><th>Measured CVD verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Fig. 1 · 5-class scatter</td><td>Wong 2011 / Okabe–Ito</td><td>✅ distinguishable under all three simulations: protanopia / deuteranopia / tritanopia</td></tr>
+            <tr><td>Fig. 2 · sequential heatmap</td><td>Viridis / Cividis</td><td>✅ lightness rises monotonically; still readable under CVD and grayscale printing</td></tr>
+            <tr><td>Fig. 3 · red/green two-color contrast</td><td>red—green (wrong case)</td><td>⚠ to a deuteranope the two are almost the same color — the most serious accessibility problem</td></tr>
+          </tbody>
+        </table>
+        <p class="case-note">The problem is not that the figure is “ugly” — it is that <strong>information disappears outright for part of your readers</strong>: in Fig. 3 the difference between the two categories is, to a color-blind reader, simply not encoded.</p>
+
+        <span class="sec-label"><i>2</i> Embedded theory</span>
+        <div class="theory-card">
+          <h4>The three CVD types and the “dual encoding” remedy</h4>
+          <ul>
+            <li><strong>Protanopia</strong>: about 1% of men; the red photoreceptor is missing and the red—green axis collapses.</li>
+            <li><strong>Deuteranopia</strong>: about 6% of men, the most common type; it likewise makes red—green hard to tell apart.</li>
+            <li><strong>Tritanopia</strong>: extremely rare; the blue—yellow axis is affected.</li>
+          </ul>
+          <p>Testing workflow: <strong>①</strong> export the original figure as PNG → <strong>②</strong> simulate the three CVD types with Coblis / Color Oracle → <strong>③</strong> check whether it is still distinguishable. Three criteria: is the <strong>lightness contrast</strong> still sufficient, are <strong>shapes / labels</strong> independent of color, and does each category still have a second, non-color encoding.</p>
+          <p><strong>Redundant encoding</strong> is the universal remedy: stack a shape layer (circle / square / triangle / cross) on top of color, or label the categories directly. Then even if the colors collapse, shapes still separate the classes — grayscale printing benefits too.</p>
+        </div>
+        <figure class="figure">
+          <svg viewBox="0 0 640 268" role="img" aria-label="CVD testing workflow diagram: export the original figure, simulate the three color vision deficiencies, check whether it is still distinguishable; the right side shows a red/green contrast converging to the same color after simulation, plus the countermeasure — using shape as a second encoding beyond color">
+            <rect x="24" y="26" width="180" height="60" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2); stroke-width: 1.2;"/>
+            <text x="114" y="52" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① Export the original PNG</text>
+            <text x="114" y="70" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">keep the real palette, unchanged</text>
+
+            <line x1="114" y1="86" x2="114" y2="108" style="stroke: var(--c-border-2); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <polygon points="114,116 110,108 118,108" style="fill: var(--c-border-2);"/>
+
+            <rect x="24" y="120" width="180" height="60" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2); stroke-width: 1.2;"/>
+            <text x="114" y="146" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② Simulate the three CVD types</text>
+            <text x="114" y="164" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">Coblis / Color Oracle</text>
+
+            <line x1="114" y1="180" x2="114" y2="202" style="stroke: var(--c-border-2); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <polygon points="114,210 110,202 118,202" style="fill: var(--c-border-2);"/>
+
+            <rect x="24" y="214" width="180" height="46" rx="10" style="fill: color-mix(in srgb, var(--c-success) 14%, var(--c-surface)); stroke: var(--c-success); stroke-width: 1.2;"/>
+            <text x="114" y="242" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ Check whether still distinguishable</text>
+
+            <text x="392" y="42" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Original palette (5 classes)</text>
+            <rect x="392" y="52" width="44" height="24" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="442" y="52" width="44" height="24" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="492" y="52" width="44" height="24" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="542" y="52" width="44" height="24" rx="5" style="fill: var(--ch-5);"/>
+
+            <text x="392" y="112" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Deuteranopia simulation (schematic)</text>
+            <rect x="392" y="122" width="44" height="24" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="442" y="122" width="44" height="24" rx="5" style="fill: color-mix(in srgb, var(--ch-2) 35%, var(--c-muted));"/>
+            <rect x="492" y="122" width="44" height="24" rx="5" style="fill: color-mix(in srgb, var(--ch-3) 35%, var(--c-muted));"/>
+            <rect x="542" y="122" width="44" height="24" rx="5" style="fill: var(--ch-5);"/>
+            <text x="392" y="164" style="fill: var(--c-warn); font-size: 11px;">orange ↔ green almost merge into one class ⚠</text>
+
+            <text x="392" y="210" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">Countermeasure: add a “shape” second encoding beyond color</text>
+            <circle cx="404" cy="228" r="7" style="fill: var(--ch-1);"/>
+            <rect x="428" y="221" width="14" height="14" rx="3" style="fill: var(--ch-2);"/>
+            <polygon points="464,221 470,235 458,235" style="fill: var(--ch-3);"/>
+            <text x="486" y="234" style="fill: var(--c-muted); font-size: 11px;">shapes independent of color → still separable under CVD</text>
+          </svg>
+          <figcaption>CVD testing workflow and a typical failure: when colors collapse, only a “second encoding” via shape / label preserves readability</figcaption>
+        </figure>
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> CVD simulation: Machado 2009 approximation matrices</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// the three CVD types approximated by 3×3 linear transforms (fitted in the style of Machado et al. 2009)</span>
+<span class="kw">const</span> CVD_MATRICES = {
+  protanopia:   [[<span class="num">0.567</span>, <span class="num">0.433</span>, <span class="num">0.000</span>], [<span class="num">0.558</span>, <span class="num">0.442</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.242</span>, <span class="num">0.758</span>]],
+  deuteranopia: [[<span class="num">0.625</span>, <span class="num">0.375</span>, <span class="num">0.000</span>], [<span class="num">0.700</span>, <span class="num">0.300</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.300</span>, <span class="num">0.700</span>]],
+  tritanopia:   [[<span class="num">0.950</span>, <span class="num">0.050</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.433</span>, <span class="num">0.567</span>], [<span class="num">0.000</span>, <span class="num">0.475</span>, <span class="num">0.525</span>]],
+};
+
+<span class="cmt">// apply the matrix to one color, clamping the result to 0–255 (matrix row × input vector)</span>
+<span class="kw">function</span> simulateCVD([r, g, b], type) {
+  <span class="kw">const</span> m = CVD_MATRICES[type];
+  <span class="kw">return</span> m.map((row) =&gt;
+    Math.round(Math.max(<span class="num">0</span>, Math.min(<span class="num">255</span>, row[<span class="num">0</span>] * r + row[<span class="num">1</span>] * g + row[<span class="num">2</span>] * b)))
+  );
+}</code></pre>
+              <div class="key-point">
+                <p>Each row of the matrix is “new channel = a weighted sum of the original three channels”. In the protan/deutan matrices the red and green rows are highly similar — that is the mathematical origin of “red–green collapse”: the deuteranopia rows <code>[0.625, 0.375, 0]</code> and <code>[0.700, 0.300, 0]</code> point in almost the same direction.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Recolor a whole SVG in place (labels untouched)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// walk every filled element and swap in simulated colors via the matrix; text / strokes stay untouched</span>
+<span class="kw">function</span> simulateSvg(svg, type) {
+  svg.querySelectorAll(<span class="str">'[fill]'</span>).forEach((el) =&gt; {
+    <span class="kw">if</span> (!el.dataset.origFill) el.dataset.origFill = el.getAttribute(<span class="str">'fill'</span>);   <span class="cmt">// back up the original color, restore when switching back to normal</span>
+    <span class="kw">const</span> rgb = parseCssColor(el.dataset.origFill);                    <span class="cmt">// handles both hex and rgb()</span>
+    el.setAttribute(<span class="str">'fill'</span>, rgbStr(simulateCVD(rgb, type)));
+  });
+}
+<span class="cmt">// switch back to “normal”: just write the backed-up originals back</span>
+svg.querySelectorAll(<span class="str">'[data-orig-fill]'</span>).forEach((el) =&gt; el.setAttribute(<span class="str">'fill'</span>, el.dataset.origFill));</code></pre>
+              <div class="key-point">
+                <p>The key is to <strong>change only <code>fill</code>, never <code>stroke</code> or text</strong>: if text is transformed too, the reader cannot tell “this is a simulated view” from “this is the real figure”. Backing up the original color (<code>dataset.origFill</code>) also turns “switch back to normal” into a single restore, avoiding error accumulation from repeated transforms.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> Grayscale self-check: is lightness still separable</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// WCAG relative luminance: gamma-decode first, then weight by 0.2126 / 0.7152 / 0.0722</span>
+<span class="kw">function</span> luminance([r, g, b]) {
+  <span class="kw">const</span> lin = (v) =&gt; {
+    v /= <span class="num">255</span>;
+    <span class="kw">return</span> v &lt;= <span class="num">0.03928</span> ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+  };
+  <span class="kw">return</span> <span class="num">0.2126</span> * lin(r) + <span class="num">0.7152</span> * lin(g) + <span class="num">0.0722</span> * lin(b);
+}
+
+<span class="cmt">// a lightness difference &lt; 0.05 → the classes blur together in grayscale print; a second encoding is needed</span>
+<span class="kw">const</span> grayClash = (c1, c2) =&gt; Math.abs(luminance(c1) - luminance(c2)) &lt; <span class="num">0.05</span>;</code></pre>
+              <div class="key-point">
+                <p>The grayscale self-check is CVD testing’s <strong>sibling</strong>: papers get printed in black and white, and if two classes differ only in hue — with equal lightness — they vanish in grayscale. The same <code>luminance()</code> also gives you the WCAG contrast ratio (see 3.4): two birds, one stone.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+        <span class="sec-label"><i>4</i> Runnable demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Click “Normal / Protanopia / Deuteranopia / Tritanopia” to switch simulation modes and all three real paper figures on the right (5-class scatter, sequential heatmap, red/green contrast) recolor simultaneously; then click “Color + shape dual encoding” to see whether shapes rescue the red/green contrast. Data comes from real state-level records in <code>crime.csv</code>.</p>
+          <div class="demo-mount" data-demo="d-3-8"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>About 8% of men have a color vision deficiency, deuteranopia most commonly; red—green is the <strong>most dangerous</strong> color direction.</li>
+            <li>CVD testing workflow: export the original → simulate the three CVD types → check whether lightness / shape / labels still separate the classes.</li>
+            <li>The universal remedy is <strong>dual encoding</strong>: stack shapes or labels on top of color so the figure passes both the CVD test and the grayscale-print test.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-check · 1 question</div>
+          <p class="selftest__q">A figure that distinguishes two classes by red / green fails its CVD test: “to a deuteranope the two classes are nearly the same color”. The most effective remedy is?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="a"><span>Make the red a bit brighter and rely on light–dark contrast</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="b"><span>Switch to a CVD-friendly palette and give each class a different shape as a second encoding</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="c"><span>Enlarge the legend and state clearly “red is A, green is B”</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="d"><span>Add a line under the figure: “the red/green here is merely illustrative and does not affect the conclusions”</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit answer</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>The remedy must solve <strong>both</strong> problems at once: replace the collapsing palette (e.g. Wong / Okabe–Ito) and give each class an encoding independent of color (shape / annotation). Adjusting lightness alone is usually not enough (the hues stay close), and enlarging the legend or adding a note is worse — “knowing it is red–green doesn’t help”, because readers simply cannot tell which one is red and which is green.</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= Previous / Next chapter ================= -->
+  <nav class="chapter-pager" aria-label="Chapter pager">
+    <a class="pager-prev" href="../lesson-02/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 2 Process</span>
+    </a>
+    <a class="pager-portal" href="../">Back to portal</a>
+    <a class="pager-next" href="../lesson-04/">
+      <span class="pager-dir">Next chapter →</span>
+      <span class="pager-title">Chapter 4 Low-Dim</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 Introduction to Visualization · China University of Petroleum (East China) · Instructor: Li Xin · Main textbook: Chen Wei, Introduction to Visualization</p>
+    <p>Zero-build static site · inline SVG graphics · no video · bilingual (zh/en) with dark mode</p>
+  </footer>
+
+  <!-- Chapter demos and interaction (ES Module; blocked by CORS under file://, the page still reads fine) -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

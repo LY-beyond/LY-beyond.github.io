@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 5 Temporal Data Visualization · Introduction to Visualization</title>
+  <meta name="description" content="Chapter 5 of Introduction to Visualization: temporal attributes (instant / interval / span / frequency / cycle), the standard line chart and aggregation scale, van Wijk's calendar heatmap, the Archimedean spiral for cyclic time, and the Storyline (Jurassic Park). Includes 5 interactive inline-SVG demos with instant self-tests.">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../../theme.js"></script>
+
+  <link rel="stylesheet" href="../../tokens.css">
+  <link rel="stylesheet" href="../../theme.css">
+  <link rel="stylesheet" href="../../i18n.css">
+  <link rel="stylesheet" href="../../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= 章节顶栏 ================= -->
+  <header class="course-topbar" data-current="5">
+    <a class="brand" href="../">
+      <span class="back">←</span> Introduction to Visualization
+      <span class="brand__sub">Chapter 5 · Temporal Data Visualization</span>
+    </a>
+
+    <nav class="tabs" aria-label="Chapter navigation">
+      <a href="../lesson-01/">Ch. 1 Data</a>
+      <a href="../lesson-02/">Ch. 2 Process</a>
+      <a href="../lesson-03/">Ch. 3 Color</a>
+      <a href="../lesson-04/">Ch. 4 Low-dim</a>
+      <a href="./">Ch. 5 Temporal</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      Code only
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <span class="lang-switch-item is-active" aria-current="true">EN</span>
+      <a class="lang-switch-item" href="../../lesson-05/" data-lang-link="zh" lang="zh-CN" hreflang="zh-CN">中</a>
+    </div>
+  </header>
+
+  <!-- ================= 章节头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>Chapter 5 · Temporal Data Visualization</h1>
+        <p class="subtitle">Time is not just another numeric column — <b>Attributes · Line charts · Calendar heatmaps · Spirals · Storyline</b></p>
+      </div>
+      <div class="header-tip">Read along and see it live · Demos render in place · Self-tests graded instantly</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>Learning goals</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>Explain the difference among the five temporal attributes — instant / interval / span / frequency / cycle — and pick a suitable chart for each</span></label></li>
+        <li><label><input type="checkbox"><span>Use timeParse and scaleTime to draw a standard line chart, and explain how aggregation scale changes a chart's shape and conclusions</span></label></li>
+        <li><label><input type="checkbox"><span>Describe van Wijk's calendar heatmap "week × weekday" layout, and why the isMonthDivider month-separation algorithm is elegant</span></label></li>
+        <li><label><input type="checkbox"><span>Lay cycles onto polar coordinates with the Archimedean spiral r = a + bθ, and explain why a dynamic Δθ keeps each arc length approximately equal</span></label></li>
+        <li><label><input type="checkbox"><span>Name Storyline's three elements (time-scale mapping / Catmull-Rom spline / event layer), and use them to draw multi-character lifelines</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>Chapter 5 · Contents</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 5 sections</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-5-1" data-chapter="ch-5-1">5.1 Temporal attributes</a></li>
+        <li><a href="#ch-5-2" data-chapter="ch-5-2">5.2 Standard time visualization (line charts)</a></li>
+        <li><a href="#ch-5-3" data-chapter="ch-5-3">5.3 Calendar heatmap (van Wijk)</a></li>
+        <li><a href="#ch-5-4" data-chapter="ch-5-4">5.4 Cyclic time visualization (Archimedean spiral)</a></li>
+        <li><a href="#ch-5-5" data-chapter="ch-5-5">5.5 Storyline timeline (Jurassic Park)</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>How to study this chapter</b><br>
+        ① Tick the learning goals at the top first;<br>
+        ② Read section by section — demos render in place;<br>
+        ③ Finish each section's self-test before moving on;<br>
+        ④ When reviewing, click "Code only" in the top right.
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 5.1 时间属性 ============ -->
+      <article class="chapter" id="ch-5-1">
+        <h2>5.1 Temporal attributes</h2>
+        <p class="chapter-subtitle">Before drawing a time-series chart, answer one question: is the "time" I have an instant, an interval, or a cycle?</p>
+
+        <span class="sec-label"><i>1</i> Your original example</span>
+        <p>The original Section 6.1 listed temporal attributes in a "glossary table", yet after reading it you still wouldn't know how to use them. This section puts them on a <strong>circular wheel</strong>: click an attribute and its definition, a real-life example, and its most typical visualization appear right next to it.</p>
+        <p>The wheel holds five attributes that map directly onto axes: <strong>instant</strong>, <strong>interval</strong>, <strong>span</strong>, <strong>frequency</strong>, and <strong>cycle</strong>. They are not five mutually exclusive data types, but five angles from which "the same time column" can be questioned — a phone-number table asks about instants, a heart-rate curve asks about intervals, and a monthly sales report asks about cycles.</p>
+
+        <span class="sec-label"><i>2</i> Theory</span>
+        <div class="theory-card">
+          <h4>Chen Wei's textbook: time is a structured dimension</h4>
+          <p>The textbook stresses that time is <strong>not an ordinary numeric axis</strong>; it carries five properties of its own: <strong>order</strong> (any two events can be compared in sequence, tightly linked to causality), <strong>continuity</strong> (there is always another instant between two instants), <strong>periodicity</strong> (natural processes often cycle — day and night, seasons — expressible as a cyclic time domain), <strong>independence from space</strong> (time and space are closely related, yet most scientific processes treat them separately), and <strong>structure</strong> (hierarchical splits of year / month / day / hour / minute / second, covering both the natural day-night cycle and man-made conventions such as 60 seconds).</p>
+        </div>
+        <ul>
+          <li>Treat an "<strong>instant</strong>" as a point → scatter plots, event markers; treat an "<strong>interval</strong>" as a length → Gantt charts, timeline brackets.</li>
+          <li>Treat a "<strong>span</strong>" as a range → area charts, time-axis range highlighting.</li>
+          <li>Ignore <strong>periodicity</strong> → seasonal trends get "flattened" by a linear time axis, leaving only a jagged line with no visible pattern.</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 276" role="img" aria-label="Decomposition of temporal attributes: the top half marks instant, interval, and span on a time axis; the middle uses evenly spaced ticks for frequency; the bottom uses a head-to-tail circle for cycle">
+            <!-- ① 时刻 / 间隔 / 跨度 -->
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">① Instant · Interval · Span</text>
+            <line x1="40" y1="86" x2="600" y2="86" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <g style="stroke: var(--c-line-2);">
+              <line x1="40" y1="81" x2="40" y2="91"/><line x1="140" y1="81" x2="140" y2="91"/>
+              <line x1="240" y1="81" x2="240" y2="91"/><line x1="340" y1="81" x2="340" y2="91"/>
+              <line x1="440" y1="81" x2="440" y2="91"/><line x1="540" y1="81" x2="540" y2="91"/>
+            </g>
+            <circle cx="140" cy="86" r="5.5" style="fill: var(--c-primary);"/>
+            <text x="140" y="52" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 700;">Instant</text>
+            <text x="140" y="68" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">a single reading</text>
+            <path d="M140 100 L240 100" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <path d="M140 96 L140 104 M240 96 L240 104" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <text x="190" y="118" text-anchor="middle" style="fill: var(--c-accent); font-size: 11.5px; font-weight: 700;">Interval</text>
+            <rect x="40" y="138" width="500" height="7" rx="3.5" style="fill: color-mix(in srgb, var(--c-primary) 22%, transparent);"/>
+            <text x="40" y="164" style="fill: var(--c-text-soft); font-size: 11.5px;">Span — the whole covered range, shown as a single band</text>
+
+            <!-- ② 频率 -->
+            <text x="0" y="192" style="fill: var(--c-muted); font-size: 12px;">② Frequency</text>
+            <g style="stroke: var(--c-primary); stroke-width: 1.4;">
+              <line x1="40" y1="222" x2="40" y2="238"/><line x1="80" y1="222" x2="80" y2="238"/>
+              <line x1="120" y1="222" x2="120" y2="238"/><line x1="160" y1="222" x2="160" y2="238"/>
+              <line x1="200" y1="222" x2="200" y2="238"/><line x1="240" y1="222" x2="240" y2="238"/>
+            </g>
+            <text x="256" y="234" style="fill: var(--c-text-soft); font-size: 11.5px;">Evenly spaced ticks: repeats per unit time (λ)</text>
+
+            <!-- ③ 周期 -->
+            <text x="0" y="266" style="fill: var(--c-muted); font-size: 12px;">③ Cycle</text>
+            <circle cx="470" cy="248" r="20" fill="none" style="stroke: var(--c-success); stroke-width: 2;" stroke-dasharray="44 82"/>
+            <path d="M486 234 l-9 -3 l3 9" style="stroke: var(--c-success); stroke-width: 2; fill: none;" stroke-linecap="round"/>
+            <text x="500" y="252" style="fill: var(--c-text-soft); font-size: 11.5px;">a repeating segment that returns to its start</text>
+          </svg>
+          <figcaption>The same "time" can be questioned as five different quantities — which one you pick decides whether you draw a point, a bracket, a band, evenly spaced ticks, or a circle.</figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p>Thinking these five attributes through blocks four common mistakes: missing <strong>order</strong> (a scatter plot turns into misaligned noise), confused <strong>continuity</strong> (discrete events forcibly joined into a line), ignored <strong>periodicity</strong> (seasonal trends flattened), and mismatched <strong>structure</strong> (weekdays / weekends and leap years all miscounted).</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Single source of truth: five attributes as an array of objects</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ One dataset, used in several places: wheel nodes, detail panel, and legend all derive from it</span>
+const TIME_ATTRIBUTES = [
+  { key: <span class="str">'instant'</span>,   name: <span class="str">'Instant'</span>, icon: <span class="str">'•'</span>, token: <span class="str">'--c-primary'</span>,
+    desc:  <span class="str">'A point on the time axis, such as a sensor reading.'</span>,
+    viz:   <span class="str">'Scatter plot, event markers'</span> },
+  { key: <span class="str">'interval'</span>,  name: <span class="str">'Interval'</span>, icon: <span class="str">'↔'</span>, token: <span class="str">'--c-accent'</span>,
+    desc:  <span class="str">'The difference between two instants, such as a duration or wait time.'</span>,
+    viz:   <span class="str">'Gantt chart, timeline brackets'</span> },
+  { key: <span class="str">'span'</span>,      name: <span class="str">'Span'</span>, icon: <span class="str">'▭'</span>, token: <span class="str">'--ch-1'</span>,
+    desc:  <span class="str">'A range covered continuously, such as a season or a term of office.'</span>,
+    viz:   <span class="str">'Area chart, range highlighting'</span> },
+  { key: <span class="str">'frequency'</span>, name: <span class="str">'Frequency'</span>, icon: <span class="str">'λ'</span>, token: <span class="str">'--ch-3'</span>,
+    desc:  <span class="str">'The number of repetitions per unit of time.'</span>,
+    viz:   <span class="str">'Bar chart, histogram'</span> },
+  { key: <span class="str">'cycle'</span>,     name: <span class="str">'Cycle'</span>, icon: <span class="str">'⟳'</span>, token: <span class="str">'--c-success'</span>,
+    desc:  <span class="str">'A segment that returns to its start and repeats, such as day-night or the seasons.'</span>,
+    viz:   <span class="str">'Spiral chart, calendar heatmap, polar chart'</span> },
+];</code></pre>
+              <div class="key-point">
+                <p><strong>Why an array of objects:</strong> the wheel, the detail panel, and the legend all need to read the same set of attributes. Written as one data source, changing one place updates the whole thing, so you never "change the card but forget the legend". <strong>By the way:</strong> colors are <em>not hard-coded</em> as literal values but recorded as design-token names (<code>'--c-primary'</code>), read at runtime via <code>getComputedStyle</code> — so dark mode follows automatically.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Layout of the circular wheel: angle → polar → Cartesian</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Five nodes split 360°: start straight up (-90°), one step every 72°</span>
+const N = <span class="num">5</span>;
+const nodeAt = (i) =&gt; {
+  const deg = -<span class="num">90</span> + i * (<span class="num">360</span> / N);
+  const rad = deg * Math.PI / <span class="num">180</span>;
+  return {
+    x: CX + R * Math.cos(rad),   <span class="cmt">// polar = (R, θ)</span>
+    y: CY + R * Math.sin(rad),   <span class="cmt">// to Cartesian = (x, y)</span>
+    rad,
+  };
+};
+<span class="cmt">// Adjacent points are always 72° apart, so the node spacing is naturally even</span></code></pre>
+              <div class="key-point">
+                <p><strong>The general recipe for polar layouts:</strong> first fix the angle (<code>θ = start + i·360/N</code>), then multiply by the radius to get <code>x / y</code>. Earlier chapters drew pyramids with <code>M</code> / <code>L</code> / <code>Z</code> line commands; here they become <code>cos / sin</code> — polar coordinates are the universal entry point for "circular graphics" (wheels, radar charts, spirals, pie charts).</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Live demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Click any attribute on the wheel (or press <span class="kbd">Tab</span> to focus it, then Enter) — the right side shows its definition, a real-life example, a typical chart, and a one-line design note.</p>
+          <div class="demo-mount" data-demo="d-5-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Time can be questioned from five angles: instant (a point), interval (a length), span (a range), frequency (a repeat count), and cycle (a loop).</li>
+            <li>The textbook stresses time's five properties: order, continuity, periodicity, independence from space, and structure — each maps to a class of design pitfalls.</li>
+            <li>Polar layout (<code>θ → (x, y)</code>) is the universal entry point for circular graphics, and circular graphics are the starting point for expressing "cycles".</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-test · Q1</div>
+          <p class="selftest__q">The data point "the temperature reading at 08:00 on March 1, 2024" belongs to which temporal attribute?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="a"><span>Interval</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="b"><span>Instant</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="c"><span>Span</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1" value="d"><span>Cycle</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>It lands on a single <strong>instant</strong> and is a point, so it is an <strong>instant</strong>. An interval needs two instants subtracted (e.g. "from 08:00 to 12:00 is 4 hours"); a span is a whole continuously covered range; a cycle is a repeating segment that returns to its start — none of the three is a property of this single data point.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-test · Q2</div>
+          <p class="selftest__q">When designing a time-series chart, <strong>ignoring periodicity</strong> is most likely to cause?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="a"><span>A scatter plot turning into misaligned noise</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="b"><span>Discrete events being wrongly joined into a line</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="c"><span>Seasonal trends being "flattened", hiding the cyclic pattern</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-1b" value="d"><span>Leap years and weekdays / weekends being miscounted</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>A linear time axis lays every year or day out side by side, stretching a periodic signal into a jagged line with no visible pattern; this is exactly why one switches from a line chart to a <strong>calendar heatmap</strong> (5.3) or a <strong>spiral</strong> (5.4). Option a corresponds to "missing order", b to "confused continuity", and d to "mismatched structure".</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.2 标准时间可视化 ============ -->
+      <article class="chapter" id="ch-5-2">
+        <h2>5.2 Standard time visualization (line charts)</h2>
+        <p class="chapter-subtitle">x axis = time, y axis = measure. The most common time-series chart — and the one whose conclusions are most easily swayed by "aggregation scale".</p>
+
+        <span class="sec-label"><i>1</i> Your original example</span>
+        <p>The original Section 6.2.1 used a line chart to show how the usage frequency of French names (Marie / Jean / Camille) changed from 1900 to 2020. The original page also had a "word cloud + hover highlight + time-range filter", but the code only showed the few key lines of the line chart.</p>
+        <table class="theory-table">
+          <caption>Three kinds of data → three scales of line: this section places the "same series" side by side under different aggregation scales</caption>
+          <thead>
+            <tr><th>Aggregation scale</th><th>Points (2024 daily temps)</th><th>What you can see</th><th>What you lose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Raw daily data</td><td>366</td><td>Day-to-day jitter, extreme weather</td><td>Long-term trend (drowned in noise)</td></tr>
+            <tr><td>Weekly aggregation</td><td>about 53</td><td>Week-level ups and downs, short-term trend</td><td>The specific day within a week</td></tr>
+            <tr><td>Monthly aggregation</td><td>12</td><td>The full-year seasonal curve, clear at a glance</td><td>All detail within a month</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Theory</span>
+        <div class="theory-card">
+          <h4>A standard time-series chart = a 2D line chart</h4>
+          <p>At heart it is a 2D line chart with "x = time, y = measure"; its strength is that <strong>trends over a linear time domain are immediately clear</strong>, and its cost is that <strong>periodicity is hard to express</strong> — which is exactly why the calendar heatmap in 5.3 and the spiral in 5.4 exist. Interactively, hover highlight, tooltips, and time-range filtering are already standard in data journalism.</p>
+        </div>
+        <ul>
+          <li><strong>Choosing a curve:</strong> with ≤ 50 points use <code>linear</code> (faithful to the data); with 50–500 use <code>monotoneX</code> / <code>curveCatmullRom</code> (smooth but no overshoot); only above 500 consider an area or box plot.</li>
+          <li><strong>The aggregation trade-off:</strong> aggregation reduces noise and makes trends clearer, but every step of aggregation is "trading detail for clarity", so conclusions may change because of it.</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 176" role="img" aria-label="Shape comparison of the same daily series under three aggregation scales: raw daily data is sharply jagged, weekly aggregation undulates gently, and monthly aggregation shows a clear seasonal curve">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">Same 2024 daily temperature series · three aggregation scales</text>
+
+            <!-- 原始日数据 -->
+            <text x="20" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">Raw daily data (366 points)</text>
+            <polyline points="20,100 28,58 36,96 44,52 52,92 60,64 68,88 76,48 84,84 92,70 100,90 108,44 116,86 124,66 132,92 140,56 148,80 156,72 164,88 172,60 180,84 188,50"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 1.6;"/>
+            <line x1="20" y1="128" x2="188" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <!-- 按周聚合 -->
+            <text x="215" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">Weekly (≈53 points)</text>
+            <polyline points="215,94 232,76 249,86 266,68 283,78 300,64 317,70 334,54 351,60 368,46 385,54 402,42"
+              fill="none" style="stroke: var(--c-accent); stroke-width: 1.8;"/>
+            <line x1="215" y1="128" x2="402" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <!-- 按月聚合 -->
+            <text x="430" y="34" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">Monthly (12 points)</text>
+            <polyline points="430,104 447,98 464,88 481,74 498,58 515,46 532,42 549,52 566,68 583,82 600,94 617,104"
+              fill="none" style="stroke: var(--c-success); stroke-width: 2.2;"/>
+            <line x1="430" y1="128" x2="617" y2="128" style="stroke: var(--c-line-2);"/>
+
+            <text x="20" y="150" style="fill: var(--c-text-soft); font-size: 11.5px;">Left → right: fewer and fewer points, smoother and smoother curves — but each dropped point also drops some information. When the shape changes, the conclusion often changes with it.</text>
+            <text x="20" y="168" style="fill: var(--c-muted); font-size: 11.5px;">Same data, same line chart, only the aggregation scale changed — this is "scale decides shape and conclusion".</text>
+          </svg>
+          <figcaption>Three aggregation scales in a row: raw (noisy) → weekly (trend emerging) → monthly (clear seasonal curve).</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p>The rule of thumb is to <strong>pick the scale after the goal</strong>: to answer "did it rain on a given day" use daily data; to answer "was this summer hot" use monthly aggregation; to answer both, place them side by side (which is exactly what this section's demo does).</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Time string → Date, then hand it to the time axis</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ The year in the CSV is the string '1965'; parse it into a Date first</span>
+const parseYear = d3.timeParse(<span class="str">'%Y'</span>);      <span class="cmt">// '1965' → Date</span>
+const formatYear = d3.timeFormat(<span class="str">'%Y'</span>);     <span class="cmt">// Date → '1965'</span>
+<span class="cmt">// Common tokens: %Y four-digit year · %m month 01-12 · %d day · %H hour · %M minute</span>
+
+<span class="cmt">// A time axis is a specialized numeric axis (a Date is a number underneath)</span>
+const x = d3.scaleTime()
+  .domain([<span class="kw">new</span> Date(<span class="num">1900</span>, <span class="num">0</span>, <span class="num">1</span>), <span class="kw">new</span> Date(<span class="num">2020</span>, <span class="num">11</span>, <span class="num">31</span>)])
+  .range([<span class="num">0</span>, innerW]);
+
+svg.append(<span class="str">'g'</span>)
+  .attr(<span class="str">'transform'</span>, <span class="str">`translate(${M.l},${M.t + innerH})`</span>)
+  .call(d3.axisBottom(x).ticks(<span class="num">10</span>));</code></pre>
+              <div class="key-point">
+                <p><code>parseYear</code> handles <strong>string → Date</strong>, the first step for any time-series data (CSV files almost never contain a real date type). <code>scaleTime</code> adds two capabilities over <code>scaleLinear</code>: ① it automatically picks the tick interval by time span (10 years / 12 months / 30 days); ② timezone handling (in real projects remember to add <code>.utc()</code>).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Aggregation: rolling a daily series up into weekly / monthly means</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Group by "belonging week / month", then average — one piece of code, three scales</span>
+const byWeek = d3.rollup(
+  daily,
+  (v) =&gt; d3.mean(v, (d) =&gt; d.temp),         <span class="cmt">// reducer: mean</span>
+  (d) =&gt; d3.timeWeek.floor(d.date)           <span class="cmt">// key: this day's "week start"</span>
+);
+const byMonth = d3.rollup(
+  daily,
+  (v) =&gt; d3.mean(v, (d) =&gt; d.temp),
+  (d) =&gt; d3.timeMonth.floor(d.date)          <span class="cmt">// key: this day's "month start"</span>
+);
+<span class="cmt">// rollup returns Map(Date → mean); spread it with [ ...map ] to plot</span></code></pre>
+              <div class="key-point">
+                <p><strong>The key lies in the key-extraction function:</strong> <code>timeWeek.floor(date)</code> folds "any day of this week" back to the same week start, so points in the same week naturally form one group. The <code>rollup</code> (grouped aggregation) learned in Chapter 1 finally earns its keep here — <em>switching aggregation scale is essentially just switching the key function</em>.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> A generic hover template: transparent overlay + focus group</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Three layers: transparent rect captures events / focus group shows / text shows the value</span>
+const focus = svg.append(<span class="str">'g'</span>).style(<span class="str">'display'</span>, <span class="str">'none'</span>);
+focus.append(<span class="str">'line'</span>).attr(<span class="str">'class'</span>, <span class="str">'hover-line'</span>);   <span class="cmt">// vertical guide line</span>
+focus.append(<span class="str">'circle'</span>).attr(<span class="str">'r'</span>, <span class="num">4</span>);                <span class="cmt">// dot</span>
+focus.append(<span class="str">'text'</span>).attr(<span class="str">'class'</span>, <span class="str">'tip'</span>);              <span class="cmt">// value</span>
+
+svg.append(<span class="str">'rect'</span>)                                  <span class="cmt">// overlay</span>
+  .attr(<span class="str">'width'</span>, innerW).attr(<span class="str">'height'</span>, innerH)
+  .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>).attr(<span class="str">'pointer-events'</span>, <span class="str">'all'</span>)
+  .on(<span class="str">'mousemove'</span>, (event) =&gt; {
+    const [mx] = d3.pointer(event);
+    const date = x.invert(mx - M.l);              <span class="cmt">// pixel → data</span>
+    const i = d3.bisector((d) =&gt; d.date).left(series, date);  <span class="cmt">// find nearest point</span>
+    focus.attr(<span class="str">'transform'</span>, <span class="str">`translate(${x(series[i].date)},0)`</span>);
+  });</code></pre>
+              <div class="key-point">
+                <p><strong>Remember this trio</strong> (transparent rect + focus group + <code>bisector</code>) — it applies to almost every time-series chart. <code>x.invert()</code> converts mouse pixels back into data values, and <code>d3.bisector</code> uses binary search to find the nearest point — faster and more accurate than a hand-written loop.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Live demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Above is the original example's standard line chart (French names; toggle them and hover to read the values); below is a <strong>multi-scale comparison</strong> of the same 2024 daily temperatures — click "Raw daily / Weekly / Monthly" to compare shape and point count.</p>
+          <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>A standard time-series chart is a 2D line chart with "x = time, y = measure"; it excels at trend, not at periodicity.</li>
+            <li>Aggregation scale (raw / weekly / monthly) markedly changes shape and conclusions — switching scale is essentially just switching the <code>rollup</code> key function.</li>
+            <li>Choose curve smoothness by point count: ≤ 50 use linear, 50–500 use monotoneX / Catmull-Rom, above 500 consider an area chart.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-test · Q1</div>
+          <p class="selftest__q">After <strong>aggregating a 366-day temperature series by week</strong> and then drawing a line, the most direct effect is?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="a"><span>More points, so more detail becomes visible</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="b"><span>Fewer points, day-to-day noise smoothed away and the trend clearer, but within-week detail erased</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="c"><span>The total amount of data is unchanged; only the order is rearranged</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2" value="d"><span>The time axis is turned from a linear domain into a cyclic domain</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Aggregation is "trading detail for clarity": 366 points are folded into about 53, noise is averaged away and the trend becomes more obvious, at the cost of no longer seeing the differences between individual days of a week. It does <strong>not</strong> turn the time domain into a cyclic one — that is what the spiral in 5.4 does.</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-test · Q2</div>
+          <p class="selftest__q">Compared with <code>d3.scaleLinear</code>, what extra core capability does <code>d3.scaleTime</code> add?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="a"><span>It can automatically turn strings into Dates, so timeParse is no longer needed</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="b"><span>It can automatically aggregate daily data into monthly data</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="c"><span>It can automatically pick a tick interval by time span (e.g. 10 years / 12 months / 30 days) and handle timezones</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-2b" value="d"><span>It can automatically draw a line as a smooth curve</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden><code>scaleTime</code> adds a "time semantics" layer on top of the numeric axis: it automatically picks the tick interval by span (ten years / twelve months / thirty days) and provides <code>.utc()</code> for timezones. Turning strings into Dates relies on <code>timeParse</code>, aggregation relies on <code>rollup</code>, and drawing smooth curves relies on <code>curve*</code> — none of which is the scale's job.</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.3 日历热图 ============ -->
+      <article class="chapter" id="ch-5-3">
+        <h2>5.3 Calendar heatmap (van Wijk)</h2>
+        <p class="chapter-subtitle">Spread "a whole year" into a grid: x = week, y = weekday, color = value — seasonality surfaces at a glance.</p>
+
+        <span class="sec-label"><i>1</i> Your original example</span>
+        <p>The original Section 6.2.2 used a calendar heatmap to show Beijing's daily maximum temperature in 2024, with a red line separating each month. This section reuses the same data (<code>data/weather_2024.csv</code>, 366 days) and fully explains "why this layout is easier to read than a line chart".</p>
+        <p>A line chart answers "<strong>how it changes over time</strong>"; a calendar heatmap answers "<strong>how it changes with season / weekday</strong>". The same 366 days of data become 366 peaks and troughs in a line chart, yet in a calendar you can see at a glance: winter is all blue, summer is all red, plus a column rhythm repeating every 7 days.</p>
+
+        <span class="sec-label"><i>2</i> Theory</span>
+        <div class="theory-card">
+          <h4>van Wijk 2008: the coordinate convention of a calendar heatmap</h4>
+          <p>The calendar heatmap was proposed by van Wijk in 2008: <strong>x = week (which week of the year), y = weekday, color = value</strong>. It suits three kinds of tasks especially well: ① long series (spanning years) + ② periodicity (weekday / month) + ③ anomaly detection (holidays, weekdays vs weekends).</p>
+        </div>
+        <ul>
+          <li><strong>Which day starts the week:</strong> starting each week on Sunday or Monday directly changes where "the weekend" sits visually — Chinese-language contexts often switch to a Monday start.</li>
+          <li><strong>Month separation:</strong> cutting the months apart with red lines is far easier to read than a bare 7 × 53 grid.</li>
+          <li><strong>Color scheme:</strong> use a sequential colormap (e.g. Viridis), because "temperature high/low" is ordered — see Section 3.2 on colormaps in Chapter 3.</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="Line chart versus calendar heatmap: in the line chart the seasonal signal is drowned by daily noise, while in the calendar grid cells of the same season join into a color band, making periodicity obvious">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">Same data, two layouts</text>
+
+            <!-- 左：折线 -->
+            <text x="10" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">Line chart: the seasonal signal drowns in daily noise</text>
+            <polyline points="10,140 20,96 30,132 40,88 50,126 60,102 70,138 80,92 90,120 100,86 110,128 120,108 130,140 140,100 150,118 160,84 170,130 180,106 190,136 200,94 210,116 220,100"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 1.5;"/>
+            <line x1="10" y1="150" x2="220" y2="150" style="stroke: var(--c-line-2);"/>
+            <text x="10" y="172" style="fill: var(--c-text-soft); font-size: 11px;">One line squeezes both "season" and "daily weather" signals</text>
+
+            <!-- 右：日历网格 -->
+            <text x="330" y="36" style="fill: var(--c-text); font-size: 12px; font-weight: 700;">Calendar heatmap: same-season cells form a color band</text>
+            <g>
+              <text x="318" y="58" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Mo</text>
+              <text x="318" y="70" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Tu</text>
+              <text x="318" y="82" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">We</text>
+              <text x="318" y="94" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Th</text>
+              <text x="318" y="106" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Fr</text>
+              <text x="318" y="118" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Sa</text>
+              <text x="318" y="130" text-anchor="end" style="fill: var(--c-muted); font-size: 9px;">Su</text>
+            </g>
+            <g>
+              <!-- 每列一格：颜色由「时令」派生（color-mix 混两条令牌色），非写死色值 -->
+              <rect x="330" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 95%, var(--ch-6));"/>
+              <rect x="351" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 91%, var(--ch-6));"/>
+              <rect x="372" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 82%, var(--ch-6));"/>
+              <rect x="393" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 73%, var(--ch-6));"/>
+              <rect x="414" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 64%, var(--ch-6));"/>
+              <rect x="435" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 55%, var(--ch-6));"/>
+              <rect x="456" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 45%, var(--ch-6));"/>
+              <rect x="477" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 36%, var(--ch-6));"/>
+              <rect x="498" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 27%, var(--ch-6));"/>
+              <rect x="519" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 18%, var(--ch-6));"/>
+              <rect x="540" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 9%, var(--ch-6));"/>
+              <rect x="561" y="52" width="21" height="84" style="fill: color-mix(in srgb, var(--ch-1) 5%, var(--ch-6));"/>
+              <!-- 每周一行的分隔线：把色带切成「日历格」 -->
+              <g style="stroke: var(--c-surface); stroke-width: 1.2;">
+                <line x1="330" y1="64" x2="582" y2="64"/><line x1="330" y1="76" x2="582" y2="76"/>
+                <line x1="330" y1="88" x2="582" y2="88"/><line x1="330" y1="100" x2="582" y2="100"/>
+                <line x1="330" y1="112" x2="582" y2="112"/><line x1="330" y1="124" x2="582" y2="124"/>
+              </g>
+            </g>
+            <g>
+              <line x1="414" y1="50" x2="414" y2="137" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+              <line x1="498" y1="50" x2="498" y2="137" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+              <text x="330" y="46" style="fill: var(--c-muted); font-size: 9.5px;">Jan</text>
+              <text x="418" y="46" style="fill: var(--c-muted); font-size: 9.5px;">Feb</text>
+              <text x="502" y="46" style="fill: var(--c-muted); font-size: 9.5px;">Mar</text>
+            </g>
+            <text x="330" y="158" style="fill: var(--c-text-soft); font-size: 11px;">Color uses only one channel — lightness / hue — and the seasonal trend appears in patches</text>
+            <text x="330" y="176" style="fill: var(--c-text-soft); font-size: 11px;">Red line = month divider: cuts the bare 7×53 grid into readable month blocks</text>
+          </svg>
+          <figcaption>Lines show trend, calendars show cycles. Same data, different layout, completely different patterns visible (illustrations are inline SVG, no bitmaps).</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>The elegance of isMonthDivider:</strong> there is no need to loop "to find the first day of each month" — just check <strong>whether "today and 7 days ago are in the same month"</strong>: same month means no line, different month means drawing a divider. A single O(n) pass suffices, and it is naturally correct.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.timeDay.range splits "a year" into "one day at a time"</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Split a whole year by day; leap year 366 / common year 365 handled automatically</span>
+const days = d3.timeDay.range(
+  <span class="kw">new</span> Date(<span class="num">2024</span>, <span class="num">0</span>, <span class="num">1</span>),      <span class="cmt">// 2024-01-01</span>
+  <span class="kw">new</span> Date(<span class="num">2025</span>, <span class="num">0</span>, <span class="num">1</span>)       <span class="cmt">// 2025-01-01</span>
+).map((d) =&gt; ({
+  date: d,
+  value: byKey.get(d3.timeFormat(<span class="str">'%Y-%m-%d'</span>)(d)) ?? <span class="num">0</span>,
+}));
+console.log(days.length);   <span class="cmt">// 366 (2024 is a leap year)</span></code></pre>
+              <div class="key-point">
+                <p><code>d3.timeDay.range(start, stop)</code> hits "continuity + structure" in one move: it lays out days at daily granularity continuously, and automatically handles months and leap years. <strong>A small pitfall:</strong> <code>timeFormat('%Y-%m-%d')</code> must match the date string keys in the CSV exactly, otherwise whole days fail to line up and holes appear in the heatmap.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Week-column / weekday-row layout with Sunday as the start</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Column = which week of the year this is (days divided by 7); row = weekday</span>
+function weekCol(date) {
+  return Math.floor(d3.timeDay.count(d3.timeYear.floor(date), date) / <span class="num">7</span>);
+}
+function dayRow(date) {
+  return date.getDay();     <span class="cmt">// 0=Sun, 1=Mon, … 6=Sat</span>
+}
+
+g.selectAll(<span class="str">'rect.cell'</span>)
+  .data(days).join(<span class="str">'rect'</span>)
+  .attr(<span class="str">'x'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'y'</span>, (d) =&gt; dayRow(d.date) * cellSize)
+  .attr(<span class="str">'width'</span>, cellSize).attr(<span class="str">'height'</span>, cellSize)
+  .attr(<span class="str">'fill'</span>, (d) =&gt; color(d.value));</code></pre>
+              <div class="key-point">
+                <p><strong>Sunday vs Monday</strong> is the design fork of a calendar heatmap: <code>getDay()</code> uses Sunday as 0, the English-calendar tradition; Chinese-language contexts often change the row order to <code>(getDay() + 6) % 7</code> so Monday sits in the first row. <em>This round's demo offers a "Sunday start / Monday start" switch; toggling it shows "the weekend" changing position in the grid.</em></p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> isMonthDivider: a single pass for month-divider lines</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Check whether "today and 7 days ago are in the same month": no line if same, line if different</span>
+function isMonthDivider(date) {
+  const sevenDaysAgo = d3.timeDay.offset(date, -<span class="num">7</span>);
+  return date.getFullYear() !== sevenDaysAgo.getFullYear()
+      || date.getMonth()    !== sevenDaysAgo.getMonth();
+}
+
+<span class="cmt">// Draw a vertical line: cut the month-crossing column from top to bottom</span>
+g.selectAll(<span class="str">'line.mdiv'</span>)
+  .data(days.filter((d) =&gt; isMonthDivider(d.date))).join(<span class="str">'line'</span>)
+  .attr(<span class="str">'x1'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'x2'</span>, (d) =&gt; weekCol(d.date) * cellSize)
+  .attr(<span class="str">'y1'</span>, (d) =&gt; dayRow(d.date) * cellSize)
+  .attr(<span class="str">'y2'</span>, (d) =&gt; dayRow(d.date) * cellSize + cellSize);</code></pre>
+              <div class="key-point">
+                <p>With the intuitive "find the first day of each month" approach, you would have to handle 28 / 29 / 30 / 31-day differences and easily miss "column crossings". <strong>The "look back 7 days" approach uses only a single O(n) pass</strong>, naturally covering every month length and leap years — this is the ingenuity of van Wijk's algorithm.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Live demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">The whole of 2024's daily temperatures laid out as a "week × weekday" heatmap (blue = cold / red = hot), with red lines separating the months. Toggle "Monday start / Sunday start", and hover any cell to see its date and temperature.</p>
+          <div class="demo-mount" data-demo="d-5-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>A calendar heatmap = week columns × weekday rows × color encoding, proposed by van Wijk in 2008, purpose-built for "long series + periodicity + anomaly detection".</li>
+            <li>Month separation is judged by "whether 7 days ago is in the same month"; a single O(n) pass suffices, without finding each month's first day.</li>
+            <li>It answers a different question from a line chart: lines show "change over time", calendars show "change with season / weekday".</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">Self-test · 1 question</div>
+          <p class="selftest__q"><code>isMonthDivider(date)</code> uses "whether 7 days ago is in the same month" to decide whether to draw a month divider. What is the benefit of writing it this way?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="a"><span>It is more precise than comparing month numbers directly and can detect leap years</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="b"><span>It can incidentally compute this week's total temperature</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="c"><span>It needs only a single O(n) pass and naturally covers 28–31-day months and leap years, without looking up each "first day of the month"</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-3" value="d"><span>It can directly determine what color each day should be filled with</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Handing "is this a month crossing" to a comparison of two adjacent weeks sidesteps the question of "how many days each month has": regardless of 28 / 29 / 30 / 31 days, you only look 7 days ahead, completing it in one traversal. It neither computes temperatures nor decides colors — that is the job of the reducer and the colormap.</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.4 周期时间可视化 ============ -->
+      <article class="chapter" id="ch-5-4">
+        <h2>5.4 Cyclic time visualization (Archimedean spiral)</h2>
+        <p class="chapter-subtitle">A line expresses trend, a circle expresses cycle; a spiral = a circle + continuous unwinding — coil a year into a spiral and periodicity is visible at a glance.</p>
+
+        <span class="sec-label"><i>1</i> Your original example</span>
+        <p>The original Section 6.2.3 used an Archimedean spiral (constant-speed spiral) to lay out dates: each loop represents 1 year / 1 month / 1 week, and each date maps to one ring segment on the spiral. This section continues with the 2024 daily temperatures and offers a three-way switch for "each loop = 1 year / 1 season / 1 month" — the same data, wound into different numbers of loops, reveals different levels of cycles.</p>
+        <table class="theory-table">
+          <thead>
+            <tr><th>Each loop represents</th><th>Loops (one year, 2024)</th><th>Cycles you can see</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 year</td><td>1 loop</td><td>A single seasonal cycle across the year</td></tr>
+            <tr><td>1 season</td><td>4 loops</td><td>The advance and retreat of the four seasons</td></tr>
+            <tr><td>1 month</td><td>about 12 loops</td><td>Short cycles fluctuating within and between months</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> Theory</span>
+        <div class="theory-card">
+          <h4>Spiral vs line: two time domains</h4>
+          <p>A line lays time out on a <strong>linear time domain</strong> and excels at expressing "trend"; a spiral lays time out on a <strong>cyclic time domain</strong>, repeating around a circle, and excels at expressing "cycles". The formula of the <strong>Archimedean spiral</strong> is <code>r = a + bθ</code>: <strong>constant-speed unwinding</strong>, the radius increasing by a constant b on every turn — if b = 0, it degenerates into an ordinary circle.</p>
+        </div>
+        <ul>
+          <li><strong>The dynamic-Δθ algorithm:</strong> the elegant point of the original document, <code>Δθ = boxSize / √(b² + r²)</code>, keeps each ring segment's <strong>arc length approximately equal</strong>, so the visual stays consistent even as the radius keeps growing.</li>
+          <li><strong>The practical trade-off:</strong> a spiral suits cycles with clear repetition such as "year / season / week", but is <strong>unsuited to data with "no cycle" or "too long a cycle"</strong>.</li>
+        </ul>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 300" role="img" aria-label="Archimedean spiral geometry: a spiral unwinding at constant speed from the center, labeled with the radius r and the angle θ, and marking the first and second loops with their respective cycles">
+            <!-- 螺旋（r = a + bθ 的采样点） -->
+            <path d="M 232 170 L 228.6 188.6 L 210 200.6 L 185.3 194.7 L 170.7 170 L 179.2 139.2 L 210 122.1 L 246.9 133.1 L 266.6 170 L 253.1 213.1 L 210 235.2 L 160.9 219.1 L 136.2 170 L 154.7 114.7 L 210 87.5 L 271.4 108.6 L 301.1 170 L 277.5 237.5 L 210 269.8 L 136.4 96.4"
+              fill="none" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+            <circle cx="210" cy="170" r="3" style="fill: var(--c-text);"/>
+
+            <!-- 半径向量 r -->
+            <path d="M210 170 L232 170" style="stroke: var(--c-accent); stroke-width: 2;"/>
+            <text x="218" y="164" style="fill: var(--c-accent); font-size: 12px; font-weight: 700;">r</text>
+            <text x="120" y="146" style="fill: var(--c-muted); font-size: 11px;">center</text>
+
+            <!-- 角度 θ -->
+            <path d="M262 170 A 52 52 0 0 1 210 222" fill="none" style="stroke: var(--c-success); stroke-width: 1.8;" stroke-dasharray="3 3"/>
+            <text x="266" y="200" style="fill: var(--c-success); font-size: 12px; font-weight: 700;">θ</text>
+
+            <!-- 圈标注 -->
+            <text x="272" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">Loop 1</text>
+            <text x="272" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= cycle 1</text>
+            <text x="306" y="166" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">Loop 2</text>
+            <text x="306" y="180" style="fill: var(--c-muted); font-size: 10.5px;">= cycle 2</text>
+
+            <!-- 公式与说明 -->
+            <text x="360" y="60" style="fill: var(--c-primary); font-size: 15px; font-weight: 800;">r = a + bθ</text>
+            <text x="360" y="84" style="fill: var(--c-text-soft); font-size: 12px;">Each 2π added to θ adds a constant b to r</text>
+            <text x="360" y="102" style="fill: var(--c-text-soft); font-size: 12px;">→ each turn expands outward by b, forming a spiral</text>
+            <text x="360" y="130" style="fill: var(--c-text-soft); font-size: 12px;">when b = 0 it degenerates into an ordinary circle</text>
+            <text x="360" y="158" style="fill: var(--c-text-soft); font-size: 12px;">Larger radius → longer arc for the same angle</text>
+            <text x="360" y="176" style="fill: var(--c-text-soft); font-size: 12px;">so Δθ must shrink dynamically (see Key code)</text>
+            <text x="360" y="212" style="fill: var(--c-muted); font-size: 11.5px;">Spiral = circle + continuous unwinding:</text>
+            <text x="360" y="230" style="fill: var(--c-muted); font-size: 11.5px;">"Cycles" are repeated again and again on the same chart</text>
+          </svg>
+          <figcaption>Geometry of the Archimedean spiral: the radius grows at a constant rate with the angle, so "each loop = one cycle".</figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p>A spiral brings "adjacent loops" visually very close, so readers easily misread them as "happening at the same time". Always <strong>mark the start of each loop</strong> (this demo uses month labels) and let readers know "how long one loop is".</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Polar → Cartesian: r = a + bθ</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Ring width and gap between coils</span>
+const boxSize = <span class="num">22</span>;
+const coilGap = boxSize * <span class="num">1.4</span>;            <span class="cmt">// radial gap between adjacent coils</span>
+const b = coilGap / (<span class="num">2</span> * Math.PI);          <span class="cmt">// constant r gains per full turn</span>
+const startRadius = <span class="num">60</span>;
+let theta = (startRadius - <span class="num">0</span>) / b;         <span class="cmt">// starting angle</span>
+
+function pos(t) {                       <span class="cmt">// t: angle (radians)</span>
+  const r = <span class="num">0</span> + b * t;                    <span class="cmt">// Archimedean spiral: r is proportional to θ</span>
+  return { x: r * Math.cos(t), y: r * Math.sin(t), r };
+}</code></pre>
+              <div class="key-point">
+                <p>Polar is <code>(r, θ)</code> and Cartesian is <code>(x, y)</code>: <strong>every 2π added to θ adds b to r</strong>, which is exactly "expanding one notch outward per turn". The larger b is, the looser the coils and the more "unfurled" the spiral; when b = 0 it degenerates fully into a circle — which also shows that "a circle" is a special case of a spiral.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> A dynamic angle increment: making every arc length approximately equal</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Arc length = r · Δθ. The larger r is, the longer the arc for the same Δθ</span>
+function angleDelta(currentR) {
+  return boxSize / Math.sqrt(b * b + currentR * currentR);
+}
+<span class="cmt">// Equivalent to "arc length ≈ boxSize": every cell looks the same size</span>
+
+let t = theta;
+for (let day = <span class="num">0</span>; day &lt; dayCount; day++) {
+  const p = pos(t);
+  <span class="cmt">// … draw the ring segment for day (t → t + Δθ)</span>
+  t += angleDelta(p.r);          <span class="cmt">// the angle increment shrinks dynamically with radius</span>
+}</code></pre>
+              <div class="key-point">
+                <p><strong>This is the core insight of the original document:</strong> the outer radius is large, so if the angle increment is constant, cells get "stretched". Writing Δθ as <code>integer width / √(b² + r²)</code> is equivalent to <strong>making every cell's arc length roughly equal to boxSize</strong>, so inner and outer coils look equally tidy. <em>The cost: one loop no longer equals exactly 2π, so "each loop = one cycle" must be read by loop index rather than by angle.</em></p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> The ring-segment path: M / L / Z across a cell's four vertices</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ Four key points: start-outer → end-outer → end-inner → start-inner, closing back to start</span>
+function segmentPath(t0, t1, r0, r1, halfWidth) {
+  const at = (t, rr) =&gt; [rr * Math.cos(t), rr * Math.sin(t)];
+  const [x0o, y0o] = at(t0, r0 + halfWidth);     <span class="cmt">// start · outer</span>
+  const [x1o, y1o] = at(t1, r1 + halfWidth);     <span class="cmt">// end · outer</span>
+  const [x1i, y1i] = at(t1, r1 - halfWidth);     <span class="cmt">// end · inner</span>
+  const [x0i, y0i] = at(t0, r0 - halfWidth);     <span class="cmt">// start · inner</span>
+  return <span class="str">`M ${x0o} ${y0o} L ${x1o} ${y1o} L ${x1i} ${y1i} L ${x0i} ${y0i} Z`</span>;
+}</code></pre>
+              <div class="key-point">
+                <p>A ring segment is just an <code>M / L / L / L / Z</code> path — exactly the same line commands learned in 5.1. <strong>Why not use <code>d3.arc()</code>:</strong> it computes by "arc angle" and cannot be applied directly to a spiral whose radius keeps changing; hand-computing the four vertices is more flexible instead.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Live demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">The same 2024 daily temperatures: first switch "each loop = 1 year / 1 season / 1 month" to see how the loop count and radius growth change; then tick "Equal-arc Δθ" to compare "outer cells stretched" against "inner and outer widths equal". Hover any cell to see its date and temperature.</p>
+          <div class="demo-mount" data-demo="d-5-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>A spiral places time in a "cyclic time domain": <code>r = a + bθ</code>, the radius gains a constant b each turn, and b = 0 degenerates into a circle.</li>
+            <li>A dynamic Δθ = boxSize / √(b² + r²) keeps each arc length approximately equal, fixing the visual inconsistency of "outer cells being stretched".</li>
+            <li>Each date = one ring segment, whose path is the four vertices of <code>M / L / L / L / Z</code> — no need to rely on d3.arc().</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-test · 1 question</div>
+          <p class="selftest__q">Why use a dynamic angle increment <code>Δθ = boxSize / √(b² + r²)</code> instead of a fixed Δθ?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="a"><span>Because a fixed Δθ cannot compute the polar x and y</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="b"><span>Because the larger the radius, the longer the arc for the same angle, so shrinking Δθ dynamically keeps each cell's arc length approximately equal</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="c"><span>Because it makes the spiral stop exactly on whole loops, which helps align the months</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-4" value="d"><span>Because a dynamic Δθ can automatically perform the color mapping</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Arc length ≈ r · Δθ, so the larger the radius r, the longer the arc. Making Δθ decrease as r grows keeps every cell's arc length near boxSize, so inner and outer coils look consistent. The cost is that "one loop" no longer equals exactly 2π — so cycles must be read via the <strong>loop index</strong>, not the angle.</p>
+        </div>
+      </article>
+
+      <!-- ============ 5.5 Storyline 时间线 ============ -->
+      <article class="chapter" id="ch-5-5">
+        <h2>5.5 Storyline timeline (Jurassic Park)</h2>
+        <p class="chapter-subtitle">Multiple "lifelines" laid side by side on a time axis: lines converging = encounter / conflict, lines diverging = separation — turning a narrative into a chart.</p>
+
+        <span class="sec-label"><i>1</i> Your original example</span>
+        <p>The original Section 6.2.4 built a Storyline timeline from Jurassic Park's five characters (Alan &amp; Kids / T-REX / Raptors / Malcolm / Dilophosaurus), with the event layer marking key conflicts as translucent red circles. This section reuses that narrative data (rewritten as an inline constant inside <code>lesson.js</code>) and adds "click a line to read its appearance interval and key nodes".</p>
+
+        <span class="sec-label"><i>2</i> Theory</span>
+        <div class="theory-card">
+          <h4>Ogawa &amp; Ma 2008: breaking a narrative into lifelines</h4>
+          <p>Storyline was proposed by Ogawa &amp; Ma at Stanford University in 2008, originally for films and academic-collaborator networks. At its core is abstracting each character / organization / process into a <strong>lifeline</strong>: <strong>lines converging = a character encounter or conflict, lines diverging = characters separating</strong> — so "who is with whom, and when" becomes readable geometry.</p>
+        </div>
+        <ol>
+          <li><strong>Time-scale mapping:</strong> movie duration → SVG width, with the x axis aligned strictly proportionally (0–127 min).</li>
+          <li><strong>Spline smoothing:</strong> Catmull-Rom curves with a tension of 0.5 — "flowing naturally" but not "over-bending".</li>
+          <li><strong>Event layer:</strong> translucent red circles + text marking key turning points, decoupled from the line layer.</li>
+        </ol>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 250" role="img" aria-label="Storyline sketch: three character lifelines converge toward one event point on the time axis and then diverge, with the event point marked by a translucent circle">
+            <text x="0" y="14" style="fill: var(--c-muted); font-size: 12px;">Storyline sketch · three lifelines = three characters</text>
+
+            <!-- 网格 -->
+            <line x1="40" y1="40" x2="40" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="180" y1="40" x2="180" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="320" y1="40" x2="320" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="460" y1="40" x2="460" y2="200" style="stroke: var(--c-line);"/>
+            <line x1="600" y1="40" x2="600" y2="200" style="stroke: var(--c-line);"/>
+
+            <!-- 三条曲线 -->
+            <path d="M 50 70 Q 200 90 330 110 Q 460 130 590 70" fill="none" style="stroke: var(--ch-1); stroke-width: 3;"/>
+            <path d="M 260 190 Q 300 150 330 110 Q 360 70 400 44" fill="none" style="stroke: var(--c-danger); stroke-width: 3;"/>
+            <path d="M 80 160 Q 200 140 330 110 Q 470 80 600 120" fill="none" style="stroke: var(--ch-3); stroke-width: 3;"/>
+
+            <!-- 事件点 -->
+            <circle cx="330" cy="110" r="17" style="fill: color-mix(in srgb, var(--c-danger) 18%, transparent);"/>
+            <circle cx="330" cy="110" r="4.5" style="fill: var(--c-danger);"/>
+            <text x="330" y="86" text-anchor="middle" style="fill: var(--c-danger); font-size: 11px; font-weight: 700;">Event: encounter / conflict</text>
+
+            <!-- 标签 -->
+            <text x="50" y="60" style="fill: var(--ch-1); font-size: 11px; font-weight: 700;">Hero</text>
+            <text x="404" y="40" style="fill: var(--c-danger); font-size: 11px; font-weight: 700;">Threat</text>
+            <text x="80" y="176" style="fill: var(--ch-3); font-size: 11px; font-weight: 700;">Villain</text>
+
+            <!-- 时间轴 -->
+            <line x1="40" y1="212" x2="600" y2="212" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <text x="40" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">0</text>
+            <text x="180" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">30</text>
+            <text x="320" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">60</text>
+            <text x="460" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">90</text>
+            <text x="600" y="230" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">120</text>
+            <text x="320" y="246" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">Movie time (min) →</text>
+          </svg>
+          <figcaption>Three lifelines converge near t≈60 at the same event point (encounter / conflict), then separate again — the y-axis position expresses "relationship", not a numeric value.</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>Why Catmull-Rom rather than monotoneX?</strong> monotoneX guarantees "no over-bending", but it draws lines <em>too straight</em> and loses the narrative's "river feel". Catmull-Rom's tension of 0.5 is an empirical value: softer than 0 (that sense of story) and steadier than 1.0 (no oscillation). Only when fitting scientific curves do you drop the tension to 0.2–0.3.</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Each character = one path (time-scale mapping)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ X axis: 0–127 min → screen width; each line uses y to express "relationship"</span>
+const x = d3.scaleLinear().domain([<span class="num">0</span>, <span class="num">127</span>]).range([M.l, W - M.r]);
+
+const characters = [
+  { name: <span class="str">'Alan &amp; Kids'</span>, token: <span class="str">'--ch-1'</span>, points: [
+    { time: <span class="num">5</span>,  y: <span class="num">80</span> }, { time: <span class="num">18</span>, y: <span class="num">130</span> },
+    { time: <span class="num">78</span>, y: <span class="num">80</span> }, { time: <span class="num">125</span>, y: <span class="num">40</span> },
+  ]},
+  { name: <span class="str">'T-REX'</span>,       token: <span class="str">'--c-danger'</span>, points: [
+    { time: <span class="num">75</span>, y: <span class="num">280</span> }, { time: <span class="num">78</span>, y: <span class="num">130</span> },
+    { time: <span class="num">120</span>, y: <span class="num">290</span> },
+  ]},
+];
+
+const line = d3.line()
+  .x((d) =&gt; x(d.time))
+  .y((d) =&gt; yScale(d.y))
+  .curve(d3.curveCatmullRom.alpha(<span class="num">0.5</span>));   <span class="cmt">// tension 0.5</span>
+
+characters.forEach((c) =&gt; {
+  svg.append(<span class="str">'path'</span>).datum(c.points)
+    .attr(<span class="str">'d'</span>, line)
+    .attr(<span class="str">'stroke'</span>, getToken(c.token))
+    .attr(<span class="str">'stroke-width'</span>, <span class="num">3</span>)
+    .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>);
+});</code></pre>
+              <div class="key-point">
+                <p><strong>Using the y value to express "relationship" is the key:</strong> both T-REX and Alan draw their lines to <code>y = 130</code> (at the same instant <code>t = 78</code>), so the two lines <strong>converge visually</strong> — expressing "T-REX attacked Alan at minute 78". This is not algorithmically generated but <strong>hand-crafted narrative design</strong>; the library only provides the tool for "adjusting y by hand".</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> Event layer: narrative anchors decoupled from the line layer</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⭐ The event layer is a separate &lt;g&gt;: translucent red circle + dot + text</span>
+const events = [
+  { time: <span class="num">78</span>, y: <span class="num">105</span>, name: <span class="str">'T-REX Attack'</span>,
+    desc: <span class="str">'T-REX breaks out of its pen and attacks Alan &amp; the kids\' car'</span> },
+  { time: <span class="num">48</span>, y: <span class="num">335</span>, name: <span class="str">'Nedry Incident'</span>,
+    desc: <span class="str">'Dilophosaurus attacks Nedry amid the blackout'</span> },
+];
+
+const layer = svg.append(<span class="str">'g'</span>).attr(<span class="str">'class'</span>, <span class="str">'event-layer'</span>);
+events.forEach((ev) =&gt; {                       <span class="cmt">// read-only render; events don't modify the lines</span>
+  const g = layer.append(<span class="str">'g'</span>).attr(<span class="str">'tabindex'</span>, <span class="num">0</span>);   <span class="cmt">// focusable, so keyboard users can see it too</span>
+  g.append(<span class="str">'circle'</span>).attr(<span class="str">'cx'</span>, x(ev.time)).attr(<span class="str">'cy'</span>, yScale(ev.y))
+    .attr(<span class="str">'r'</span>, <span class="num">18</span>).attr(<span class="str">'fill'</span>, <span class="str">'color-mix(in srgb, var(--c-danger) 18%, transparent)'</span>);
+  g.append(<span class="str">'text'</span>).attr(<span class="str">'x'</span>, x(ev.time)).attr(<span class="str">'y'</span>, yScale(ev.y) - <span class="num">9</span>)
+    .attr(<span class="str">'text-anchor'</span>, <span class="str">'middle'</span>).text(ev.name);
+});</code></pre>
+              <div class="key-point">
+                <p><strong>The value of the two-layer structure:</strong> the line layer handles "the flow of relationships", the event layer handles "the anchors of the narrative". Once decoupled, the two can animate independently and be filtered independently without interfering with each other — which is also why Storyline can be extended into "multi-person case timelines" and "project task handovers".</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> alpha(0.5): how to choose the tension coefficient</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// curveCatmullRom.alpha(t), t ranges 0 → 1</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">0.0</span>));  <span class="cmt">// close to a straight line (the "hardest")</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">0.5</span>));  <span class="cmt">// standard Catmull-Rom (recommended)</span>
+d3.line().curve(d3.curveCatmullRom.alpha(<span class="num">1.0</span>));  <span class="cmt">// highly curved (prone to oscillation)</span>
+
+<span class="cmt">// d3-free equivalent approximation: interpolate control points between "line ↔ Catmull-Rom"</span>
+<span class="cmt">// the two control points for the curve segment p1→p2:</span>
+<span class="cmt">//   line version  c1 = p1 + (p2 - p1)/3,  c2 = p2 - (p2 - p1)/3</span>
+<span class="cmt">//   Catmull version c1 = p1 + (p2 - p0)/6,  c2 = p2 - (p3 - p1)/6</span>
+<span class="cmt">// c = lerp(line version, Catmull version, t)  → cubic Bézier approximation</span></code></pre>
+              <div class="key-point">
+                <p>0.5 is an empirical value: <strong>softer than 0 (it looks like it has a sense of story) and steadier than 1.0 (no roller coaster)</strong>. Use 0.5 for time-based narratives; use 0.2–0.3 for scientific curve fitting so the line hugs the data. This page's demo approximates Catmull-Rom with "piecewise cubic Bézier" (no d3 pulled in) and adjusts tension with a slider, matching the effect of <code>alpha</code>.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> Live demo</span>
+        <div class="demo-card">
+          <p class="demo-hint">Click any lifeline (or the character name on the left) — that line highlights and thickens while the rest dim, and the right side shows its appearance interval and key nodes. Drag the "Tension" slider to change the curve's bend in real time.</p>
+          <div class="demo-mount" data-demo="d-5-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>Section summary</h4>
+          <ul>
+            <li>Storyline abstracts characters / organizations / processes into lifelines: converging = encounter / conflict, diverging = separation.</li>
+            <li>All three elements are essential: time-scale mapping, the Catmull-Rom spline, and an event layer decoupled from the line layer.</li>
+            <li>A tension of 0.5 is the rule of thumb for narrative; to stay faithful to data, lower the tension to 0.2–0.3 or just use monotoneX.</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">Self-test · 1 question</div>
+          <p class="selftest__q">In a Storyline timeline, what does a lifeline's <strong>y-axis position</strong> express?</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="a"><span>The numeric size of the character's appearance duration</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="b"><span>The character's converging / diverging relationship with other characters (converging = encounter / conflict, diverging = separation)</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="c"><span>The importance of the event (higher means more critical)</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-5-5" value="d"><span>The order in which the character appears in the film</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">Submit</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Storyline's y axis is not a numeric axis but a <strong>relationship axis</strong>: two lines drawn to the same height tell the reader "these two characters are together, or in conflict, right now". Only the x axis is time (mapped strictly proportionally); appearance order and numeric size are both expressed by x.</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一章 / 下一章 ================= -->
+  <nav class="chapter-pager" aria-label="Chapter pagination">
+    <a class="pager-prev" href="../lesson-04/">
+      <span class="pager-dir">← Previous chapter</span>
+      <span class="pager-title">Chapter 4 Low-dimensional data visualization</span>
+    </a>
+    <a class="pager-portal" href="../">Back to portal</a>
+    <span class="empty"></span>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 Introduction to Visualization course · China University of Petroleum (East China) · Instructor: Li Xin · Primary reference textbook: Chen Wei, Introduction to Visualization</p>
+    <p>Zero-build static site · Inline SVG graphics · No video · Bilingual (EN/ZH) with dark mode</p>
+  </footer>
+
+  <!-- 本章演示与交互（ES Module；file:// 下会被 CORS 拦截，页面仍可阅读） -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

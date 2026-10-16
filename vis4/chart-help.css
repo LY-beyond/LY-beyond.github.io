@@ -1,0 +1,242 @@
+/* =========================================================
+ * chart-help.css —— 「选图指南」专题页样式（中英两版共享）
+ * ---------------------------------------------------------
+ * 页面本身沿用 lesson.css 的顶栏 / 章节头 / 侧栏目录 / 自测组件，
+ * 这里只补三块本页特有的东西：
+ *   ① 决策树向导（.cg-*）
+ *   ② 正误用图对照（.cg-vs-*）
+ *   ③ 迷你示意图（.cg-axis / .cg-lbl …）
+ * 配色一律取自 tokens.css，不出现硬编码色值。
+ * ========================================================= */
+
+/* ---------------- 决策树向导 ---------------- */
+.cg-wizard { margin: 0; }
+
+.cg-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  font-size: 12px;
+}
+.cg-crumbs[hidden] { display: none; }
+.cg-crumb {
+  padding: 3px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  color: var(--c-muted);
+  font-weight: 600;
+}
+.cg-crumb--pick {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-weight: 800;
+}
+.cg-crumbs__sep { color: var(--c-border-2); }
+
+.cg-q {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.cg-q i {
+  flex: 0 0 auto;
+  font-style: normal;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.cg-q span { flex: 1 1 auto; }
+
+.cg-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(216px, 1fr));
+  gap: 10px;
+}
+.cg-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 15px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-control), transform var(--dur-fast) var(--ease);
+}
+.cg-opt b { font-size: 13.5px; }
+.cg-opt span { font-size: 12px; line-height: 1.6; color: var(--c-muted); }
+.cg-opt:hover {
+  border-color: color-mix(in srgb, var(--c-primary) 46%, var(--c-line));
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.cg-opt:hover b { color: var(--c-primary); }
+
+.cg-wizard__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--c-line-2);
+}
+.cg-wizard__foot [hidden] { display: none; }
+
+/* 向导给出的推荐结果卡 */
+.cg-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+.cg-result__chart {
+  padding: 14px;
+  border: 1px dashed color-mix(in srgb, var(--c-primary) 30%, var(--c-border-2));
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+}
+.cg-result__chart svg { display: block; width: 100%; height: auto; }
+.cg-result__name {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+}
+.cg-result__info h4 { margin: 0 0 8px; font-size: 17px; color: var(--c-primary); }
+.cg-result__why { margin: 0 0 12px; font-size: 13.5px; line-height: 1.8; color: var(--c-text-soft); }
+.cg-result__ref { margin: 12px 0 0; font-size: 12.5px; color: var(--c-muted); }
+.cg-result__ref a { color: var(--c-primary); font-weight: 700; }
+.cg-result__ref a:hover { text-decoration: underline; }
+
+/* ---------------- 速查矩阵（本页比门户更全） ---------------- */
+.cg-matrix { margin-top: 4px; }
+.cg-matrix table { min-width: 720px; }
+.cg-grouprow th {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  font-size: 12.5px;
+  letter-spacing: .03em;
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+}
+.cg-task {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---------------- 正误用图对照 ---------------- */
+.cg-vs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space);
+  margin: 0 0 18px;
+}
+.cg-vs:last-child { margin-bottom: 0; }
+.cg-vs__col {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+}
+.cg-vs__col--bad {
+  border-color: color-mix(in srgb, var(--c-danger) 34%, var(--c-line));
+  background: color-mix(in srgb, var(--c-danger) var(--mix-soft), var(--c-surface));
+}
+.cg-vs__col--good {
+  border-color: color-mix(in srgb, var(--c-success) 34%, var(--c-line));
+  background: color-mix(in srgb, var(--c-success) var(--mix-soft), var(--c-surface));
+}
+.cg-vs__tag {
+  align-self: flex-start;
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.cg-vs__col--bad .cg-vs__tag { background: color-mix(in srgb, var(--c-danger) 18%, transparent); color: color-mix(in srgb, var(--c-danger) 86%, var(--c-text)); }
+.cg-vs__col--good .cg-vs__tag { background: color-mix(in srgb, var(--c-success) 18%, transparent); color: color-mix(in srgb, var(--c-success) 86%, var(--c-text)); }
+.cg-vs__svg {
+  margin: 0 0 10px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+}
+.cg-vs__svg svg { display: block; width: 100%; height: auto; }
+.cg-vs__col p { margin: 0; font-size: 12.8px; line-height: 1.75; color: var(--c-text-soft); }
+.cg-vs__col p b { color: var(--c-text); }
+
+/* ---------------- 小测得分条 ---------------- */
+.cg-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+  border: 1px solid color-mix(in srgb, var(--c-primary) var(--mix-halo), transparent);
+  font-size: 13px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--c-primary) var(--mix-ink), var(--c-text));
+}
+.cg-score__num { font-family: var(--font-mono); font-size: 15px; }
+
+/* ---------------- 迷你示意图的通用图元 ---------------- */
+.cg-axis { fill: none; stroke: var(--c-line-2); stroke-width: 1.2; }
+.cg-lbl { font-size: 6.5px; fill: var(--c-muted); font-family: var(--font-mono); }
+.cg-guide { fill: none; stroke: var(--c-line); stroke-width: 1; stroke-dasharray: 2 3; }
+.cg-grid { fill: none; stroke: var(--c-line); stroke-width: .8; }
+
+/* 结果卡 / 对照卡里的图例小行 */
+.cg-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--c-muted);
+}
+.cg-key i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 5px;
+  border-radius: 2px;
+  background: currentColor;
+  vertical-align: -1px;
+}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 720px) {
+  .cg-result { grid-template-columns: 1fr; gap: var(--space); }
+  .cg-vs { grid-template-columns: 1fr; }
+}

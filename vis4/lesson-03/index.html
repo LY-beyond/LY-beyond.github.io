@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 3 章 色彩专题 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》第 3 章：颜色模型（RGB / HSL / CIE Lab）、colormap 三类选择、CIE Lab 色域图、5 大色系搭配规则、科研经典配色、对错案例对比、鲜艳+低饱和配色生成器与 CVD 色觉缺陷模拟器。含 8 个可运行演示与即时自测。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 章节顶栏 ================= -->
+  <header class="course-topbar" data-current="3">
+    <a class="brand" href="../">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">第 3 章 · 色彩专题</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="../lesson-01/">第 1 章 数据</a>
+      <a href="../lesson-02/">第 2 章 流程</a>
+      <a href="./">第 3 章 色彩</a>
+      <a href="../lesson-04/">第 4 章 低维</a>
+      <a href="../lesson-05/">第 5 章 时序</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      只看代码
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="../en/lesson-03/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 章节头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>第 3 章 · 色彩专题</h1>
+        <p class="subtitle">同一份数据，配色决定它被不被读懂 —— <b>颜色模型 · colormap · 色域 · 搭配 · CVD</b></p>
+      </div>
+      <div class="header-tip">读到哪里看到哪里 · 演示就地渲染 · 自测即时判分</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本章学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说清 RGB / HSL / CIE Lab 各自「擅长什么」，并解释为什么设计 colormap 要在 Lab 里插值</span></label></li>
+        <li><label><input type="checkbox"><span>拿到一份数据就能判断该用顺序型 / 发散型 / 定性型中的哪一类 colormap，并说得出选错的后果</span></label></li>
+        <li><label><input type="checkbox"><span>看懂 Lab 的 a*b* 色域图，指出 sRGB / Adobe RGB / Rec.2020 的嵌套关系与「超色域被 clamp」现象</span></label></li>
+        <li><label><input type="checkbox"><span>用 5 大色系规则搭一套配色，并用 WCAG 对比度公式判断它是否适合做正文文字</span></label></li>
+        <li><label><input type="checkbox"><span>用 CVD 模拟自查一张图在红色盲 / 绿色盲 / 蓝色盲眼里是否仍可分辨，并指出哪些配色会失效</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>第 3 章 · 目录</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 8 小节</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-3-1" data-chapter="ch-3-1">3.1 颜色模型基础</a></li>
+        <li><a href="#ch-3-2" data-chapter="ch-3-2">3.2 colormap 三类选择</a></li>
+        <li><a href="#ch-3-3" data-chapter="ch-3-3">3.3 CIE Lab 色域图</a></li>
+        <li><a href="#ch-3-4" data-chapter="ch-3-4">3.4 色系搭配规则（5 大类）</a></li>
+        <li><a href="#ch-3-5" data-chapter="ch-3-5">3.5 科研经典配色</a></li>
+        <li><a href="#ch-3-6" data-chapter="ch-3-6">3.6 对错案例对比</a></li>
+        <li><a href="#ch-3-7" data-chapter="ch-3-7">3.7 鲜艳 + 低饱和 哲学生成器</a></li>
+        <li><a href="#ch-3-8" data-chapter="ch-3-8">3.8 CVD 论文图测</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本章怎么学</b><br>
+        ① 先勾上方的学习目标；<br>
+        ② 按小节连续往下读，演示会就地渲染；<br>
+        ③ 做完每节自测再进下一节；<br>
+        ④ 复习时点右上角「只看代码」。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 3.1 颜色模型基础 ============ -->
+      <article class="chapter" id="ch-3-1">
+        <h2>3.1 颜色模型基础</h2>
+        <p class="chapter-subtitle">为什么需要 4 种颜色空间？它们各自擅长什么？色盲眼中看到的世界又是什么样？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>本章从头到尾只用一份数据：<strong>美国各州犯罪统计（<code>data/crime.csv</code>）</strong>，含 50 个州、13 列（人口、抢劫、谋杀、纵火等）。数据本身不是重点 —— 重点是<strong>同一份数据换一套配色，读者对它的理解会完全不同</strong>。</p>
+
+        <table class="theory-table">
+          <caption>本章的 4 个配色问题，对应 4 个知识块</caption>
+          <thead>
+            <tr><th>问题</th><th>在哪一节回答</th><th>关键结论</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>颜色能不能直接拿 RGB 插值？</td><td>3.1 / 3.3</td><td>不行，RGB 不感知均匀，要在 CIE Lab 里插值</td></tr>
+            <tr><td>连续数值该用哪类色阶？</td><td>3.2</td><td>有序 → 顺序型；有中点 → 发散型；无序 → 定性型</td></tr>
+            <tr><td>几个类别、怎么搭色不刺眼？</td><td>3.4 / 3.7</td><td>≤ 7 类；色相拉开 ≥ 30°；配套色 S 30–50%</td></tr>
+            <tr><td>色盲读者还看得懂吗？</td><td>3.5 / 3.8</td><td>用 CVD 模拟自查；红绿对比最危险</td></tr>
+          </tbody>
+        </table>
+
+        <p>例如把每个州的 <code>murder</code>（谋杀案数）画成柱状图：用「浅蓝 → 深蓝」读者能读出大小；用「红 → 黄 → 绿」的彩虹色阶，读者只会看到花花绿绿 —— 中间的黄色既不是「最大值」也不是「最小值」，它什么语义都没有。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>四种颜色空间，四种「擅长」</h4>
+          <table class="theory-table">
+            <thead><tr><th>空间</th><th>模型</th><th>擅长</th><th>是否感知均匀</th></tr></thead>
+            <tbody>
+              <tr><td><b>RGB</b></td><td>加色（三束光相加）</td><td>屏幕发光原理、设备原生存储</td><td>✗ 不是</td></tr>
+              <tr><td><b>HSL</b></td><td>色相 / 饱和度 / 亮度</td><td>人（尤其是设计师）的直觉调色</td><td>✗ 不是</td></tr>
+              <tr><td><b>CIE Lab</b></td><td>L* 明度 + a* / b* 对立通道</td><td>度量「看上去差多少」</td><td>✓ 是（黄金标准）</td></tr>
+              <tr><td><b>CMYK</b></td><td>减色（油墨吸收光）</td><td>印刷 / 出版</td><td>✗ 不是</td></tr>
+            </tbody>
+          </table>
+          <p><strong>核心结论：</strong>RGB 是「设备空间」，Lab 是「思考空间」。设计 colormap 时在 Lab 中插值，转成 RGB 显示时再 clamp —— 这就是为什么 <code>d3.interpolateLab</code> 出来的渐变比 <code>d3.interpolateRgb</code> 平滑。</p>
+        </div>
+
+        <div class="callout callout--warn">
+          <p><strong>CVD（色觉缺陷）：</strong>约 <b>8% 男性</b>、0.5% 女性存在色觉缺陷。常见三种：红色盲（protanopia，约 1% 男性）、<strong>绿色盲（deuteranopia，约 6% 男性，最常见）</strong>、蓝色盲（tritanopia，极罕见）。也就是说，你的一页幻灯片大概率至少有一位读者看不出红绿差别。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 236" role="img" aria-label="四种颜色空间并列示意：RGB 三束光相加、HSL 色相环与明度轴、CIE Lab 的 a*b* 平面与 L* 轴、CMYK 四色油墨叠印">
+            <!-- 面板 1：RGB -->
+            <rect x="2" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="12" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① RGB · 加色</text>
+            <circle cx="56" cy="94" r="30" style="fill: color-mix(in srgb, var(--c-danger) 55%, transparent);"/>
+            <circle cx="98" cy="94" r="30" style="fill: color-mix(in srgb, var(--c-success) 55%, transparent);"/>
+            <circle cx="77" cy="132" r="30" style="fill: color-mix(in srgb, var(--ch-1) 55%, transparent);"/>
+            <text x="52" y="180" style="fill: var(--c-muted); font-size: 11px;">R / G / B 三束光相加</text>
+            <text x="12" y="200" style="fill: var(--c-text-soft); font-size: 11px;">设备相关 · 不感知均匀</text>
+
+            <!-- 面板 2：HSL -->
+            <rect x="164" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="174" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② HSL · 直觉</text>
+            <circle cx="239" cy="104" r="42" fill="none" style="stroke: var(--c-border-2); stroke-width: 8;"/>
+            <circle cx="239" cy="104" r="30" fill="none" stroke-dasharray="3 4" style="stroke: var(--c-primary); stroke-width: 1.4;"/>
+            <line x1="239" y1="104" x2="239" y2="66" style="stroke: var(--c-primary); stroke-width: 2;"/>
+            <circle cx="239" cy="66" r="4.5" style="fill: var(--c-primary);"/>
+            <line x1="281" y1="104" x2="239" y2="104" style="stroke: var(--c-accent); stroke-width: 2;"/>
+            <circle cx="281" cy="104" r="4.5" style="fill: var(--c-accent);"/>
+            <text x="174" y="176" style="fill: var(--c-muted); font-size: 11px;">H 环上角度 · S 半径 · L 明度轴</text>
+            <text x="174" y="200" style="fill: var(--c-text-soft); font-size: 11px;">与人直觉一致 · 仍不均匀</text>
+
+            <!-- 面板 3：CIE Lab -->
+            <rect x="326" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="336" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ CIE Lab · 感知</text>
+            <line x1="348" y1="120" x2="456" y2="120" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <line x1="402" y1="66" x2="402" y2="174" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <text x="452" y="110" text-anchor="end" style="fill: var(--c-danger); font-size: 11px;">+a* 红</text>
+            <text x="352" y="110" style="fill: var(--c-success); font-size: 11px;">绿 -a*</text>
+            <text x="406" y="78" style="fill: var(--c-warn); font-size: 11px;">+b* 黄</text>
+            <text x="406" y="172" style="fill: var(--ch-1); font-size: 11px;">-b* 蓝</text>
+            <circle cx="424" cy="100" r="6" style="fill: var(--c-primary);"/>
+            <text x="336" y="196" style="fill: var(--c-text-soft); font-size: 11px;">距离 ≈ 人眼感知差（L* 轴垂直纸面）</text>
+
+            <!-- 面板 4：CMYK -->
+            <rect x="488" y="16" width="150" height="200" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <text x="498" y="36" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">④ CMYK · 减色</text>
+            <rect x="512" y="60" width="46" height="46" style="fill: color-mix(in srgb, var(--ch-1) 50%, transparent);"/>
+            <rect x="540" y="60" width="46" height="46" style="fill: color-mix(in srgb, var(--ch-4) 50%, transparent);"/>
+            <rect x="512" y="88" width="46" height="46" style="fill: color-mix(in srgb, var(--c-accent-2) 50%, transparent);"/>
+            <rect x="540" y="88" width="46" height="46" style="fill: color-mix(in srgb, var(--c-text) 40%, transparent);"/>
+            <text x="498" y="156" style="fill: var(--c-muted); font-size: 11px;">青 · 品红 · 黄 · 黑 叠印</text>
+            <text x="498" y="180" style="fill: var(--c-text-soft); font-size: 11px;">印刷用；Web 可视化用不到</text>
+
+            <text x="0" y="12" style="fill: var(--c-muted); font-size: 11.5px;">同样一种颜色，四种空间各记各的账 —— 取色与换算的「活口」在演示里</text>
+          </svg>
+          <figcaption>四种颜色空间并列：RGB 讲设备、HSL 讲直觉、CIE Lab 讲感知、CMYK 讲印刷</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> RGB → HSL 手写：最大通道决定色相</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 输入 0-255，输出 h∈[0,360) s,l∈[0,100]</span>
+<span class="kw">function</span> rgbToHsl(r, g, b) {
+  r /= <span class="num">255</span>; g /= <span class="num">255</span>; b /= <span class="num">255</span>;
+  <span class="kw">const</span> max = Math.max(r, g, b), min = Math.min(r, g, b);
+  <span class="kw">let</span> h, s, l = (max + min) / <span class="num">2</span>;
+  <span class="kw">if</span> (max === min) { h = s = <span class="num">0</span>; }          <span class="cmt">// 灰：无色相</span>
+  <span class="kw">else</span> {
+    <span class="kw">const</span> d = max - min;                     <span class="cmt">// 相减 → 饱和度</span>
+    s = l &gt; <span class="num">0.5</span> ? d / (<span class="num">2</span> - max - min) : d / (max + min);
+    <span class="kw">switch</span> (max) {                          <span class="cmt">// 谁最大 → 决定色相落点</span>
+      <span class="kw">case</span> r: h = (g - b) / d + (g &lt; b ? <span class="num">6</span> : <span class="num">0</span>); <span class="kw">break</span>;
+      <span class="kw">case</span> g: h = (b - r) / d + <span class="num">2</span>; <span class="kw">break</span>;
+      <span class="kw">case</span> b: h = (r - g) / d + <span class="num">4</span>; <span class="kw">break</span>;
+    }
+    h /= <span class="num">6</span>;
+  }
+  <span class="kw">return</span> [h * <span class="num">360</span>, s * <span class="num">100</span>, l * <span class="num">100</span>];
+}</code></pre>
+              <div class="key-point">
+                <p>自己写一遍，是为了看清三步物理含义：<strong>最大通道决定色相、最大减最小决定饱和度、最大加最小决定亮度</strong>。也顺带解释了为什么色相是 0–360° 的环形量 —— 加偏移必须 <code>(h + 30 + 360) % 360</code> 才不会出走。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> CVD 模拟：一行矩阵乘法换一双眼睛</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Machado 2009 一类近似矩阵：把 RGB 乘一遍矩阵即得「色盲眼中」的颜色</span>
+<span class="kw">const</span> CVD_MATRICES = {
+  protanopia:   [[<span class="num">0.567</span>, <span class="num">0.433</span>, <span class="num">0</span>], [<span class="num">0.558</span>, <span class="num">0.442</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.242</span>, <span class="num">0.758</span>]],
+  deuteranopia: [[<span class="num">0.625</span>, <span class="num">0.375</span>, <span class="num">0</span>], [<span class="num">0.700</span>, <span class="num">0.300</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.300</span>, <span class="num">0.700</span>]],
+  tritanopia:   [[<span class="num">0.950</span>, <span class="num">0.050</span>, <span class="num">0</span>], [<span class="num">0</span>, <span class="num">0.433</span>, <span class="num">0.567</span>], [<span class="num">0</span>, <span class="num">0.475</span>, <span class="num">0.525</span>]],
+};
+
+<span class="kw">function</span> simulateCVD([r, g, b], type) {
+  <span class="kw">const</span> m = CVD_MATRICES[type];
+  <span class="kw">return</span> [
+    r * m[<span class="num">0</span>][<span class="num">0</span>] + g * m[<span class="num">0</span>][<span class="num">1</span>] + b * m[<span class="num">0</span>][<span class="num">2</span>],
+    r * m[<span class="num">1</span>][<span class="num">0</span>] + g * m[<span class="num">1</span>][<span class="num">1</span>] + b * m[<span class="num">1</span>][<span class="num">2</span>],
+    r * m[<span class="num">2</span>][<span class="num">0</span>] + g * m[<span class="num">2</span>][<span class="num">1</span>] + b * m[<span class="num">2</span>][<span class="num">2</span>],
+  ].map((v) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">255</span>, v)));
+}</code></pre>
+              <div class="key-point">
+                <p>三种色觉缺陷都是<strong>线性变换</strong>：正常视觉的三个锥细胞响应被「合并」了。看矩阵就知道为什么绿色盲最危险 —— 第一行 <code>0.625 / 0.375</code> 与第二行 <code>0.700 / 0.300</code> 几乎相同，红与绿被投影到几乎同一个方向。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 本站做法：颜色一律从设计令牌读取</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 本站零构建、离线可用，所以不引 D3 / 任何颜色库；
+// 需要「真实的颜色数值」时，从 CSS 设计令牌里读出来再算。</span>
+<span class="kw">const</span> token = (name) =&gt;
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+<span class="kw">const</span> rgb = parseColorCss(token(<span class="str">'--c-primary'</span>));   <span class="cmt">// → [67, 56, 202]</span>
+<span class="kw">const</span> hsl = rgbToHsl(...rgb);                      <span class="cmt">// 接着做色相旋转、Lab 换算…</span></code></pre>
+              <div class="key-point">
+                <p><strong>好处有三：</strong>① 页面里不出现写死的色值，换肤只改 <code>tokens.css</code>；② 深色模式切换后，演示自动跟着变（令牌在深色下是另一套值）；③ 演示与正文图形共用同一套色板，讲的和看到的完全一致。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">四块面板对应四种颜色空间，<strong>点哪一块，右侧就读出该空间的数值与适用场景</strong>：在 RGB 立方体上点面选色、拖动「方位角」旋转投影、在 HSL 轮盘上点角度换色相、在 a*b* 平面上点位置换色 —— 四处改的是同一个颜色。</p>
+          <div class="demo-mount" data-demo="d-3-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>RGB 是设备空间、HSL 是直觉空间、CIE Lab 是感知空间、CMYK 是印刷空间 —— <strong>设计 colormap 要在 Lab 里插值</strong>。</li>
+            <li>色相是 0–360° 的环形量，任何加偏移都要 <code>mod 360</code>；饱和度由「最大减最小」决定。</li>
+            <li>约 8% 男性有色觉缺陷，其中绿色盲最多 —— 配色必须过 CVD 这一关（3.8 有模拟器）。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">要设计一条平滑、明暗过渡自然的 colormap 渐变，应该在哪个颜色空间里做插值？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="a"><span>RGB —— 设备原生，计算最快</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="b"><span>HSL —— 色相直观，调色方便</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="c"><span>CIE Lab —— 感知均匀，插值结果不会出现明暗跳变</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-1" value="d"><span>CMYK —— 印刷标准，最接近人眼</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>RGB 与 HSL 都不是感知均匀的：在 RGB 里线性插值，中段会出现「看着比两端都更暗/更亮」的假台阶。CIE Lab 的欧氏距离 ≈ 人眼感知差，所以在 Lab 里等步长插值得到的渐变，人眼看着才是等步长的 —— 这就是 <code>d3.interpolateLab</code> 存在的理由。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.2 colormap 三类选择 ============ -->
+      <article class="chapter" id="ch-3-2">
+        <h2>3.2 colormap 三类选择</h2>
+        <p class="chapter-subtitle">顺序型 / 发散型 / 定性型 —— 选错类型不是「不好看」，而是误导读者。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <table class="theory-table">
+          <caption>三类 colormap 对应三种数据语义</caption>
+          <thead><tr><th>类型</th><th>数据语义</th><th>颜色特征</th><th>典型方案</th></tr></thead>
+          <tbody>
+            <tr><td><b>顺序型</b> Sequential</td><td>有自然顺序：人口、温度、谋杀案数</td><td>亮度单调 + 色相单调</td><td>Viridis / Plasma / Cividis</td></tr>
+            <tr><td><b>发散型</b> Diverging</td><td>有真有意义的中点：0、正负偏差、相对中位数</td><td>两端异色、中间最浅</td><td>RdBu / BrBG / PiYG</td></tr>
+            <tr><td><b>定性型</b> Qualitative</td><td>无序类别：州、产品线、实验分组</td><td>色相区分大、亮度接近</td><td>Tableau10 / Set1 / Okabe–Ito</td></tr>
+          </tbody>
+        </table>
+        <p>回到 <code>crime.csv</code>：<code>murder</code> 是「有自然顺序」的数值 → 顺序型；如果先算出「各州谋杀率与本州历史均值的差」，差值有正有负、0 有意义 → 发散型；如果只是想区分 5 个地区的<em>类别</em> → 定性型。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>选错类型 = 撒谎</h4>
+          <p>用<strong>发散型 RdBu 去画有序的「50 州谋杀率」</strong>：色阶中段接近白色，读者会本能地把「接近白色」的州读成「中间的、正常的」—— 可 100 这个数值没有任何语义，纯属误导。反过来，用<strong>顺序型 Viridis 去表示正负偏差</strong>，读者会以为白色的地方是零点，而 Viridis 的中点其实是深紫色。所以先问数据语义，再挑色阶类型。</p>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>CVD 友好检查清单：</strong>Viridis / Cividis ✅ 优（Nature Methods 推荐）；RdBu / BrBG △ 中等（红绿两端对色盲不友好）；Tableau10 △ 与色相相关；<strong>Jet / Rainbow ⚠ 直接禁用</strong>。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 214" role="img" aria-label="三类 colormap 对照条：顺序型亮度单调递增、发散型两端异色中间最浅、定性型八个色相并列">
+            <defs>
+              <linearGradient id="l3-seq-g" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" style="stop-color: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));"/>
+                <stop offset="100%" style="stop-color: var(--c-primary);"/>
+              </linearGradient>
+              <linearGradient id="l3-div-g" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" style="stop-color: var(--c-danger);"/>
+                <stop offset="50%" style="stop-color: var(--c-surface);"/>
+                <stop offset="100%" style="stop-color: var(--c-primary);"/>
+              </linearGradient>
+            </defs>
+
+            <text x="0" y="16" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">顺序型 Sequential</text>
+            <text x="176" y="16" style="fill: var(--c-muted); font-size: 11.5px;">→ 一个方向单调变深：读得出「谁更大」</text>
+            <rect x="0" y="24" width="600" height="26" rx="6" style="fill: url(#l3-seq-g); stroke: var(--c-line);"/>
+            <text x="606" y="42" style="fill: var(--c-muted); font-size: 11px;">低 → 高</text>
+
+            <text x="0" y="82" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">发散型 Diverging</text>
+            <text x="176" y="82" style="fill: var(--c-muted); font-size: 11.5px;">← 离开中点往两边变深：读得出「偏哪边、偏多少」</text>
+            <rect x="0" y="90" width="600" height="26" rx="6" style="fill: url(#l3-div-g); stroke: var(--c-line);"/>
+            <text x="4" y="110" style="fill: var(--c-on-primary); font-size: 11px; font-weight: 700;">负</text>
+            <text x="296" y="110" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11px; font-weight: 700;">中点 = 0</text>
+            <text x="596" y="110" text-anchor="end" style="fill: var(--c-on-primary); font-size: 11px; font-weight: 700;">正</text>
+
+            <text x="0" y="148" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">定性型 Qualitative</text>
+            <text x="176" y="148" style="fill: var(--c-muted); font-size: 11.5px;">亮度接近、色相拉开：只区分「是哪一个」，不表达大小</text>
+            <rect x="0" y="156" width="76" height="26" rx="6" style="fill: var(--ch-1);"/>
+            <rect x="86" y="156" width="76" height="26" rx="6" style="fill: var(--ch-2);"/>
+            <rect x="172" y="156" width="76" height="26" rx="6" style="fill: var(--ch-3);"/>
+            <rect x="258" y="156" width="76" height="26" rx="6" style="fill: var(--ch-4);"/>
+            <rect x="344" y="156" width="76" height="26" rx="6" style="fill: var(--ch-5);"/>
+            <rect x="430" y="156" width="76" height="26" rx="6" style="fill: var(--ch-6);"/>
+            <rect x="516" y="156" width="76" height="26" rx="6" style="fill: var(--ch-7);"/>
+            <text x="0" y="202" style="fill: var(--c-muted); font-size: 11.5px;">本条与后两条的色值全部由令牌混色计算而来（<tspan style="font-family: var(--font-mono);">color-mix(in srgb, var(--c-primary) x%, var(--c-surface))</tspan>），页面里没有写死任何色值。</text>
+          </svg>
+          <figcaption>三类 colormap 对照条：顺序型单向前进、发散型双向离开中点、定性型并列区分</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 三类 scale 速记</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 顺序型：[0, 1] → 颜色（单调亮度）</span>
+<span class="kw">const</span> seq = d3.scaleSequential(d3.interpolateViridis);
+
+<span class="cmt">// 发散型：t=0 一端、t=0.5 中点、t=1 另一端</span>
+<span class="kw">const</span> div = d3.interpolateRdBu;
+
+<span class="cmt">// 定性型：类别 → 颜色（互不相邻才不打架）</span>
+<span class="kw">const</span> cat = d3.scaleOrdinal(d3.schemeTableau10);</code></pre>
+              <div class="key-point">
+                <p>三者的接口完全一样（输入 [0,1] 出颜色），区别只在<strong>语义契约</strong>：顺序型承诺「越大越深」，发散型承诺「中点最浅」，定性型承诺「亮度接近」。一旦把某个契约用在了不满足前提的数据上，颜色就开始说谎。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 决策表：先问数据，再挑色阶</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">function</span> pickColormap(data) {
+  <span class="kw">if</span> (data.hasMeaningfulMidpoint) <span class="kw">return</span> <span class="str">'diverging'</span>;   <span class="cmt">// 有真中点（0 / 均值）</span>
+  <span class="kw">if</span> (data.isOrdered)              <span class="kw">return</span> <span class="str">'sequential'</span>;  <span class="cmt">// 有自然顺序</span>
+  <span class="kw">return</span> <span class="str">'categorical'</span>;                                  <span class="cmt">// 其余：无序类别</span>
+}</code></pre>
+              <div class="key-point">
+                <p>两个问题的顺序不能颠倒：<strong>「0 有没有意义」要先于「数据有没有顺序」</strong>。有顺序、但中点为 0 的数据（如环比增长）应当走发散型 —— 这正是 <code>crime.csv</code> 的谋杀率与「谋杀率偏差」的分水岭。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 本站做法：用令牌混色算出渐变</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 顺序型：从「主色 5% + 表面色 95%」走到「主色 100%」，逐级混色</span>
+<span class="kw">const</span> cells = <span class="num">16</span>;
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; cells; i++) {
+  <span class="kw">const</span> p = Math.round(i / (cells - <span class="num">1</span>) * <span class="num">100</span>);
+  strip.append(el.style.background =
+    <span class="str">`color-mix(in srgb, var(--c-primary) ${p}%, var(--c-surface))`</span>);
+}
+
+<span class="cmt">// 发散型：左半段 危险色 → 表面色，右半段 表面色 → 主色</span>
+<span class="cmt">// 中点天然落在「表面色」，与「中点 = 0」的语义吻合</span></code></pre>
+              <div class="key-point">
+                <p><strong>为什么不用写死的 hex 数组：</strong>本站要支持深浅色主题。<code>var(--c-primary)</code> 在白底是靛蓝、在深底是淡靛蓝，<code>var(--c-surface)</code> 也跟着换 —— 混色算出来的整条色阶自动适配主题，硬编码的 hex 做不到这一点。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">上方是<strong>计算出来的</strong>三条对照条（顺序与发散型由令牌混色逐级生成，不是图片）；下方把 <code>crime.csv</code> 的谋杀案数画成真实柱状图，切换「顺序型 / 发散型」看发散型是怎么把有序数据讲错的。</p>
+          <div class="demo-mount" data-demo="d-3-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>三类 colormap 各对应一种数据语义：有序 → 顺序型、有真中点 → 发散型、无序类别 → 定性型。</li>
+            <li>选错类型不是审美问题：发散型画有序数据会凭空造出一个「正常的中点」，顺序型画正负偏差会让人误把深紫当零点。</li>
+            <li>彩虹型（Jet）三类都算不上：非感知均匀、CVD 不友好、打印也不友好，应当直接禁用。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">有一份数据是「各州犯罪率相对全美中位数的偏差」（有正有负，0 是有意义的中点），最合适的 colormap 类型是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="a"><span>顺序型：找一条感知均匀的单向色阶</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="b"><span>发散型：两端异色、中点最浅，让 0 成为视觉锚点</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="c"><span>定性型：把正负当作两个类别</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-2" value="d"><span>彩虹型：颜色多，信息量大</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>偏差数据的「中点 0」有明确语义，所以要用<strong>发散型</strong>：中点最浅、两端异色，读者一眼就能看出「高于中位数」还是「低于中位数」以及偏离的幅度。顺序型会把 0 藏在色阶中段，定性型则丢掉了正负的<em>程度</em>信息。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.3 CIE Lab 色域图 ============ -->
+      <article class="chapter" id="ch-3-3">
+        <h2>3.3 CIE Lab 色域图</h2>
+        <p class="chapter-subtitle">在感知均匀的颜色空间里，「能显示的颜色」到底长什么样？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>你要给 <code>crime.csv</code> 配一条「高饱和的纯绿 → 纯红」色阶。在 Lab 里算出来的颜色很漂亮，但 LCD 屏幕上显示出来的绿却「闷」了一截 —— 因为<strong>你算的那个绿已经跑出屏幕的色域了</strong>。</p>
+        <table class="theory-table">
+          <thead><tr><th>色域</th><th>标准 / 场景</th><th>相对大小</th><th>本课用途</th></tr></thead>
+          <tbody>
+            <tr><td><b>sRGB</b></td><td>Web / PPT / 一般科研图</td><td>最小（基准）</td><td>本次重构的目标色域</td></tr>
+            <tr><td><b>Adobe RGB</b></td><td>摄影 / 印刷</td><td>中（绿域更宽）</td><td>投稿印刷版时需注意</td></tr>
+            <tr><td><b>Rec.2020</b></td><td>4K / HDR 电视</td><td>最大</td><td>目前 Web 用不到</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>为什么是「嵌套」，为什么会被 clamp</h4>
+          <p>三个色域是<strong>包含关系</strong>：sRGB ⊂ Adobe RGB ⊂ Rec.2020。用 Lab 坐标算出来的颜色如果落在 sRGB 之外，标准转换流程会把它<strong>夹（clamp）</strong>回 sRGB 边界 —— 结果不是报错，而是「颜色看起来变了」，而且是在你毫无察觉的情况下变。</p>
+          <p><strong>实战三条：</strong>① <code>d3.lab(L, a, b).rgb()</code> 会静默 clamp；② 设计 colormap 用 <code>d3.interpolateLab</code>，比 <code>interpolateRgb</code> 平滑；③ 高饱和色只在打印 / 4K 屏幕上「真的存在」，Web 上看不一定准。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Lab a*b* 平面上三个嵌套色域：外层 Rec.2020、中层 Adobe RGB、内层 sRGB，超出内层的颜色会被夹回边界">
+            <rect x="150" y="14" width="290" height="212" rx="8" style="fill: var(--c-surface-2); stroke: var(--c-line);"/>
+            <ellipse cx="295" cy="120" rx="138" ry="99" style="fill: color-mix(in srgb, var(--c-info) 10%, transparent); stroke: var(--c-info); stroke-width: 1.6; stroke-dasharray: 6 4;"/>
+            <ellipse cx="295" cy="120" rx="112" ry="80" style="fill: color-mix(in srgb, var(--c-accent) 12%, transparent); stroke: var(--c-accent); stroke-width: 1.6; stroke-dasharray: 5 4;"/>
+            <ellipse cx="295" cy="120" rx="88" ry="62" style="fill: color-mix(in srgb, var(--c-primary) 16%, transparent); stroke: var(--c-primary); stroke-width: 1.8;"/>
+
+            <circle cx="352" cy="84" r="6" style="fill: var(--c-danger);"/>
+            <line x1="352" y1="84" x2="386" y2="70" style="stroke: var(--c-danger); stroke-width: 1.4; stroke-dasharray: 3 3;"/>
+            <text x="390" y="68" style="fill: var(--c-danger); font-size: 11.5px; font-weight: 700;">取样点在 sRGB 外 → 被夹回边界</text>
+            <circle cx="330" cy="106" r="5" style="fill: var(--c-success);"/>
+            <text x="340" y="112" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">在内 → 原样显示</text>
+
+            <line x1="150" y1="120" x2="440" y2="120" style="stroke: var(--c-border-2); stroke-width: 1;"/>
+            <line x1="295" y1="14" x2="295" y2="226" style="stroke: var(--c-border-2); stroke-width: 1;"/>
+            <text x="436" y="112" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">a*（绿 ↔ 红）</text>
+            <text x="299" y="26" style="fill: var(--c-muted); font-size: 11px;">b*（蓝 ↔ 黄）</text>
+
+            <text x="0" y="40" style="fill: var(--c-primary); font-size: 13px; font-weight: 700;">sRGB</text>
+            <text x="0" y="60" style="fill: var(--c-muted); font-size: 11px;">Web / PPT</text>
+            <text x="0" y="104" style="fill: var(--c-accent); font-size: 13px; font-weight: 700;">Adobe RGB</text>
+            <text x="0" y="124" style="fill: var(--c-muted); font-size: 11px;">摄影 / 印刷 · 绿域更宽</text>
+            <text x="0" y="168" style="fill: var(--c-info); font-size: 13px; font-weight: 700;">Rec.2020</text>
+            <text x="0" y="188" style="fill: var(--c-muted); font-size: 11px;">4K / HDR · 目前最大</text>
+            <text x="0" y="216" style="fill: var(--c-text-soft); font-size: 11px;">L* 固定时，三个色域在 a*b* 平面上就是三个嵌套的封闭区域。</text>
+          </svg>
+          <figcaption>Lab 的 a*b* 平面：三个色域层层嵌套，越出 sRGB 的颜色会被静默 clamp</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> Lab ↔ sRGB：不 clamp，才能判断出没出色域</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// γ 解码：sRGB 数值 → 线性光</span>
+<span class="kw">const</span> toLinear = (v) =&gt; (v /= <span class="num">255</span>) &lt;= <span class="num">0.04045</span>
+  ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+
+<span class="kw">function</span> labToRgb(L, a, b) {
+  <span class="kw">const</span> fy = (L + <span class="num">16</span>) / <span class="num">116</span>;                     <span class="cmt">// Lab → XYZ（D65 白点）</span>
+  <span class="kw">const</span> fx = a / <span class="num">500</span> + fy, fz = fy - b / <span class="num">200</span>;
+  <span class="kw">const</span> xyz = [fx * fx * fx * <span class="num">0.95047</span>, fy * fy * fy, fz * fz * fz];
+  <span class="cmt">// XYZ → 线性 RGB（标准 sRGB 矩阵的逆）</span>
+  <span class="kw">const</span> lin = xyzToLinearSrgb(xyz);
+  <span class="cmt">// 注意：这里故意【不】clamp —— 越界值保留原样，才能判断是否超色域</span>
+  <span class="kw">return</span> lin.map((v) =&gt; v &lt;= <span class="num">0.0031308</span>
+    ? v * <span class="num">12.92</span> : <span class="num">1.055</span> * Math.pow(v, <span class="num">1</span> / <span class="num">2.4</span>) - <span class="num">0.055</span>) .map((v) =&gt; v * <span class="num">255</span>);
+}</code></pre>
+              <div class="key-point">
+                <p><strong>关键就在「不 clamp」这一步。</strong>如果转换函数内部先把结果夹到 [0,255]，你永远发现不了自己算的颜色已经跑出 sRGB。本站演示用「不 clamp 的转换 + 之后再判断」来找出色域边界，画出的那条边界线就是这样求出来的。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 判断是否在色域内（顺便求出边界）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 在色域内 ⟺ 三个通道都落在 [0, 255]（留一点浮点容差）</span>
+<span class="kw">const</span> inGamut = (rgb) =&gt; rgb.every((v) =&gt; v &gt;= -<span class="num">0.5</span> &amp;&amp; v &lt;= <span class="num">255.5</span>);
+
+<span class="cmt">// 边界怎么求：固定 L*，沿每个色相角二分手找「最远的仍在色域内的半径」</span>
+<span class="kw">function</span> outline(L, angles = <span class="num">180</span>) {
+  <span class="kw">const</span> pts = [];
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; angles; i++) {
+    <span class="kw">const</span> th = i / angles * Math.PI * <span class="num">2</span>;
+    <span class="kw">let</span> lo = <span class="num">0</span>, hi = <span class="num">200</span>;                 <span class="cmt">// 二分 18 次足够定位</span>
+    <span class="kw">for</span> (<span class="kw">let</span> k = <span class="num">0</span>; k &lt; <span class="num">18</span>; k++) {
+      <span class="kw">const</span> mid = (lo + hi) / <span class="num">2</span>;
+      <span class="kw">if</span> (inGamut(labToRgb(L, mid * Math.cos(th), mid * Math.sin(th)))) lo = mid; <span class="kw">else</span> hi = mid;
+    }
+    pts.push([lo * Math.cos(th), lo * Math.sin(th)]);
+  }
+  <span class="kw">return</span> pts;                                  <span class="cmt">// 连起来就是色域多边形</span>
+}</code></pre>
+              <div class="key-point">
+                <p>同一个 <code>labToRgb</code> + <code>inGamut</code> 组合能干三件事：判断某个色<em>能不能显示</em>、求出色域<em>边界形状</em>、比较 sRGB 与 Adobe RGB 的<em>大小差</em>（演示里三层嵌套轮廓就是这么来的）。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 在 Lab 空间插值 vs 在 RGB 空间插值</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ✅ 在 Lab 空间插值：中间点感知上是「真正的中间」</span>
+<span class="kw">const</span> mid = rgb2lab(mix(rgb2lab(c1), rgb2lab(c2), <span class="num">0.5</span>));
+
+<span class="cmt">// ❌ 在 RGB 空间直接线性插值：中段会瘪下去（看着更暗）</span>
+<span class="kw">const</span> bad = [c1, c2].map((c, i) =&gt; c * (<span class="num">1</span> - i) + c * i);
+
+<span class="cmt">// d3 里对应的两个函数（c1、c2 为任意两端色）</span>
+<span class="cmt">// d3.interpolateLab(c1, c2)(0.5)   ← 感知均匀</span>
+<span class="cmt">// d3.interpolateRgb(c1, c2)(0.5)   ← 不是感知中点</span></code></pre>
+              <div class="key-point">
+                <p>演示里的三层色域、色域内的色块阵列，全部是<strong>实时算出来的</strong>（不是图片），所以你拖动 L* 时能看到色域面积整体收缩 —— 这正是「暗色的可饱和范围更窄」这句话的视觉证据。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">拖动 L* 滑块看色域收缩；<strong>用鼠标在图上拖那个取样点</strong>，右侧会实时读出它的 Lab 值与「在不在 sRGB 内」；勾选外两层可以看 Adobe RGB / Rec.2020 的相对大小。</p>
+          <div class="demo-mount" data-demo="d-3-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>色域是嵌套的：sRGB ⊂ Adobe RGB ⊂ Rec.2020；Lab 里算出来的颜色可能落在 sRGB 之外。</li>
+            <li>超出 sRGB 的颜色会被<strong>静默 clamp</strong> 回边界 —— 不报错，只是「悄悄变了色」。</li>
+            <li>想要平滑渐变就在 Lab 里插值，转 RGB 显示时再让浏览器去 clamp；判断「能不能显示」必须先做<em>不 clamp</em> 的转换。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">你在 Lab 空间里构造了一个高饱和纯绿（超出 sRGB），再把它转成 RGB 显示在一台普通 LCD 上，会发生什么？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="a"><span>屏幕会原样显示更鲜艳的绿</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="b"><span>会被 clamp 到 sRGB 边界，颜色失真，并且不会有任何报错</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="c"><span>浏览器会抛异常，提示颜色越界</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="d"><span>会自动改用 CMYK 四色叠印来显示</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>转换流程把每个通道夹进 [0, 1]，超出的那部分直接丢掉 —— 于是「超饱和的绿」变成了「sRGB 能表现的最饱和的绿」。它不报错，所以你只能靠本节的色域图提前发现：绿色的取样点越出了 sRGB 轮廓。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.4 色系搭配规则 ============ -->
+      <article class="chapter" id="ch-3-4">
+        <h2>3.4 色系搭配规则（5 大类）</h2>
+        <p class="chapter-subtitle">单色 / 类比 / 互补 / 三等分 / 分裂互补 —— 什么时候该用哪一个？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>还是 <code>crime.csv</code>：你打算把「东部 / 中西部 / 南部 / 西部」四个地区画成四组柱状图。四个类别、没有顺序 —— 这就要在色轮上「挑角度」了：挑错角度，四组柱子会互相打架；挑对角度，一眼就能对上图例。</p>
+        <table class="theory-table">
+          <thead><tr><th>规则</th><th>色相关系</th><th>特点</th><th>什么时候用</th></tr></thead>
+          <tbody>
+            <tr><td><b>单色</b> Monochromatic</td><td>同一色相，只改亮度 / 饱和度</td><td>最安全、最不刺眼</td><td>严肃科研图（Nature 经济型配色）</td></tr>
+            <tr><td><b>类比</b> Analogous</td><td>色轮相邻 ±30°</td><td>和谐，但对比度弱</td><td>表达「层级 / 分组」</td></tr>
+            <tr><td><b>互补</b> Complementary</td><td>色轮对面 180°</td><td>对比最强，容易刺眼</td><td>突出重点：实验组 vs 对照组</td></tr>
+            <tr><td><b>三等分</b> Triadic</td><td>色轮 120° 等分</td><td>三种色互相都分得开</td><td>正好 3 个类别</td></tr>
+            <tr><td><b>分裂互补</b> Split</td><td>对面两侧 150°</td><td>互补的温和版</td><td>拿不准时的默认选择</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>挑完角度，还得过「可读性」这一关</h4>
+          <p>颜色搭配好不好看，是<strong>色相差</strong>的问题；文字读不读得清，是<strong>对比度</strong>的问题 —— 后者可以用 WCAG 的对比度公式量化：<code>对比度 = (L1 + 0.05) / (L2 + 0.05)</code>，其中 L 是相对亮度。</p>
+          <table class="theory-table">
+            <thead><tr><th>WCAG 2.1 等级</th><th>正文（<b>约 14px 常规</b>）</th><th>大字号（≥18.66px 粗体 / ≥24px）</th></tr></thead>
+            <tbody>
+              <tr><td>AA</td><td>≥ 4.5 : 1</td><td>≥ 3 : 1</td></tr>
+              <tr><td>AAA</td><td>≥ 7 : 1</td><td>≥ 4.5 : 1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--warn">
+          <p><strong>最容易踩的坑：</strong>把「互补色」直接拿来当「文字色 + 底色」。互补色相差 180°，但两者的<em>亮度</em>可能非常接近 —— 色相差再大，对比度也可能只有 2:1，读起来糊成一团。色相差管「分不分得开」，亮度差管「读不读得清」。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 220" role="img" aria-label="色轮上五种搭配规则的角度关系：单色 0 度、类比正负 30 度、互补 180 度、三等分 120 度、分裂互补正负 150 度">
+            <circle cx="130" cy="110" r="86" fill="none" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <circle cx="130" cy="110" r="78" fill="none" stroke-dasharray="2 5" style="stroke: var(--c-line-2); stroke-width: 1;"/>
+            <circle cx="130" cy="110" r="4" style="fill: var(--c-text-soft);"/>
+            <line x1="130" y1="110" x2="130" y2="32" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+            <circle cx="130" cy="32" r="7" style="fill: var(--c-primary);"/>
+            <text x="130" y="22" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">主色 0°</text>
+            <text x="130" y="200" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">角度关系才是重点 —— 每一格的角度差都用右表核对</text>
+
+            <!-- 类比 ±30 -->
+            <line x1="130" y1="110" x2="172" y2="47" style="stroke: var(--c-accent); stroke-width: 1.6;"/>
+            <line x1="130" y1="110" x2="88" y2="47" style="stroke: var(--c-accent); stroke-width: 1.6;"/>
+            <circle cx="172" cy="47" r="6" style="fill: var(--c-accent);"/><circle cx="88" cy="47" r="6" style="fill: var(--c-accent);"/>
+            <text x="182" y="52" style="fill: var(--c-accent); font-size: 11px;">+30°</text>
+            <text x="80" y="42" text-anchor="end" style="fill: var(--c-accent); font-size: 11px;">-30° 类比</text>
+
+            <line x1="130" y1="110" x2="119" y2="188" style="stroke: var(--c-danger); stroke-width: 1.6;"/>
+            <circle cx="119" cy="188" r="6" style="fill: var(--c-danger);"/>
+            <text x="126" y="196" style="fill: var(--c-danger); font-size: 11px;">180° 互补</text>
+
+            <line x1="130" y1="110" x2="204" y2="146" style="stroke: var(--c-info); stroke-width: 1.6;"/>
+            <circle cx="204" cy="146" r="6" style="fill: var(--c-info);"/>
+            <text x="212" y="152" style="fill: var(--c-info); font-size: 11px;">120° 三等分</text>
+
+            <line x1="130" y1="110" x2="73" y2="160" style="stroke: var(--c-success); stroke-width: 1.6;"/>
+            <circle cx="73" cy="160" r="6" style="fill: var(--c-success);"/>
+            <text x="66" y="168" text-anchor="end" style="fill: var(--c-success); font-size: 11px;">150° 分裂互补</text>
+
+            <line x1="300" y1="34" x2="300" y2="200" style="stroke: var(--c-line); stroke-width: 1;"/>
+
+            <text x="324" y="46" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">对照：同一张「四地区柱状图」</text>
+            <rect x="324" y="60" width="34" height="52" style="fill: var(--c-primary);"/>
+            <rect x="360" y="60" width="34" height="34" style="fill: var(--c-accent);"/>
+            <rect x="396" y="60" width="34" height="66" style="fill: var(--c-danger);"/>
+            <rect x="432" y="60" width="34" height="44" style="fill: var(--c-info);"/>
+            <text x="324" y="132" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">✓ 四色都跳得出来，互不打架</text>
+
+            <text x="324" y="158" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">反例：两个互补色当「字色 + 底色」</text>
+            <rect x="324" y="170" width="200" height="30" rx="5" style="fill: var(--c-primary);"/>
+            <text x="334" y="190" style="fill: var(--c-on-primary); font-size: 12px; font-weight: 700;">互补配色的正文示例</text>
+            <text x="532" y="190" style="fill: var(--c-muted); font-size: 11px;">← 对比度够不够，得算</text>
+          </svg>
+          <figcaption>5 大色系规则都在讲「色轮上的角度差」；但好看 ≠ 好读，可读性要用对比度公式来算</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 5 大色系的本质：一组色相偏移量</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">const</span> HUE_OFFSETS = {
+  monochromatic: <span class="num">0</span>,    <span class="cmt">// 同色相，只改 S / L</span>
+  analogous:     <span class="num">30</span>,   <span class="cmt">// 相邻 ±30°</span>
+  triadic:       <span class="num">120</span>,  <span class="cmt">// 三等分</span>
+  split:         <span class="num">150</span>,  <span class="cmt">// 分裂互补</span>
+  complementary: <span class="num">180</span>,  <span class="cmt">// 对面</span>
+};
+
+<span class="kw">function</span> swatches(baseH, offset, n = <span class="num">5</span>) {
+  <span class="kw">return</span> Array.from({ length: n }, (_, i) =&gt; {
+    <span class="kw">const</span> h = (baseH + i * offset + <span class="num">360</span>) % <span class="num">360</span>;   <span class="cmt">// ← mod 360 不能漏</span>
+    <span class="kw">return</span> hsl2rgb(h, <span class="num">60</span>, <span class="num">55</span>);                     <span class="cmt">// 转成 RGB 直接画</span>
+  });
+}</code></pre>
+              <div class="key-point">
+                <p>五种规则其实只有<strong>一个参数不同</strong>：相邻两色的色相差。记住这句，就不用背五段代码了 —— <code>0 / 30 / 120 / 150 / 180</code> 就是全部。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> WCAG 对比度：把「读不清」变成一个数</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 相对亮度：先 γ 解码，再加权求和（人眼对绿最敏感）</span>
+<span class="kw">function</span> luminance([r, g, b]) {
+  <span class="kw">const</span> lin = [r, g, b].map((v) =&gt; {
+    v /= <span class="num">255</span>;
+    <span class="kw">return</span> v &lt;= <span class="num">0.03928</span> ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+  });
+  <span class="kw">return</span> <span class="num">0.2126</span> * lin[<span class="num">0</span>] + <span class="num">0.7152</span> * lin[<span class="num">1</span>] + <span class="num">0.0722</span> * lin[<span class="num">2</span>];
+}
+
+<span class="cmt">// 对比度比值：永远是「亮的在上」，所以结果 ≥ 1</span>
+<span class="kw">const</span> ratio = (c1, c2) =&gt; {
+  <span class="kw">const</span> [a, b] = [luminance(c1), luminance(c2)].sort((x, y) =&gt; y - x);
+  <span class="kw">return</span> (a + <span class="num">0.05</span>) / (b + <span class="num">0.05</span>);
+};</code></pre>
+              <div class="key-point">
+                <p>三个阈值记牢就够了：<strong>3 : 1</strong>（大字号 AA / 图形元素边界）、<strong>4.5 : 1</strong>（正文 AA）、<strong>7 : 1</strong>（正文 AAA）。演示里的判定就是拿这三个数去比。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 用对比度反过来约束配色</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 先按色系规则生成候选色，再用对比度筛掉不能当文字的那些</span>
+<span class="kw">function</span> pickTextColor(bg, candidates) {
+  <span class="kw">const</span> ok = candidates.filter((c) =&gt; ratio(bg, c) &gt;= <span class="num">4.5</span>);
+  <span class="kw">if</span> (ok.length) <span class="kw">return</span> ok[<span class="num">0</span>];
+  <span class="cmt">// 一个都不合格 → 不换色，而是换底色（或改用大字号 + 加粗）</span>
+  <span class="kw">return</span> <span class="kw">null</span>;
+}</code></pre>
+              <div class="key-point">
+                <p>配色流程应该是<strong>「先定语义色相，再按对比度收敛」</strong>。反过来的做法（先挑好看的颜色、读不清再说）在演示里一算就知道：很多「好看的互补配」正文对比度只有 2～3:1。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">上半部分是<strong>5 大色系搭配器</strong>：拖动基准色相偏移，五种规则的色板与小图同时刷新，点卡片看适用场景。下半部分是<strong>对比度检查器</strong>：两个颜色各从一个下拉框里挑（选项都是本站设计令牌），实时算出 WCAG 比值与 AA / AAA 判定，并展示它在浅底与深底上的可读性。</p>
+          <div class="demo-mount" data-demo="d-3-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>5 大色系规则只差一个参数：相邻色相差 <code>0 / 30 / 120 / 150 / 180</code>，对应单色 / 类比 / 三等分 / 分裂互补 / 互补。</li>
+            <li>选择原则：严肃科研用单色、分组用类比、突出重点用互补、正好 3 类用三等分、拿不准用分裂互补。</li>
+            <li>色相差决定「分不分得开」，亮度差决定「读不读得清」；正文 AA 门槛是 <b>4.5 : 1</b>，大字号是 <b>3 : 1</b>。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">WCAG 2.1 对「正文文本」（约 14px 常规字重）在 AA 级下的最低对比度要求是多少？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="a"><span>2 : 1 —— 能看出有色差就够了</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="b"><span>3 : 1 —— 与图形元素的宽松标准一致</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="c"><span>4.5 : 1 —— 正文 AA 的硬门槛</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-4" value="d"><span>7 : 1 —— AA 与 AAA 用的是同一个数</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>4.5 : 1 是<strong>正文 AA</strong> 的门槛；3 : 1 是<em>大字号 AA</em>（以及图形元素边界）的标准；7 : 1 才是正文 AAA。三个数别记混 —— 演示里的判定标签就按这三个阈值实时给出。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.5 科研经典配色 ============ -->
+      <article class="chapter" id="ch-3-5">
+        <h2>3.5 科研经典配色</h2>
+        <p class="chapter-subtitle">Wong / Paul Tol / Okabe–Ito / Tableau / Paired / Viridis —— 顶刊到底在用哪一套？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>你给 <code>crime.csv</code> 画一张五地区对比图，需要 5 个颜色。选项太多：Tableau 10 好看、Paired 12 色齐全、彩虹色最「显眼」—— 但顶刊在用的其实是那几套看起来「有点土」的色板。为什么？</p>
+        <table class="theory-table">
+          <thead><tr><th>配色</th><th>来源</th><th>色数</th><th>特点 / 风险</th></tr></thead>
+          <tbody>
+            <tr><td><b>Wong 2011</b></td><td>Nature Methods 8:441</td><td>8</td><td>CVD 友好 + 灰度打印友好</td></tr>
+            <tr><td><b>Okabe–Ito</b></td><td>Okabe &amp; Ito 2002</td><td>8</td><td>早期 Nature / Science 默认；本课 <code>--ch-1..8</code></td></tr>
+            <tr><td><b>Paul Tol</b></td><td>SRON Tech Note</td><td>7~8</td><td>给出 bright / muted / high-contrast 三套场景版</td></tr>
+            <tr><td><b>Tableau 10</b></td><td>Tableau 商业默认</td><td>10</td><td>通用好看，但红绿对色盲不友好</td></tr>
+            <tr><td><b>Paired (12)</b></td><td>ColorBrewer</td><td>12</td><td>配对设计专用；12 色对眼睛已过载</td></tr>
+            <tr><td><b>Viridis / Cividis</b></td><td>matplotlib / d3 默认</td><td>连续</td><td>感知均匀 + CVD 友好；只适用于连续数值</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>顶刊选配色的三条硬指标</h4>
+          <ul>
+            <li><strong>类别数 ≤ 7</strong>：超过 7 种，眼睛就分不清了 —— 类别多时应改画连续 colormap 或做小多图。</li>
+            <li><strong>过 CVD 模拟</strong>：在红色盲 / 绿色盲 / 蓝色盲三种视角下都还能区分（见 3.8）。</li>
+            <li><strong>灰度可辨</strong>：论文常被黑白打印，把颜色转成明度后<em>依然要能区分</em>。这一条排除了大量「色相不同、亮度相同」的漂亮色板。</li>
+          </ul>
+          <p><strong>所以 Okabe–Ito / Wong 这类色板看起来「不够鲜艳」，恰恰是为了满足上面三条：色相拉开的同时，明度也刻意拉出梯度。</strong></p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="同一组类别在四种色板下的对比：课程令牌定性色板、主色深浅阶、发散阶、以及把它们转成明度后的灰度对照">
+            <text x="0" y="16" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① 令牌定性色板（Okabe–Ito 系，CVD 友好）</text>
+            <rect x="0" y="24" width="70" height="26" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="76" y="24" width="70" height="26" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="152" y="24" width="70" height="26" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="228" y="24" width="70" height="26" rx="5" style="fill: var(--ch-4);"/>
+            <rect x="304" y="24" width="70" height="26" rx="5" style="fill: var(--ch-5);"/>
+            <rect x="380" y="24" width="70" height="26" rx="5" style="fill: var(--ch-6);"/>
+            <rect x="456" y="24" width="70" height="26" rx="5" style="fill: var(--ch-7);"/>
+            <rect x="532" y="24" width="70" height="26" rx="5" style="fill: var(--ch-8);"/>
+
+            <text x="0" y="76" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② 单色深浅阶（同一色相改亮度，用于层级）</text>
+            <rect x="0" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 100%, var(--c-surface));"/>
+            <rect x="76" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 74%, var(--c-surface));"/>
+            <rect x="152" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 52%, var(--c-surface));"/>
+            <rect x="228" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 34%, var(--c-surface));"/>
+            <rect x="304" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 20%, var(--c-surface));"/>
+            <rect x="380" y="84" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 9%, var(--c-surface));"/>
+            <text x="470" y="102" style="fill: var(--c-muted); font-size: 11px;">用于「同一指标的不同年份/层级」</text>
+
+            <text x="0" y="136" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ 灰度打印自检（把上面两行转成明度看还分不分得开）</text>
+            <rect x="0" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 92%, var(--c-surface));"/>
+            <rect x="76" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 66%, var(--c-surface));"/>
+            <rect x="152" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 78%, var(--c-surface));"/>
+            <rect x="228" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 54%, var(--c-surface));"/>
+            <rect x="304" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 84%, var(--c-surface));"/>
+            <rect x="380" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 46%, var(--c-surface));"/>
+            <rect x="456" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 62%, var(--c-surface));"/>
+            <rect x="532" y="144" width="70" height="26" rx="5" style="fill: color-mix(in srgb, var(--c-text) 74%, var(--c-surface));"/>
+            <text x="0" y="192" style="fill: var(--c-muted); font-size: 11.5px;">灰度行里相邻两格仍能区分 ⇒ 这套色板「灰度打印友好」；若相邻格糊成一片，就必须换色板。</text>
+          </svg>
+          <figcaption>同一组类别在令牌定性色板、单色深浅阶与灰度自检下的样子</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 用令牌而不是写死 hex 定义色板</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ❌ 旧写法：把 8 个写死的 hex 抄进 JS，换主题时完全不动</span>
+<span class="cmt">// const WONG = ['&lt;hex-1&gt;', '&lt;hex-2&gt;', ... ];</span>
+
+<span class="cmt">// ✅ 本站写法：色板 = 一组设计令牌（可带混色）</span>
+<span class="kw">const</span> SCHEMES = {
+  <span class="str">'课程定性色板'</span>: [<span class="str">'var(--ch-1)'</span>, <span class="str">'var(--ch-2)'</span>, <span class="str">'var(--ch-3)'</span>, <span class="str">'var(--ch-4)'</span>],
+  <span class="str">'主色深浅阶'</span>:   [<span class="num">100</span>, <span class="num">74</span>, <span class="num">52</span>, <span class="num">34</span>].map(
+    (p) =&gt; <span class="str">`color-mix(in srgb, var(--c-primary) ${p}%, var(--c-surface))`</span>),
+};</code></pre>
+              <div class="key-point">
+                <p>色板本身也变成「令牌的组合」，好处是<strong>深浅主题一键切换</strong>：深色模式下 <code>--ch-1..8</code> 是专门提亮过的一档，浅底能看的色板在深底往往偏暗 —— 用令牌就自动解决了。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 灰度友好性自检：转成明度排序</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 把色板里的每个颜色按 WCAG 相对亮度排序，
+// 再看「相邻两个的亮度差」是否足够 —— 差太小 ⇒ 黑白打印后糊成一团</span>
+<span class="kw">const</span> lums = palette.map(luminance);
+<span class="kw">const</span> gaps = lums.slice(<span class="num">1</span>).map((v, i) =&gt; Math.abs(v - lums[i]));
+<span class="kw">const</span> minGap = Math.min(...gaps);           <span class="cmt">// 经验阈值：≥ 0.06 较稳</span>
+<span class="kw">const</span> grayscaleSafe = minGap &gt;= <span class="num">0.06</span>;</code></pre>
+              <div class="key-point">
+                <p><code>luminance()</code> 就是 3.4 里那个 WCAG 公式：<strong>一个函数，两处用</strong> —— 判断文字对比度、判断灰度打印可辨性。这也是「顶刊配色看起来朴素」的原因：它们为了亮度差，牺牲了一部分色相自由度。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 类别数超限时的退路</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 类别数 ≤ 7：用定性色板；8~10：勉强用定性色板但必须过 CVD；
+// &gt; 10：改用「连续 colormap + 排序」或小多图，别硬塞颜色</span>
+<span class="kw">function</span> paletteFor(n) {
+  <span class="kw">if</span> (n &lt;= <span class="num">8</span>) <span class="kw">return</span> { type: <span class="str">'qualitative'</span>, note: <span class="str">'过 CVD 与灰度自检即可'</span> };
+  <span class="kw">if</span> (n &lt;= <span class="num">12</span>) <span class="kw">return</span> { type: <span class="str">'qualitative+'</span>, note: <span class="str">'勉强，建议先合并类别'</span> };
+  <span class="kw">return</span> { type: <span class="str">'redesign'</span>, note: <span class="str">'改连续 colormap / 小多图 / 分组'</span> };
+}</code></pre>
+              <div class="key-point">
+                <p><strong>不要为了「每个类别一个颜色」硬撑。</strong>更好的做法是：把次要类别合并成「其他」、把一张图拆成小多图、或者干脆让类别映射到位置（分面）而不是颜色。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">六张<strong>配色卡</strong>：每张列出颜色条、适用场景与两条自检结论（CVD / 灰度）。点任意一张，右下角的「小图预览」会用这套色板画同一份数据 —— 同一组数字，配色一换，读起来的感觉完全不同。</p>
+          <div class="demo-mount" data-demo="d-3-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>顶刊三条硬指标：类别数 ≤ 7、过 CVD 模拟、灰度打印仍可辨 —— 满足这三条的色板看起来都「不那么鲜艳」。</li>
+            <li>Okabe–Ito / Wong / Paul Tol 是科研场景的三大黄金标准；Tableau 10 好看但红绿不友好；Paired 12 色已过载。</li>
+            <li>本章所有演示的色板都定义成「令牌的组合」，所以深浅色主题切换时整套配色自动适配。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">顶刊普遍改用 Okabe–Ito / Wong 这一类「看起来偏朴素」的色板，最核心的原因是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="a"><span>它们比彩虹色更好看、更现代</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="b"><span>色数少，画图时省事</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="c"><span>对色觉缺陷读者友好，而且黑白打印后依然能区分</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-5" value="d"><span>它们是某些绘图库的默认值，改起来麻烦</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>这类色板在设计时就同时约束了<strong>色相差异</strong>与<strong>明度梯度</strong>：色相拉开保证 CVD 读者能区分，明度拉开保证转成灰度后仍能区分。它们在屏幕上确实不如彩虹「抢眼」，但在一页可能被黑白打印、被色觉缺陷读者阅读的论文里，这两个约束比「好看」重要得多。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.6 对错案例对比 ============ -->
+      <article class="chapter" id="ch-3-6">
+        <h2>3.6 对错案例对比</h2>
+        <p class="chapter-subtitle">同一份数据、两种配色 —— 点一下切换，亲眼看看错误的配色是怎么把数据讲错的。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>用 <code>crime.csv</code> 里 8 个州的谋杀案数画柱状图，数据不变，只换配色方案：</p>
+        <table class="theory-table">
+          <thead><tr><th>方案</th><th>配色做法</th><th>结论</th><th>错在哪</th></tr></thead>
+          <tbody>
+            <tr><td>A 彩虹谱（Jet 型）</td><td>色相从红扫到紫</td><td>⚠ 错</td><td>非感知均匀、CVD 不友好、打印不友好；Nature 已禁用</td></tr>
+            <tr><td>B 红绿对比</td><td>用「危险色 / 成功色」交替</td><td>⚠ 错</td><td>红色盲与绿色盲眼中几乎同色，是最严重的可访问性问题</td></tr>
+            <tr><td>C 12 色过载</td><td>给每根柱子一个色相</td><td>⚠ 错</td><td>超过 7 种颜色，眼睛已经分不清哪个是哪个</td></tr>
+            <tr><td>D 令牌定性色板</td><td>8 色，色相 + 明度双拉开</td><td>✅ 对</td><td>CVD 友好 + 灰度打印友好 + 类别数 ≤ 8</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>为什么「彩虹」会被顶刊直接禁用</h4>
+          <p>彩虹色阶的色相是循环的，而人眼在蓝→绿→黄这一段的<strong>明度感知并不单调</strong>：同一条平缓上升的数据，用彩虹画出来会在中段出现一截「看起来更亮」的假台阶。读者会把这条假台阶当成「数据在这里发生了突变」—— <strong>图制造了数据里并不存在的结构</strong>，这比「不好看」严重得多。</p>
+        </div>
+
+        <div class="callout callout--ok">
+          <p><strong>教学要点：</strong>光看理论不如下场选错一次。本节演示故意让你在三种错方案里切换，每一次都告诉你「错在哪」—— 亲手看到红绿在绿盲模拟下糊成一片，比读一百遍规则都记得住。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 208" role="img" aria-label="两行对比：第一行令牌定性色板八色可区分，第二行危险红与成功绿交替，说明在色盲眼中会塌陷成同色">
+            <text x="0" y="16" style="fill: var(--c-success); font-size: 12.5px; font-weight: 700;">✅ 对：令牌定性色板（色相 + 明度双拉开）</text>
+            <rect x="0" y="24" width="76" height="30" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="86" y="24" width="76" height="30" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="172" y="24" width="76" height="30" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="258" y="24" width="76" height="30" rx="5" style="fill: var(--ch-4);"/>
+            <rect x="344" y="24" width="76" height="30" rx="5" style="fill: var(--ch-5);"/>
+            <rect x="430" y="24" width="76" height="30" rx="5" style="fill: var(--ch-6);"/>
+            <rect x="516" y="24" width="76" height="30" rx="5" style="fill: var(--ch-7);"/>
+            <text x="0" y="70" style="fill: var(--c-muted); font-size: 11px;">相邻两色在色相与明度上都拉开 ⇒ 三种 CVD 与灰度打印下都能区分</text>
+
+            <line x1="0" y1="88" x2="640" y2="88" style="stroke: var(--c-line); stroke-width: 1;"/>
+
+            <text x="0" y="110" style="fill: var(--c-danger); font-size: 12.5px; font-weight: 700;">⚠ 错：危险红 / 成功绿 交替</text>
+            <rect x="0" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="86" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <rect x="172" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="258" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <rect x="344" y="118" width="76" height="30" rx="5" style="fill: var(--c-danger);"/>
+            <rect x="430" y="118" width="76" height="30" rx="5" style="fill: var(--c-success);"/>
+            <text x="0" y="164" style="fill: var(--c-text-soft); font-size: 11px;">正常视觉：一眼分开</text>
+
+            <rect x="0" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="86" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <rect x="172" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="258" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <rect x="344" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 78%, var(--c-surface));"/>
+            <rect x="430" y="172" width="76" height="30" rx="5" style="fill: color-mix(in srgb, var(--c-warn) 74%, var(--c-surface));"/>
+            <text x="516" y="184" style="fill: var(--c-warn); font-size: 11px;">← 绿盲眼中：几乎同色</text>
+            <text x="516" y="198" style="fill: var(--c-muted); font-size: 10.5px;">（此处用同色系近似示意）</text>
+          </svg>
+          <figcaption>同一组类别：令牌定性色板在 CVD 与灰度下都站得住，红绿交替则会塌陷</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 错误示范：彩虹色阶（故意写错）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ⚠ 这里故意用彩虹色阶，就是要演示错配：
+//   色相沿 0→320° 扫一圈，写出「彩虹谱 Jet」型色阶。
+//   它的毛病不是难看，而是感知不均匀 —— 会在数据平缓处造出假的亮台阶。</span>
+<span class="kw">const</span> rainbowAt = (t) =&gt; {
+  <span class="kw">const</span> h = t * <span class="num">320</span>;                 <span class="cmt">// 0° 红 → 320° 紫</span>
+  <span class="kw">return</span> hsl2rgb(h, <span class="num">95</span>, <span class="num">55</span>);     <span class="cmt">// 高饱和、中等明度</span>
+};
+
+<span class="cmt">// 12 色过载同理：色相平均切 12 份，人眼已经分不清相邻两色</span>
+<span class="kw">const</span> overloaded = (i) =&gt; hsl2rgb(i * <span class="num">30</span>, <span class="num">72</span>, <span class="num">52</span>);</code></pre>
+              <div class="key-point">
+                <p><strong>除本处之外，本章演示一律只用令牌色。</strong>保留这一段是因为它演示的正是「不该这样做」：你可以用同一份数据切到这一档，亲眼看到彩虹色阶的假台阶与红绿塌陷。请对照 3.8 的 CVD 模拟验证。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 正确示范：令牌定性色板按索引取色</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 类别 → 颜色：顺序固定、亮度可辨、深色主题自动提亮</span>
+<span class="kw">const</span> QUALITATIVE = [
+  <span class="str">'var(--ch-1)'</span>, <span class="str">'var(--ch-2)'</span>, <span class="str">'var(--ch-3)'</span>, <span class="str">'var(--ch-4)'</span>,
+  <span class="str">'var(--ch-5)'</span>, <span class="str">'var(--ch-6)'</span>, <span class="str">'var(--ch-7)'</span>, <span class="str">'var(--ch-8)'</span>,
+];
+
+<span class="kw">const</span> colorOf = (i) =&gt; QUALITATIVE[i % QUALITATIVE.length];   <span class="cmt">// 超过 8 类就该换画法了</span>
+
+<span class="cmt">// 红绿对比的错误做法：用「语义色」当类别色</span>
+<span class="cmt">// const bad = (i) =&gt; i % 2 ? 'var(--c-success)' : 'var(--c-danger)';</span></code></pre>
+              <div class="key-point">
+                <p><code>--c-danger</code> / <code>--c-success</code> 这类令牌是<strong>语义色</strong>：它们表示「危险 / 成功」的含义，不该被用来区分中性的类别。混用语义色当类别色，既误导语义、又在 CVD 下失效 —— 这正是本演示要对比的两种写法。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 并排对照：把「结论」直接写在图上</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 左栏永远是正确的令牌色板，右栏随按钮切换到某一档错误方案</span>
+<span class="kw">const</span> CASES = {
+  rainbow: { label: <span class="str">'彩虹谱'</span>,   color: rainbowAt,      why: <span class="str">'非感知均匀，造出假台阶'</span> },
+  redgreen:{ label: <span class="str">'红绿对比'</span>,   color: redGreen,       why: <span class="str">'绿盲眼中几乎同色'</span> },
+  twelve:  { label: <span class="str">'12 色过载'</span>,  color: overloaded,     why: <span class="str">'超过 7 色，眼睛分不清'</span> },
+};
+
+<span class="kw">function</span> render(key) {
+  right.innerHTML = bars(CASES[key].color);        <span class="cmt">// 同一份数据，只换取色函数</span>
+  why.textContent = CASES[key].why;
+}</code></pre>
+              <div class="key-point">
+                <p>把「同一份数据 + 两种配色」并排放在一起，是教会学生配色最快的办法：数据一模一样，结论却完全不同 —— 他们会立刻明白<strong>配色不是装饰，而是论证的一部分</strong>。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">左边永远是<strong>正确</strong>的令牌色板，右边用按钮切换三种<strong>错误</strong>配色；每次切换都会在下方写明「错在哪」。同一份 8 州谋杀案数据，两边唯一的不同就是取色函数。</p>
+          <div class="demo-mount" data-demo="d-3-6"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>三种典型错配：彩虹谱（非感知均匀）、红绿对比（CVD 下塌陷）、颜色过多（超过 7 色分不清）。</li>
+            <li>彩虹色阶的危害在于<strong>制造数据里并不存在的结构</strong> —— 平缓处的假亮台阶会被读成「突变」。</li>
+            <li>别把语义色（危险 / 成功）当类别色；类别就用定性色板，按索引固定取色。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">Nature 系列期刊禁用 rainbow / Jet 色阶，最根本的原因是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="a"><span>颜色不够鲜艳，做图出来不好看</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="b"><span>印刷时 CMYK 四色成本太高</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="c"><span>非感知均匀，会在平缓数据处造出并不存在的「亮台阶」等假结构</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-6" value="d"><span>它对色觉缺陷读者「过于友好」，与其他图不统一</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>彩虹色阶的明度感知不单调（蓝→绿→黄那一段尤其明显），于是「颜色看起来更亮」不等于「数值更大」。读者会把假的亮度台阶读成真实的结构变化 —— 图在制造数据里不存在的信息，这属于学术诚信问题，而不只是审美问题。CVD 与打印问题则是它的附加缺点。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.7 鲜艳 + 低饱和 哲学生成器 ============ -->
+      <article class="chapter" id="ch-3-7">
+        <h2>3.7 鲜艳 + 低饱和 哲学生成器</h2>
+        <p class="chapter-subtitle">颜色数量 ≤ 7、鲜艳色相 + 低饱和度 —— 好看，而且耐看。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>你要给 <code>crime.csv</code> 的五个地区各配一个色，还想让整套图看起来「有设计感」。把饱和度全开（S=100%）会刺眼，全部低饱和又会发灰 —— 于是有了本章这套经验规则：</p>
+        <table class="theory-table">
+          <thead><tr><th>规则</th><th>参数</th><th>为什么</th></tr></thead>
+          <tbody>
+            <tr><td>数量少</td><td>颜色数 ≤ 7</td><td>超过 7 种，眼睛就分不清相邻类别了</td></tr>
+            <tr><td>色相拉开</td><td>相邻色相差 ≥ 30°</td><td>用色相拉开「类间距离」，类别才跳得出来</td></tr>
+            <tr><td>饱和度压低</td><td>配套色 S = 30–50%</td><td>每个色都别太「冲」，整页才耐看</td></tr>
+            <tr><td>主色略艳</td><td>主色 S = 70–80%</td><td>鲜明但不刺眼，承担「主角」</td></tr>
+            <tr><td>高亮极淡</td><td>高亮 L = 85–90%</td><td>用于背景、注释、参考线</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>7 色生成规则：一条「主色 + 两个邻居 + 一个对面 + 一档高亮」的配方</h4>
+          <p>主色 + 2 个类比（±30°）+ 1 个类比低饱和 + 1 个互补 + 1 个互补低饱和 + 1 个高亮 = <strong>7 色</strong>。它同时满足了「≤ 7」与「色相拉开 ≥ 30°」，而低饱和的那几档负责把整个页面「压住」，让主色更抢眼。</p>
+          <p><strong>为什么要分主色 / 配套色：</strong>一张图里真正需要「跳出来」的通常只有一两个系列，其余都是陪衬。让所有颜色都鲜艳，等于没有重点；让所有颜色都低饱和，等于没有重点 —— 主次分明才好看。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 210" role="img" aria-label="色相环上七个生成色的角度分布：主色 0 度、两个类比正负 30 度、互补 180 度、以及对应的低饱和与高亮档位">
+            <circle cx="150" cy="112" r="80" fill="none" style="stroke: var(--c-border-2); stroke-width: 1.4;"/>
+            <circle cx="150" cy="112" r="3" style="fill: var(--c-text-soft);"/>
+
+            <line x1="150" y1="112" x2="150" y2="32" style="stroke: var(--c-primary); stroke-width: 2.6;"/>
+            <circle cx="150" cy="32" r="8" style="fill: var(--c-primary);"/>
+            <text x="150" y="22" text-anchor="middle" style="fill: var(--c-primary); font-size: 11px; font-weight: 700;">主色 S70–80%</text>
+
+            <line x1="150" y1="112" x2="190" y2="43" style="stroke: var(--c-primary); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <circle cx="190" cy="43" r="6" style="fill: color-mix(in srgb, var(--c-primary) 62%, var(--c-surface));"/>
+            <text x="198" y="40" style="fill: var(--c-text-soft); font-size: 10.5px;">+30° 类比</text>
+            <line x1="150" y1="112" x2="110" y2="43" style="stroke: var(--c-primary); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <circle cx="110" cy="43" r="6" style="fill: color-mix(in srgb, var(--c-primary) 62%, var(--c-surface));"/>
+            <text x="102" y="38" text-anchor="end" style="fill: var(--c-text-soft); font-size: 10.5px;">-30° 类比</text>
+
+            <line x1="150" y1="112" x2="139" y2="192" style="stroke: var(--c-danger); stroke-width="1.8"/>
+            <circle cx="139" cy="192" r="7" style="fill: var(--c-danger);"/>
+            <text x="146" y="200" style="fill: var(--c-danger); font-size: 10.5px;">180° 互补（强调）</text>
+
+            <text x="270" y="40" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">⑦ 高亮档（L 85–90%，S 极低）</text>
+            <rect x="270" y="50" width="300" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));"/>
+            <text x="278" y="67" style="fill: var(--c-text-soft); font-size: 11px;">背景 / 注释 / 参考线</text>
+
+            <text x="270" y="98" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">配套色（S 30–50%，克制）</text>
+            <rect x="270" y="108" width="92" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-primary) 52%, var(--c-surface));"/>
+            <rect x="372" y="108" width="92" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-accent) 62%, var(--c-surface));"/>
+            <rect x="474" y="108" width="96" height="24" rx="5" style="fill: color-mix(in srgb, var(--c-danger) 58%, var(--c-surface));"/>
+
+            <text x="270" y="158" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">主色（S 70–80%，主角）</text>
+            <rect x="270" y="168" width="140" height="24" rx="5" style="fill: var(--c-primary);"/>
+            <text x="420" y="184" style="fill: var(--c-muted); font-size: 11px;">主次分明：一艳 + 多淡 = 有重点又耐看</text>
+          </svg>
+          <figcaption>「鲜艳 + 低饱和」的配方：色相拉开保证可分，饱和度分档保证主次与耐看</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 7 色生成规则</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 输入基准色相 H、主色饱和度 S、主色亮度 L，输出 7 色（S / L 会被分档调整）</span>
+<span class="kw">function</span> genPalette(H, S, L) {
+  <span class="kw">const</span> rotate = (d) =&gt; (H + d + <span class="num">360</span>) % <span class="num">360</span>;   <span class="cmt">// 色相安全循环</span>
+  <span class="kw">const</span> s = (k) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">100</span>, S * k));
+  <span class="kw">const</span> l = (k) =&gt; Math.max(<span class="num">0</span>, Math.min(<span class="num">100</span>, L * k));
+  <span class="kw">return</span> [
+    hsl2rgb(rotate(-<span class="num">30</span>), s(<span class="num">0.6</span>), l(<span class="num">1.10</span>)),   <span class="cmt">// 类比 1 · 低饱和</span>
+    hsl2rgb(rotate(-<span class="num">30</span>), s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// 类比 1</span>
+    hsl2rgb(H,            s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// 主色 ★</span>
+    hsl2rgb(rotate(<span class="num">30</span>),  s(<span class="num">1.0</span>), l(<span class="num">1.00</span>)),   <span class="cmt">// 类比 2</span>
+    hsl2rgb(rotate(<span class="num">30</span>),  s(<span class="num">0.6</span>), l(<span class="num">1.10</span>)),   <span class="cmt">// 类比 2 · 低饱和</span>
+    hsl2rgb(rotate(<span class="num">180</span>), s(<span class="num">0.8</span>), l(<span class="num">0.95</span>)),   <span class="cmt">// 互补 · 强调</span>
+    hsl2rgb(H,            s(<span class="num">0.2</span>), l(<span class="num">1.40</span>)),   <span class="cmt">// 高亮（极低饱和）</span>
+  ];
+}</code></pre>
+              <div class="key-point">
+                <p>配方里每个颜色都由 (色相偏移, 饱和系数, 亮度系数) 三元组决定 —— <strong>改这三个系数就能整批调色</strong>。注意 <code>rotate()</code>：色相是环形的，加偏移必须 mod 360，否则会出现负角度或超过 360 的非法值。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> HSL → RGB 与 hex 输出</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 标准 HSL → RGB（s,l 是百分数）</span>
+<span class="kw">function</span> hsl2rgb(h, s, l) {
+  s /= <span class="num">100</span>; l /= <span class="num">100</span>;
+  <span class="kw">const</span> k = (n) =&gt; (n + h / <span class="num">30</span>) % <span class="num">12</span>;
+  <span class="kw">const</span> a = s * Math.min(l, <span class="num">1</span> - l);
+  <span class="kw">const</span> f = (n) =&gt; l - a * Math.max(-<span class="num">1</span>, Math.min(k(n) - <span class="num">3</span>, Math.min(<span class="num">9</span> - k(n), <span class="num">1</span>)));
+  <span class="kw">return</span> [f(<span class="num">0</span>) * <span class="num">255</span>, f(<span class="num">8</span>) * <span class="num">255</span>, f(<span class="num">4</span>) * <span class="num">255</span>].map((v) =&gt; Math.round(v));
+}
+
+<span class="cmt">// 给「复制 hex」用：转成 #rrggbb 文本</span>
+<span class="kw">const</span> hexOf = ([r, g, b]) =&gt;
+  <span class="str">'#'</span> + [r, g, b].map((v) =&gt; v.toString(<span class="num">16</span>).padStart(<span class="num">2</span>, <span class="str">'0'</span>)).join(<span class="str">''</span>);</code></pre>
+              <div class="key-point">
+                <p>演示页面上显示 hex 是为了<strong>可复制、可交付</strong>：颜色最终要写进别人的论文或别的图表里。但要注意，hex 一旦写死就丢了主题适配能力 —— 所以本站正文与图形仍然用令牌，hex 只作为「导出结果」。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 「复制全部 hex」：clipboard + 失败降级</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="kw">async</span> <span class="kw">function</span> copyAll(hexes) {
+  <span class="kw">const</span> text = hexes.join(<span class="str">', '</span>);
+  <span class="kw">try</span> {
+    <span class="kw">await</span> navigator.clipboard.writeText(text);       <span class="cmt">// 首选：异步剪贴板 API</span>
+    <span class="kw">return</span> <span class="str">'已复制 7 个 hex'</span>;
+  } <span class="kw">catch</span> (err) {
+    <span class="cmt">// 降级 1：非安全上下文 / 无权限时，用临时 textarea + execCommand</span>
+    <span class="kw">try</span> {
+      <span class="kw">const</span> ta = document.createElement(<span class="str">'textarea'</span>);
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      <span class="kw">const</span> ok = document.execCommand(<span class="str">'copy'</span>);
+      ta.remove();
+      <span class="kw">if</span> (ok) <span class="kw">return</span> <span class="str">'已复制（降级模式）'</span>;
+    } <span class="kw">catch</span> (e) { <span class="cmt">/* 继续走降级 2 */</span> }
+    showSelectable(text);                             <span class="cmt">// 降级 2：显示可选中的文本框</span>
+    <span class="kw">return</span> <span class="str">'自动复制被浏览器拦截，请手动全选复制'</span>;
+  }
+}</code></pre>
+              <div class="key-point">
+                <p><code>navigator.clipboard</code> 只在<strong>安全上下文</strong>（https 或 localhost）可用；本地用 <code>file://</code> 打开页面时它会直接抛错。三层防护（API → <code>execCommand</code> → 可选中文本框）保证任何环境下都不会「点了没反应」。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">拖动<strong>基准色相偏移 / 饱和度 / 亮度</strong>三个滑块，右侧实时生成 7 色方案、列出每个色的 hex，并用这套色在真实图表上画一遍。点「复制全部 hex」把 7 个值一次性拿走（自动复制失败时会给你一个可手动复制的文本框）。</p>
+          <div class="demo-mount" data-demo="d-3-7"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>7 色配方 = 主色 + 2 类比（±30°）+ 1 类比低饱和 + 1 互补 + 1 互补低饱和 + 1 高亮。</li>
+            <li>「鲜艳 + 低饱和」的要点是<strong>分档</strong>：主色艳、配套色淡，主次分明才既好看又耐看。</li>
+            <li>色相偏移必须 <code>mod 360</code>；生成结果导出为 hex，但页面本身仍应使用令牌以保证主题适配。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">按「鲜艳 + 低饱和」的配色哲学，成套方案里的<strong>配套色</strong>饱和度建议控制在什么区间？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="a"><span>0–10%，越灰越稳</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="b"><span>30–50%，低饱和、耐看</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="c"><span>70–80%，和主色保持一致最统一</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-7" value="d"><span>90–100%，鲜艳就是要把饱和度拉满</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>配套色是陪衬，S 控制在 <strong>30–50%</strong>：既不至于灰到看不出色相，又不会和主色抢注意力。70–80% 是<em>主色</em>的档位，90–100% 会刺眼 —— 一页全是高饱和色，等于没有重点。</p>
+        </div>
+      </article>
+
+      <!-- ============ 3.8 CVD 论文图测 ============ -->
+      <article class="chapter" id="ch-3-8">
+        <h2>3.8 CVD 论文图测</h2>
+        <p class="chapter-subtitle">你的图在色盲读者眼里还看得懂吗？拿真实数据现场测一遍。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>你投出去一张论文图，审稿人回了句「figure 2 is hard to read」。你自查了排版、字号、图例，都没问题 —— 有没有可能，是因为审稿人是色觉缺陷者（CVD）？约 8% 的男性读不出你靠颜色区分的那几类。先看三张最常见的「论文图」在 CVD 下的实测结果：</p>
+        <table class="theory-table">
+          <thead><tr><th>论文图</th><th>配色方案</th><th>CVD 实测结论</th></tr></thead>
+          <tbody>
+            <tr><td>图 1 · 5 类别散点</td><td>Wong 2011 / Okabe–Ito</td><td>✅ 红盲 / 绿盲 / 蓝盲三种模拟下都能区分</td></tr>
+            <tr><td>图 2 · 顺序型热图</td><td>Viridis / Cividis</td><td>✅ 亮度单调递增，CVD 与灰度打印下仍可读</td></tr>
+            <tr><td>图 3 · 红 / 绿双色对比</td><td>红—绿（错误案例）</td><td>⚠ 绿盲眼中两者几乎同色 —— 最严重的可访问性问题</td></tr>
+          </tbody>
+        </table>
+        <p class="case-note">问题不在「图丑」，而在<strong>信息在部分读者眼中直接消失</strong>：图 3 的两个类别的差异，对色盲读者来说等于没有编码。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>三类 CVD 与「双编码」补救</h4>
+          <ul>
+            <li><strong>红色盲（protanopia）</strong>：约 1% 男性，红色通道感光缺失，红—绿方向坍缩。</li>
+            <li><strong>绿色盲（deuteranopia）</strong>：约 6% 男性，最常见，同样让红—绿难以区分。</li>
+            <li><strong>蓝色盲（tritanopia）</strong>：极罕见，蓝—黄方向受影响。</li>
+          </ul>
+          <p>测试流程：<strong>①</strong> 导出原图 PNG → <strong>②</strong> 用 Coblis / Color Oracle 模拟三类 CVD → <strong>③</strong> 检查是否仍能区分。判据有三条：<strong>亮度对比</strong>是否还够、<strong>形状 / 标签</strong>是否独立于颜色、类别是否还有非颜色的第二编码。</p>
+          <p><strong>双编码（redundant encoding）</strong>是通用解法：颜色再叠一层形状（圆 / 方 / 三角 / 叉）或直接标注类别。这样即使颜色坍缩，形状仍能把类别分开 —— 灰度打印时同样受益。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 268" role="img" aria-label="CVD 测试流程图：导出原图、模拟三类色觉缺陷、检查是否仍可区分；右侧示意红绿对比在模拟后趋于同色，以及对策——用形状做颜色之外的第二编码">
+            <rect x="24" y="26" width="180" height="60" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2); stroke-width: 1.2;"/>
+            <text x="114" y="52" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① 导出原图 PNG</text>
+            <text x="114" y="70" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">保持真实配色，不改动</text>
+
+            <line x1="114" y1="86" x2="114" y2="108" style="stroke: var(--c-border-2); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <polygon points="114,116 110,108 118,108" style="fill: var(--c-border-2);"/>
+
+            <rect x="24" y="120" width="180" height="60" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2); stroke-width: 1.2;"/>
+            <text x="114" y="146" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② 模拟三类色觉缺陷</text>
+            <text x="114" y="164" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">Coblis / Color Oracle</text>
+
+            <line x1="114" y1="180" x2="114" y2="202" style="stroke: var(--c-border-2); stroke-width: 1.6;" stroke-dasharray="4 3"/>
+            <polygon points="114,210 110,202 118,202" style="fill: var(--c-border-2);"/>
+
+            <rect x="24" y="214" width="180" height="46" rx="10" style="fill: color-mix(in srgb, var(--c-success) 14%, var(--c-surface)); stroke: var(--c-success); stroke-width: 1.2;"/>
+            <text x="114" y="242" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ 检查是否仍可区分</text>
+
+            <text x="392" y="42" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">原配色（5 类）</text>
+            <rect x="392" y="52" width="44" height="24" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="442" y="52" width="44" height="24" rx="5" style="fill: var(--ch-2);"/>
+            <rect x="492" y="52" width="44" height="24" rx="5" style="fill: var(--ch-3);"/>
+            <rect x="542" y="52" width="44" height="24" rx="5" style="fill: var(--ch-5);"/>
+
+            <text x="392" y="112" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">绿盲模拟（示意）</text>
+            <rect x="392" y="122" width="44" height="24" rx="5" style="fill: var(--ch-1);"/>
+            <rect x="442" y="122" width="44" height="24" rx="5" style="fill: color-mix(in srgb, var(--ch-2) 35%, var(--c-muted));"/>
+            <rect x="492" y="122" width="44" height="24" rx="5" style="fill: color-mix(in srgb, var(--ch-3) 35%, var(--c-muted));"/>
+            <rect x="542" y="122" width="44" height="24" rx="5" style="fill: var(--ch-5);"/>
+            <text x="392" y="164" style="fill: var(--c-warn); font-size: 11px;">橙色 ↔ 绿色几乎并成一类 ⚠</text>
+
+            <text x="392" y="210" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">对策：颜色之外再加「形状」第二编码</text>
+            <circle cx="404" cy="228" r="7" style="fill: var(--ch-1);"/>
+            <rect x="428" y="221" width="14" height="14" rx="3" style="fill: var(--ch-2);"/>
+            <polygon points="464,221 470,235 458,235" style="fill: var(--ch-3);"/>
+            <text x="486" y="234" style="fill: var(--c-muted); font-size: 11px;">形状独立于颜色 → CVD 下仍可分</text>
+          </svg>
+          <figcaption>CVD 测试流程与典型失效：颜色坍缩时，用形状 / 标签做「第二编码」才能保住可读性</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> CVD 模拟：Machado 2009 一类近似矩阵</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 三种色觉缺陷用 3×3 线性变换近似（Machado et al. 2009 一类拟合）</span>
+<span class="kw">const</span> CVD_MATRICES = {
+  protanopia:   [[<span class="num">0.567</span>, <span class="num">0.433</span>, <span class="num">0.000</span>], [<span class="num">0.558</span>, <span class="num">0.442</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.242</span>, <span class="num">0.758</span>]],
+  deuteranopia: [[<span class="num">0.625</span>, <span class="num">0.375</span>, <span class="num">0.000</span>], [<span class="num">0.700</span>, <span class="num">0.300</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.300</span>, <span class="num">0.700</span>]],
+  tritanopia:   [[<span class="num">0.950</span>, <span class="num">0.050</span>, <span class="num">0.000</span>], [<span class="num">0.000</span>, <span class="num">0.433</span>, <span class="num">0.567</span>], [<span class="num">0.000</span>, <span class="num">0.475</span>, <span class="num">0.525</span>]],
+};
+
+<span class="cmt">// 对单个颜色应用矩阵，结果钳到 0-255（矩阵行 × 输入向量）</span>
+<span class="kw">function</span> simulateCVD([r, g, b], type) {
+  <span class="kw">const</span> m = CVD_MATRICES[type];
+  <span class="kw">return</span> m.map((row) =&gt;
+    Math.round(Math.max(<span class="num">0</span>, Math.min(<span class="num">255</span>, row[<span class="num">0</span>] * r + row[<span class="num">1</span>] * g + row[<span class="num">2</span>] * b)))
+  );
+}</code></pre>
+              <div class="key-point">
+                <p>矩阵的每一行就是「新通道 = 原三通道的加权和」。红/绿盲矩阵里红绿两行高度相似，这正是「红绿坍缩」的数学来源 —— 绿色盲那一行 <code>[0.625, 0.375, 0]</code> 与 <code>[0.700, 0.300, 0]</code> 几乎是同一个方向。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 就地给整张 SVG 重着色（标签不动）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 遍历所有填色元素，用矩阵把它们换成模拟色；文字 / 描边保持原样</span>
+<span class="kw">function</span> simulateSvg(svg, type) {
+  svg.querySelectorAll(<span class="str">'[fill]'</span>).forEach((el) =&gt; {
+    <span class="kw">if</span> (!el.dataset.origFill) el.dataset.origFill = el.getAttribute(<span class="str">'fill'</span>);   <span class="cmt">// 备份原色，切回正常时恢复</span>
+    <span class="kw">const</span> rgb = parseCssColor(el.dataset.origFill);                    <span class="cmt">// 兼容 hex 与 rgb()</span>
+    el.setAttribute(<span class="str">'fill'</span>, rgbStr(simulateCVD(rgb, type)));
+  });
+}
+<span class="cmt">// 切回「正常」：把备份的原色写回去即可</span>
+svg.querySelectorAll(<span class="str">'[data-orig-fill]'</span>).forEach((el) =&gt; el.setAttribute(<span class="str">'fill'</span>, el.dataset.origFill));</code></pre>
+              <div class="key-point">
+                <p>关键是<strong>只改 <code>fill</code>、不动 <code>stroke</code> 和文字</strong>：如果连文字也一起变换，读者根本读不出「这是模拟视图」还是「这是真的图」。此外备份原色（<code>dataset.origFill</code>）让「切回正常」变成一次还原，避免反复变换造成误差累积。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 灰度自检：亮度是否还分得开</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// WCAG 相对亮度：先 γ 解码再按 0.2126 / 0.7152 / 0.0722 加权</span>
+<span class="kw">function</span> luminance([r, g, b]) {
+  <span class="kw">const</span> lin = (v) =&gt; {
+    v /= <span class="num">255</span>;
+    <span class="kw">return</span> v &lt;= <span class="num">0.03928</span> ? v / <span class="num">12.92</span> : Math.pow((v + <span class="num">0.055</span>) / <span class="num">1.055</span>, <span class="num">2.4</span>);
+  };
+  <span class="kw">return</span> <span class="num">0.2126</span> * lin(r) + <span class="num">0.7152</span> * lin(g) + <span class="num">0.0722</span> * lin(b);
+}
+
+<span class="cmt">// 两个类的亮度差 &lt; 0.05 → 灰度打印后基本糊在一起，需要第二编码</span>
+<span class="kw">const</span> grayClash = (c1, c2) =&gt; Math.abs(luminance(c1) - luminance(c2)) &lt; <span class="num">0.05</span>;</code></pre>
+              <div class="key-point">
+                <p>灰度自检是 CVD 测试的<strong>兄弟</strong>：论文常被黑白打印，如果两类颜色只在色相上不同、亮度却一样，灰度下就消失了。用同一个 <code>luminance()</code> 还能顺便算 WCAG 对比度（见 3.4），一举两得。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「正常 / 红盲 / 绿盲 / 蓝盲」切换模拟模式，右侧三张真实论文图（5 类别散点、顺序型热图、红绿对比）会同时重着色；再点「颜色 + 形状双编码」看红绿对比加上形状后是否救得回来。数据来自 <code>crime.csv</code> 的真实州级记录。</p>
+          <div class="demo-mount" data-demo="d-3-8"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>约 8% 男性有色觉缺陷，绿色盲最常见；红—绿是<strong>最危险</strong>的配色方向。</li>
+            <li>CVD 测试流程：导出原图 → 模拟三类色觉缺陷 → 检查亮度 / 形状 / 标签是否仍能区分。</li>
+            <li>通用补救是<strong>双编码</strong>：颜色之外再叠形状或标注，让它同时通过 CVD 与灰度打印两道关。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">一张靠红 / 绿区分两类别的图，在 CVD 测试中被发现「绿盲眼中两类几乎同色」。最有效的补救做法是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="a"><span>把红色调得更亮一点，靠明暗拉开差距</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="b"><span>改用 CVD 友好配色，并为两类各加一个不同的形状做第二编码</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="c"><span>把图例放大，并写清楚「红色是 A、绿色是 B」</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-3-8" value="d"><span>在图下面加一行说明「本文红绿仅作示意，不影响结论」</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>补救要<strong>同时</strong>解决两件事：换掉会坍缩的配色（如 Wong / Okabe–Ito），并给每类加一层独立于颜色的编码（形状 / 标注）。只调亮度常不够（色相仍近），放大图例和写说明更是「知道是红绿也没用」—— 读者压根分不出哪个是红哪个是绿。</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 章节翻页 ================= -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-02/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 2 章 数据可视化流程</span>
+    </a>
+    <a class="pager-portal" href="../">返回门户</a>
+    <a class="pager-next" href="../lesson-04/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 4 章 低维数据可视化</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 本章演示与交互（ES Module；file:// 下会被 CORS 拦截，页面仍可阅读） -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

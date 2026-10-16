@@ -1,0 +1,51 @@
+/* =========================================================
+ * i18n.css —— 中英双语「语言切换器」组件（全站共享）
+ * ---------------------------------------------------------
+ * 中英文两版页面都加载这一份，是唯一的 i18n 样式来源。
+ * 配色 / 圆角 / 动效一律取自 tokens.css，本文件不出现硬编码色值。
+ * ========================================================= */
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  flex: 0 0 auto;
+}
+
+.lang-switch-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .02em;
+  transition: var(--t-control);
+}
+
+.lang-switch-item:hover {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  color: var(--c-primary);
+}
+
+/* 当前语言：常驻高亮 + 不可点（用 <span> 而非 <a>，天然不可点） */
+.lang-switch-item.is-active {
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow-xs),
+              inset 0 0 0 1px color-mix(in srgb, var(--c-primary) 24%, transparent);
+  cursor: default;
+}
+
+@media (max-width: 720px) {
+  .lang-switch-item { min-width: 28px; height: 20px; padding: 0 6px; font-size: 11px; }
+}

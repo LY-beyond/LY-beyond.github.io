@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 4 章 低维数据可视化 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》第 4 章：宽长格式转换、数据空间→归一化空间→屏幕像素空间三层坐标变换、10 种曲线拟合对照、Cleveland 45° 倾角感知与 Marching Squares 等值线。含 crime.csv 可运行演示与即时自测。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="../theme.js"></script>
+
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../i18n.css">
+  <link rel="stylesheet" href="../lesson.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 章节顶栏 ================= -->
+  <header class="course-topbar" data-current="4">
+    <a class="brand" href="../">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">第 4 章 · 低维数据可视化</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="../lesson-01/">第 1 章 数据</a>
+      <a href="../lesson-02/">第 2 章 流程</a>
+      <a href="../lesson-03/">第 3 章 色彩</a>
+      <a href="./">第 4 章 低维</a>
+      <a href="../lesson-05/">第 5 章 时序</a>
+    </nav>
+
+    <button type="button" class="code-only-toggle" aria-pressed="false">
+      只看代码
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="../en/lesson-04/" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 章节头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>第 4 章 · 低维数据可视化</h1>
+        <p class="subtitle">把表格翻译成图形 —— <b>宽长转换 · 三层坐标 · 曲线拟合 · 45° 倾角 · 等值线</b></p>
+      </div>
+      <div class="header-tip">读到哪里看到哪里 · 演示就地渲染 · 自测即时判分</div>
+    </div>
+
+    <div class="learn-goals">
+      <h2>本章学习目标</h2>
+      <ol>
+        <li><label><input type="checkbox"><span>说清宽格式与长格式的差别，并用 flatMap 把 crime.csv 的一行展开成多个观测</span></label></li>
+        <li><label><input type="checkbox"><span>画得出「数据空间 → 归一化空间 → 屏幕像素空间」三层坐标变换，并解释为什么必须分层</span></label></li>
+        <li><label><input type="checkbox"><span>给一组散点，能判断该用插值还是拟合，并用 R² 比较不同模型的贴合程度</span></label></li>
+        <li><label><input type="checkbox"><span>解释 Cleveland 45° 实验与 Stevens 幂律，说明为什么关键斜率要落在 30°–60°</span></label></li>
+        <li><label><input type="checkbox"><span>讲清 Marching Squares 的 16 种 case 与鞍点歧义，并手写格点编码与边求交点</span></label></li>
+      </ol>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <div class="lesson-main" id="main">
+    <aside class="chapter-nav">
+      <h3>第 4 章 · 目录</h3>
+      <div class="chapter-progress">
+        <div class="chapter-progress__bar"><i class="chapter-progress__fill"></i></div>
+        <div class="chapter-progress__text"><span>0 / 5 小节</span><span>0%</span></div>
+      </div>
+      <ul>
+        <li><a href="#ch-4-1" data-chapter="ch-4-1">4.1 数据转换</a></li>
+        <li><a href="#ch-4-2" data-chapter="ch-4-2">4.2 坐标轴变换</a></li>
+        <li><a href="#ch-4-3" data-chapter="ch-4-3">4.3 曲线拟合</a></li>
+        <li><a href="#ch-4-4" data-chapter="ch-4-4">4.4 倾角感知（45° 黄金角）</a></li>
+        <li><a href="#ch-4-5" data-chapter="ch-4-5">4.5 等值线（Marching Squares）</a></li>
+      </ul>
+      <div class="nav-tip">
+        <b>本章怎么学</b><br>
+        ① 先勾上方的学习目标；<br>
+        ② 按小节连续往下读，演示会就地渲染；<br>
+        ③ 做完每节自测再进下一节；<br>
+        ④ 复习时点右上角「只看代码」。
+      </div>
+    </aside>
+
+    <div class="lesson-body">
+
+      <!-- ============ 4.1 数据转换 ============ -->
+      <article class="chapter" id="ch-4-1">
+        <h2>4.1 数据转换</h2>
+        <p class="chapter-subtitle">宽格式给人看，长格式给程序用 —— 一次 flatMap 完成转换。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>本章从头到尾只用一份数据：<strong>1985 年美国 50 州犯罪统计 crime.csv</strong>。它含 <strong>50 行 × 12 列</strong>，每行一个州、每列一个指标 —— 这是典型的<strong>宽格式</strong>。</p>
+
+        <table class="theory-table">
+          <caption>crime.csv 字段清单：1 列标识 + 1 列人口 + 10 列犯罪指标</caption>
+          <thead>
+            <tr><th>列名</th><th>含义</th><th>类型</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>state</code></td><td>州名（唯一标识）</td><td>String</td></tr>
+            <tr><td><code>population</code></td><td>1985 年人口</td><td>Number（53 万 ~ 2700 万，跨 50 倍）</td></tr>
+            <tr><td><code>population_growth</code></td><td>人口增长率（%）</td><td>Number（有正有负）</td></tr>
+            <tr><td><code>robbery</code> / <code>aggravated_assault</code></td><td>抢劫 / 加重伤害</td><td>Number（案件数）</td></tr>
+            <tr><td><code>burglary</code> / <code>larceny_theft</code> / <code>motor_vehicle_theft</code></td><td>入室盗窃 / 普通盗窃 / 车辆盗窃</td><td>Number（案件数）</td></tr>
+            <tr><td><code>murder</code> / <code>arson</code> / <code>rape1</code> / <code>rape2</code></td><td>谋杀 / 纵火 / 强奸两版口径</td><td>Number（案件数）</td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>宽格式（wide）与长格式（long）</h4>
+          <p><strong>宽格式</strong>：一行一个<em>实体</em>（州），列是指标（murder、robbery…）。人眼读得懂、一目了然，但「哪个指标」这个信息藏在<strong>列名</strong>里，程序拿不到。</p>
+          <p><strong>长格式</strong>：一行一个<em>观测</em>，列固定为 <code>{state, metric, value}</code>。「指标」被<strong>降级成一列数据</strong>，于是 filter / group / data-join 都能直接按它切分。</p>
+          <p><strong>转换</strong>：对每个州，遍历要保留的指标列表，把 (州, 指标, 值) 三元组展开 —— 也就是 <code>flatMap</code>。这一步是 ES2019 的语法，等价于 <code>map()</code> 再 <code>flat()</code>。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 190" role="img" aria-label="宽格式一行一个州、列是指标，经 flatMap 展开成长格式一行一个观测">
+            <defs>
+              <marker id="l4-a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-primary);"/>
+              </marker>
+            </defs>
+
+            <text x="8" y="22" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">宽格式 wide</text>
+            <text x="8" y="38" style="fill: var(--c-muted); font-size: 11px;">一行一个州 · 指标藏在列名里</text>
+            <rect x="8" y="46" width="250" height="112" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <rect x="8" y="46" width="250" height="26" rx="10" style="fill: color-mix(in srgb, var(--c-primary) 12%, transparent);"/>
+            <text x="18" y="64" style="fill: var(--c-text); font-size: 11px; font-family: var(--font-mono); font-weight: 700;">state | murder | robbery | burglary</text>
+            <text x="18" y="94" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | 350 | 10670 | 95380</text>
+            <text x="18" y="118" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alaska  |  65 |  1729 |  6567</text>
+            <text x="18" y="142" style="fill: var(--c-muted); font-size: 11px; font-family: var(--font-mono);">…50 行 × 12 列</text>
+
+            <line x1="262" y1="102" x2="368" y2="102" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a1)"/>
+            <text x="315" y="92" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-weight: 700; font-family: var(--font-mono);">flatMap</text>
+            <text x="315" y="124" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">遍历指标列表</text>
+
+            <text x="382" y="22" style="fill: var(--c-text); font-size: 13px; font-weight: 700;">长格式 long</text>
+            <text x="382" y="38" style="fill: var(--c-muted); font-size: 11px;">一行一个观测 · 指标降级成一列</text>
+            <rect x="382" y="46" width="250" height="112" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <rect x="382" y="46" width="250" height="26" rx="10" style="fill: color-mix(in srgb, var(--c-success) 14%, transparent);"/>
+            <text x="392" y="64" style="fill: var(--c-text); font-size: 11px; font-family: var(--font-mono); font-weight: 700;">state | metric | value</text>
+            <text x="392" y="94" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | murder  | 350</text>
+            <text x="392" y="112" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | robbery | 10670</text>
+            <text x="392" y="130" style="fill: var(--c-text-soft); font-size: 11px; font-family: var(--font-mono);">Alabama | burglary| 95380</text>
+            <text x="392" y="150" style="fill: var(--c-muted); font-size: 10.5px; font-family: var(--font-mono);">…150 行 × 3 列</text>
+
+            <text x="320" y="180" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">同一份信息 · 换成「一行一个观测」后可以 filter / group / join</text>
+          </svg>
+          <figcaption>宽 → 长：把「列名」变成「一列数据」，信息量不变，可操作性变强</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>怎么选：</strong>给人看、给人填的表格用<strong>宽格式</strong>；给程序算、给 D3 绑的中间数据用<strong>长格式</strong>。同一份数据在流水线里往往「一进一出各一种格式」，转换点就在 <code>flatMap</code> 这一行。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.autoType：加载即完成类型推断</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 第二参直接传 d3.autoType，省掉逐列 +d.field</span>
+const raw = <span class="kw">await</span> d3.csv(<span class="str">'./data/crime.csv'</span>, d3.autoType);
+
+<span class="cmt">// 验证类型确实转换了：</span>
+console.log(raw[<span class="num">0</span>].population);        <span class="cmt">// 3979000（Number，不是 "3979000"）</span>
+console.log(<span class="kw">typeof</span> raw[<span class="num">0</span>].state);      <span class="cmt">// "string"</span></code></pre>
+              <div class="key-point">
+                <p><code>autoType</code> 内部就是遍历每一列，试探 <code>Number()</code> / <code>Date()</code> / 布尔字面量：能识别的就转，识别不了的<strong>保持字符串</strong>。所以它很省事、但也很保守 —— 像 <code>"1,234"</code> 这种带千分位的数字它<em>不会</em>帮你转，仍要自己清洗。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> flatMap：宽格式 → 长格式的一行写法</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 宽格式：一行一个州，列 = 指标</span>
+<span class="cmt">// 长格式：一行一个观测 {state, metric, value}</span>
+const METRICS = [<span class="str">'murder'</span>, <span class="str">'robbery'</span>, <span class="str">'burglary'</span>];
+
+const long = raw.flatMap(d =&gt;
+  METRICS.map(metric =&gt; ({
+    state: d.state,
+    metric,
+    value: d[metric],
+  }))
+);
+<span class="cmt">// 50 行 × 3 个指标 = 150 行</span>
+const byMetric = d3.group(long, d =&gt; d.metric);   <span class="cmt">// 分组、过滤、join 都顺了</span></code></pre>
+              <div class="key-point">
+                <p><code>flatMap</code> = 「map 之后把结果压低一层」。写成 <code>map(...).flat()</code> 结果一样，但 <code>flatMap</code> 语义更清楚，也不会出现中间那份嵌套数组。<strong>注意：</strong>行数会从 50 涨到 150 —— 长格式是用<em>行数</em>换<em>可操作性</em>。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 平行坐标前的逐轴归一化</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 平行坐标：每根轴各自 min-max，映射到 [0, 1]</span>
+const norm = (values) =&gt; {
+  const lo = Math.min(...values), hi = Math.max(...values);
+  const span = hi - lo || <span class="num">1</span>;          <span class="cmt">// 全部相等时避免除以 0</span>
+  return (v) =&gt; (v - lo) / span;
+};
+const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
+              <div class="key-point">
+                <p><strong>平行坐标最大的陷阱：</strong>每根轴的刻度<em>不一样</em>。归一化后跨轴比较的是「相对位置」，不是绝对数值 —— 所以只能说「这个州在谋杀轴上偏上、在盗窃轴上偏下」，不能说「谋杀 350 = 盗窃 350」。<strong>散点矩阵</strong>没有这个问题：两两对比时两轴都是真实刻度。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">先用<em>平行坐标</em>看 50 个州在 5 个指标上的「轮廓」，再用<em>散点矩阵</em>做两两对比。选一根轴、拖两个滑块刷选（brush）—— 被选中的州会在两个图里<strong>同步高亮</strong>，这就是联动刷选。</p>
+          <div class="demo-mount" data-demo="d-4-1"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>宽格式一行一个实体（人眼友好），长格式一行一个观测（程序友好）；<code>flatMap</code> 一行完成宽 → 长。</li>
+            <li><code>d3.autoType</code> 加载时就逐列推断类型，但它只做「能猜出来的」转换，脏数据仍要自己清洗。</li>
+            <li>平行坐标必须<strong>逐轴归一化</strong>（跨轴只读相对位置）；散点矩阵用真实刻度做两两对比 —— 这就是多变量投影的两条不同策略。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">crime.csv 里「一行一个州、每列一个犯罪指标」，这种布局属于？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="a"><span>长格式（long）：一行一个观测</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="b"><span>宽格式（wide）：一行一个实体，每列一个指标</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="c"><span>既不是 long 也不是 wide，是「矩阵格式」</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1" value="d"><span>三维数据，因为每个州有多个指标</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>宽格式 = 一行一个<strong>实体</strong>（州），列是<strong>指标</strong>（murder、robbery…）。改成一行一个 <code>(州, 指标, 值)</code> 的三元组，才是长格式 —— 那是给 filter / group / data-join 用的形状。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q">把 50 行宽格式的 crime.csv，用 <code>['murder', 'robbery', 'burglary']</code> 三个指标 <code>flatMap</code> 成长格式，会得到多少行？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="a"><span>50 行（行数不变）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="b"><span>150 行（50 × 3）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="c"><span>12 行（列数不变）</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="d"><span>3 行（只保留三个指标）</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>每个州被展开成 3 行观测：50 × 3 = 150 行。长格式是用<strong>行数换可操作性</strong> —— 数据变大，但 filter / group / 绑定 join 都变简单了。</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.2 坐标轴变换 ============ -->
+      <article class="chapter" id="ch-4-2">
+        <h2>4.2 坐标轴变换</h2>
+        <p class="chapter-subtitle">数据空间 → 归一化空间 → 屏幕像素空间，三层职责分明，错了就乱套。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 5.1.2 节用散点图展示 crime.csv 的 <strong>谋杀（murder）vs 抢劫（robbery）</strong>。麻烦在于：谋杀数从 32（Vermont）到 3082（California），抢劫数从 489（Wyoming）到 254707（California）—— 如果直接把原始数值当像素用，画布根本装不下。</p>
+
+        <table class="theory-table">
+          <thead><tr><th>层</th><th>坐标含义</th><th>本例数值</th><th>谁负责</th></tr></thead>
+          <tbody>
+            <tr><td><b>① 数据空间</b></td><td>原始数值（真实单位）</td><td>murder = 3082</td><td>你的数据</td></tr>
+            <tr><td><b>② 归一化空间</b></td><td>压缩到 <code>0..innerW</code> 的标准化坐标</td><td>x' = 0.98</td><td><code>scaleLinear / scaleLog / scaleSqrt</code></td></tr>
+            <tr><td><b>③ 屏幕像素空间</b></td><td>加上 margin 偏移后的最终像素位置</td><td>X = 48 + 0.98×560 ≈ 597 px</td><td>第二层 scale 或 <code>d3.axisBottom</code></td></tr>
+          </tbody>
+        </table>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>为什么必须分三层</h4>
+          <p>把「值 → 坐标」和「坐标 → 像素」拆开，好处是<strong>解耦</strong>：归一化结果只和<em>数据</em>有关，屏幕像素只和<em>画布尺寸</em>有关。于是换一个画布大小（响应式布局、导出不同尺寸的图）只需要重算第三层，第一层的归一化结果原地复用。</p>
+          <p>如果偷懒写成「一个 scale 同时管 domain=数据、range=[margin, margin+innerW]」，那么每次改 margin 都要回到数据层改一遍 —— 而且元素之间共享的坐标（比如一条参考线的位置）就没法复用了。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 190" role="img" aria-label="三层坐标变换：数据空间的原始值经归一化变成 0 到 innerW 的标准化坐标，再加 margin 偏移得到屏幕像素坐标">
+            <defs>
+              <marker id="l4-a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--c-primary);"/>
+              </marker>
+            </defs>
+
+            <rect x="8" y="44" width="176" height="72" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="96" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① 数据空间</text>
+            <text x="96" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-family: var(--font-mono);">murder = 3082</text>
+
+            <line x1="186" y1="80" x2="232" y2="80" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a2)"/>
+            <text x="209" y="68" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">①</text>
+
+            <rect x="240" y="44" width="176" height="72" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <text x="328" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② 归一化空间</text>
+            <text x="328" y="94" text-anchor="middle" style="fill: var(--c-primary); font-size: 11.5px; font-family: var(--font-mono);">x' = 0.98（0..innerW）</text>
+
+            <line x1="418" y1="80" x2="464" y2="80" style="stroke: var(--c-primary); stroke-width: 1.6;" marker-end="url(#l4-a2)"/>
+            <text x="441" y="68" text-anchor="middle" style="fill: var(--c-primary); font-size: 12px; font-weight: 800;">②</text>
+
+            <rect x="472" y="44" width="160" height="72" rx="10" style="fill: color-mix(in srgb, var(--c-success) 12%, transparent); stroke: color-mix(in srgb, var(--c-success) 45%, transparent);"/>
+            <text x="552" y="72" text-anchor="middle" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">③ 屏幕像素空间</text>
+            <text x="552" y="94" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-family: var(--font-mono);">X = 597 px</text>
+
+            <text x="8" y="152" style="fill: var(--c-text-soft); font-size: 11.5px; font-family: var(--font-mono);">① x' = (x − min) / (max − min) × innerW</text>
+            <text x="8" y="174" style="fill: var(--c-text-soft); font-size: 11.5px; font-family: var(--font-mono);">② X = margin.left + x'</text>
+            <text x="400" y="174" style="fill: var(--c-muted); font-size: 11px;">两层各自独立 → 换画布尺寸只重算第二层</text>
+          </svg>
+          <figcaption>三层空间：原始值 → 标准化坐标 → 带 margin 的像素坐标。轴刻度由 <code>d3.axisBottom</code> 自动完成第二层到第三层</figcaption>
+        </figure>
+
+        <div class="callout callout--warn">
+          <p><strong>常见错位：</strong>把「数据域 → 像素域」写进<em>同一个</em> scale（<code>domain=[0, maxMurder]</code>、<code>range=[margin, margin+innerW]</code>）。当时看不出问题，直到你要改 margin、做响应式或叠加一条共享参考线 —— 才发现每个 scale 都得改两处。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 两层 scale：数据 → 归一化 → 像素</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code>const M = { t: <span class="num">20</span>, r: <span class="num">20</span>, b: <span class="num">36</span>, l: <span class="num">48</span> };   <span class="cmt">// 边距</span>
+const innerW = W - M.l - M.r, innerH = H - M.t - M.b;
+
+<span class="cmt">// 第一层：数据空间 → 归一化空间（只跟数据有关）</span>
+const xData = d3.scaleLinear().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// 第二层：归一化空间 → 屏幕像素空间（只跟画布有关）</span>
+const xScreen = d3.scaleLinear().domain([<span class="num">0</span>, innerW]).range([M.l, M.l + innerW]);
+
+<span class="cmt">// 渲染时层层套用：数据 → 归一化 → 像素</span>
+.attr(<span class="str">'cx'</span>, d =&gt; xScreen(xData(d.murder)))</code></pre>
+              <div class="key-point">
+                <p><code>domain()</code> 是输入、<code>range()</code> 是输出。两层分开后，<code>xData</code> 可以被多张图共享（同一份数据的迷你图们），<code>xScreen</code> 只在渲染时用一次。<strong>口诀：</strong>里层管数据，外层管画布。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 第一层里选哪个 scale：linear / log / sqrt</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 均匀分布：最常用，直接线性映射</span>
+const xLin  = d3.scaleLinear().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// 跨数量级（人口 53 万 ~ 2700 万）：log 让等比变成等距</span>
+const xLog  = d3.scaleLog().domain([<span class="num">1</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// 面积感知：半径平方映射到值（气泡图的正确做法）</span>
+const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).range([<span class="num">0</span>, innerW]);
+<span class="cmt">// 类别轴用 scaleBand（柱状图），别拿 scaleLinear 去排类别</span></code></pre>
+              <div class="key-point">
+                <p><strong>换 scale 只改第一层，第二层完全不动</strong> —— 这正是分层的价值。数据的分布决定了第一层用哪个 scale：线性分布用 linear、跨数量级用 log、映射到面积（而非长度）用 sqrt。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「下一步」逐层推进，看<strong>同一组州</strong>在每一层的坐标怎么变；上方切 linear / log / sqrt 会同时改变第 ② 层的归一化，右侧表格给出每个点的三套坐标与当前公式。</p>
+          <div class="demo-mount" data-demo="d-4-2"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>三层职责：数据空间（真实值）→ 归一化空间（<code>0..innerW</code>）→ 屏幕像素空间（加 margin），层与层之间的桥梁是 scale。</li>
+            <li>分层带来解耦：归一化结果与画布尺寸无关，改尺寸只重算最外层，共享元素（参考线、网格）不用重算。</li>
+            <li>第一层选 scale 由数据分布决定：linear 均匀、log 跨数量级、sqrt 用于面积、band 用于类别。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="a">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">把「数据空间 → 归一化空间 → 屏幕像素空间」拆成两层 scale，最主要的好处是？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="a"><span>归一化结果与画布尺寸解耦，换屏幕尺寸只需重算最外层的 margin 映射</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="b"><span>因为 d3 的 scale 必须成对出现，否则会报错</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="c"><span>可以让图形的配色更好看</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="d"><span>能减少一次网络请求</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>第二层只依赖画布尺寸，第一层只依赖数据。改画布时第一层的归一化结果原样复用 —— 而且共享元素（网格线、参考线、其他迷你图）都能复用同一套坐标。d3 也<strong>不</strong>强制要求两层。</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.3 曲线拟合 ============ -->
+      <article class="chapter" id="ch-4-3">
+        <h2>4.3 曲线拟合</h2>
+        <p class="chapter-subtitle">同一组散点，换一种模型就是另一条趋势线 —— 靠什么判断哪种更贴合？</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 5.1.3 节用「折线 + 散点」展示 50 个州的趋势，代码里写的是 <code>curveCatmullRom</code>，但<strong>没讲为什么</strong> —— 结果就是曲线过拟合地把每个州的抖动都画了出来。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>插值（interpolation）vs 拟合（fitting）</h4>
+          <p><strong>插值</strong>：曲线<em>经过每一个</em>数据点（Catmull-Rom、Natural、monotoneX）。保住了全部信息，但也把噪声一起画了进去。</p>
+          <p><strong>拟合</strong>：曲线<em>不</em>要求经过数据点，只反映趋势（线性回归、幂函数、LOESS）。它主动「丢掉」点对点的细节，换来看清整体走向。</p>
+          <p><strong>怎么选：</strong>点数少（&lt; 10）→ 插值，信息本来就不多，别浪费；点数多（&gt; 30）→ 拟合，抖动多半是噪声；数据本身有顺序且要保单调 → <code>monotoneX</code>（不会出现伪震荡）。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 180" role="img" aria-label="同一组散点：插值曲线经过所有数据点但在点间起伏，拟合直线不经过数据点但反映整体趋势">
+            <text x="20" y="18" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">① 插值 · 过所有点</text>
+            <rect x="12" y="26" width="276" height="126" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <g transform="translate(20,34)">
+              <path d="M10,92 C30,70 38,66 58,62 C80,58 86,72 106,76 C128,80 132,42 154,36 C176,30 180,50 202,52 C224,54 228,30 250,26"
+                    fill="none" style="stroke: var(--c-primary); stroke-width: 2.2;"/>
+              <circle cx="10" cy="92" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="58" cy="62" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="106" cy="76" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="154" cy="36" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="202" cy="52" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="250" cy="26" r="4" style="fill: var(--c-ch-2);"/>
+            </g>
+
+            <text x="340" y="18" style="fill: var(--c-text); font-size: 12.5px; font-weight: 700;">② 拟合 · 只看趋势</text>
+            <rect x="322" y="26" width="276" height="126" rx="10" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+            <g transform="translate(330,34)">
+              <line x1="0" y1="88" x2="260" y2="36" style="stroke: var(--c-success); stroke-width: 2.2;"/>
+              <circle cx="10" cy="92" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="58" cy="64" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="106" cy="80" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="154" cy="42" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="202" cy="60" r="4" style="fill: var(--c-ch-2);"/>
+              <circle cx="250" cy="32" r="4" style="fill: var(--c-ch-2);"/>
+            </g>
+
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">左边保住了每个点的抖动，右边保住了整体上升 —— <tspan style="fill: var(--c-text); font-weight: 700;">两种都对，取决于你要回答什么问题</tspan></text>
+          </svg>
+          <figcaption>同一组数据、两种画法：插值把噪声也画了进去，拟合把趋势抽了出来</figcaption>
+        </figure>
+
+        <div class="callout callout--tip">
+          <p><strong>别忘了 colormap。</strong>本节演示的散点用色也遵循第 3 章的规则：同一类别用同一色相，不用彩虹色阶 —— 颜色只区分「是否被选中」，不编码数值。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> d3.line().curve()：换一行就换风格</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code>const line = d3.line()
+  .x(d =&gt; x(d.population))
+  .y(d =&gt; y(d.murder))
+  .curve(d3.curveMonotoneX);   <span class="cmt">// ← 只改这一行，换曲线风格</span>
+
+svg.append(<span class="str">'path'</span>)
+  .datum(data)                 <span class="cmt">// 整个数组当一份数据交给 path</span>
+  .attr(<span class="str">'d'</span>, line)
+  .attr(<span class="str">'fill'</span>, <span class="str">'none'</span>);</code></pre>
+              <div class="key-point">
+                <p><code>datum()</code> 是把数组<strong>整体</strong>绑给一个元素（不是逐元素绑）。常用 curve：<code>linear</code> 直连、<code>monotoneX</code> 保单调、<code>catmullRom</code> 平滑过点、<code>step</code> 阶梯。<strong>判断口诀：</strong>有序数据用 monotoneX、抖动大用平滑样条、离散状态用 step。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 最小二乘拟合：把幂函数变成直线来解</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 幂函数 y = a · x^b → 两边取对数变成直线：ln y = ln a + b · ln x</span>
+const pts = data.filter(d =&gt; d.population &gt; <span class="num">0</span> &amp;&amp; d.murder &gt; <span class="num">0</span>);
+const lx = pts.map(d =&gt; Math.log(d.population));
+const ly = pts.map(d =&gt; Math.log(d.murder));
+
+const { slope, intercept } = ols(lx, ly);   <span class="cmt">// 一元线性回归</span>
+const a = Math.exp(intercept), b = slope;   <span class="cmt">// 幂函数的两参数</span></code></pre>
+              <div class="key-point">
+                <p>「<strong>线性化</strong>」是拟合的万能钥匙：指数、幂、反比、平方根都能通过换元变成直线，然后调用同一个 <code>ols()</code>。注意：在线性化空间里最小化误差，<em>不等于</em>在原始空间里最小化误差 —— 所以取完对数再算的 R² 要回到原空间评估。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> R²：贴合程度的统一标尺</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// R² = 1 − SSres / SStot：越接近 1 越贴合</span>
+const mean  = ys.reduce((s, v) =&gt; s + v, <span class="num">0</span>) / ys.length;
+const ssTot = ys.reduce((s, v) =&gt; s + (v - mean) ** <span class="num">2</span>, <span class="num">0</span>);
+const ssRes = ys.reduce((s, v, i) =&gt; s + (v - fit[i]) ** <span class="num">2</span>, <span class="num">0</span>);
+const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// 可以为负：比「直接用平均值」还差</span></code></pre>
+              <div class="key-point">
+                <p><strong>R² 不是越高越好。</strong>它衡量的是「相对<em>均值基线</em>的改进」：直线对 50 个州能到 0.6 就很不错了，而三次多项式总能再挤出 0.02 —— 那 0.02 往往只是把噪声拟合了一遍。比较 R² 时，<strong>参数量要一并看</strong>。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">下方点按钮切换 <strong>10 种拟合模型</strong>：同一组成对的散点（人口 → 谋杀数）不动，曲线、拟合方程与 R² 同步更新；右侧排序条按 R² 从高到低排，一眼看出谁最贴合。</p>
+          <div class="demo-mount" data-demo="d-4-3"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>插值过所有点（保信息、也保噪声），拟合只反映趋势（丢细节、看得清）；点数多少是主要判断依据。</li>
+            <li><code>d3.line().curve()</code> 换一行就换风格：有序数据选 <code>monotoneX</code>，抖动大选平滑样条，离散状态选 <code>step</code>。</li>
+            <li>拟合靠「线性化」统一成最小二乘；用 R² 比较贴合度时，必须同时看模型复杂度，否则会挑上过拟合的那个。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 第 1 题</div>
+          <p class="selftest__q">只有 8 个数据点的折线图，要保持原序列单调、不出现伪震荡，应该选哪种 curve？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="a"><span><code>curveCatmullRom</code>：最平滑</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="b"><span><code>curveMonotoneX</code>：保单调，不会凭空鼓包</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="c"><span><code>curveStep</code>：阶梯状最稳</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3" value="d"><span><code>curveBasis</code>：不过点但好看</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>Catmull-Rom 这类张力样条在点间可能「甩」出一个并不存在的鼓包（伪震荡）。<code>monotoneX</code> 约束了每段的三次项，保证「数据上升就不下弯」，是时间序列与有序数据最稳的默认选择。</p>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="a">
+          <div class="selftest__head">自测 · 第 2 题</div>
+          <p class="selftest__q">关于拟合优度 R²，下面哪种说法是<strong>正确</strong>的？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="a"><span>它衡量相对均值基线的改进，模型越复杂越容易虚高，要一并看参数量</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="b"><span>三次多项式的 R² 一定高于直线，所以三次多项式一定更好</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="c"><span>R² 出现负数说明计算过程出错了</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-3b" value="d"><span>R² 可以直接跨数据集比较不同模型的优劣</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>R² = 1 − SSres/SStot，基线是「全部用平均值预测」。它<strong>可以</strong>为负（比均值还差，说明模型完全不合适）；它只对<em>同一份数据</em>可比，跨数据集没有意义；而复杂度越高越容易虚高 —— 所以要看参数量（或调整后 R²）。</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.4 倾角感知 ============ -->
+      <article class="chapter" id="ch-4-4">
+        <h2>4.4 倾角感知（45° 黄金角）</h2>
+        <p class="chapter-subtitle">人眼对斜率的估计<strong>不是</strong>线性的 —— 45° 是视觉上的「中点」。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 5.1.4 节提到「平均倾斜度最优为 45°」，但没有解释原因。而对 crime.csv 这种跨 50 倍的数据，画在<strong>线性轴</strong>上时，多数州挤成一团、趋势线的倾角接近水平（&lt; 20°），读者几乎读不出斜率。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>Cleveland 1984 的斜率估计实验</h4>
+          <p>让被试估计直线的斜率，并报告感知值与真实值的偏差，结果是一条 <strong>U 型曲线</strong>：</p>
+          <ul>
+            <li>斜率接近 <strong>0° 或 90°</strong> 时，估计误差最大（几乎没法判断「这点差别算不算更陡」）。</li>
+            <li>斜率接近 <strong>45°</strong> 时，估计最准 —— 这就是「黄金角」。</li>
+          </ul>
+          <p><strong>Stevens 幂律</strong>给出了原因：感知斜率 ≈ 真实斜率<sup>1.0~1.3</sup>，即人眼把「陡度」整体<em>夸张了约 30%</em>。只有在 45° 附近，「被夸张」与「被压缩」误差互相抵消，感知与真实最接近。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 220" role="img" aria-label="Cleveland 斜率估计误差的 U 型曲线：0 度与 90 度误差最大，45 度误差最小，30 到 60 度为稳定区间">
+            <rect x="237" y="30" width="182" height="150" rx="8" style="fill: color-mix(in srgb, var(--c-success) 12%, transparent);"/>
+            <text x="328" y="24" text-anchor="middle" style="fill: var(--c-success); font-size: 11.5px; font-weight: 700;">稳定区 30°–60°</text>
+
+            <line x1="56" y1="180" x2="600" y2="180" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <line x1="56" y1="30" x2="56" y2="180" style="stroke: var(--c-line-2); stroke-width: 1.4;"/>
+            <text x="46" y="40" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">误差大</text>
+            <text x="46" y="176" text-anchor="end" style="fill: var(--c-muted); font-size: 11px;">误差小</text>
+
+            <path d="M56,40 C150,182 506,182 600,40" fill="none" style="stroke: var(--c-primary); stroke-width: 2.6;"/>
+            <line x1="328" y1="30" x2="328" y2="180" stroke-dasharray="4 4" style="stroke: var(--c-danger); stroke-width: 1.4;"/>
+            <circle cx="328" cy="146" r="5" style="fill: var(--c-danger);"/>
+            <circle cx="56" cy="40" r="4" style="fill: var(--c-warn);"/>
+            <circle cx="600" cy="40" r="4" style="fill: var(--c-warn);"/>
+            <text x="328" y="140" text-anchor="middle" style="fill: var(--c-danger); font-size: 11.5px; font-weight: 700;">45° 误差最小</text>
+            <text x="72" y="56" style="fill: var(--c-warn); font-size: 11px; font-weight: 700;">0° 误差最大</text>
+            <text x="560" y="56" text-anchor="end" style="fill: var(--c-warn); font-size: 11px; font-weight: 700;">90° 误差最大</text>
+
+            <text x="56" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">0°</text>
+            <text x="237" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">30°</text>
+            <text x="328" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">45°</text>
+            <text x="419" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">60°</text>
+            <text x="600" y="196" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">90°</text>
+            <text x="320" y="214" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">视倾角 →（斜率估计误差随倾角呈 U 型：两端最差、45° 最好）</text>
+          </svg>
+          <figcaption>Cleveland 的 U 型误差曲线：设计时把关键斜率赶进 30°–60°，两端（5° 以下 / 85° 以上）尽量别做趋势对比</figcaption>
+        </figure>
+
+        <div class="callout callout--ok">
+          <p><strong>设计原则：</strong>① 关键数据的斜率落在 <strong>30°–60°</strong>；② 对比增长曲线时，用 <strong>log 轴</strong>把陡度拉回 45° 左右；③ 避免在 5° 以下或 85° 以上做趋势对比 —— 那里的感知误差足以让你得出错误结论。</p>
+        </div>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> 角度 → 屏幕坐标（注意 SVG 的 y 轴朝下）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// SVG 的 y 轴向下（与数学坐标相反），所以 sin 项要取负</span>
+function lineAt(deg, len = <span class="num">240</span>, o = { x: <span class="num">100</span>, y: <span class="num">240</span> }) {
+  const r = deg * Math.PI / <span class="num">180</span>;
+  return {
+    x1: o.x, y1: o.y,
+    x2: o.x + len * Math.cos(r),
+    y2: o.y - len * Math.sin(r),
+  };
+}</code></pre>
+              <div class="key-point">
+                <p>这是画角度图形的<strong>第一个坑</strong>：SVG 原点在左上角、y 向下增长，所以 <code>sin</code> 项要取负，否则 30° 会画成「向右下 30°」。第二个坑：角度必须<em>换算成弧度</em>再喂给 <code>Math.cos / Math.sin</code>。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> U 型误差模型 + 滑块驱动</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Cleveland 的 U 型误差：|ln(tan θ)| 在 45° 取 0，向两端发散</span>
+const err = (deg) =&gt; {
+  if (deg &lt;= <span class="num">0</span> || deg &gt;= <span class="num">90</span>) return <span class="num">1</span>;
+  const r = deg * Math.PI / <span class="num">180</span>;
+  return <span class="num">1</span> - Math.exp(-Math.abs(Math.log(Math.tan(r))));
+};
+
+slider.addEventListener(<span class="str">'input'</span>, e =&gt; draw(+e.target.value));</code></pre>
+              <div class="key-point">
+                <p>把抽象理论变成<strong>可调参数</strong>，学生才能「感觉到」它：拖动滑块时同时更新「直线倾角」与「误差曲线上的游标」，两条信息一对应，U 型的含义就立住了。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 用 log 轴把趋势斜率拉回 45°</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 指数增长在线性轴上是「前缓后陡」：斜率 5° → 85°，两端都失真</span>
+<span class="cmt">// 换 log 轴：等比增长变成等距，整条趋势的倾角落回 45° 附近</span>
+const xLog = d3.scaleLog()
+  .domain(d3.extent(data, d =&gt; d.population))   <span class="cmt">// [53 万, 2700 万]</span>
+  .range([<span class="num">0</span>, innerW]);
+
+<span class="cmt">// 检验：把散点回归到「归一化后的平方画布」上，量一下角度是否进了 30°–60°</span>
+const angle = Math.atan(ols(normX, normY).slope) * <span class="num">180</span> / Math.PI;</code></pre>
+              <div class="key-point">
+                <p>这就是 4.2 的 scale 选型与本节的设计原则接上的地方：<strong>换第一层的 scale，就能改变屏幕上那条趋势线的倾角</strong>。下面演示里切线性 / log，可以看到同一个回归系数算出的角度从 &lt; 20° 跳进黄金区间。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">拖滑块改变<strong>视倾角</strong>：左图是直线本身（含 45° 参考虚线），中图是 Cleveland 的 U 型误差曲线与游标，右下角用 crime.csv 的真实回归算出「当前轴下的趋势倾角」—— 切 linear / log 看它怎么跑进 30°–60°。</p>
+          <div class="demo-mount" data-demo="d-4-4"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>Cleveland 1984：斜率估计误差呈 U 型，0° / 90° 最差、45° 最好；稳定区间取 30°–60°。</li>
+            <li>Stevens 幂律（感知 ≈ 真实<sup>1.0~1.3</sup>）解释了原因：人眼把陡度夸张了约 30%，45° 附近恰好抵消。</li>
+            <li>设计动作：把关键斜率赶进 30°–60°；增长曲线用 log 轴压缩陡度 —— 换 scale 就能换倾角。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="c">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">用滑块把视倾角从 45° 拖到 85°，Cleveland 的 U 型误差曲线会怎么变？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="a"><span>误差不变，人眼估计斜率一直很稳</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="b"><span>误差先变大、再变小</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="c"><span>误差随「远离 45°」单调变大，85° 已经进了危险区</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="d"><span>误差会变成负数</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>U 型曲线的两侧都是<strong>单调上升</strong>的：从 45° 出发，无论往 0° 还是往 90° 走，误差都在变大。85° 与 5° 都在「危险区」，在这样的倾角上比较趋势，感知误差会直接盖过真实差别。</p>
+        </div>
+      </article>
+
+      <!-- ============ 4.5 等值线 ============ -->
+      <article class="chapter" id="ch-4-5">
+        <h2>4.5 等值线（Marching Squares）</h2>
+        <p class="chapter-subtitle">给定标量场 + 阈值，把「值 = 阈值」的那条曲线追踪出来。</p>
+
+        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <p>原 5.2.2 节用 Marching Squares 从 crime.csv 里提取等值线，但原始代码是<strong>一张截图占位</strong> —— 这节课我们把它补成真能跑的算法，并把每一步摊开来看。</p>
+        <p>思路：先把 50 个州的两个指标（如谋杀、抢劫）当成 2D 平面上的散点，用核密度估计（KDE）铺出一张<strong>标量场</strong>，再对这个连续场取等值线 —— 等值线包围的就是「密度相仿」的区域。</p>
+
+        <span class="sec-label"><i>2</i> 嵌入理论</span>
+        <div class="theory-card">
+          <h4>原理：用「格子四角的大小关系」判断线段怎么走</h4>
+          <p>把标量场离散化成网格。对每个 cell，看它的<strong>4 个角</strong>是不是大于阈值 —— 4 个布尔量组成 <strong>case 编号 0~15</strong>（2⁴ = 16 种）。每种 case 对应 <strong>0 / 1 / 2 条线段</strong>，正好把「超过阈值」和「未超过阈值」两片区域分开。</p>
+          <p><strong>位编码：</strong><code>bit0 = BL</code>、<code>bit1 = BR</code>、<code>bit2 = TR</code>、<code>bit3 = TL</code>（左下→右下→右上→左上，顺时针）。</p>
+          <p>每条线段的端点落在 cell 的边上，位置由<strong>线性插值</strong>求出：<code>t = (阈值 − a) / (b − a)</code>，其中 a、b 是该边两端格点的值。</p>
+          <p><strong>唯一需要动脑的情形：</strong>case 5 与 case 10 是<strong>鞍点</strong>（对角两两大于阈值），此时线段有两种连法，必须借助 cell 的<em>中心值</em>才能决定该往哪边连。</p>
+          <p><strong>推广到 3D</strong>：每个立方体 8 个角 → 2⁸ = 256 种 case，就是 Marching Cubes（Lorensen &amp; Cline 1987），医学 MRI / CT 的等值面提取标配。</p>
+        </div>
+
+        <figure class="figure">
+          <svg viewBox="0 0 640 176" role="img" aria-label="四种典型 Marching Squares case：case 1 单角、case 3 同边两角、case 6 对角相邻两角、case 10 鞍点两条线段">
+            <g transform="translate(14,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <path d="M45,0 L0,45" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 1 · 0001</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">仅 BL 大 · 1 条</text>
+            </g>
+
+            <g transform="translate(176,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M45,0 L45,90" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 3 · 0011</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">下边两角 · 1 条</text>
+            </g>
+
+            <g transform="translate(338,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
+              <circle cx="0" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="0" r="6" style="fill: var(--c-success);"/>
+              <circle cx="0" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M0,45 L90,45" style="stroke: var(--c-primary); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">case 6 · 0110</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">右边两角 · 1 条</text>
+            </g>
+
+            <g transform="translate(500,24)">
+              <rect x="0" y="0" width="90" height="90" rx="6" style="fill: color-mix(in srgb, var(--c-warn) 12%, transparent); stroke: color-mix(in srgb, var(--c-warn) 45%, transparent);"/>
+              <circle cx="0" cy="0" r="6" style="fill: var(--c-success);"/>
+              <circle cx="90" cy="0" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="0" cy="90" r="5" style="fill: var(--c-surface); stroke: var(--c-line-2);"/>
+              <circle cx="90" cy="90" r="6" style="fill: var(--c-success);"/>
+              <path d="M0,45 L45,90" style="stroke: var(--c-warn); stroke-width: 2.4;"/>
+              <path d="M45,0 L90,45" style="stroke: var(--c-warn); stroke-width: 2.4;"/>
+              <text x="45" y="112" text-anchor="middle" style="fill: var(--c-warn); font-size: 11.5px; font-weight: 700;">case 10 · 1010</text>
+              <text x="45" y="128" text-anchor="middle" style="fill: var(--c-muted); font-size: 10.5px;">鞍点 · 2 条 · 有歧义</text>
+            </g>
+
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11px;">实心点 = 该角大于阈值 &nbsp;·&nbsp; 位编码 bit0=BL · bit1=BR · bit2=TR · bit3=TL</text>
+          </svg>
+          <figcaption>4 种典型 case：单角、同边两角、相邻两角各 1 条线段；只有鞍点（case 5 / 10）是 2 条且需要判方向</figcaption>
+        </figure>
+
+        <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
+        <div class="sec-code">
+          <details class="code-fold" open>
+            <summary><span class="code-fold__badge">①</span> EDGE_TABLE：16 种 case 的核心数据结构</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 边编号：0 = 左中, 1 = 下中, 2 = 右中, 3 = 上中</span>
+const EDGE_TABLE = [
+  [],                  <span class="cmt">// 0000 全小于阈值 → 无线段</span>
+  [[3, 0]],            <span class="cmt">// 0001 仅 BL 大</span>
+  [[0, 1]],            <span class="cmt">// 0010 仅 BR 大</span>
+  [[3, 1]],            <span class="cmt">// 0011 BL + BR</span>
+  [[1, 2]],            <span class="cmt">// 0100 仅 TR 大</span>
+  [[3, 0], [1, 2]],    <span class="cmt">// 0101 鞍点（需看格心）</span>
+  [[0, 2]],            <span class="cmt">// 0110 BR + TR</span>
+  [[3, 2]],            <span class="cmt">// 0111 只有 TL 小</span>
+  [[2, 3]],            <span class="cmt">// 1000 仅 TL 大</span>
+  [[2, 0]],            <span class="cmt">// 1001 TL + BL</span>
+  [[0, 1], [2, 3]],    <span class="cmt">// 1010 鞍点（需看格心）</span>
+  [[2, 1]],            <span class="cmt">// 1011 只有 BR 小</span>
+  [[1, 3]],            <span class="cmt">// 1100 TR + TL</span>
+  [[1, 0]],            <span class="cmt">// 1101 只有 TR 小</span>
+  [[0, 3]],            <span class="cmt">// 1110 只有 BL 小</span>
+  [],                  <span class="cmt">// 1111 全大于阈值</span>
+];</code></pre>
+              <div class="key-point">
+                <p>这张表就是 Marching Squares 的<strong>全部算法逻辑</strong> —— 剩下的都是查表 + 插值。case 0 与 15 无交点（整格同侧），case 5 与 10 各有 2 条线段且方向有歧义。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">②</span> 位运算拼出 case 编号</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 4 个角「是否大于阈值」→ 4 位二进制 → case 编号 0~15</span>
+let code = <span class="num">0</span>;
+if (bl &gt; threshold) code |= <span class="num">1</span>;   <span class="cmt">// bit 0</span>
+if (br &gt; threshold) code |= <span class="num">2</span>;   <span class="cmt">// bit 1</span>
+if (tr &gt; threshold) code |= <span class="num">4</span>;   <span class="cmt">// bit 2</span>
+if (tl &gt; threshold) code |= <span class="num">8</span>;   <span class="cmt">// bit 3</span>
+
+const segs = EDGE_TABLE[code];    <span class="cmt">// 查表得到 0 / 1 / 2 条线段</span></code></pre>
+              <div class="key-point">
+                <p>用<code>|=</code> 累加「2 的幂」是位运算的经典写法：4 个布尔恰好拼出 0~15 的编号。<strong>顺序</strong>很关键 —— 表里的 0/1/2/3 边编号与这里 bit 的排列必须一一对应，否则线段会连错位置。</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">③</span> 在边上线性插值求交点（含鞍点判方向）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 边 (a→b) 上与阈值等值点的位置 t ∈ [0,1]</span>
+const t = (threshold - a) / (b - a);
+const px = ax + t * (bx - ax);
+const py = ay + t * (by - ay);
+
+<span class="cmt">// 鞍点：比较格心与阈值，决定两条线段各自该连哪一对边</span>
+const center = (tl + tr + bl + br) / <span class="num">4</span>;
+<span class="cmt">// code 5: 格心 &gt; 阈值 → 连 [3,0]；否则连 [1,2]</span>
+<span class="cmt">// code 10: 格心 &gt; 阈值 → 连 [2,3]；否则连 [0,1]</span></code></pre>
+              <div class="key-point">
+                <p><strong>为什么必须插值：</strong>如果偷懒取<em>边中点</em>，等值线会变成锯齿状的折线，网格越粗越难看。线性插值让交点在边上按数值比例滑动，网格很粗时也能得到平滑的曲线。</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <span class="sec-label"><i>4</i> 可运行演示</span>
+        <div class="demo-card">
+          <p class="demo-hint">点「下一步」逐步走完算法：<strong>格点取值 → 标记大于阈值的格点 → 在边上插值求交点 → 连成折线</strong>；也可以「播放」自动走完，拖阈值滑块看等值线如何变形、有时会分裂成两圈。</p>
+          <div class="demo-mount" data-demo="d-4-5"></div>
+        </div>
+
+        <div class="takeaway">
+          <h4>本节小结</h4>
+          <ul>
+            <li>Marching Squares = 用格子四角的「是否大于阈值」拼出 case 编号（0~15），查表得到 0/1/2 条线段，把两侧区域分开。</li>
+            <li>线段端点由边上<strong>线性插值</strong>给出（<code>t = (阈值 − a)/(b − a)</code>），这是等值线平滑的关键。</li>
+            <li>只有鞍点（case 5 / 10）有歧义，必须借助格心值判方向；推广到 3D 就是 2⁸ = 256 种 case 的 Marching Cubes。</li>
+          </ul>
+        </div>
+
+        <div class="selftest" data-selftest data-answer="b">
+          <div class="selftest__head">自测 · 1 题</div>
+          <p class="selftest__q">Marching Squares 里 case 5 与 case 10 为什么需要特殊处理？</p>
+          <ul class="selftest__opts">
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="a"><span>这两种 case 没有线段，可以直接跳过</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="b"><span>它们是鞍点：对角两两大于阈值，两条线段有两种连法，要靠格心值判方向</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="c"><span>它们是「全大 / 全小」的边界情况</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-5" value="d"><span>它们只出现在 3D 的 Marching Cubes 里</span></label></li>
+          </ul>
+          <div class="selftest__actions">
+            <button type="button" class="selftest__btn">提交答案</button>
+            <span class="selftest__verdict"></span>
+          </div>
+          <p class="selftest__why" hidden>全大（15）与全小（0）才没有线段。case 5 / 10 是对角两角大于阈值，两条线段既可以「围住两个大角」也可以「围住两个小角」，几何上有歧义 —— 算法惯例是比较<strong>格心值</strong>与阈值来定夺。</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ================= 上一章 / 下一章 ================= -->
+  <nav class="chapter-pager" aria-label="章节翻页">
+    <a class="pager-prev" href="../lesson-03/">
+      <span class="pager-dir">← 上一章</span>
+      <span class="pager-title">第 3 章 色彩专题</span>
+    </a>
+    <a class="pager-portal" href="../">返回门户</a>
+    <a class="pager-next" href="../lesson-05/">
+      <span class="pager-dir">下一章 →</span>
+      <span class="pager-title">第 5 章 时序数据可视化</span>
+    </a>
+  </nav>
+
+  <footer class="lesson-footer">
+    <p>© 2026 《可视化导论》课程 · 中国石油大学（华东）· 授课教师：李昕 · 主要参考教材：陈为《可视化导论》</p>
+    <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
+  </footer>
+
+  <!-- 本章演示与交互（ES Module；file:// 下会被 CORS 拦截，页面仍可阅读） -->
+  <script type="module" src="./lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>章节测验 · 学习成果检验 · 《可视化导论》</title>
+  <meta name="description" content="《可视化导论》章节测验：覆盖 5 章正文与「选图指南」专题，共 44 道题（26 道选择题 + 18 道判断题）。可按题量与范围随机抽题、按章节均衡出题，提交后一次性判分，含逐题解析、薄弱章节跳转、错题本与历史成绩。零构建静态站，支持深色模式。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- 主题脚本必须尽早执行：渲染前写好 data-theme，切换无闪烁 -->
+  <script src="theme.js"></script>
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="i18n.css">
+  <link rel="stylesheet" href="lesson.css">
+  <link rel="stylesheet" href="quiz.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="course-topbar" data-current="quiz">
+    <a class="brand" href="./">
+      <span class="back">←</span> 《可视化导论》
+      <span class="brand__sub">章节测验</span>
+    </a>
+
+    <nav class="tabs" aria-label="章节导航">
+      <a href="lesson-01/">第 1 章 数据</a>
+      <a href="lesson-02/">第 2 章 流程</a>
+      <a href="lesson-03/">第 3 章 色彩</a>
+      <a href="lesson-04/">第 4 章 低维</a>
+      <a href="lesson-05/">第 5 章 时序</a>
+      <a href="topic-chart-guide/">选图指南</a>
+      <a href="quiz.html" class="current" aria-current="page">章节测验</a>
+      <a href="practice.html">实战工作台</a>
+      <a href="graph.html">知识图谱</a>
+    </nav>
+
+    <div class="lang-switch" role="group" aria-label="语言 / Language">
+      <span class="lang-switch-item is-active" aria-current="true">中</span>
+      <a class="lang-switch-item" href="en/quiz.html" data-lang-link="en" lang="en" hreflang="en">EN</a>
+    </div>
+  </header>
+
+  <!-- ================= 页头 ================= -->
+  <header class="lesson-header">
+    <div class="lesson-header__row">
+      <div>
+        <h1>章节测验 · 学习成果检验</h1>
+        <p class="subtitle">覆盖 5 章正文与「选图指南」专题 —— <b>选择题 26 道 · 判断题 18 道</b>，按章节均衡随机抽题</p>
+      </div>
+      <div class="header-tip">题量可选 · 范围可选 · 提交即判分</div>
+    </div>
+  </header>
+
+  <!-- ================= 正文 ================= -->
+  <main class="quiz-main" id="main">
+    <div id="quiz-root" role="region" aria-label="章节测验"></div>
+  </main>
+
+  <!-- ================= 页脚 ================= -->
+  <footer class="lesson-footer">
+    <p>《可视化导论》· 章节测验 · 零构建静态站，成绩只保存在本机浏览器</p>
+  </footer>
+
+  <!-- 题库在前，引擎在后；两者都是普通脚本，file:// 直接双击也能答题 -->
+  <script src="quiz-data.js"></script>
+  <script src="quiz.js"></script>
+</body>
+</html>
