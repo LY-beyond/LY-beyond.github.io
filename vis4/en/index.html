@@ -37,7 +37,9 @@
       <nav class="topnav" aria-label="Page navigation">
         <a href="#path">Learning path</a>
         <a href="#chapters">Chapters</a>
+        <a href="#profile">Profile</a>
         <a href="#tools">Study tools</a>
+        <a href="#kg">Knowledge graph</a>
         <a href="#guide">Chart cheat sheet</a>
         <a href="#about">About</a>
       </nav>
@@ -56,7 +58,7 @@
     <section class="hero">
       <div class="hero__lead">
         <p class="hero__tag">VISUALIZATION · INTRODUCTION</p>
-        <h1 class="hero__title">Introduction to <em>Visualization</em></h1>
+        <h1 class="hero__title">Introduction to Visualization</h1>
         <p class="hero__sub">From data to charts: a hands-on course with JavaScript + D3.js. First understand what the data is, then decide which graphic should express it.</p>
         <p class="hero__meta">
           China University of Petroleum (East China) · Main textbook: Chen Wei, “Introduction to Visualization”
@@ -386,6 +388,36 @@
       </div>
     </section>
 
+    <!-- ================= 学习画像 ================= -->
+    <section class="section" id="profile">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">LEARNING PROFILE</span>
+        <h2>My learning profile</h2>
+        <p>The radar composes each chapter's mastery as <strong>sections read 50% + learning goals 30% + quiz performance 20%</strong> (weights redistributed when there is no quiz data); the heatmap records daily study actions over the last 18 weeks. All data stays in this browser only.</p>
+      </div>
+
+      <div class="profile-card" id="profile-card">
+        <div class="profile-grid">
+          <figure class="profile-panel">
+            <figcaption>Chapter mastery</figcaption>
+            <svg id="profile-radar" viewBox="0 0 320 230" role="img" aria-label="Radar chart of mastery across the five chapters"></svg>
+          </figure>
+          <figure class="profile-panel">
+            <figcaption>Study heatmap · last 18 weeks</figcaption>
+            <svg id="profile-heat" viewBox="0 0 316 126" role="img" aria-label="Daily study heatmap of the last 18 weeks"></svg>
+            <div class="profile-legend" aria-hidden="true">
+              <span>Less</span><i class="ph-l0"></i><i class="ph-l1"></i><i class="ph-l2"></i><i class="ph-l3"></i><i class="ph-l4"></i><span>More</span>
+            </div>
+          </figure>
+        </div>
+        <p class="profile-meta" id="profile-meta"></p>
+        <div class="profile-actions">
+          <a class="btn btn--primary" id="profile-review" href="quiz.html#review" hidden>Redo wrong answers</a>
+          <a class="btn btn--ghost" href="quiz.html">Take the quiz</a>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= 学习工具 ================= -->
     <section class="section" id="tools">
       <div class="sec-head">
@@ -457,7 +489,20 @@
       </div>
     </section>
 
-    <!-- ================= 图表速查 ================= -->
+    <!-- ================= Knowledge graph ================= -->
+    <section class="section" id="kg">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">KNOWLEDGE GRAPH</span>
+        <h2>Course knowledge graph</h2>
+        <p>Spread 5 chapters / 27 sections into one relation network: <strong>chapter → section → key point → case / dataset</strong>. Nodes are colored by chapter; drag freely (positions are remembered on release), and click a node to jump to the relevant section.</p>
+      </div>
+      <div class="home-kg">
+        <div id="home-kg-root" class="home-kg__stage"></div>
+        <p class="home-kg__hint">Tip: drag a node to re-layout · click “Fit” to center · click a node to open its chapter / section</p>
+      </div>
+    </section>
+
+    <!-- ================= Chart cheat sheet ================= -->
     <section class="section" id="guide">
       <div class="sec-head">
         <span class="sec-head__eyebrow">CHART CHEAT SHEET</span>
@@ -625,6 +670,14 @@
     </p>
     <p>Zero-build static site · inline SVG graphics · no videos · bilingual (Chinese / English) with dark mode</p>
   </footer>
+
+  <!-- Knowledge graph: d3-force (bundled locally) + full-site knowledge data -->
+  <script src="../vendor/d3-quadtree.min.js"></script>
+  <script src="../vendor/d3-dispatch.min.js"></script>
+  <script src="../vendor/d3-timer.min.js"></script>
+  <script src="../vendor/d3-force.min.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="../home-graph.js"></script>
 
   <!-- 门户交互（进度回填 / 顶栏高亮）；file:// 下模块被 CORS 拦截时静默降级 -->
   <script type="module" src="../portal.js"></script>

@@ -56,6 +56,21 @@ function ensureDemoStyles() {
 .l1-join-dot.is-update { background: var(--ch-1); }
 .l1-join-dot.is-exit   { background: var(--c-danger); }
 .l1-join-dot.is-hidden { transform: scale(0); opacity: 0; }
+
+/* 1.x Dirty-data ER */
+.l1x-status { padding: 8px 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); font-size: 12.5px; color: var(--c-text); }
+.l1x-cap { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: var(--c-text-soft); }
+.l1x-sick { background: color-mix(in srgb, var(--c-danger) 14%, transparent); color: var(--c-danger); font-weight: 700; }
+.l1x-raw { margin-top: 10px; font-size: 12px; color: var(--c-text-soft); }
+.l1x-raw summary { cursor: pointer; }
+.l1x-pre { margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.7; overflow: auto; }
+.l1x-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.l1x-badge { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: var(--radius-pill); font-size: 12px; border: 1px solid var(--c-line); background: var(--c-surface-2); color: var(--c-text); }
+.l1x-badge b { font-size: 12px; }
+.l1x-badge i { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; color: var(--c-muted); }
+.l1x-badge.is-ok { border-color: color-mix(in srgb, var(--c-success) 45%, transparent); }
+.l1x-badge.is-warn { border-color: color-mix(in srgb, var(--c-warn) 55%, transparent); }
+.l1x-fail { padding: 18px 14px; border: 1px dashed color-mix(in srgb, var(--c-danger) 55%, transparent); border-radius: var(--radius-sm); color: var(--c-danger); font-size: 12.5px; }
 `;
   document.head.appendChild(st);
 }
@@ -264,7 +279,7 @@ DEMOS['d-1-2'] = (mount) => {
               <path d="${d}" style="fill: ${L.token};"/>
               <text x="${cx}" y="${(L.yTop + yBot) / 2}" text-anchor="middle"
                     dominant-baseline="middle"
-                    style="fill: var(--c-on-primary); font-size: 15px; font-weight: 700;">${L.en}</text>
+                    style="fill: #fff; paint-order: stroke; stroke: #0e1119; stroke-width: 3px; font-size: 14px; font-weight: 700;">${L.en}</text>
             </g>`;
           }).join('')}
         </svg>
@@ -580,6 +595,165 @@ DEMOS['d-1-5'] = (mount) => {
   });
 
   join();
+};
+
+/* =========================================================
+ * Startup
+ * ======================================================= */
+/* =========================================================
+ * Original demo 1.x —— Dirty-data ER
+ *   A mini dataset carrying 5 typical illnesses: tick the
+ *   "prescriptions" to treat it live and watch the type badges
+ *   flip from string ⚠ to Number ✓, the chart from failure to success.
+ *   Teaching point: cleaning is the first mile of visualization;
+ *   autoType only digests "well-behaved" dirt.
+ * ======================================================= */
+DEMOS['d-1-x'] = (mount) => {
+  const DIRTY_CSV = [
+    'name,age,spending,enrolled',
+    'Alex,18,1285,2024-09-01',
+    'Ben,19yo,980,2024/9/2',
+    'Chloe,20,"1,105",2024-09-03',
+    'Dan,19,,2024-09-04',
+    'Alex,18,1285,2024-09-01',
+  ].join('\n');
+  const RAW = parseCSV(DIRTY_CSV);
+  const HEAD = RAW[0];
+  const ROWS = toObjects(RAW);
+
+  const FIXES = [
+    { id: 'thou', label: '① Remove thousands separators ("1,105" → 1105)' },
+    { id: 'miss', label: '② Drop rows with missing spending' },
+    { id: 'strip', label: '③ Strip non-numeric characters ("19yo" → 19)' },
+    { id: 'date', label: '④ Normalize dates to ISO' },
+    { id: 'dup', label: '⑤ Remove exact duplicate rows' },
+  ];
+
+  // Simplified autoType: mirrors the three rules used by d3.autoType in the key code
+  function inferType(v) {
+    const s = String(v ?? '').trim();
+    if (s === '') return 'null';
+    if (/^-?\d+(\.\d+)?$/.test(s)) return 'number';
+    const t = Date.parse(s);
+    if (!isNaN(t) && /[/-]/.test(s)) return 'date';
+    return 'string';
+  }
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">Prescriptions (tick to treat):</span>
+      ${FIXES.map((f) => `<label class="demo-control"><input type="checkbox" data-fix="${f.id}"> ${f.label}</label>`).join('')}
+    </div>
+
+    <div class="l1x-status" data-role="status"></div>
+
+    <div class="demo-grid" style="margin-top:14px">
+      <div>
+        <p class="l1x-cap">📥 Admission · raw chart (sick cells in red)</p>
+        <div class="table-scroll">
+          <table class="mini-table" data-role="sick"></table>
+        </div>
+        <details class="l1x-raw">
+          <summary>View the raw CSV text (note why thousands separators need quotes)</summary>
+          <pre class="l1x-pre">${esc(DIRTY_CSV)}</pre>
+        </details>
+      </div>
+      <div>
+        <p class="l1x-cap">🩺 After treatment · inferred type badges</p>
+        <div class="l1x-badges" data-role="badges"></div>
+        <div data-role="chartWrap" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <p class="demo-note"><strong>Watch for:</strong> autoType only converts "well-behaved" numbers — <code>"1,105"</code> with a thousands separator, <code>"19yo"</code> with letters, and the empty string are all <em>refused</em> (kept as string or turned into null). Leave any single illness untreated and the chart below fails to render — in real projects, most visualization breakdowns trip on this first mile.</p>
+  `;
+
+  const statusEl = mount.querySelector('[data-role="status"]');
+  const sickEl = mount.querySelector('[data-role="sick"]');
+  const badgesEl = mount.querySelector('[data-role="badges"]');
+  const chartWrap = mount.querySelector('[data-role="chartWrap"]');
+  const boxes = [...mount.querySelectorAll('[data-fix]')];
+
+  function sickMarks(d, r) {
+    const age = String(d['age']).trim();
+    const spend = String(d['spending']).trim();
+    const date = String(d['enrolled']).trim();
+    const dup = r > 0 && ROWS.slice(0, r).some((p) => JSON.stringify(p) === JSON.stringify(d));
+    return {
+      'name': dup,
+      'age': inferType(age) === 'string',
+      'spending': /,/.test(spend) || spend === '',
+      'enrolled': !/^\d{4}-\d{2}-\d{2}$/.test(date),
+    };
+  }
+
+  function renderSick() {
+    sickEl.innerHTML = `<thead><tr>${HEAD.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>`
+      + ROWS.map((d, r) => {
+        const marks = sickMarks(d, r);
+        return `<tr>${HEAD.map((h) => `<td${marks[h] ? ' class="l1x-sick"' : ''}>${esc(String(d[h]).trim() || '∅')}</td>`).join('')}</tr>`;
+      }).join('') + '</tbody>';
+  }
+
+  function colBadge(name, vals) {
+    const counts = {};
+    vals.forEach((v) => { const t = inferType(v); counts[t] = (counts[t] || 0) + 1; });
+    const bad = counts.string || counts.null;
+    const detail = Object.entries(counts).map(([t, n]) => `${n}×${t}`).join(' · ');
+    return `<span class="l1x-badge ${bad ? 'is-warn' : 'is-ok'}">${name}<b>${bad ? ' ⚠ ' : ' ✓ '}</b><i>${detail}</i></span>`;
+  }
+
+  function treat() {
+    const fx = {};
+    boxes.forEach((b) => { fx[b.dataset.fix] = b.checked; });
+
+    let out = ROWS.map((d) => {
+      let age = String(d['age'] ?? '').trim();
+      let spend = String(d['spending'] ?? '').trim();
+      let date = String(d['enrolled'] ?? '').trim();
+      if (fx.thou) spend = spend.replace(/,/g, '');
+      if (fx.strip) { age = age.replace(/[^0-9.]/g, ''); spend = spend.replace(/[^0-9.]/g, ''); }
+      if (fx.date && date) { const t = Date.parse(date); if (!isNaN(t)) date = new Date(t).toISOString().slice(0, 10); }
+      return { name: String(d['name'] ?? '').trim(), age, spend, date };
+    });
+    if (fx.miss) out = out.filter((d) => d.spend !== '');
+    if (fx.dup) {
+      const seen = new Set();
+      out = out.filter((d) => { const k = JSON.stringify(d); if (seen.has(k)) return false; seen.add(k); return true; });
+    }
+
+    statusEl.textContent = `Treatment progress ${FIXES.filter((f) => fx[f.id]).length} / ${FIXES.length} · rows ${ROWS.length} → ${out.length}`;
+
+    badgesEl.innerHTML =
+      colBadge('Age', out.map((d) => d.age))
+      + colBadge('Spending', out.map((d) => d.spend))
+      + colBadge('Enrolled', out.map((d) => d.date));
+
+    const ok = out.length >= 2 && out.every((d) => /^-?\d+(\.\d+)?$/.test(d.spend));
+    if (!ok) {
+      const why = out.some((d) => d.spend === '') ? 'contains missing values (null)' : 'contains non-numeric strings';
+      chartWrap.innerHTML = `<div class="l1x-fail">⛔ Chart render failed: the spending column ${why} — any row that is not a Number makes the whole column unusable.</div>`;
+      return;
+    }
+    const vals = out.map((d) => +d.spend);
+    const max = Math.max(...vals);
+    const W = 320, rowH = 34;
+    chartWrap.innerHTML = `
+      <svg viewBox="0 0 ${W} ${out.length * rowH + 26}" role="img" aria-label="Bar chart of spending after cleaning">
+        <text x="0" y="12" style="fill: var(--c-text-soft); font-size: 11px; font-weight: 700;">✅ Spending bar chart (drawable only after cleaning)</text>
+        ${out.map((d, i) => {
+          const w = (vals[i] / max) * (W - 96);
+          return `<g transform="translate(0 ${26 + i * rowH})">
+            <text x="0" y="17" style="fill: var(--c-text); font-size: 11px;">${esc(d.name)}</text>
+            <rect x="52" y="4" width="${w.toFixed(1)}" height="18" rx="4" style="fill: var(--c-primary); opacity: .85;"/>
+            <text x="${(54 + w).toFixed(1)}" y="17" style="fill: var(--c-text-soft); font-size: 10.5px; font-family: var(--font-mono);">${vals[i]}</text>
+          </g>`;
+        }).join('')}
+      </svg>`;
+  }
+
+  boxes.forEach((b) => b.addEventListener('change', treat));
+  renderSick();
+  treat();
 };
 
 /* =========================================================

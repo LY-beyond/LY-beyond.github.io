@@ -1018,6 +1018,198 @@ DEMOS['d-3-8'] = async function (mount) {
 /* =========================================================
  * 启动
  * ======================================================= */
+/* =========================================================
+ * 原创演示 3.x —— 配色急诊室
+ *   4 个「配色生病」的病例，三选一开药方：选对即治愈并复色，
+ *   选错给病理分析；治愈后可用 CVD 滤镜复查全部病例。
+ *   综合运用本章所有配色规则：顺序 / 定性 / 对比 / 明度 / CVD。
+ * ======================================================= */
+DEMOS['d-3-x'] = (mount) => {
+  // 私有样式（一次性注入）
+  if (!document.getElementById('l3x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l3x-styles';
+    st.textContent = `
+.l3x-score { padding: 8px 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); font-size: 12.5px; color: var(--c-text); }
+.l3x-patient { display: grid; grid-template-columns: 300px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--c-line); align-items: start; }
+@media (max-width: 720px) { .l3x-patient { grid-template-columns: 1fr; } }
+.l3x-patient:first-of-type { border-top: 0; padding-top: 4px; }
+.l3x-patient h4 { margin: 0 0 4px; font-size: 13px; color: var(--c-text); }
+.l3x-patient .l3x-desc { margin: 0 0 10px; font-size: 12px; color: var(--c-muted); }
+.l3x-chart { border: 1px solid var(--c-line); border-radius: var(--radius-sm); padding: 8px; background: var(--c-surface-2); }
+.l3x-opts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.l3x-opts .demo-btn { text-align: left; justify-content: flex-start; }
+.l3x-opts .demo-btn.is-ok { border-color: var(--c-success); color: var(--c-success); }
+.l3x-opts .demo-btn.is-bad { opacity: .45; text-decoration: line-through; }
+.l3x-why { margin: 8px 0 0; font-size: 11.5px; color: var(--c-text-soft); }
+.l3x-why b { color: var(--c-success); }
+.l3x-why s { color: var(--c-danger); }
+`;
+    document.head.appendChild(st);
+  }
+
+  // 病理色板（演示主题色，独立于 UI 令牌）
+  const RAINBOW = ['#e41a1c', '#ff7f00', '#ffe945', '#4daf4a', '#4575e6'];
+  const SEQ_BLUE = ['#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5'];
+  const OKABE5 = ['#0072b2', '#e69f00', '#009e73', '#cc79a7', '#56b4e9'];
+  const REDGREEN = ['#d7191c', '#1a9641'];
+  const BLUEORANGE = ['#0072b2', '#e69f00'];
+  const LOWCON = ['#a3a9b3', '#b3a9b3'];
+  const DARKLIGHT = ['#2b5c8a', '#f0b429'];
+  const REDWARM = ['#a63603', '#e6550d', '#fd8d3c', '#fdae6b', '#fdd0a2'];
+
+  function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+  const PATIENTS = [
+    {
+      id: 'a', chart: 'bars',
+      title: '病例 A · 用彩虹色表达顺序',
+      desc: '5 个月的学习时长逐月递增 —— 这是顺序型数据，彩虹色相却毫无大小含义。',
+      data: [['3 月', 4], ['4 月', 5], ['5 月', 6.5], ['6 月', 8], ['7 月', 9]],
+      sick: RAINBOW,
+      options: [
+        { label: '药方 1：Okabe–Ito 定性五色', colors: OKABE5, ok: false, why: '定性板主张「各类平等」，不传达大小，还会反过来暗示类别无序。' },
+        { label: '药方 2：单色青蓝渐变（浅 → 深）', colors: SEQ_BLUE, ok: true, why: '明度随数值单调递增，顺序一眼可读，灰度打印与 CVD 下依旧成立。' },
+        { label: '药方 3：红 → 绿发散色板', colors: REDGREEN, ok: false, why: '发散板适合「有中点」的数据（如盈亏），这里没有中点，且红绿对色觉缺陷不友好。' },
+      ],
+    },
+    {
+      id: 'b', chart: 'bars',
+      title: '病例 B · 红 / 绿表达「对 / 错」',
+      desc: '判断题结果只有两类：正确 vs 错误 —— 需要一眼区分的两极。',
+      data: [['正确', 32], ['错误', 11]],
+      sick: REDGREEN,
+      options: [
+        { label: '药方 1：红绿都再加深', colors: ['#8b1410', '#0f5c22'], ok: false, why: '加深后明度接近，红绿色盲者看到的仍是两块几乎相同的深色。' },
+        { label: '药方 2：蓝 / 橙对比对', colors: BLUEORANGE, ok: true, why: '红绿色盲下蓝橙依旧一冷一暖 —— CVD 安全对比的经典答案。' },
+        { label: '药方 3：蓝 → 深蓝顺序渐变', colors: ['#dbe9f6', '#2171b5'], ok: false, why: '渐变表达「多少」，而这两个类别彼此平等，应该用对比而非渐变。' },
+      ],
+    },
+    {
+      id: 'c', chart: 'lines',
+      title: '病例 C · 两条线明度太接近',
+      desc: '班级 A / B 的月均成绩折线几乎融为一体 —— 线图区分靠明度，不靠色相花哨。',
+      data: null,
+      sick: LOWCON,
+      options: [
+        { label: '药方 1：两色都换更浅的粉彩', colors: ['#c9d4de', '#dcc9d4'], ok: false, why: '继续压低对比，线和网格线粘在一起，可读性更差。' },
+        { label: '药方 2：深色 + 浅色拉开明度', colors: DARKLIGHT, ok: true, why: '先拉大明度差、再谈色相 —— 明度是线型图区分的第一通道。' },
+        { label: '药方 3：两色都换高饱和彩虹', colors: ['#e41a1c', '#4575e6'], ok: false, why: '高饱和 ≠ 高可读：两条彩虹线明度仍可能相当，冲突没有解决。' },
+      ],
+    },
+    {
+      id: 'd', chart: 'bars',
+      title: '病例 D · 用渐变色表达无序类别',
+      desc: '5 门选修课的选课人数 —— 类别彼此平等，却套了深浅渐变，暗示了并不存在的顺序。',
+      data: [['音乐', 24], ['影视', 31], ['摄影', 18], ['戏剧', 27], ['写作', 22]],
+      sick: SEQ_BLUE,
+      options: [
+        { label: '药方 1：Okabe–Ito 定性五色', colors: OKABE5, ok: true, why: '类别平等 → 用色相区分，明度、饱和度保持接近，不暗示任何顺序。' },
+        { label: '药方 2：单色蓝渐变继续加深', colors: ['#eff6fb', '#c6dbef', '#6baed6', '#2171b5', '#08306b'], ok: false, why: '渐变 = 顺序的误用和病例一模一样，只是颜色换了个方向。' },
+        { label: '药方 3：红 → 橙 → 黄暖渐变', colors: REDWARM, ok: false, why: '换暖色仍是渐变，依然暗示「音乐 < 写作」这类并不存在的次序。' },
+      ],
+    },
+  ];
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">CVD 复查滤镜：</span>
+      <select data-cvd>
+        <option value="normal">正常视觉</option>
+        <option value="deuteranopia">绿色盲</option>
+        <option value="protanopia">红色盲</option>
+        <option value="tritanopia">蓝色盲</option>
+      </select>
+    </div>
+    <div class="l3x-score" data-score></div>
+    <div data-cards style="margin-top:6px"></div>
+    <p class="demo-note"><strong>通关即复习：</strong>四个病例合起来正好是本章的四条底线 —— 顺序数据用顺序板、两极对比用 CVD 安全对、线图先拉明度差、无序类别用定性板。给真实项目配色前，先把这套「体检」在脑子里过一遍。</p>
+  `;
+
+  const cvdSel = mount.querySelector('[data-cvd]');
+  const scoreEl = mount.querySelector('[data-score]');
+  const cardsEl = mount.querySelector('[data-cards]');
+  const cured = new Set();
+
+  function filt(hex) {
+    if (cvdSel.value === 'normal') return hex;
+    return '#' + cvdSim(hex2rgb(hex), cvdSel.value).map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  function svgFor(p, colors) {
+    if (p.chart === 'bars') {
+      const W = 284, H = 148, B = 24, T = 8;
+      const max = Math.max(...p.data.map((d) => d[1]));
+      const bw = (W - 16) / p.data.length;
+      let g = '';
+      p.data.forEach((d, i) => {
+        const h = (d[1] / max) * (H - B - T - 12);
+        const c = filt(colors[i % colors.length]);
+        g += `<rect x="${(8 + i * bw + bw * 0.18).toFixed(1)}" y="${(H - B - h).toFixed(1)}" width="${(bw * 0.64).toFixed(1)}" height="${h.toFixed(1)}" rx="3" style="fill: ${c};"/>
+          <text x="${(8 + i * bw + bw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 9.5px;">${esc(d[0])}</text>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(p.title)}">${g}</svg>`;
+    }
+    const W = 284, H = 148, L = 26, B = 22, T = 10;
+    const series = [
+      { pts: [72, 75, 71, 78, 80, 79], c: filt(colors[0]) },
+      { pts: [64, 66, 70, 68, 73, 76], c: filt(colors[1]) },
+    ];
+    let g = '';
+    for (let i = 0; i < 4; i++) {
+      const y = T + i * ((H - B - T) / 3);
+      g += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - 8}" y2="${y.toFixed(1)}" style="stroke: var(--c-line); opacity: .6"/>`;
+    }
+    series.forEach((s) => {
+      const path = s.pts.map((v, i) => {
+        const x = L + i * ((W - L - 8) / 5);
+        const y = T + (1 - (v - 60) / 25) * (H - B - T);
+        return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }).join(' ');
+      g += `<path d="${path}" style="fill: none; stroke: ${s.c}; stroke-width: 2.5; stroke-linecap: round;"/>`;
+    });
+    g += `<text x="${L}" y="${H - 6}" style="fill: var(--c-text-soft); font-size: 9.5px;">1–6 月</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(p.title)}">${g}</svg>`;
+  }
+
+  function render() {
+    scoreEl.textContent = `治愈进度 ${cured.size} / ${PATIENTS.length} —— 每个病例三选一，选错会给病理分析，选对即治愈并复色。`;
+    cardsEl.innerHTML = PATIENTS.map((p) => {
+      const done = cured.has(p.id);
+      const colors = done ? p.options.find((o) => o.ok).colors : p.sick;
+      const opts = p.options.map((o, i) => {
+        const cls = 'demo-btn' + (done && o.ok ? ' is-ok' : (o._bad ? ' is-bad' : ''));
+        return `<button type="button" class="${cls}" data-p="${p.id}" data-i="${i}"${done ? ' disabled' : ''}>${esc(o.label)}</button>`;
+      }).join('');
+      return `<div class="l3x-patient">
+        <div class="l3x-chart">${svgFor(p, colors)}</div>
+        <div>
+          <h4>${done ? '✅ ' : '🩺 '}${esc(p.title)}</h4>
+          <p class="l3x-desc">${esc(p.desc)}</p>
+          <div class="l3x-opts">${opts}</div>
+          <p class="l3x-why" data-why="${p.id}">${done ? '<b>治愈：</b>' + esc(p.options.find((o) => o.ok).why) : (p.note ? '<s>误诊：</s>' + esc(p.note) : '')}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    cardsEl.querySelectorAll('[data-p]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = PATIENTS.find((x) => x.id === btn.dataset.p);
+        const o = p.options[+btn.dataset.i];
+        if (o.ok) { cured.add(p.id); p.note = ''; }
+        else { p.note = o.why; o._bad = true; }
+        render();
+      });
+    });
+  }
+
+  cvdSel.addEventListener('change', render);
+  render();
+};
+
+/* =========================================================
+ * 启动
+ * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;
 

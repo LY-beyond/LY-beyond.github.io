@@ -380,12 +380,43 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> Original · Three smoothers & two readouts (Smoothing Lab)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// EWMA: one recursion step, O(1) memory, lag ≈ (1−α)/α years</span>
+<span class="kw">const</span> out = [vals[<span class="num">0</span>]];
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt; vals.length; i++)
+  out.push(a * vals[i] + (<span class="num">1</span> - a) * out[i - <span class="num">1</span>]);
+
+<span class="cmt">// Moving average / median: sliding window with half = (k−1)/2</span>
+<span class="kw">const</span> win = vals.slice(Math.max(<span class="num">0</span>, i - half), i + half + <span class="num">1</span>);
+<span class="cmt">// mean = arithmetic average; median = sort and take the middle (nearly immune to outliers)</span>
+
+<span class="cmt">// Two live readouts: peak lag &amp; noise (first-difference standard deviation)</span>
+<span class="kw">const</span> lag = years[argmax(sm)] - years[argmax(vals)];
+<span class="kw">const</span> noise = a =&gt; Math.sqrt(
+  a.slice(<span class="num">1</span>).reduce((s, v, i) =&gt; s + (v - a[i]) ** <span class="num">2</span>, <span class="num">0</span>) / (a.length - <span class="num">1</span>));</code></pre>
+              <div class="key-point">
+                <p><strong>Corresponding demo:</strong> Smoothing Lab (raw line + smoothed line overlaid). The larger k or the smaller α, the more the noise readout drops — and the more the peak lags — the <strong>granularity–noise–lag</strong> triangle made directly visible in two numbers. A smoothed line is always a model: overlaying the raw line semi-transparently is exactly that ethic written in code.</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> Live demo</span>
         <div class="demo-card">
           <p class="demo-hint">Above is the original example's standard line chart (French names; toggle them and hover to read the values); below is a <strong>multi-scale comparison</strong> of the same 2024 daily temperatures — click "Raw daily / Weekly / Monthly" to compare shape and point count.</p>
           <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Original demo · Smoothing Lab: one real time series (French names) — tune the window k and switch between moving average / median / EWMA live, and read out "how many years the peak lags, how much noise drops" — feel the granularity–noise–lag trade-off with your own hands.</p>
+          <div class="demo-mount" data-demo="d-5-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Theory lens · Smoothing is low-pass filtering:</strong> the mathematical essence of smoothing is to <strong>keep the low-frequency trend and suppress high-frequency noise</strong>, and the three smoothers are three routes to the same goal — the <strong>moving average</strong> applies an equal-weight window (larger k → smoother, lag ≈ (k−1)/2 years); the <strong>median filter</strong> replaces the center value with an order statistic, nearly immune to outliers at the cost of a staircase look; <strong>EWMA</strong> recurses s<sub>t</sub> = α·y<sub>t</sub> + (1−α)·s<sub>t−1</sub>, weighting exponentially and storing a single number (O(1) memory), with lag ≈ (1−α)/α years. All three face the <strong>granularity–noise–lag</strong> trade-off: a wider window cuts noise but flattens and delays peaks — there is no perfect parameter, only a choice that matches the question. And one rule of ethics: a smoothed line is a <strong>model</strong>, not the data — always show the raw line next to it, exactly as this demo does.</p>
         </div>
 
         <div class="takeaway">

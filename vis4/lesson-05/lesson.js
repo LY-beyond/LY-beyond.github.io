@@ -988,6 +988,155 @@ DEMOS['d-5-5'] = function (mount) {
 /* ---------------------------------------------------------
  * 3) 启动
  * ------------------------------------------------------- */
+/* =========================================================
+ * 原创演示 5.x —— 平滑窗口实验室
+ *   同一条真实时序（french_names.json），调窗口 k、切平滑器
+ *   （移动平均 / 中位数 / EWMA），原图上叠加平滑线，
+ *   实时读出「峰值滞后几年」与「噪声降低多少」。
+ *   教学点：粒度 – 噪声 – 滞后 的三角权衡 —— 没有完美参数，只有取舍。
+ * ======================================================= */
+DEMOS['d-5-x'] = async function (mount) {
+  let data = null, years = [];
+  const maps = {};
+  try {
+    const res = await fetch('./data/french_names.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    ['Marie', 'Jean', 'Camille'].forEach((k) => {
+      const arr = json.names[k] || [];
+      maps[k] = new Map(arr.map((d) => [+d.year, +d.count]));
+    });
+    years = (json.names.Marie || []).map((d) => +d.year).sort((a, b) => a - b);
+    data = years.length > 50;
+  } catch (e) { /* file:// 降级 */ }
+
+  if (!data) {
+    mount.innerHTML = '<div class="callout callout--warn"><p><strong>数据加载失败：</strong>演示需要 french_names.json（http 服务下可用）。</p></div>';
+    return;
+  }
+
+  // 私有样式（一次性注入）
+  if (!document.getElementById('l5x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l5x-styles';
+    st.textContent = `
+.l5x-read { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--c-text); }
+.l5x-read b { color: var(--c-primary); }
+.l5x-chip { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; font-size: 11.5px; color: var(--c-text-soft); }
+.l5x-chip i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+`;
+    document.head.appendChild(st);
+  }
+
+  const COLOR = { Marie: 'var(--ch-4)', Jean: 'var(--ch-1)', Camille: 'var(--ch-3)' };
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <label class="demo-control">名字
+        <select data-name><option>Marie</option><option>Jean</option><option>Camille</option></select>
+      </label>
+      <label class="demo-control">平滑器
+        <select data-smooth>
+          <option value="ma">移动平均</option>
+          <option value="median">中位数滤波</option>
+          <option value="ewma">EWMA 指数平滑</option>
+        </select>
+      </label>
+      <label class="demo-control">窗口 k（移动平均 / 中位数）
+        <input type="range" min="1" max="25" step="2" value="5" data-k>
+        <span class="l5-mono" data-kVal>5 年</span>
+      </label>
+      <label class="demo-control">EWMA α
+        <input type="range" min="5" max="50" step="5" value="20" data-alpha>
+        <span class="l5-mono" data-aVal>0.20</span>
+      </label>
+    </div>
+    <div style="margin:6px 0 10px">
+      <span class="l5x-chip"><i style="background:${'var(--c-text-soft)'}; opacity:.45"></i>原始（1900–2020）</span>
+      <span class="l5x-chip"><i style="background:var(--c-primary)"></i>平滑结果</span>
+    </div>
+    <div data-chart></div>
+    <div class="l5x-read" data-read style="margin-top:12px"></div>
+    <p class="demo-note"><strong>三角权衡：</strong>窗口越大 → 曲线越平滑（噪声 ↓），但峰值被削平、位置后移（滞后 ↑）；EWMA 用小内存就能跟得紧（滞后 ≈ (1−α)/α 年），却对突变敏感；中位数滤波对离群值几乎免疫、但曲线有台阶感。先问要回答什么问题，再选平滑强度 —— 平滑永远是为了「看清趋势」，不是「美化数据」。</p>
+  `;
+
+  const nameSel = mount.querySelector('[data-name]');
+  const smSel = mount.querySelector('[data-smooth]');
+  const kEl = mount.querySelector('[data-k]');
+  const aEl = mount.querySelector('[data-alpha]');
+  const kVal = mount.querySelector('[data-kVal]');
+  const aVal = mount.querySelector('[data-aVal]');
+  const chartEl = mount.querySelector('[data-chart]');
+  const readEl = mount.querySelector('[data-read]');
+
+  function smooth(vals) {
+    const k = +kEl.value, a = +aEl.value / 100;
+    if (smSel.value === 'ewma') {
+      const out = [vals[0]];
+      for (let i = 1; i < vals.length; i++) out.push(a * vals[i] + (1 - a) * out[i - 1]);
+      return out;
+    }
+    const half = (k - 1) / 2;
+    return vals.map((_, i) => {
+      const win = vals.slice(Math.max(0, i - half), Math.min(vals.length, i + half + 1));
+      if (smSel.value === 'median') {
+        const s = win.slice().sort((x, y) => x - y);
+        const m = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+        return m;
+      }
+      return win.reduce((x, y) => x + y, 0) / win.length;
+    });
+  }
+
+  function render() {
+    const key = nameSel.value;
+    kVal.textContent = `${kEl.value} 年`;
+    aVal.textContent = (+aEl.value / 100).toFixed(2);
+    const vals = years.map((y) => maps[key].get(y) || 0);
+    const sm = smooth(vals);
+
+    const W = 700, H = 250, M = { t: 14, r: 18, b: 32, l: 52 };
+    const vmax = Math.max(...vals) * 1.12;
+    const X = lin(years[0], years[years.length - 1], M.l, W - M.r);
+    const Y = lin(0, vmax, H - M.b, M.t);
+    let g = '';
+    for (let v = 0; v <= vmax; v += 1000) {
+      g += `<line x1="${M.l}" y1="${Y(v).toFixed(1)}" x2="${W - M.r}" y2="${Y(v).toFixed(1)}" style="stroke: var(--c-line); opacity: .6"/>`
+        + `<text x="${M.l - 7}" y="${(Y(v) + 3).toFixed(1)}" text-anchor="end" style="fill: var(--c-muted); font-size: 9.5px;">${v}</text>`;
+    }
+    for (let yr = 1900; yr <= 2020; yr += 20) {
+      g += `<text x="${X(yr).toFixed(1)}" y="${H - 10}" text-anchor="middle" style="fill: var(--c-muted); font-size: 9.5px;">${yr}</text>`;
+    }
+    const toPts = (arr) => arr.map((v, i) => X(years[i]).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    g += `<polyline points="${toPts(vals)}" style="fill: none; stroke: var(--c-text-soft); stroke-width: 1.4; opacity: .4"/>`;
+    g += `<polyline points="${toPts(sm)}" style="fill: none; stroke: var(--c-primary); stroke-width: 2.6; stroke-linejoin: round"/>`;
+    g += `<text x="${M.l + 6}" y="${M.t + 10}" style="fill: var(--c-text); font-size: 11px; font-weight: 700;">${key} · 每年出生登记数</text>`;
+    chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${key}出生数原始与平滑对比" style="width:100%;height:auto">${g}</svg>`;
+
+    // 读数：峰值滞后 + 噪声降低
+    const argmax = (a) => a.reduce((bi, v, i) => (v > a[bi] ? i : bi), 0);
+    const lag = years[argmax(sm)] - years[argmax(vals)];
+    const noise = (a) => {
+      let s = 0, n = 0;
+      for (let i = 1; i < a.length; i++) { s += (a[i] - a[i - 1]) ** 2; n++; }
+      return Math.sqrt(s / n);
+    };
+    const n0 = noise(vals), n1 = noise(sm);
+    const drop = n0 > 0 ? Math.max(0, (1 - n1 / n0) * 100) : 0;
+    readEl.innerHTML =
+      `峰值：原始出现在 <b>${years[argmax(vals)]}</b> 年，平滑后出现在 <b>${years[argmax(sm)]}</b> 年 → 滞后 <b>${lag}</b> 年　|　`
+      + `噪声（一阶差分标准差）：${n0.toFixed(0)} → ${n1.toFixed(0)}，降低 <b>${drop.toFixed(0)}%</b>　|　`
+      + `平滑器：${smSel.options[smSel.selectedIndex].text}${smSel.value === 'ewma' ? `（α=${(+aEl.value / 100).toFixed(2)}）` : `（k=${kEl.value}）`}`;
+  }
+
+  [nameSel, smSel, kEl, aEl].forEach((el) => el.addEventListener('input', render));
+  render();
+};
+
+/* =========================================================
+ * 启动
+ * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;
+
 initLesson('第 5 章 · 时序数据可视化', { lesson: 'lesson-05' });

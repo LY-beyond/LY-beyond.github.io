@@ -220,7 +220,12 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
 
         <span class="sec-label"><i>4</i> Runnable Demo</span>
         <div class="demo-card">
-          <p class="demo-hint">First use <em>parallel coordinates</em> to see the "profile" of the 50 states across 5 metrics, then use a <em>scatterplot matrix</em> for pairwise comparison. Pick an axis and drag the two sliders to brush — the selected states light up <strong>in sync</strong> across both charts; that is linked brushing.</p>
+          <p class="demo-hint">Demo A · Wide → Long: crime.csv is loaded at runtime. Tick the metrics to keep and watch <code>flatMap</code> unfold "50 rows × 12 cols" into "150 rows × 3 cols" — the highlighted columns in the source table are exactly what becomes one observation per row.</p>
+          <div class="demo-mount" data-demo="d-4-1b"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Demo B · Multivariate projection: first use <em>parallel coordinates</em> to see the "profile" of the 50 states across 5 metrics, then use a <em>scatterplot matrix</em> for pairwise comparison. Pick an axis and drag the two sliders to brush — the selected states light up <strong>in sync</strong> across both charts; that is linked brushing.</p>
           <div class="demo-mount" data-demo="d-4-1"></div>
         </div>
 
@@ -656,12 +661,39 @@ const angle = Math.atan(ols(normX, normY).slope) * <span class="num">180</span> 
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> Original · Exaggeration factor: computing the lie (Chart-lie Magnifier)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// y-axis baseline slider: f ∈ [0, 0.92], y0 = truncation point</span>
+<span class="kw">const</span> y0 = Bv.rate * (+baseEl.value / <span class="num">100</span>);
+lieEl.innerHTML    = barSvg(A, Bv, y0, Math.round(<span class="num">190</span> * stretch)); <span class="cmt">// lie panel deforms with the slider</span>
+honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num">190</span>);                   <span class="cmt">// honest panel always starts at zero</span>
+
+<span class="cmt">// Exaggeration factor = seen height ratio ÷ true height ratio</span>
+<span class="kw">const</span> trueRatio = A.rate / Bv.rate;                <span class="cmt">// from zero, e.g. 1.04</span>
+<span class="kw">const</span> seenRatio = (A.rate - y0) / (Bv.rate - y0);  <span class="cmt">// truncated, e.g. 1.27</span>
+<span class="kw">const</span> factor = seenRatio / trueRatio;              <span class="cmt">// → 1.2×, growing as you truncate</span></code></pre>
+              <div class="key-point">
+                <p><strong>Corresponding demo:</strong> Chart-lie Magnifier (two charts side by side + live readout). The truncated-axis lie is <strong>computable</strong>, not a "feeling": as y0 approaches the shorter bar's value, seenRatio → ∞; stacking a <code>stretch</code>× aspect distortion warps area perception a second time. Note that line charts are exempt — their contract is position, not length, so this rule <strong>binds bar charts only</strong>.</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> Runnable Demo</span>
         <div class="demo-card">
           <p class="demo-hint">Drag the slider to change the <strong>visual inclination</strong>: the left chart is the line itself (with a dashed 45° reference), the middle is Cleveland's U-shaped error curve with a cursor, and the lower-right computes the "trend inclination under the current axis" from a real regression on crime.csv — switch linear / log to watch it run into 30°–60°.</p>
           <div class="demo-mount" data-demo="d-4-4"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Original demo · Chart-lie Magnifier: one real dataset, two bar charts — the left deforms with the "y-axis baseline" and "aspect stretch" sliders while the right always starts at zero, and the middle readout tells how many times the difference got inflated. Build the reflex for truncated axes.</p>
+          <div class="demo-mount" data-demo="d-4-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Theory lens · The bar chart's silent contract:</strong> bar length encodes quantity <strong>starting from zero</strong> — an unwritten agreement between chart and reader, and truncating the y-axis tears it up: a true 4% gap becomes a 27% visual cliff. Cleveland & McGill's perception experiments supply the theory: <strong>position judgments are the most accurate, lengths next, areas worst</strong> — a truncated axis silently downgrades a position/length comparison into an area comparison, and stretching the aspect ratio inflates that area sensation further (same data, different story). Exaggeration factor = seen ratio ÷ true ratio, computed live in this demo. Three defensive questions when reading any chart: <strong>where does the y-axis start? what is the aspect ratio? how big is the absolute gap?</strong> — most lies collapse under all three. Note that line charts are exempt: their contract is position, not length, so a moderate truncation can be legitimate.</p>
         </div>
 
         <div class="takeaway">

@@ -11,6 +11,7 @@
 // =========================================================
 
 const KEY = 'vis4-progress';
+const KEY_ACT = 'vis4-activity';   // 每日活动计数（首页学习热力图数据源）
 
 function readAll() {
   try {
@@ -41,6 +42,7 @@ export function markSection(lesson, id) {
   if (!b.data.sections.includes(id)) {
     b.data.sections.push(id);
     writeAll(b.all);
+    bumpActivity(1);   // 首次读完一个小节 = 记一次学习动作
   }
 }
 
@@ -54,6 +56,7 @@ export function markGoal(lesson, values) {
   const b = bucket(lesson, true);
   b.data.goals = values;
   writeAll(b.all);
+  bumpActivity(1);   // 勾 / 取消学习目标也算一次学习动作
 }
 
 export function getGoals(lesson) {
@@ -87,4 +90,33 @@ export function siteProgress(lessonIds) {
 
 export function resetAll() {
   try { localStorage.removeItem(KEY); } catch (e) { /* 忽略 */ }
+}
+
+/* ---------- 每日活动（首页学习热力图数据源） ----------
+ * 结构：{ "2026-10-17": 3, ... } —— 只增不减，与学习进度解耦：
+ * 「重置学习进度」只清 vis4-progress，不抹掉历史热力图。
+ * quiz.js（普通脚本）按同键同格式写入，两边互不依赖。 */
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+export function readActivity() {
+  try {
+    const obj = JSON.parse(localStorage.getItem(KEY_ACT) || '{}');
+    return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+export function bumpActivity(n = 1) {
+  try {
+    const all = readActivity();
+    const day = todayKey();
+    all[day] = (all[day] || 0) + n;
+    localStorage.setItem(KEY_ACT, JSON.stringify(all));
+  } catch (e) { /* 隐私模式等场景降级为不记录 */ }
 }

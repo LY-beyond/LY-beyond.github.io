@@ -34,7 +34,7 @@ body {
   overflow-x: hidden;
 }
 
-/* 纯 CSS 底纹：网格 + 顶部两团柔光，零图片请求 */
+/* 纯 CSS 底纹：顶部两团柔光 + 细网格，零图片请求 */
 body::before {
   content: "";
   position: fixed;
@@ -42,11 +42,35 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
+    radial-gradient(54% 30% at 7% 0%, var(--tex-glow), transparent 66%),
+    radial-gradient(46% 26% at 95% 3%, var(--tex-warm), transparent 68%),
     linear-gradient(var(--tex-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--tex-grid) 1px, transparent 1px);
-  background-size: 46px 46px;
+  background-size: auto, auto, 46px 46px, 46px 46px;
   -webkit-mask-image: radial-gradient(130% 92% at 50% 0%, #000 26%, transparent 76%);
           mask-image: radial-gradient(130% 92% at 50% 0%, #000 26%, transparent 76%);
+}
+
+/* 首页顶部氛围图：数据可视化主题插画（原图 background.png，
+ * 站点引用的是压缩版 background.jpg ≈ 91KB，守住 ≤150KB 位图约束）。
+ * 图上是两层 scrim：中段用页面底色按 --art-scrim 比例罩住保证文字可读，
+ * 底部再渐变回纯页面底色，与下方内容无缝衔接；
+ * 浅色主题压得重、深色主题压得轻（图本身深蓝），两种主题都协调。 */
+:root { --art-scrim: 66%; }
+:root[data-theme="dark"] { --art-scrim: 34%; }
+body::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 700px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 52%, var(--c-bg) 97%),
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--c-bg) var(--art-scrim), transparent),
+      color-mix(in srgb, var(--c-bg) calc(var(--art-scrim) * 0.42), transparent)),
+    url("background.jpg") center 18% / cover no-repeat;
 }
 
 h1, h2, h3, h4 {
@@ -189,9 +213,9 @@ img, svg { max-width: 100%; }
   margin: 0 auto;
   padding: 56px var(--gutter) 34px;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-xl);
-  align-items: center;
+  align-items: start;
 }
 .hero::after {
   content: "";
@@ -225,9 +249,6 @@ img, svg { max-width: 100%; }
   font-size: clamp(30px, 5.4vw, 46px);
   margin-bottom: 12px;
   letter-spacing: -.01em;
-}
-.hero__title em {
-  font-style: normal;
   background: linear-gradient(120deg, var(--c-primary), var(--c-primary-2) 55%, var(--c-accent));
   -webkit-background-clip: text;
           background-clip: text;
@@ -310,6 +331,11 @@ img, svg { max-width: 100%; }
 /* ---- 课程关系示意图（5 个模块 + 流动箭头） ---- */
 .relmap {
   margin: 0;
+  /* 模块盒子加宽为原内容宽度（约 540px）的 1.5 倍，内容正常重排、文字不变形；
+     justify-self: start 下宽度随内容收缩，必须显式给 width，仅改 max-width 无效 */
+  width: 810px;
+  max-width: 100%;   /* 窄容器兜底，不横向溢出 */
+  justify-self: start;
   padding: 22px 20px 18px;
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
@@ -925,6 +951,110 @@ img, svg { max-width: 100%; }
 }
 .site-footer a { font-weight: 700; }
 
+/* ---------------- §8 首页知识图谱 ---------------- */
+.home-kg {
+  position: relative;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(80% 60% at 50% 0%, color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent), transparent 70%),
+    var(--c-surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.home-kg__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 380px;
+}
+.hkg-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.hkg-link {
+  stroke: var(--c-line-2);
+  stroke-width: 1.4;
+  fill: none;
+  opacity: .7;
+}
+.hkg-link--dashed { stroke-dasharray: 6 5; }
+.hkg-link--dotted { stroke-dasharray: 2 4; }
+
+.hkg-node { cursor: grab; }
+.hkg-node:active { cursor: grabbing; }
+.hkg-node circle {
+  transition: transform var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hkg-node:hover circle { filter: brightness(1.08) saturate(1.1); transform: scale(1.12); }
+.hkg-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--c-text);
+  paint-order: stroke;
+  stroke: var(--c-surface);
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.hkg-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--c-surface-2) 70%, transparent);
+}
+.hkg-stats {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--c-text-soft);
+}
+.hkg-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-line-2);
+  background: var(--c-surface);
+  color: var(--c-text-soft);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control);
+  text-decoration: none;
+}
+.hkg-btn:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface));
+}
+.hkg-btn--link {
+  margin-left: auto;
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+.home-kg__hint {
+  margin: 0;
+  padding: 8px 16px 14px;
+  font-size: 12.5px;
+  color: var(--c-muted);
+}
+.hkg-error {
+  padding: 24px;
+  color: var(--c-danger);
+  font-weight: 600;
+}
+
 /* ---------------- 响应式 ---------------- */
 @media (max-width: 1000px) {
   .hero {
@@ -984,4 +1114,97 @@ img, svg { max-width: 100%; }
   .relmap__node:hover { transform: none; }
   .card:hover .card__cta::after { transform: none; }
   .btn--primary:hover { transform: none; }
+}
+
+/* ---------------- §学习画像（掌握度雷达 + 学习热力图） ----------------
+ * 图形由 portal.js 以内联 SVG 生成，配色全部取自 tokens.css。
+ * 数据源：vis4-progress / vis4-activity / vis4-quiz-* （只读本机存储）。 */
+.profile-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+
+.profile-panel { margin: 0; min-width: 0; }
+.profile-panel figcaption {
+  margin-bottom: var(--space-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.profile-panel svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 汇总行与操作区 */
+.profile-meta {
+  margin: var(--space) 0 0;
+  font-size: 12.5px;
+  color: var(--c-text-soft);
+}
+.profile-meta.is-empty { color: var(--c-muted); }
+
+/* hidden 属性兜底：display:flex 类会覆盖浏览器默认的 display:none，
+ * 导致「无错题时的重练按钮」「首访时的空进度汇总条」仍然可见 */
+.profile-actions .btn[hidden],
+.progress-line[hidden] { display: none; }
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space);
+}
+
+/* 掌握度雷达（.pr-*） */
+.pr-ring { fill: none; stroke: var(--c-line); }
+.pr-axis { stroke: var(--c-line-2); }
+.pr-data {
+  fill: color-mix(in srgb, var(--c-primary) 24%, transparent);
+  stroke: var(--c-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pr-dot { fill: var(--c-primary); }
+.pr-chlabel { fill: var(--c-text-soft); font-size: 11px; font-weight: 600; }
+
+/* 学习热力图（.ph-*）：5 档强度全部由令牌混合而来 */
+.ph-l0 { fill: var(--c-surface-2); }
+.ph-l1 { fill: color-mix(in srgb, var(--c-primary) 30%, var(--c-surface-2)); }
+.ph-l2 { fill: color-mix(in srgb, var(--c-primary) 55%, var(--c-surface-2)); }
+.ph-l3 { fill: color-mix(in srgb, var(--c-primary) 78%, var(--c-surface-2)); }
+.ph-l4 { fill: var(--c-primary); }
+.ph-future { opacity: .35; }
+.ph-month,
+.ph-wday { fill: var(--c-muted); font-size: 9.5px; }
+
+/* 图例 */
+.profile-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: var(--space-sm);
+  font-size: 10.5px;
+  color: var(--c-muted);
+}
+.profile-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
 }

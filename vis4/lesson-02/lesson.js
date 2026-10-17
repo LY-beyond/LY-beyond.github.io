@@ -761,7 +761,169 @@ DEMOS['d-2-4'] = (mount) => {
 /* =========================================================
  * 启动
  * ======================================================= */
+/* =========================================================
+ * 原创演示 2.x —— 图形规范生成器（迷你图形语法）
+ *   把字段分配到通道（X / Y / 颜色）+ 选标记类型，
+ *   实时渲染图表并同步生成「图形规范 JSON」。
+ *   教学点：可视化流程的本质 = 数据 → 规范 → 渲染，
+ *   一次点选就是一次规范改写，正是 Vega-Lite 的思想内核。
+ * ======================================================= */
+DEMOS['d-2-x'] = async (mount) => {
+  let students;
+  try { students = await loadStudents(); } catch (e) { corsHint(mount, e); return; }
+
+  // 私有样式（一次性注入）
+  if (!document.getElementById('l2x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l2x-styles';
+    st.textContent = `
+.l2x-wrap { display: grid; grid-template-columns: 1fr 220px; gap: 14px; align-items: start; }
+@media (max-width: 720px) { .l2x-wrap { grid-template-columns: 1fr; } }
+.l2x-cap { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--c-text-soft); }
+.l2x-spec { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 11px; line-height: 1.65; color: var(--c-text); overflow: auto; max-height: 300px; white-space: pre; }
+.l2x-hint { margin: 8px 0 0; font-size: 11.5px; color: var(--c-muted); }
+`;
+    document.head.appendChild(st);
+  }
+
+  const PALETTE = ['var(--ch-2)', 'var(--ch-4)', 'var(--ch-6)', 'var(--ch-8)'];
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <label class="demo-control">标记
+        <select data-role="mark"><option value="bar">bar · 条形</option><option value="point">point · 点</option></select>
+      </label>
+      <label class="demo-control">X 通道
+        <select data-role="x"><option value="gender">性别</option><option value="major">专业</option><option value="class">班级</option></select>
+      </label>
+      <label class="demo-control">Y 聚合
+        <select data-role="y"><option value="count">人数 count</option><option value="ageMean">平均年龄 mean(age)</option></select>
+      </label>
+      <label class="demo-control">颜色
+        <select data-role="color"><option value="">（无）</option><option value="gender">性别</option><option value="major">专业</option></select>
+      </label>
+    </div>
+    <div class="l2x-wrap" style="margin-top:12px">
+      <div>
+        <p class="l2x-cap">渲染结果（由规范现场驱动）</p>
+        <div data-role="chart"></div>
+      </div>
+      <div>
+        <p class="l2x-cap">图形规范 spec.json</p>
+        <pre class="l2x-spec" data-role="spec"></pre>
+        <p class="l2x-hint">改一个下拉 = 改一条规范 → 图形重画。图表不是「画」出来的，是「被规范描述」出来的。</p>
+      </div>
+    </div>
+    <p class="demo-note"><strong>对应流程理论：</strong>这几十行演示 = Card 管道的后半段——「数据变换」（rollup 聚合）→「视觉映射」（字段 → 通道）→「视图生成」（SVG 现场构建）。Vega-Lite、Plot、Tableau 的拖放界面，本质都是在帮你写这份 spec。</p>
+  `;
+
+  const els = {
+    mark: mount.querySelector('[data-role="mark"]'),
+    x: mount.querySelector('[data-role="x"]'),
+    y: mount.querySelector('[data-role="y"]'),
+    color: mount.querySelector('[data-role="color"]'),
+    chart: mount.querySelector('[data-role="chart"]'),
+    spec: mount.querySelector('[data-role="spec"]'),
+  };
+
+  function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+  function render() {
+    const mark = els.mark.value;
+    const xKey = els.x.value;
+    const yKey = els.y.value;
+    const colorKey = els.color.value;
+
+    // ---- 1) 数据变换：rollup 聚合（规范里的 y.aggregate）----
+    const xVals = [...new Set(students.map((d) => d[xKey]))];
+    const cVals = colorKey ? [...new Set(students.map((d) => d[colorKey]))] : [null];
+    const cell = new Map(); // "xVal|cVal" -> number
+    let yMax = 0;
+    for (const xv of xVals) {
+      for (const cv of cVals) {
+        const grp = students.filter((d) => d[xKey] === xv && (!colorKey || d[colorKey] === cv));
+        let v = 0;
+        if (yKey === 'count') v = grp.length;
+        else v = grp.length ? grp.reduce((s, d) => s + d.age, 0) / grp.length : 0;
+        cell.set(xv + '|' + cv, v);
+        if (v > yMax) yMax = v;
+      }
+    }
+    yMax = Math.max(yMax, 1) * 1.15;
+
+    // ---- 2) 规范 JSON：与右侧面板同步 ----
+    const spec = {
+      data: 'newstudent.csv',
+      mark,
+      encoding: {
+        x: { field: xKey, type: 'nominal' },
+        y: yKey === 'count'
+          ? { aggregate: 'count', type: 'quantitative' }
+          : { field: 'age', aggregate: 'mean', type: 'quantitative' },
+      },
+    };
+    if (colorKey) spec.encoding.color = { field: colorKey, type: 'nominal' };
+    els.spec.textContent = JSON.stringify(spec, null, 2);
+
+    // ---- 3) 视图生成：现场构建 SVG ----
+    const W = 380, H = 250, L = 40, R = 10, T = 26, B = 40;
+    const iw = W - L - R, ih = H - T - B;
+    const nX = xVals.length, nC = cVals.length;
+    const bandW = iw / nX;
+    const cellW = bandW / nC;
+    const yOf = (v) => T + ih - (v / yMax) * ih;
+
+    let g = '';
+    // Y 网格与刻度
+    for (let i = 0; i <= 4; i++) {
+      const v = (yMax / 4) * i;
+      const y = yOf(v);
+      g += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" style="stroke: var(--c-line); stroke-width: 1; opacity: .55"/>`
+        + `<text x="${L - 6}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" style="fill: var(--c-muted); font-size: 9.5px; font-family: var(--font-mono);">${Number.isInteger(v) ? v : v.toFixed(1)}</text>`;
+    }
+    // X 轴标签
+    xVals.forEach((xv, i) => {
+      g += `<text x="${(L + bandW * (i + 0.5)).toFixed(1)}" y="${H - 14}" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 10px;">${esc(truncate(String(xv), 6))}</text>`;
+    });
+    // 图形主体（按颜色序列分组错位）
+    cVals.forEach((cv, ci) => {
+      const fill = colorKey ? PALETTE[ci % PALETTE.length] : 'var(--c-primary)';
+      xVals.forEach((xv, xi) => {
+        const v = cell.get(xv + '|' + cv) || 0;
+        const cx = L + bandW * xi + cellW * (ci + 0.5);
+        if (mark === 'bar') {
+          const y = yOf(v);
+          g += `<rect x="${(cx - Math.min(cellW * 0.62, 22) / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.min(cellW * 0.62, 22).toFixed(1)}" height="${(T + ih - y).toFixed(1)}" rx="3" style="fill: ${fill}; opacity: .88;"/>`;
+        } else {
+          g += `<circle cx="${cx.toFixed(1)}" cy="${yOf(v).toFixed(1)}" r="${Math.max(3.5, Math.min(cellW * 0.22, 7)).toFixed(1)}" style="fill: ${fill}; opacity: .88;"/>`;
+        }
+      });
+    });
+    // 图例
+    if (colorKey) {
+      cVals.forEach((cv, ci) => {
+        g += `<rect x="${L + 4 + ci * 78}" y="6" width="9" height="9" rx="2" style="fill: ${PALETTE[ci % PALETTE.length]};"/>`
+          + `<text x="${L + 17 + ci * 78}" y="14" style="fill: var(--c-text-soft); font-size: 9.5px;">${esc(truncate(String(cv), 7))}</text>`;
+      });
+    } else {
+      g += `<text x="${L + 4}" y="14" style="fill: var(--c-muted); font-size: 9.5px;">颜色通道：未映射</text>`;
+    }
+    // 轴线
+    g += `<line x1="${L}" y1="${T}" x2="${L}" y2="${T + ih}" style="stroke: var(--c-text-soft); stroke-width: 1"/>`
+      + `<line x1="${L}" y1="${T + ih}" x2="${W - R}" y2="${T + ih}" style="stroke: var(--c-text-soft); stroke-width: 1"/>`;
+    els.chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="由图形规范驱动的${mark === 'bar' ? '条形' : '点'}图" style="width:100%;height:auto">${g}</svg>`;
+  }
+
+  [els.mark, els.x, els.y, els.color].forEach((s) => s.addEventListener('change', render));
+  render();
+};
+
+/* =========================================================
+ * 启动
+ * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;
 
 initLesson('第 2 章 · 数据可视化流程', { lesson: 'lesson-02' });
+
+

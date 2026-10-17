@@ -220,12 +220,49 @@ svg.selectAll(<span class="str">".stage"</span>).data(STAGES).join(<span class="
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> 原创 · 规范驱动的迷你渲染器（图形规范生成器）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ① 数据变换：按 X 通道分组 → 按 Y 通道聚合（rollup 的等价手写）</span>
+<span class="kw">const</span> cell = <span class="kw">new</span> Map();                        <span class="cmt">// "x值|颜色值" → 聚合结果</span>
+<span class="kw">const</span> grp = students.filter(d =&gt; d[xKey] === xv &amp;&amp; d[colorKey] === cv);
+<span class="kw">const</span> v = yKey === <span class="str">"count"</span>
+  ? grp.length                                     <span class="cmt">// y.aggregate = count</span>
+  : grp.reduce((s, d) =&gt; s + d.age, <span class="num">0</span>) / grp.length; <span class="cmt">// mean(age)</span>
+cell.set(xv + <span class="str">"|"</span> + cv, v);
+
+<span class="cmt">// ② 规范 JSON：每动一个下拉框就整份重写</span>
+<span class="kw">const</span> spec = {
+  mark,                                            <span class="cmt">// "bar" / "point"</span>
+  encoding: {
+    x: { field: xKey, type: <span class="str">"nominal"</span> },
+    y: { aggregate: <span class="str">"count"</span>, type: <span class="str">"quantitative"</span> },
+  },
+};
+
+<span class="cmt">// ③ 渲染器只认 spec：遍历 xVals × cVals 现场生成 SVG，</span>
+<span class="cmt">//    刻度、分组错位、图例全部从规范推导，没有一条硬编码坐标</span></code></pre>
+              <div class="key-point">
+                <p><strong>对应演示：</strong>图形规范生成器（左图右 spec 实时同步）。改一个下拉 = 改一条规范，图形整体重画 —— 渲染器从不「画图」，它只是把规范<strong>推导</strong>成图形。这正是 Vega-Lite「encoding 即图表」的最小可运行版本。</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
           <p class="demo-hint">点「▶ 逐段点亮」看管道依次亮起，或直接点任意一段 —— 右侧会显示该段的职责、典型操作，以及它在三套模型里分别对应什么。</p>
           <div class="demo-mount" data-demo="d-2-1"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">原创演示 · 图形规范生成器：把字段分配到 X / Y / 颜色通道、选标记类型，左侧图表实时重画、右侧同步生成「图形规范 JSON」—— 图表是被规范描述出来的，这正是流程理论后半段的可玩版本。</p>
+          <div class="demo-mount" data-demo="d-2-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>理论透视 · 图形语法（Grammar of Graphics）：</strong>图形不是逐笔「画」出来的，而是被一份<strong>规范</strong>描述出来的——数据 + 统计变换 + 标记（mark）+ 通道映射（encoding）+ 标尺，五件套缺一不可。Wilkinson 在 1999 年提出这套思想，Vega-Lite 把它简化成「encoding 即图表」：你只需声明「x 绑什么、y 怎么聚合、颜色给谁」，轴、图例、分组错位全部由渲染器从规范<strong>推导</strong>出来。本演示里改一个下拉框 = 改一条规范，图形随之整体重画——这正是声明式与命令式的分水岭：命令式改坐标，声明式改「描述」。同一份数据，换一组通道绑定就得到完全不同的图——图表的选择因此变成可推理的决策，而不是灵感。</p>
         </div>
 
         <div class="takeaway">

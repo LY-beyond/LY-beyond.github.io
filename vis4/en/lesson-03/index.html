@@ -1382,11 +1382,44 @@ svg.querySelectorAll(<span class="str">'[data-orig-fill]'</span>).forEach((el) =
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> Original · CVD re-check filter & patient verdicts (Color ER)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ① One matrix multiply = a different pair of eyes: put any hex under a CVD filter</span>
+<span class="kw">function</span> filt(hex) {
+  <span class="kw">if</span> (mode === <span class="str">"normal"</span>) <span class="kw">return</span> hex;
+  <span class="kw">return</span> <span class="str">"#"</span> + cvdSim(hex2rgb(hex), mode)         <span class="cmt">// same Machado matrices as ③</span>
+    .map(v =&gt; v.toString(<span class="num">16</span>).padStart(<span class="num">2</span>, <span class="str">"0"</span>)).join(<span class="str">""</span>);
+}
+
+<span class="cmt">// ② Patient verdict: a right pick "cures" (swaps in the safe palette), a wrong one leaves pathology notes</span>
+btn.addEventListener(<span class="str">"click"</span>, () =&gt; {
+  <span class="kw">const</span> o = patient.options[+btn.dataset.i];
+  <span class="kw">if</span> (o.ok) cured.add(patient.id);          <span class="cmt">// cured → recolor with o.colors</span>
+  <span class="kw">else</span> { patient.note = o.why; o._bad = <span class="kw">true</span>; } <span class="cmt">// misdiagnosed → strikethrough + pathology</span>
+  render();
+});</code></pre>
+              <div class="key-point">
+                <p><strong>Corresponding demo:</strong> Color ER (three prescriptions per patient). The filter shares the same Machado matrices as 3.8 — once all patients are cured, switch to a CVD mode to <strong>re-check the new palettes</strong> under color-vision deficiency; the <code>_bad</code> strikethrough turns misdiagnoses into teaching material instead of mere punishment.</p>
+              </div>
+            </div>
+          </details>
         </div>
+
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
           <p class="demo-hint">Click “Normal / Protanopia / Deuteranopia / Tritanopia” to switch simulation modes and all three real paper figures on the right (5-class scatter, sequential heatmap, red/green contrast) recolor simultaneously; then click “Color + shape dual encoding” to see whether shapes rescue the red/green contrast. Data comes from real state-level records in <code>crime.csv</code>.</p>
           <div class="demo-mount" data-demo="d-3-8"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Original demo · Color ER: four "sick palettes", three prescriptions each — a right pick cures and recolors the chart, a wrong one returns pathology notes; once all are cured, re-check them through a CVD filter. Clearing it revises all four bottom lines of this chapter.</p>
+          <div class="demo-mount" data-demo="d-3-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Theory lens · The first law of color:</strong> <strong>data type dictates scale type</strong> — ordered data (magnitude) takes a single-hue luminance ramp, diverging data (around a midpoint) takes a diverging two-end scale, and categorical data (unordered sets) takes a categorical palette (distinct hues, similar lightness). The four patients are four classic diseases: rainbow scales have <strong>no perceptual order</strong> in hue; the red–green pair is hazardous for color-vision deficiency (about 8% of men are red-green weak, and under deuteranopia the two colors nearly merge); two lines with near-equal lightness defeat the color channel; a gradient applied to unordered categories fabricates order out of thin air. Each cure follows the same logic: monotone luminance for order, blue–orange instead of red–green, lightness separation for legibility, and the Okabe–Ito safe palette for categories. One universal rule: <strong>never rely on hue alone</strong> — add shape, labels or line style as redundant encoding.</p>
         </div>
 
         <div class="takeaway">

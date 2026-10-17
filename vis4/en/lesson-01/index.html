@@ -209,12 +209,53 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> Original · Simplified autoType & the five cleaning prescriptions (Dirty-data ER)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// Try parsing a single value — a column's type is decided by per-value votes</span>
+<span class="kw">function</span> inferType(v) {
+  <span class="kw">const</span> s = String(v ?? <span class="str">""</span>).trim();
+  <span class="kw">if</span> (s === <span class="str">""</span>) <span class="kw">return</span> <span class="str">"null"</span>;                      <span class="cmt">// missing</span>
+  <span class="kw">if</span> (/^-?\d+(\.\d+)?$/.test(s)) <span class="kw">return</span> <span class="str">"number"</span>;
+  <span class="kw">const</span> t = Date.parse(s);
+  <span class="kw">if</span> (!isNaN(t) &amp;&amp; /[/-]/.test(s)) <span class="kw">return</span> <span class="str">"date"</span>;
+  <span class="kw">return</span> <span class="str">"string"</span>;  <span class="cmt">// "19 yrs", "1,105" land here → whole column judged string</span>
+}
+
+<span class="cmt">// The five prescriptions = one reproducible chain of pure transforms</span>
+<span class="kw">if</span> (fx.thou)  spend = spend.replace(<span class="str">/,/g</span>, <span class="str">""</span>);         <span class="cmt">// ① thousands separators</span>
+<span class="kw">if</span> (fx.strip) age   = age.replace(<span class="str">/[^0-9.]/g</span>, <span class="str">""</span>);     <span class="cmt">// ③ strip non-digits</span>
+<span class="kw">if</span> (fx.date &amp;&amp; date) date = <span class="kw">new</span> Date(Date.parse(date))
+  .toISOString().slice(<span class="num">0</span>, <span class="num">10</span>);                         <span class="cmt">// ④ normalize to ISO</span>
+<span class="kw">if</span> (fx.miss)  out = out.filter(d =&gt; d.spend !== <span class="str">""</span>);   <span class="cmt">// ② drop missing rows</span>
+<span class="kw">if</span> (fx.dup) {
+  <span class="kw">const</span> seen = <span class="kw">new</span> Set();
+  out = out.filter(d =&gt; {
+    <span class="kw">const</span> k = JSON.stringify(d);
+    <span class="kw">return</span> seen.has(k) ? <span class="kw">false</span> : (seen.add(k), <span class="kw">true</span>); <span class="cmt">// ⑤ JSON string as the dedupe key</span>
+  });
+}</code></pre>
+              <div class="key-point">
+                <p><strong>Corresponding demo:</strong> Dirty-data ER (tick prescriptions, watch badges turn green). autoType only accepts "well-behaved" values — <code>"1,105"</code>, <code>"19 yrs"</code> and empty strings are all refused conversion; if any symptom is left untreated, the bar chart fails to render on the spot. <strong>Cleaning must be written as a reproducible transform chain</strong>, never as silent edits in a spreadsheet.</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
           <p class="demo-hint">Click "Reload" and watch the console output — focus on the two lines <code>typeof data[0].age</code> and <code>birthday instanceof Date</code>.</p>
           <div class="demo-mount" data-demo="d-1-1"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Original demo · Dirty-data ER: a mini dataset carrying 5 typical illnesses. Tick the "prescriptions" one by one and watch the type badges turn green and the chart go from render failure to success — cleaning is the first mile of visualization.</p>
+          <div class="demo-mount" data-demo="d-1-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Theory lens · Data cleaning:</strong> dirty data falls into five classic symptoms — <strong>missing values, type errors (a number stored as "19 yrs"), inconsistent formats (thousands separators, non-ISO dates), duplicate rows, and outliers</strong>. Why are they fatal? Because every aggregation and mapping assumes correctly typed columns: a single unparseable value can degrade a whole column into strings — ages become categories and sums crash. That is Garbage In, Garbage Out. The type badges in this demo replicate how autoType works: <strong>sample column by column → try parsing each value → vote on the column's type</strong>; if any row isn't a Number, the whole column drops out of computation. And one discipline to keep: cleaning must leave a reproducible "prescription record" — never change data silently.</p>
         </div>
 
         <div class="takeaway">

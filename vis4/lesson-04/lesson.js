@@ -99,6 +99,16 @@ function ensureDemoStyles() {
 /* 演示里的只读表格（沿用 .mini-table，这里补一点内边距） */
 .l4-mono { font-family: var(--font-mono); }
 
+/* 4.1b 宽/长格式对照面板 */
+.l4-io-cap { margin: 0 0 6px; font-size: 11.5px; font-weight: 700; color: var(--c-text-soft); }
+.l4-io-cap b { margin-left: 8px; color: var(--c-primary); font-family: var(--font-mono); font-weight: 700; }
+.l4-io {
+  margin: 0; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--c-surface-2); border: 1px solid var(--c-line);
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;
+  color: var(--c-text); overflow: auto; max-height: 236px; white-space: pre;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .demo-mount, .demo-mount * { transition: none !important; animation: none !important; }
 }
@@ -427,6 +437,98 @@ DEMOS['d-4-1'] = async (mount) => {
   });
 
   update();
+};
+
+/* =========================================================
+ * 演示 4.1b —— 宽格式 → 长格式（flatMap 实时展开）
+ *   对应目标站同名演示：运行时真实加载 crime.csv，
+ *   左右并排展示两种形状，行数变化来自现场计算而非写死。
+ * ======================================================= */
+DEMOS['d-4-1b'] = async (mount) => {
+  const { rows, ok } = await loadCrime();
+
+  // 真实列数：直接读 CSV 表头（file:// 被 CORS 拦截时退回对象键数）
+  let csvCols = 0;
+  try {
+    const res = await fetch('./data/crime.csv', { cache: 'no-store' });
+    if (res.ok) csvCols = (await res.text()).split(/\r?\n/)[0].split(',').length;
+  } catch (e) { /* 忽略，走回退 */ }
+  const wideCols = csvCols || Object.keys(rows[0]).length;
+
+  const METRICS = [
+    { key: 'murder', label: '谋杀' },
+    { key: 'robbery', label: '抢劫' },
+    { key: 'burglary', label: '入室盗窃' },
+    { key: 'larceny_theft', label: '普通盗窃' },
+    { key: 'motor_vehicle_theft', label: '车辆盗窃' },
+  ];
+
+  const q = (s) => '"' + s + '"';
+  const fmtWide = (d) => '{ ' + Object.entries(d)
+    .map(([k, v]) => k + ': ' + (typeof v === 'string' ? q(v) : v)).join(', ') + ' }';
+  const fmtLong = (o) => '{ state: ' + q(o.state) + ', metric: ' + q(o.metric) + ', value: ' + o.value + ' }';
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">保留的指标：</span>
+      ${METRICS.map((m, i) => `<label class="demo-control"><input type="checkbox" data-metric="${i}"${i < 3 ? ' checked' : ''}> ${m.label}</label>`).join('')}
+    </div>
+
+    <div class="l4-formula" data-role="shape"></div>
+
+    <div class="demo-grid">
+      <div>
+        <p class="l4-io-cap">宽格式 · raw（前 3 行）<b data-role="wideBadge"></b></p>
+        <pre class="l4-io">${rows.slice(0, 3).map(fmtWide).join('\n')}
+…</pre>
+      </div>
+      <div>
+        <p class="l4-io-cap">长格式 · flatMap 展开（前 9 行）<b data-role="longBadge"></b></p>
+        <pre class="l4-io" data-role="longPre"></pre>
+      </div>
+    </div>
+
+    <div class="demo-sub" style="margin-top:16px">
+      <h4>宽格式原表（前 10 行）· 勾选的指标列会高亮 —— 它们正被展开成长格式的一行行观测</h4>
+      <div class="table-scroll">
+        <table class="mini-table">
+          <thead><tr>
+            <th>州</th><th>population</th>
+            ${METRICS.map((m) => `<th class="l4-cell" data-col="${m.key}">${m.label}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${rows.slice(0, 10).map((d) => `<tr>
+              <td>${esc(d.state)}</td><td>${d.population}</td>
+              ${METRICS.map((m) => `<td class="l4-cell" data-col="${m.key}">${d[m.key]}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="demo-note"><strong>行数不是写死的：</strong>长格式行数 = 州数 × 勾选的指标数，全部由运行时加载的 crime.csv 现场算出。勾掉一个指标，长格式立刻少 50 行 —— 这就是「指标降级成一列数据」的直接后果。演示只把 7 个字段载入内存（state、population 与 5 项指标），列数以 CSV 原表 12 列为准。</p>
+    ${dataNote(ok)}
+  `;
+
+  const shapeEl = mount.querySelector('[data-role="shape"]');
+  const longPre = mount.querySelector('[data-role="longPre"]');
+  const wideBadge = mount.querySelector('[data-role="wideBadge"]');
+  const longBadge = mount.querySelector('[data-role="longBadge"]');
+  const boxes = [...mount.querySelectorAll('[data-metric]')];
+
+  function convert() {
+    const keys = METRICS.filter((_, i) => boxes[i].checked);
+    const long = rows.flatMap((d) => keys.map((m) => ({ state: d.state, metric: m.key, value: d[m.key] })));
+    longPre.textContent = (long.slice(0, 9).map(fmtLong).join('\n') || '（至少勾选一个指标）') + '\n…';
+    shapeEl.textContent = `CSV 原表：${rows.length} 行 × ${wideCols} 列 → flatMap → 长格式：${long.length} 行 × 3 列 · {state, metric, value}`;
+    wideBadge.textContent = `${rows.length} 行`;
+    longBadge.textContent = `${long.length} 行`;
+    mount.querySelectorAll('[data-col]').forEach((el) => {
+      el.classList.toggle('is-on', keys.some((m) => m.key === el.dataset.col));
+    });
+  }
+
+  boxes.forEach((b) => b.addEventListener('change', convert));
+  convert();
 };
 
 /* =========================================================
@@ -1181,6 +1283,125 @@ DEMOS['d-4-5'] = async (mount) => {
   });
 
   apply();
+};
+
+/* =========================================================
+ * 启动
+ * ======================================================= */
+/* =========================================================
+ * 原创演示 4.x —— 图表谎言放大镜
+ *   同一份真实数据（crime.csv 谋杀率前两名州），拖两个滑块：
+ *   ① y 轴起点从 0 抬高 ② 纵横比拉伸。左侧「画面版」随滑块变形，
+ *   右侧「诚实版」始终从零画起，中间实时读出「差异被夸大 N 倍」。
+ *   教学点：条形图的长度是定量通道，必须从零起 —— 否则就是谎言。
+ * ======================================================= */
+DEMOS['d-4-x'] = async (mount) => {
+  const { rows, ok } = await loadCrime();
+  const ranked = rows
+    .map((d) => ({ state: d.state, rate: d.population ? (d.murder / d.population) * 100000 : 0 }))
+    .sort((a, b) => b.rate - a.rate);
+  const A = ranked[0], Bv = ranked[1];
+
+  // 私有样式（一次性注入）
+  if (!document.getElementById('l4x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l4x-styles';
+    st.textContent = `
+.l4x-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+@media (max-width: 720px) { .l4x-grid { grid-template-columns: 1fr; } }
+.l4x-cap { margin: 0 0 6px; font-size: 12px; font-weight: 700; }
+.l4x-cap.is-lie { color: var(--c-danger); }
+.l4x-cap.is-honest { color: var(--c-success); }
+.l4x-read { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--c-text); }
+.l4x-read b { color: var(--c-danger); }
+.l4x-read u { color: var(--c-success); text-decoration: none; }
+`;
+    document.head.appendChild(st);
+  }
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <label class="demo-control">y 轴起点
+        <input type="range" min="0" max="92" value="0" step="1" data-role="base">
+        <span class="l4-mono" data-baseVal>0%</span>
+      </label>
+      <label class="demo-control">纵横比拉伸
+        <input type="range" min="1" max="3" value="1" step="0.1" data-role="stretch">
+        <span class="l4-mono" data-stretchVal>1.0×</span>
+      </label>
+    </div>
+    <div class="l4x-grid">
+      <div>
+        <p class="l4x-cap is-lie">😱 画面版（随滑块变形）</p>
+        <div data-role="lie"></div>
+      </div>
+      <div>
+        <p class="l4x-cap is-honest">😇 诚实版（从零起、1×）</p>
+        <div data-role="honest"></div>
+      </div>
+    </div>
+    <div class="l4x-read" data-role="read" style="margin-top:12px"></div>
+    <p class="demo-note"><strong>规则只有一条：</strong>条形图编码的是<strong>长度</strong>，而长度是定量通道 —— 必须从零画起。折线图编码的是<strong>位置/斜率</strong>，截断轴可以接受（但要标注）。媒体上 90% 的「图表谎言」就是把条形图的轴抬高，再配一个夸张的纵横比。数据：${esc(A.state)} vs ${esc(Bv.state)} 每 10 万人谋杀率（crime.csv）。</p>
+    ${dataNote(ok)}
+  `;
+
+  const baseEl = mount.querySelector('[data-role="base"]');
+  const stretchEl = mount.querySelector('[data-role="stretch"]');
+  const baseVal = mount.querySelector('[data-baseVal]');
+  const stretchVal = mount.querySelector('[data-stretchVal]');
+  const lieEl = mount.querySelector('[data-role="lie"]');
+  const honestEl = mount.querySelector('[data-role="honest"]');
+  const readEl = mount.querySelector('[data-role="read"]');
+
+  function barSvg(va, vb, y0, H) {
+    const W = 240;
+    const pad = 30, bot = 26;
+    const ih = H - bot - 14;
+    const vmax = va.rate;
+    const yOf = (v) => 14 + ih - ((v - y0) / (vmax - y0)) * ih;
+    let g = '';
+    // 基线与刻度
+    g += `<line x1="10" y1="${(14 + ih).toFixed(1)}" x2="${W - 10}" y2="${(14 + ih).toFixed(1)}" style="stroke: var(--c-text-soft); stroke-width: 1"/>`;
+    [0, 0.5, 1].forEach((f) => {
+      const v = y0 + (vmax - y0) * f;
+      const y = yOf(v);
+      g += `<line x1="10" y1="${y.toFixed(1)}" x2="${W - 10}" y2="${y.toFixed(1)}" style="stroke: var(--c-line); opacity: .5"/>`
+        + `<text x="8" y="${(y + 3).toFixed(1)}" text-anchor="end" style="fill: var(--c-muted); font-size: 9px; font-family: var(--font-mono);">${v.toFixed(v < 10 ? 1 : 0)}</text>`;
+    });
+    [[A, 'var(--c-danger)'], [Bv, 'var(--c-text-soft)']].forEach(([s, c], i) => {
+      const x = pad + 30 + i * 90;
+      const y = yOf(s.rate);
+      const h = (14 + ih) - y;
+      g += `<rect x="${x}" y="${y.toFixed(1)}" width="52" height="${Math.max(h, 0.5).toFixed(1)}" rx="3" style="fill: ${c}; opacity: .85;"/>`
+        + `<text x="${x + 26}" y="${(14 + ih + 14).toFixed(1)}" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 9.5px;">${esc(s.state)}</text>`
+        + `<text x="${x + 26}" y="${(y - 5).toFixed(1)}" text-anchor="middle" style="fill: var(--c-text); font-size: 9.5px; font-family: var(--font-mono);">${s.rate.toFixed(1)}</text>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="谋杀率对比条形图" style="width:100%;height:auto">${g}</svg>`;
+  }
+
+  function render() {
+    const f = +baseEl.value / 100;
+    const stretch = +stretchEl.value;
+    const y0 = Bv.rate * f;
+    baseVal.textContent = `${Math.round(f * 100)}%`;
+    stretchVal.textContent = `${stretch.toFixed(1)}×`;
+
+    lieEl.innerHTML = barSvg(A, Bv, y0, Math.round(190 * stretch));
+    honestEl.innerHTML = barSvg(A, Bv, 0, 190);
+
+    const trueRatio = A.rate / Bv.rate;
+    const seenRatio = (A.rate - y0) / (Bv.rate - y0);
+    const factor = seenRatio / trueRatio;
+    readEl.innerHTML =
+      `真实差异：${esc(A.state)} 只比 ${esc(Bv.state)} 高 <u>${((trueRatio - 1) * 100).toFixed(0)}%</u><br>`
+      + `画面差异：看起来高了 <b>${((seenRatio - 1) * 100).toFixed(0)}%</b>（视觉比例被放大 <b>${factor.toFixed(1)}×</b>）`
+      + (stretch > 1.05 ? `，叠加纵横比拉伸 ${stretch.toFixed(1)}× 后面积感再被扭曲` : '')
+      + (factor < 1.15 && stretch <= 1.05 ? ' —— 目前还算诚实 🙂' : '');
+  }
+
+  baseEl.addEventListener('input', render);
+  stretchEl.addEventListener('input', render);
+  render();
 };
 
 /* =========================================================

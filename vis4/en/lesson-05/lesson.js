@@ -986,8 +986,155 @@ DEMOS['d-5-5'] = function (mount) {
   render();
 };
 
+/* =========================================================
+ * Original demo 5.x — Smoothing Window Lab
+ *   One real time series (french_names.json): tune the window k,
+ *   switch the smoother (moving average / median / EWMA), overlay
+ *   the smoothed line on the raw curve, and read out live
+ *   "how many years the peak lags" and "how much noise drops".
+ *   Teaching point: the granularity–noise–lag trade-off — there is
+ *   no perfect parameter, only choices.
+ * ======================================================= */
+DEMOS['d-5-x'] = async function (mount) {
+  let data = null, years = [];
+  const maps = {};
+  try {
+    const res = await fetch('../../lesson-05/data/french_names.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    ['Marie', 'Jean', 'Camille'].forEach((k) => {
+      const arr = json.names[k] || [];
+      maps[k] = new Map(arr.map((d) => [+d.year, +d.count]));
+    });
+    years = (json.names.Marie || []).map((d) => +d.year).sort((a, b) => a - b);
+    data = years.length > 50;
+  } catch (e) { /* file:// fallback */ }
+
+  if (!data) {
+    mount.innerHTML = '<div class="callout callout--warn"><p><strong>Data failed to load:</strong> this demo needs french_names.json (available over http).</p></div>';
+    return;
+  }
+
+  // Private styles (injected once)
+  if (!document.getElementById('l5x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l5x-styles';
+    st.textContent = `
+.l5x-read { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--c-text); }
+.l5x-read b { color: var(--c-primary); }
+.l5x-chip { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; font-size: 11.5px; color: var(--c-text-soft); }
+.l5x-chip i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+`;
+    document.head.appendChild(st);
+  }
+
+  const COLOR = { Marie: 'var(--ch-4)', Jean: 'var(--ch-1)', Camille: 'var(--ch-3)' };
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <label class="demo-control">Name
+        <select data-name><option>Marie</option><option>Jean</option><option>Camille</option></select>
+      </label>
+      <label class="demo-control">Smoother
+        <select data-smooth>
+          <option value="ma">Moving average</option>
+          <option value="median">Median filter</option>
+          <option value="ewma">EWMA exponential smoothing</option>
+        </select>
+      </label>
+      <label class="demo-control">Window k (moving avg / median)
+        <input type="range" min="1" max="25" step="2" value="5" data-k>
+        <span class="l5-mono" data-kVal>5 yrs</span>
+      </label>
+      <label class="demo-control">EWMA α
+        <input type="range" min="5" max="50" step="5" value="20" data-alpha>
+        <span class="l5-mono" data-aVal>0.20</span>
+      </label>
+    </div>
+    <div style="margin:6px 0 10px">
+      <span class="l5x-chip"><i style="background:${'var(--c-text-soft)'}; opacity:.45"></i>raw (1900–2020)</span>
+      <span class="l5x-chip"><i style="background:var(--c-primary)"></i>smoothed</span>
+    </div>
+    <div data-chart></div>
+    <div class="l5x-read" data-read style="margin-top:12px"></div>
+    <p class="demo-note"><strong>The three-way trade-off:</strong> a wider window → a smoother curve (noise ↓), but peaks get flattened and shifted later (lag ↑); EWMA tracks tightly with tiny memory (lag ≈ (1−α)/α years) yet is sensitive to abrupt changes; the median filter is nearly immune to outliers but leaves a staircase look. Ask what question you need to answer first, then choose the smoothing strength — smoothing exists to "reveal the trend", never to "beautify the data".</p>
+  `;
+
+  const nameSel = mount.querySelector('[data-name]');
+  const smSel = mount.querySelector('[data-smooth]');
+  const kEl = mount.querySelector('[data-k]');
+  const aEl = mount.querySelector('[data-alpha]');
+  const kVal = mount.querySelector('[data-kVal]');
+  const aVal = mount.querySelector('[data-aVal]');
+  const chartEl = mount.querySelector('[data-chart]');
+  const readEl = mount.querySelector('[data-read]');
+
+  function smooth(vals) {
+    const k = +kEl.value, a = +aEl.value / 100;
+    if (smSel.value === 'ewma') {
+      const out = [vals[0]];
+      for (let i = 1; i < vals.length; i++) out.push(a * vals[i] + (1 - a) * out[i - 1]);
+      return out;
+    }
+    const half = (k - 1) / 2;
+    return vals.map((_, i) => {
+      const win = vals.slice(Math.max(0, i - half), Math.min(vals.length, i + half + 1));
+      if (smSel.value === 'median') {
+        const s = win.slice().sort((x, y) => x - y);
+        const m = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+        return m;
+      }
+      return win.reduce((x, y) => x + y, 0) / win.length;
+    });
+  }
+
+  function render() {
+    const key = nameSel.value;
+    kVal.textContent = `${kEl.value} yrs`;
+    aVal.textContent = (+aEl.value / 100).toFixed(2);
+    const vals = years.map((y) => maps[key].get(y) || 0);
+    const sm = smooth(vals);
+
+    const W = 700, H = 250, M = { t: 14, r: 18, b: 32, l: 52 };
+    const vmax = Math.max(...vals) * 1.12;
+    const X = lin(years[0], years[years.length - 1], M.l, W - M.r);
+    const Y = lin(0, vmax, H - M.b, M.t);
+    let g = '';
+    for (let v = 0; v <= vmax; v += 1000) {
+      g += `<line x1="${M.l}" y1="${Y(v).toFixed(1)}" x2="${W - M.r}" y2="${Y(v).toFixed(1)}" style="stroke: var(--c-line); opacity: .6"/>`
+        + `<text x="${M.l - 7}" y="${(Y(v) + 3).toFixed(1)}" text-anchor="end" style="fill: var(--c-muted); font-size: 9.5px;">${v}</text>`;
+    }
+    for (let yr = 1900; yr <= 2020; yr += 20) {
+      g += `<text x="${X(yr).toFixed(1)}" y="${H - 10}" text-anchor="middle" style="fill: var(--c-muted); font-size: 9.5px;">${yr}</text>`;
+    }
+    const toPts = (arr) => arr.map((v, i) => X(years[i]).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    g += `<polyline points="${toPts(vals)}" style="fill: none; stroke: var(--c-text-soft); stroke-width: 1.4; opacity: .4"/>`;
+    g += `<polyline points="${toPts(sm)}" style="fill: none; stroke: var(--c-primary); stroke-width: 2.6; stroke-linejoin: round"/>`;
+    g += `<text x="${M.l + 6}" y="${M.t + 10}" style="fill: var(--c-text); font-size: 11px; font-weight: 700;">${key} · annual birth registrations</text>`;
+    chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${key} births, raw vs smoothed" style="width:100%;height:auto">${g}</svg>`;
+
+    // Readouts: peak lag + noise reduction
+    const argmax = (a) => a.reduce((bi, v, i) => (v > a[bi] ? i : bi), 0);
+    const lag = years[argmax(sm)] - years[argmax(vals)];
+    const noise = (a) => {
+      let s = 0, n = 0;
+      for (let i = 1; i < a.length; i++) { s += (a[i] - a[i - 1]) ** 2; n++; }
+      return Math.sqrt(s / n);
+    };
+    const n0 = noise(vals), n1 = noise(sm);
+    const drop = n0 > 0 ? Math.max(0, (1 - n1 / n0) * 100) : 0;
+    readEl.innerHTML =
+      `Peak: raw in <b>${years[argmax(vals)]}</b>, smoothed in <b>${years[argmax(sm)]}</b> → lag <b>${lag}</b> yrs　|　`
+      + `Noise (first-difference std): ${n0.toFixed(0)} → ${n1.toFixed(0)}, reduced <b>${drop.toFixed(0)}%</b>　|　`
+      + `Smoother: ${smSel.options[smSel.selectedIndex].text}${smSel.value === 'ewma' ? ` (α=${(+aEl.value / 100).toFixed(2)})` : ` (k=${kEl.value})`}`;
+  }
+
+  [nameSel, smSel, kEl, aEl].forEach((el) => el.addEventListener('input', render));
+  render();
+};
+
 /* ---------------------------------------------------------
- * 3) 启动
+ * 3) Startup
  * ------------------------------------------------------- */
 ensureDemoStyles();
 window.DEMOS = DEMOS;

@@ -220,7 +220,12 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
-          <p class="demo-hint">先用<em>平行坐标</em>看 50 个州在 5 个指标上的「轮廓」，再用<em>散点矩阵</em>做两两对比。选一根轴、拖两个滑块刷选（brush）—— 被选中的州会在两个图里<strong>同步高亮</strong>，这就是联动刷选。</p>
+          <p class="demo-hint">演示 A · 宽 → 长：运行时真实加载 crime.csv，勾选要保留的指标，看 <code>flatMap</code> 如何把「50 行 × 12 列」展开成「150 行 × 3 列」—— 原表中高亮的列正是被展开成一行行观测的来源。</p>
+          <div class="demo-mount" data-demo="d-4-1b"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">演示 B · 多变量投影：先用<em>平行坐标</em>看 50 个州在 5 个指标上的「轮廓」，再用<em>散点矩阵</em>做两两对比。选一根轴、拖两个滑块刷选（brush）—— 被选中的州会在两个图里<strong>同步高亮</strong>，这就是联动刷选。</p>
           <div class="demo-mount" data-demo="d-4-1"></div>
         </div>
 
@@ -656,12 +661,39 @@ const angle = Math.atan(ols(normX, normY).slope) * <span class="num">180</span> 
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> 原创 · 夸大倍数：把谎言算成一个数（图表谎言放大镜）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// y 轴起点滑块：f ∈ [0, 0.92]，y0 = 截断位置</span>
+<span class="kw">const</span> y0 = Bv.rate * (+baseEl.value / <span class="num">100</span>);
+lieEl.innerHTML    = barSvg(A, Bv, y0, Math.round(<span class="num">190</span> * stretch)); <span class="cmt">// 画面版随滑块变形</span>
+honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num">190</span>);                   <span class="cmt">// 诚实版永远从零起</span>
+
+<span class="cmt">// 夸大倍数 = 画面高度比 ÷ 真实高度比</span>
+<span class="kw">const</span> trueRatio = A.rate / Bv.rate;                <span class="cmt">// 从零起，例：1.04</span>
+<span class="kw">const</span> seenRatio = (A.rate - y0) / (Bv.rate - y0);  <span class="cmt">// 截断后，例：1.27</span>
+<span class="kw">const</span> factor = seenRatio / trueRatio;              <span class="cmt">// → 1.2×，越截越大</span></code></pre>
+              <div class="key-point">
+                <p><strong>对应演示：</strong>图表谎言放大镜（双图对照 + 实时读数）。截断轴的谎不是「感觉」，是<strong>可计算的</strong>：y0 逼近较矮那根柱的值时 seenRatio → ∞；再叠加 <code>stretch</code> 倍纵横比拉伸，面积感被二次扭曲。注意折线图不受此约束 —— 它的契约是位置而非长度，本规则<strong>只约束条形图</strong>。</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
           <p class="demo-hint">拖滑块改变<strong>视倾角</strong>：左图是直线本身（含 45° 参考虚线），中图是 Cleveland 的 U 型误差曲线与游标，右下角用 crime.csv 的真实回归算出「当前轴下的趋势倾角」—— 切 linear / log 看它怎么跑进 30°–60°。</p>
           <div class="demo-mount" data-demo="d-4-4"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">原创演示 · 图表谎言放大镜：同一份真实数据画两张条形图 —— 左边随「y 轴起点」和「纵横比拉伸」两个滑块变形，右边永远从零画起，中间实时读出「差异被夸大几倍」。练出对截断轴的条件反射。</p>
+          <div class="demo-mount" data-demo="d-4-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>理论透视 · 条形图的隐含契约：</strong>条形长度<strong>从零起</strong>编码数量——这是读者与图形的无声约定，截断 y 轴等于撕毁契约：4% 的真实差距被画成 27% 的视觉悬崖。Cleveland & McGill 的感知实验为此给出理论依据：<strong>位置比较最准、长度次之、面积最差</strong>——截断轴把本该是「位置/长度」的比较悄悄降级成「面积」比较，而纵横比拉伸会进一步放大面积感（同一份数据，拉一拉高宽比就能讲出另一个故事）。夸大倍数 = 画面比例 ÷ 真实比例，本演示把它实时算给你看。防御性读图三问：<strong>y 轴从哪起？纵横比是多少？绝对差到底是多少？</strong>——三问问完，大多数谎言不攻自破。注意折线图不受此约束：它的契约是「位置」而非「长度」，适度截断反而合理。</p>
         </div>
 
         <div class="takeaway">

@@ -102,6 +102,16 @@ function ensureDemoStyles() {
 /* Read-only tables inside demos (reuse .mini-table, adding a little padding here) */
 .l4-mono { font-family: var(--font-mono); }
 
+/* 4.1b wide/long format side-by-side panels */
+.l4-io-cap { margin: 0 0 6px; font-size: 11.5px; font-weight: 700; color: var(--c-text-soft); }
+.l4-io-cap b { margin-left: 8px; color: var(--c-primary); font-family: var(--font-mono); font-weight: 700; }
+.l4-io {
+  margin: 0; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--c-surface-2); border: 1px solid var(--c-line);
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.75;
+  color: var(--c-text); overflow: auto; max-height: 236px; white-space: pre;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .demo-mount, .demo-mount * { transition: none !important; animation: none !important; }
 }
@@ -430,6 +440,99 @@ DEMOS['d-4-1'] = async (mount) => {
   });
 
   update();
+};
+
+/* =========================================================
+ * Demo 4.1b —— wide → long format (flatMap unfolded live)
+ *   Counterpart of the same demo on the reference site: crime.csv is
+ *   loaded at runtime; the two shapes sit side by side and the row
+ *   count change is computed live, never hard-coded.
+ * ======================================================= */
+DEMOS['d-4-1b'] = async (mount) => {
+  const { rows, ok } = await loadCrime();
+
+  // Real column count: read the CSV header (falls back to object keys when file:// is blocked by CORS)
+  let csvCols = 0;
+  try {
+    const res = await fetch('../../lesson-04/data/crime.csv', { cache: 'no-store' });
+    if (res.ok) csvCols = (await res.text()).split(/\r?\n/)[0].split(',').length;
+  } catch (e) { /* ignore, use fallback */ }
+  const wideCols = csvCols || Object.keys(rows[0]).length;
+
+  const METRICS = [
+    { key: 'murder', label: 'Murder' },
+    { key: 'robbery', label: 'Robbery' },
+    { key: 'burglary', label: 'Burglary' },
+    { key: 'larceny_theft', label: 'Larceny theft' },
+    { key: 'motor_vehicle_theft', label: 'Motor vehicle theft' },
+  ];
+
+  const q = (s) => '"' + s + '"';
+  const fmtWide = (d) => '{ ' + Object.entries(d)
+    .map(([k, v]) => k + ': ' + (typeof v === 'string' ? q(v) : v)).join(', ') + ' }';
+  const fmtLong = (o) => '{ state: ' + q(o.state) + ', metric: ' + q(o.metric) + ', value: ' + o.value + ' }';
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">Metrics to keep:</span>
+      ${METRICS.map((m, i) => `<label class="demo-control"><input type="checkbox" data-metric="${i}"${i < 3 ? ' checked' : ''}> ${m.label}</label>`).join('')}
+    </div>
+
+    <div class="l4-formula" data-role="shape"></div>
+
+    <div class="demo-grid">
+      <div>
+        <p class="l4-io-cap">Wide format · raw (first 3 rows) <b data-role="wideBadge"></b></p>
+        <pre class="l4-io">${rows.slice(0, 3).map(fmtWide).join('\n')}
+…</pre>
+      </div>
+      <div>
+        <p class="l4-io-cap">Long format · unfolded by flatMap (first 9 rows) <b data-role="longBadge"></b></p>
+        <pre class="l4-io" data-role="longPre"></pre>
+      </div>
+    </div>
+
+    <div class="demo-sub" style="margin-top:16px">
+      <h4>Wide-format source table (first 10 rows) · checked metric columns are highlighted — they are being unfolded into long-format observations</h4>
+      <div class="table-scroll">
+        <table class="mini-table">
+          <thead><tr>
+            <th>State</th><th>population</th>
+            ${METRICS.map((m) => `<th class="l4-cell" data-col="${m.key}">${m.label}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${rows.slice(0, 10).map((d) => `<tr>
+              <td>${esc(d.state)}</td><td>${d.population}</td>
+              ${METRICS.map((m) => `<td class="l4-cell" data-col="${m.key}">${d[m.key]}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="demo-note"><strong>The row count is not hard-coded:</strong> long-format rows = states × checked metrics, computed live from the runtime-loaded crime.csv. Uncheck one metric and the long format instantly loses 50 rows — the direct consequence of "demoting metrics into a data column". Only 7 fields are kept in memory (state, population and 5 metrics); column counts refer to the CSV's original 12 columns.</p>
+    ${dataNote(ok)}
+  `;
+
+  const shapeEl = mount.querySelector('[data-role="shape"]');
+  const longPre = mount.querySelector('[data-role="longPre"]');
+  const wideBadge = mount.querySelector('[data-role="wideBadge"]');
+  const longBadge = mount.querySelector('[data-role="longBadge"]');
+  const boxes = [...mount.querySelectorAll('[data-metric]')];
+
+  function convert() {
+    const keys = METRICS.filter((_, i) => boxes[i].checked);
+    const long = rows.flatMap((d) => keys.map((m) => ({ state: d.state, metric: m.key, value: d[m.key] })));
+    longPre.textContent = (long.slice(0, 9).map(fmtLong).join('\n') || '(check at least one metric)') + '\n…';
+    shapeEl.textContent = `CSV as-is: ${rows.length} rows × ${wideCols} cols → flatMap → long: ${long.length} rows × 3 cols · {state, metric, value}`;
+    wideBadge.textContent = `${rows.length} rows`;
+    longBadge.textContent = `${long.length} rows`;
+    mount.querySelectorAll('[data-col]').forEach((el) => {
+      el.classList.toggle('is-on', keys.some((m) => m.key === el.dataset.col));
+    });
+  }
+
+  boxes.forEach((b) => b.addEventListener('change', convert));
+  convert();
 };
 
 /* =========================================================
@@ -1188,6 +1291,127 @@ DEMOS['d-4-5'] = async (mount) => {
 
 /* =========================================================
  * Boot
+ * ======================================================= */
+/* =========================================================
+ * Original demo 4.x —— Chart-lie Magnifier
+ *   One real dataset (top-two murder-rate states in crime.csv),
+ *   two sliders: ① raise the y-axis baseline ② stretch the aspect
+ *   ratio. The left "as-shown" chart deforms with the sliders while
+ *   the right "honest" chart always starts at zero; the middle
+ *   readout tells live how many times the difference got exaggerated.
+ *   Teaching point: bar length is a quantitative channel — it must
+ *   start at zero, otherwise it lies.
+ * ======================================================= */
+DEMOS['d-4-x'] = async (mount) => {
+  const { rows, ok } = await loadCrime();
+  const ranked = rows
+    .map((d) => ({ state: d.state, rate: d.population ? (d.murder / d.population) * 100000 : 0 }))
+    .sort((a, b) => b.rate - a.rate);
+  const A = ranked[0], Bv = ranked[1];
+
+  // Private styles (injected once)
+  if (!document.getElementById('l4x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l4x-styles';
+    st.textContent = `
+.l4x-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+@media (max-width: 720px) { .l4x-grid { grid-template-columns: 1fr; } }
+.l4x-cap { margin: 0 0 6px; font-size: 12px; font-weight: 700; }
+.l4x-cap.is-lie { color: var(--c-danger); }
+.l4x-cap.is-honest { color: var(--c-success); }
+.l4x-read { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--c-text); }
+.l4x-read b { color: var(--c-danger); }
+.l4x-read u { color: var(--c-success); text-decoration: none; }
+`;
+    document.head.appendChild(st);
+  }
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <label class="demo-control">y-axis baseline
+        <input type="range" min="0" max="92" value="0" step="1" data-role="base">
+        <span class="l4-mono" data-baseVal>0%</span>
+      </label>
+      <label class="demo-control">Aspect stretch
+        <input type="range" min="1" max="3" value="1" step="0.1" data-role="stretch">
+        <span class="l4-mono" data-stretchVal>1.0×</span>
+      </label>
+    </div>
+    <div class="l4x-grid">
+      <div>
+        <p class="l4x-cap is-lie">😱 As shown (deforms with the sliders)</p>
+        <div data-role="lie"></div>
+      </div>
+      <div>
+        <p class="l4x-cap is-honest">😇 Honest (zero-based, 1×)</p>
+        <div data-role="honest"></div>
+      </div>
+    </div>
+    <div class="l4x-read" data-role="read" style="margin-top:12px"></div>
+    <p class="demo-note"><strong>One rule:</strong> a bar chart encodes <strong>length</strong>, and length is a quantitative channel — it must start at zero. A line chart encodes <strong>position / slope</strong>, so a truncated axis is acceptable (but must be labeled). About 90% of "chart lies" in the media simply raise a bar chart's baseline and add an exaggerated aspect ratio. Data: ${esc(A.state)} vs ${esc(Bv.state)} murders per 100k (crime.csv).</p>
+    ${dataNote(ok)}
+  `;
+
+  const baseEl = mount.querySelector('[data-role="base"]');
+  const stretchEl = mount.querySelector('[data-role="stretch"]');
+  const baseVal = mount.querySelector('[data-baseVal]');
+  const stretchVal = mount.querySelector('[data-stretchVal]');
+  const lieEl = mount.querySelector('[data-role="lie"]');
+  const honestEl = mount.querySelector('[data-role="honest"]');
+  const readEl = mount.querySelector('[data-role="read"]');
+
+  function barSvg(va, vb, y0, H) {
+    const W = 240;
+    const pad = 30;
+    const ih = H - 26 - 14;
+    const vmax = va.rate;
+    const yOf = (v) => 14 + ih - ((v - y0) / (vmax - y0)) * ih;
+    let g = '';
+    g += `<line x1="10" y1="${(14 + ih).toFixed(1)}" x2="${W - 10}" y2="${(14 + ih).toFixed(1)}" style="stroke: var(--c-text-soft); stroke-width: 1"/>`;
+    [0, 0.5, 1].forEach((f) => {
+      const v = y0 + (vmax - y0) * f;
+      const y = yOf(v);
+      g += `<line x1="10" y1="${y.toFixed(1)}" x2="${W - 10}" y2="${y.toFixed(1)}" style="stroke: var(--c-line); opacity: .5"/>`
+        + `<text x="8" y="${(y + 3).toFixed(1)}" text-anchor="end" style="fill: var(--c-muted); font-size: 9px; font-family: var(--font-mono);">${v.toFixed(v < 10 ? 1 : 0)}</text>`;
+    });
+    [[A, 'var(--c-danger)'], [Bv, 'var(--c-text-soft)']].forEach(([s, c], i) => {
+      const x = pad + 30 + i * 90;
+      const y = yOf(s.rate);
+      const h = (14 + ih) - y;
+      g += `<rect x="${x}" y="${y.toFixed(1)}" width="52" height="${Math.max(h, 0.5).toFixed(1)}" rx="3" style="fill: ${c}; opacity: .85;"/>`
+        + `<text x="${x + 26}" y="${(14 + ih + 14).toFixed(1)}" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 9.5px;">${esc(s.state)}</text>`
+        + `<text x="${x + 26}" y="${(y - 5).toFixed(1)}" text-anchor="middle" style="fill: var(--c-text); font-size: 9.5px; font-family: var(--font-mono);">${s.rate.toFixed(1)}</text>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Murder-rate comparison bars" style="width:100%;height:auto">${g}</svg>`;
+  }
+
+  function render() {
+    const f = +baseEl.value / 100;
+    const stretch = +stretchEl.value;
+    const y0 = Bv.rate * f;
+    baseVal.textContent = `${Math.round(f * 100)}%`;
+    stretchVal.textContent = `${stretch.toFixed(1)}×`;
+
+    lieEl.innerHTML = barSvg(A, Bv, y0, Math.round(190 * stretch));
+    honestEl.innerHTML = barSvg(A, Bv, 0, 190);
+
+    const trueRatio = A.rate / Bv.rate;
+    const seenRatio = (A.rate - y0) / (Bv.rate - y0);
+    const factor = seenRatio / trueRatio;
+    readEl.innerHTML =
+      `True difference: ${esc(A.state)} is only <u>${((trueRatio - 1) * 100).toFixed(0)}%</u> above ${esc(Bv.state)}<br>`
+      + `As shown: it "looks" <b>${((seenRatio - 1) * 100).toFixed(0)}%</b> higher (visual ratio inflated <b>${factor.toFixed(1)}×</b>)`
+      + (stretch > 1.05 ? `, and the ${stretch.toFixed(1)}× aspect stretch distorts area perception further` : '')
+      + (factor < 1.15 && stretch <= 1.05 ? ' — still honest for now 🙂' : '');
+  }
+
+  baseEl.addEventListener('input', render);
+  stretchEl.addEventListener('input', render);
+  render();
+};
+
+/* =========================================================
+ * Startup
  * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;

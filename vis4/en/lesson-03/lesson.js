@@ -1018,6 +1018,200 @@ DEMOS['d-3-8'] = async function (mount) {
 /* =========================================================
  * Boot
  * ======================================================= */
+/* =========================================================
+ * Original demo 3.x —— Color ER
+ *   Four "sick palettes", pick one of three prescriptions:
+ *   a right pick cures the chart and recolors it, a wrong one
+ *   comes with pathology analysis; after curing, re-check every
+ *   patient through a CVD filter. Consolidates all chapter rules:
+ *   sequential / qualitative / contrast / lightness / CVD.
+ * ======================================================= */
+DEMOS['d-3-x'] = (mount) => {
+  // Private styles (injected once)
+  if (!document.getElementById('l3x-styles')) {
+    const st = document.createElement('style');
+    st.id = 'l3x-styles';
+    st.textContent = `
+.l3x-score { padding: 8px 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); font-size: 12.5px; color: var(--c-text); }
+.l3x-patient { display: grid; grid-template-columns: 300px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--c-line); align-items: start; }
+@media (max-width: 720px) { .l3x-patient { grid-template-columns: 1fr; } }
+.l3x-patient:first-of-type { border-top: 0; padding-top: 4px; }
+.l3x-patient h4 { margin: 0 0 4px; font-size: 13px; color: var(--c-text); }
+.l3x-patient .l3x-desc { margin: 0 0 10px; font-size: 12px; color: var(--c-muted); }
+.l3x-chart { border: 1px solid var(--c-line); border-radius: var(--radius-sm); padding: 8px; background: var(--c-surface-2); }
+.l3x-opts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.l3x-opts .demo-btn { text-align: left; justify-content: flex-start; }
+.l3x-opts .demo-btn.is-ok { border-color: var(--c-success); color: var(--c-success); }
+.l3x-opts .demo-btn.is-bad { opacity: .45; text-decoration: line-through; }
+.l3x-why { margin: 8px 0 0; font-size: 11.5px; color: var(--c-text-soft); }
+.l3x-why b { color: var(--c-success); }
+.l3x-why s { color: var(--c-danger); }
+`;
+    document.head.appendChild(st);
+  }
+
+  // Pathological palettes (demo subject colors, independent of UI tokens)
+  const RAINBOW = ['#e41a1c', '#ff7f00', '#ffe945', '#4daf4a', '#4575e6'];
+  const SEQ_BLUE = ['#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5'];
+  const OKABE5 = ['#0072b2', '#e69f00', '#009e73', '#cc79a7', '#56b4e9'];
+  const REDGREEN = ['#d7191c', '#1a9641'];
+  const BLUEORANGE = ['#0072b2', '#e69f00'];
+  const LOWCON = ['#a3a9b3', '#b3a9b3'];
+  const DARKLIGHT = ['#2b5c8a', '#f0b429'];
+  const REDWARM = ['#a63603', '#e6550d', '#fd8d3c', '#fdae6b', '#fdd0a2'];
+
+  function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+  const PATIENTS = [
+    {
+      id: 'a', chart: 'bars',
+      title: 'Case A · Rainbow hues for ordered data',
+      desc: 'Monthly study hours rise month by month — this is sequential data, yet rainbow hues carry no magnitude meaning.',
+      data: [['Mar', 4], ['Apr', 5], ['May', 6.5], ['Jun', 8], ['Jul', 9]],
+      sick: RAINBOW,
+      options: [
+        { label: 'Rx 1: Okabe–Ito qualitative five', colors: OKABE5, ok: false, why: 'Qualitative palettes declare "all classes equal" — they encode no magnitude and even imply the classes are unordered.' },
+        { label: 'Rx 2: single-hue blue ramp (light → dark)', colors: SEQ_BLUE, ok: true, why: 'Lightness grows monotonically with the value: order reads at a glance, and survives grayscale printing and CVD.' },
+        { label: 'Rx 3: red → green diverging palette', colors: REDGREEN, ok: false, why: 'Diverging palettes fit data with a meaningful midpoint (profit/loss). There is no midpoint here, and red/green is CVD-hostile.' },
+      ],
+    },
+    {
+      id: 'b', chart: 'bars',
+      title: 'Case B · Red / green for "right / wrong"',
+      desc: 'Two outcomes must be told apart at a glance: correct vs incorrect — a true two-pole contrast.',
+      data: [['Correct', 32], ['Wrong', 11]],
+      sick: REDGREEN,
+      options: [
+        { label: 'Rx 1: darken both red and green', colors: ['#8b1410', '#0f5c22'], ok: false, why: 'After darkening, the two lightness levels converge — a deutan viewer still sees two nearly identical dark blocks.' },
+        { label: 'Rx 2: blue / orange contrast pair', colors: BLUEORANGE, ok: true, why: 'Under red-green color blindness blue and orange still read as cold vs warm — the classic CVD-safe contrast.' },
+        { label: 'Rx 3: blue → dark-blue sequential ramp', colors: ['#dbe9f6', '#2171b5'], ok: false, why: 'A ramp encodes "how much", but these two classes are peers — use contrast, not a gradient.' },
+      ],
+    },
+    {
+      id: 'c', chart: 'lines',
+      title: 'Case C · Two lines with too-similar lightness',
+      desc: 'Class A / B monthly score lines melt into each other — line charts separate by lightness first, hue second.',
+      data: null,
+      sick: LOWCON,
+      options: [
+        { label: 'Rx 1: switch both to paler pastels', colors: ['#c9d4de', '#dcc9d4'], ok: false, why: 'Lowering contrast further glues the lines onto the gridlines — readability gets worse.' },
+        { label: 'Rx 2: dark + light, widen the lightness gap', colors: DARKLIGHT, ok: true, why: 'Widen lightness first, then talk hue — lightness is the primary channel for telling lines apart.' },
+        { label: 'Rx 3: both lines in saturated rainbow', colors: ['#e41a1c', '#4575e6'], ok: false, why: 'Saturated ≠ readable: two rainbow lines can still share the same lightness, so the clash remains.' },
+      ],
+    },
+    {
+      id: 'd', chart: 'bars',
+      title: 'Case D · Gradient for unordered classes',
+      desc: 'Enrollment of 5 electives — the classes are peers, yet a light-to-dark ramp is applied, implying an order that does not exist.',
+      data: [['Music', 24], ['Film', 31], ['Photo', 18], ['Drama', 27], ['Writing', 22]],
+      sick: SEQ_BLUE,
+      options: [
+        { label: 'Rx 1: Okabe–Ito qualitative five', colors: OKABE5, ok: true, why: 'Peer classes → separate by hue while keeping lightness and saturation close, hinting no order at all.' },
+        { label: 'Rx 2: keep deepening a blue ramp', colors: ['#eff6fb', '#c6dbef', '#6baed6', '#2171b5', '#08306b'], ok: false, why: 'The same "ramp = order" misuse as the case itself, just pointed the other way.' },
+        { label: 'Rx 3: red → orange → yellow warm ramp', colors: REDWARM, ok: false, why: 'Still a ramp — it keeps implying "Music < Writing", an ordering that is not in the data.' },
+      ],
+    },
+  ];
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">CVD re-check filter:</span>
+      <select data-cvd>
+        <option value="normal">Normal vision</option>
+        <option value="deuteranopia">Deuteranopia</option>
+        <option value="protanopia">Protanopia</option>
+        <option value="tritanopia">Tritanopia</option>
+      </select>
+    </div>
+    <div class="l3x-score" data-score></div>
+    <div data-cards style="margin-top:6px"></div>
+    <p class="demo-note"><strong>Winning = revising:</strong> the four cases add up to the chapter's four bottom lines — sequential data takes a sequential ramp, two-pole contrast takes a CVD-safe pair, line charts widen lightness first, unordered classes take a qualitative palette. Before coloring a real project, run this "check-up" in your head.</p>
+  `;
+
+  const cvdSel = mount.querySelector('[data-cvd]');
+  const scoreEl = mount.querySelector('[data-score]');
+  const cardsEl = mount.querySelector('[data-cards]');
+  const cured = new Set();
+
+  function filt(hex) {
+    if (cvdSel.value === 'normal') return hex;
+    return '#' + cvdSim(hex2rgb(hex), cvdSel.value).map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  function svgFor(p, colors) {
+    if (p.chart === 'bars') {
+      const W = 284, H = 148, B = 24, T = 8;
+      const max = Math.max(...p.data.map((d) => d[1]));
+      const bw = (W - 16) / p.data.length;
+      let g = '';
+      p.data.forEach((d, i) => {
+        const h = (d[1] / max) * (H - B - T - 12);
+        const c = filt(colors[i % colors.length]);
+        g += `<rect x="${(8 + i * bw + bw * 0.18).toFixed(1)}" y="${(H - B - h).toFixed(1)}" width="${(bw * 0.64).toFixed(1)}" height="${h.toFixed(1)}" rx="3" style="fill: ${c};"/>
+          <text x="${(8 + i * bw + bw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 9.5px;">${esc(d[0])}</text>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(p.title)}">${g}</svg>`;
+    }
+    const W = 284, H = 148, L = 26, B = 22, T = 10;
+    const series = [
+      { pts: [72, 75, 71, 78, 80, 79], c: filt(colors[0]) },
+      { pts: [64, 66, 70, 68, 73, 76], c: filt(colors[1]) },
+    ];
+    let g = '';
+    for (let i = 0; i < 4; i++) {
+      const y = T + i * ((H - B - T) / 3);
+      g += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - 8}" y2="${y.toFixed(1)}" style="stroke: var(--c-line); opacity: .6"/>`;
+    }
+    series.forEach((s) => {
+      const path = s.pts.map((v, i) => {
+        const x = L + i * ((W - L - 8) / 5);
+        const y = T + (1 - (v - 60) / 25) * (H - B - T);
+        return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }).join(' ');
+      g += `<path d="${path}" style="fill: none; stroke: ${s.c}; stroke-width: 2.5; stroke-linecap: round;"/>`;
+    });
+    g += `<text x="${L}" y="${H - 6}" style="fill: var(--c-text-soft); font-size: 9.5px;">Jan–Jun</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(p.title)}">${g}</svg>`;
+  }
+
+  function render() {
+    scoreEl.textContent = `Cured ${cured.size} / ${PATIENTS.length} — three prescriptions per case; a wrong pick returns pathology notes, a right one cures and recolors.`;
+    cardsEl.innerHTML = PATIENTS.map((p) => {
+      const done = cured.has(p.id);
+      const colors = done ? p.options.find((o) => o.ok).colors : p.sick;
+      const opts = p.options.map((o, i) => {
+        const cls = 'demo-btn' + (done && o.ok ? ' is-ok' : (o._bad ? ' is-bad' : ''));
+        return `<button type="button" class="${cls}" data-p="${p.id}" data-i="${i}"${done ? ' disabled' : ''}>${esc(o.label)}</button>`;
+      }).join('');
+      return `<div class="l3x-patient">
+        <div class="l3x-chart">${svgFor(p, colors)}</div>
+        <div>
+          <h4>${done ? '✅ ' : '🩺 '}${esc(p.title)}</h4>
+          <p class="l3x-desc">${esc(p.desc)}</p>
+          <div class="l3x-opts">${opts}</div>
+          <p class="l3x-why" data-why="${p.id}">${done ? '<b>Cured:</b> ' + esc(p.options.find((o) => o.ok).why) : (p.note ? '<s>Misdiagnosed:</s> ' + esc(p.note) : '')}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    cardsEl.querySelectorAll('[data-p]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = PATIENTS.find((x) => x.id === btn.dataset.p);
+        const o = p.options[+btn.dataset.i];
+        if (o.ok) { cured.add(p.id); p.note = ''; }
+        else { p.note = o.why; o._bad = true; }
+        render();
+      });
+    });
+  }
+
+  cvdSel.addEventListener('change', render);
+  render();
+};
+
+/* =========================================================
+ * Startup
+ * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;
 

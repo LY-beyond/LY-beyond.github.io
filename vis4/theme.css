@@ -50,3 +50,65 @@
   .theme-toggle { width: 28px; height: 28px; }
   .theme-toggle__icon { width: 14px; height: 14px; }
 }
+
+/* =========================================================
+ * CVD 色觉模拟按钮（theme.js 注入，紧随主题按钮之后）
+ * 配色 / 圆角 / 动效一律取自 tokens.css，本文件不出现硬编码色值。
+ * ======================================================= */
+
+.cvd-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t-control);
+}
+
+.cvd-toggle:hover {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  border-color: color-mix(in srgb, var(--c-primary) 36%, var(--c-line));
+  color: var(--c-primary);
+}
+
+.cvd-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* 模拟开启时高亮，提示用户当前处于「非原始色彩」视图 */
+.cvd-toggle--active {
+  background: color-mix(in srgb, var(--c-primary) var(--mix-soft), transparent);
+  border-color: color-mix(in srgb, var(--c-primary) 45%, var(--c-line));
+  color: var(--c-primary);
+}
+
+.cvd-toggle__icon { display: block; flex: 0 0 auto; }
+.cvd-toggle__text { line-height: 1; white-space: nowrap; }
+
+/* 与语言切换器之间留一点气口（同 .theme-toggle 的规则） */
+.course-topbar .cvd-toggle:not(.cvd-toggle--bar),
+.topbar-inner .cvd-toggle {
+  margin-right: 8px;
+}
+
+/* ---------------- 全站 CVD 滤镜 ----------------
+ * 滤镜定义由 theme.js 在 head 阶段注入（与 lesson-03 的 CVD_MATRICES 同源），
+ * 挂在 body 上整体模拟；各页顶栏均为 position: sticky，吸顶不受影响。 */
+html[data-cvd="prot"] body { filter: url(#cvd-prot); }
+html[data-cvd="deut"] body { filter: url(#cvd-deut); }
+html[data-cvd="trit"] body { filter: url(#cvd-trit); }
+
+@media (max-width: 720px) {
+  .cvd-toggle { height: 28px; padding: 0 8px; font-size: 11px; gap: 4px; }
+  .cvd-toggle__icon { width: 13px; height: 13px; }
+}

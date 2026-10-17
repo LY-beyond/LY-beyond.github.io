@@ -53,6 +53,21 @@ function ensureDemoStyles() {
 .l1-join-dot.is-update { background: var(--ch-1); }
 .l1-join-dot.is-exit   { background: var(--c-danger); }
 .l1-join-dot.is-hidden { transform: scale(0); opacity: 0; }
+
+/* 1.x 脏数据急诊台 */
+.l1x-status { padding: 8px 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--c-primary) var(--mix-soft), var(--c-surface)); font-size: 12.5px; color: var(--c-text); }
+.l1x-cap { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: var(--c-text-soft); }
+.l1x-sick { background: color-mix(in srgb, var(--c-danger) 14%, transparent); color: var(--c-danger); font-weight: 700; }
+.l1x-raw { margin-top: 10px; font-size: 12px; color: var(--c-text-soft); }
+.l1x-raw summary { cursor: pointer; }
+.l1x-pre { margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--c-surface-2); border: 1px solid var(--c-line); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.7; overflow: auto; }
+.l1x-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.l1x-badge { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: var(--radius-pill); font-size: 12px; border: 1px solid var(--c-line); background: var(--c-surface-2); color: var(--c-text); }
+.l1x-badge b { font-size: 12px; }
+.l1x-badge i { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; color: var(--c-muted); }
+.l1x-badge.is-ok { border-color: color-mix(in srgb, var(--c-success) 45%, transparent); }
+.l1x-badge.is-warn { border-color: color-mix(in srgb, var(--c-warn) 55%, transparent); }
+.l1x-fail { padding: 18px 14px; border: 1px dashed color-mix(in srgb, var(--c-danger) 55%, transparent); border-radius: var(--radius-sm); color: var(--c-danger); font-size: 12.5px; }
 `;
   document.head.appendChild(st);
 }
@@ -261,7 +276,7 @@ DEMOS['d-1-2'] = (mount) => {
               <path d="${d}" style="fill: ${L.token};"/>
               <text x="${cx}" y="${(L.yTop + yBot) / 2}" text-anchor="middle"
                     dominant-baseline="middle"
-                    style="fill: var(--c-on-primary); font-size: 15px; font-weight: 700;">${L.cn} · ${L.en}</text>
+                    style="fill: #fff; paint-order: stroke; stroke: #0e1119; stroke-width: 3px; font-size: 14px; font-weight: 700;">${L.cn} · ${L.en}</text>
             </g>`;
           }).join('')}
         </svg>
@@ -579,7 +594,166 @@ DEMOS['d-1-5'] = (mount) => {
 /* =========================================================
  * 启动
  * ======================================================= */
+/* =========================================================
+ * 原创演示 1.x —— 脏数据急诊台
+ *   一份带 5 类典型病症的迷你数据：勾选「处方」现场治疗，
+ *   看类型徽章从 string ⚠ 翻成 Number ✓、图表从报错变渲染成功。
+ *   教学点：清洗是可视化的第一公里，autoType 只接得住「规矩」的脏。
+ * ======================================================= */
+DEMOS['d-1-x'] = (mount) => {
+  const DIRTY_CSV = [
+    '姓名,年龄,月消费,报到日期',
+    '张三,18,1285,2024-09-01',
+    '李四,19岁,980,2024/9/2',
+    '王五,20,"1,105",2024-09-03',
+    '赵六,19,,2024-09-04',
+    '张三,18,1285,2024-09-01',
+  ].join('\n');
+  const RAW = parseCSV(DIRTY_CSV);
+  const HEAD = RAW[0];
+  const ROWS = toObjects(RAW);
+
+  const FIXES = [
+    { id: 'thou', label: '① 去千分位逗号（"1,105" → 1105）' },
+    { id: 'miss', label: '② 剔除月消费缺失的行' },
+    { id: 'strip', label: '③ 剥离非数字字符（"19岁" → 19）' },
+    { id: 'date', label: '④ 日期归一化为 ISO' },
+    { id: 'dup', label: '⑤ 去掉完全重复的行' },
+  ];
+
+  // 简化版 autoType：行为与关键代码里 d3.autoType 的三条规则对齐
+  function inferType(v) {
+    const s = String(v ?? '').trim();
+    if (s === '') return 'null';
+    if (/^-?\d+(\.\d+)?$/.test(s)) return 'number';
+    const t = Date.parse(s);
+    if (!isNaN(t) && /[/-]/.test(s)) return 'date';
+    return 'string';
+  }
+
+  mount.innerHTML = `
+    <div class="demo-controls">
+      <span class="demo-control">处方（勾选即治疗）：</span>
+      ${FIXES.map((f) => `<label class="demo-control"><input type="checkbox" data-fix="${f.id}"> ${f.label}</label>`).join('')}
+    </div>
+
+    <div class="l1x-status" data-role="status"></div>
+
+    <div class="demo-grid" style="margin-top:14px">
+      <div>
+        <p class="l1x-cap">📥 挂号 · 原始病历（病灶标红）</p>
+        <div class="table-scroll">
+          <table class="mini-table" data-role="sick"></table>
+        </div>
+        <details class="l1x-raw">
+          <summary>看原始 CSV 文本（注意千分位为什么要加引号）</summary>
+          <pre class="l1x-pre">${esc(DIRTY_CSV)}</pre>
+        </details>
+      </div>
+      <div>
+        <p class="l1x-cap">🩺 治疗后 · 类型推断徽章</p>
+        <div class="l1x-badges" data-role="badges"></div>
+        <div data-role="chartWrap" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <p class="demo-note"><strong>观察点：</strong>autoType 只会转「规矩」的数字 —— 带千分位逗号的 <code>"1,105"</code>、带汉字的 <code>"19岁"</code>、空字符串它都<em>拒绝转换</em>（保持 string 或变 null）。任何一处不治，下面的图表就渲染失败 —— 真实项目里，可视化翻车十有八九翻在这一公里。</p>
+  `;
+
+  const statusEl = mount.querySelector('[data-role="status"]');
+  const sickEl = mount.querySelector('[data-role="sick"]');
+  const badgesEl = mount.querySelector('[data-role="badges"]');
+  const chartWrap = mount.querySelector('[data-role="chartWrap"]');
+  const boxes = [...mount.querySelectorAll('[data-fix]')];
+
+  function sickMarks(d, r) {
+    const age = String(d['年龄']).trim();
+    const spend = String(d['月消费']).trim();
+    const date = String(d['报到日期']).trim();
+    const dup = r > 0 && ROWS.slice(0, r).some((p) => JSON.stringify(p) === JSON.stringify(d));
+    return {
+      '姓名': dup,
+      '年龄': inferType(age) === 'string',
+      '月消费': /,/.test(spend) || spend === '',
+      '报到日期': !/^\d{4}-\d{2}-\d{2}$/.test(date),
+    };
+  }
+
+  function renderSick() {
+    sickEl.innerHTML = `<thead><tr>${HEAD.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>`
+      + ROWS.map((d, r) => {
+        const marks = sickMarks(d, r);
+        return `<tr>${HEAD.map((h) => `<td${marks[h] ? ' class="l1x-sick"' : ''}>${esc(String(d[h]).trim() || '∅')}</td>`).join('')}</tr>`;
+      }).join('') + '</tbody>';
+  }
+
+  function colBadge(name, vals) {
+    const counts = {};
+    vals.forEach((v) => { const t = inferType(v); counts[t] = (counts[t] || 0) + 1; });
+    const bad = counts.string || counts.null;
+    const detail = Object.entries(counts).map(([t, n]) => `${n}×${t}`).join(' · ');
+    return `<span class="l1x-badge ${bad ? 'is-warn' : 'is-ok'}">${name}<b>${bad ? ' ⚠ ' : ' ✓ '}</b><i>${detail}</i></span>`;
+  }
+
+  function treat() {
+    const fx = {};
+    boxes.forEach((b) => { fx[b.dataset.fix] = b.checked; });
+
+    let out = ROWS.map((d) => {
+      let age = String(d['年龄'] ?? '').trim();
+      let spend = String(d['月消费'] ?? '').trim();
+      let date = String(d['报到日期'] ?? '').trim();
+      if (fx.thou) spend = spend.replace(/,/g, '');
+      if (fx.strip) { age = age.replace(/[^0-9.]/g, ''); spend = spend.replace(/[^0-9.]/g, ''); }
+      if (fx.date && date) { const t = Date.parse(date); if (!isNaN(t)) date = new Date(t).toISOString().slice(0, 10); }
+      return { name: String(d['姓名'] ?? '').trim(), age, spend, date };
+    });
+    if (fx.miss) out = out.filter((d) => d.spend !== '');
+    if (fx.dup) {
+      const seen = new Set();
+      out = out.filter((d) => { const k = JSON.stringify(d); if (seen.has(k)) return false; seen.add(k); return true; });
+    }
+
+    statusEl.textContent = `治疗进度 ${FIXES.filter((f) => fx[f.id]).length} / ${FIXES.length} · 数据行 ${ROWS.length} → ${out.length}`;
+
+    badgesEl.innerHTML =
+      colBadge('年龄', out.map((d) => d.age))
+      + colBadge('月消费', out.map((d) => d.spend))
+      + colBadge('报到日期', out.map((d) => d.date));
+
+    const ok = out.length >= 2 && out.every((d) => /^-?\d+(\.\d+)?$/.test(d.spend));
+    if (!ok) {
+      const why = out.some((d) => d.spend === '') ? '存在缺失值（null）' : '存在非数字字符串';
+      chartWrap.innerHTML = `<div class="l1x-fail">⛔ 图表渲染失败：月消费列${why} —— 任何一行不是 Number，整列都无法参与计算。</div>`;
+      return;
+    }
+    const vals = out.map((d) => +d.spend);
+    const max = Math.max(...vals);
+    const W = 320, rowH = 34, barTop = 8;
+    chartWrap.innerHTML = `
+      <svg viewBox="0 0 ${W} ${out.length * rowH + 26}" role="img" aria-label="清洗后的月消费条形图">
+        <text x="0" y="12" style="fill: var(--c-text-soft); font-size: 11px; font-weight: 700;">✅ 月消费条形图（清洗后才能画）</text>
+        ${out.map((d, i) => {
+          const w = (vals[i] / max) * (W - 96);
+          return `<g transform="translate(0 ${26 + i * rowH})">
+            <text x="0" y="17" style="fill: var(--c-text); font-size: 11px;">${esc(d.name)}</text>
+            <rect x="52" y="4" width="${w.toFixed(1)}" height="18" rx="4" style="fill: var(--c-primary); opacity: .85;"/>
+            <text x="${(54 + w).toFixed(1)}" y="17" style="fill: var(--c-text-soft); font-size: 10.5px; font-family: var(--font-mono);">${vals[i]}</text>
+          </g>`;
+        }).join('')}
+      </svg>`;
+  }
+
+  boxes.forEach((b) => b.addEventListener('change', treat));
+  renderSick();
+  treat();
+};
+
+/* =========================================================
+ * 启动
+ * ======================================================= */
 ensureDemoStyles();
 window.DEMOS = DEMOS;
 
 initLesson('第 1 章 · 数据', { lesson: 'lesson-01' });
+
+

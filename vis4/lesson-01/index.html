@@ -209,12 +209,53 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> 原创 · 简化版 autoType 与五类清洗处方（脏数据急诊台）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// 对单个值试解析 —— 一列的类型由逐值投票决定</span>
+<span class="kw">function</span> inferType(v) {
+  <span class="kw">const</span> s = String(v ?? <span class="str">""</span>).trim();
+  <span class="kw">if</span> (s === <span class="str">""</span>) <span class="kw">return</span> <span class="str">"null"</span>;                      <span class="cmt">// 缺失值</span>
+  <span class="kw">if</span> (/^-?\d+(\.\d+)?$/.test(s)) <span class="kw">return</span> <span class="str">"number"</span>;
+  <span class="kw">const</span> t = Date.parse(s);
+  <span class="kw">if</span> (!isNaN(t) &amp;&amp; /[/-]/.test(s)) <span class="kw">return</span> <span class="str">"date"</span>;
+  <span class="kw">return</span> <span class="str">"string"</span>;  <span class="cmt">// "19岁"、"1,105" 都掉进这里 → 整列判 string</span>
+}
+
+<span class="cmt">// 五类处方 = 一条可复现的纯函数变换链</span>
+<span class="kw">if</span> (fx.thou)  spend = spend.replace(<span class="str">/,/g</span>, <span class="str">""</span>);         <span class="cmt">// ① 去千分位</span>
+<span class="kw">if</span> (fx.strip) age   = age.replace(<span class="str">/[^0-9.]/g</span>, <span class="str">""</span>);     <span class="cmt">// ③ 剥离非数字</span>
+<span class="kw">if</span> (fx.date &amp;&amp; date) date = <span class="kw">new</span> Date(Date.parse(date))
+  .toISOString().slice(<span class="num">0</span>, <span class="num">10</span>);                         <span class="cmt">// ④ 归一化 ISO</span>
+<span class="kw">if</span> (fx.miss)  out = out.filter(d =&gt; d.spend !== <span class="str">""</span>);   <span class="cmt">// ② 剔除缺失行</span>
+<span class="kw">if</span> (fx.dup) {
+  <span class="kw">const</span> seen = <span class="kw">new</span> Set();
+  out = out.filter(d =&gt; {
+    <span class="kw">const</span> k = JSON.stringify(d);
+    <span class="kw">return</span> seen.has(k) ? <span class="kw">false</span> : (seen.add(k), <span class="kw">true</span>); <span class="cmt">// ⑤ JSON 串当去重键</span>
+  });
+}</code></pre>
+              <div class="key-point">
+                <p><strong>对应演示：</strong>脏数据急诊台（勾选处方、看徽章翻绿）。autoType 只认「规矩」的值——千分位 <code>"1,105"</code>、带汉字的 <code>"19岁"</code>、空串都被拒绝转换；任何一处不治，条形图就地渲染失败。<strong>清洗必须写成可复现的变换链</strong>，而不是在表格软件里悄悄改数。</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
           <p class="demo-hint">点「重新加载」观察控制台输出 —— 重点看 <code>typeof data[0].age</code> 与 <code>birthday instanceof Date</code> 两行。</p>
           <div class="demo-mount" data-demo="d-1-1"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">原创演示 · 脏数据急诊台：一份带 5 类典型病症的数据，逐项勾选「处方」，看类型徽章翻绿、图表从渲染失败到成功 —— 清洗是可视化的第一公里。</p>
+          <div class="demo-mount" data-demo="d-1-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>理论透视 · 数据清洗：</strong>脏数据可归为五类典型病症——<strong>缺失值、类型错误（数字存成 "19岁"）、格式不一致（千分位、非标准日期）、重复行、异常值</strong>。它们为什么致命？因为任何聚合与映射都建立在「列的类型正确」之上：一个解析失败的值就能让整列退化为字符串，年龄变成分类变量、求和直接报错——这正是 Garbage In, Garbage Out。本演示的「类型徽章」复刻了 autoType 的原理：<strong>逐列采样 → 逐值试解析 → 投票定列型</strong>，任何一行不是 Number，整列都无法参与计算。最后记住一条纪律：清洗必须留下可复现的「处方记录」，永远不要悄悄改数。</p>
         </div>
 
         <div class="takeaway">

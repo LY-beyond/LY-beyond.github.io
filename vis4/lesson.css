@@ -18,6 +18,57 @@
  *   §6 .figure           —— 内联 SVG 示意图（跟随主题，可导出）
  * ========================================================= */
 
+/* ---------------- §0 全局背景 ----------------
+ * 章节色氛围底纹：章节色由顶栏 data-current 经 :has() 自动推导，
+ * 五章各染各的章节色（与门户卡片同一套 --ch-* 映射），无需改动 HTML；
+ * 图谱 / 测验 / 实战 / 指南页无对应 data-current，回退为主色。 */
+:root:has(.course-topbar[data-current="1"]) { --page-c: var(--ch-1); }
+:root:has(.course-topbar[data-current="2"]) { --page-c: var(--ch-2); }
+:root:has(.course-topbar[data-current="3"]) { --page-c: var(--ch-4); }
+:root:has(.course-topbar[data-current="4"]) { --page-c: var(--ch-3); }
+:root:has(.course-topbar[data-current="5"]) { --page-c: var(--ch-6); }
+
+body {
+  background: var(--c-bg);
+}
+
+/* 固定底纹：章节色柔光 + 顶部暖光 + 细网格；随滚动静止，向下渐隐让位于正文 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 34% at 8% 0%,
+      color-mix(in srgb, var(--page-c, var(--c-primary)) 13%, transparent), transparent 66%),
+    radial-gradient(46% 30% at 95% 3%, var(--tex-warm), transparent 68%),
+    repeating-linear-gradient(0deg, var(--tex-grid) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, var(--tex-grid) 0 1px, transparent 1px 46px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 34%, transparent 76%);
+          mask-image: linear-gradient(180deg, #000 0%, #000 34%, transparent 76%);
+}
+
+/* ---------------- 顶部氛围图（与首页一致的 background.jpg） ----------------
+ * 图上两层 scrim：中段按 --art-scrim 比例罩页面底色保证文字可读，
+ * 底部渐变回纯底色与正文无缝衔接。 */
+:root { --art-scrim: 66%; }
+:root[data-theme="dark"] { --art-scrim: 34%; }
+body::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 700px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 52%, var(--c-bg) 97%),
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--c-bg) var(--art-scrim), transparent),
+      color-mix(in srgb, var(--c-bg) calc(var(--art-scrim) * 0.42), transparent)),
+    url("background.jpg") center 18% / cover no-repeat;
+}
+
 /* ---------------- 键盘焦点环 ---------------- */
 :where(a, button, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--c-focus);
@@ -152,7 +203,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(70% 130% at 8% 0%, var(--tex-glow), transparent 62%),
+    radial-gradient(70% 130% at 8% 0%,
+      color-mix(in srgb, var(--page-c, var(--c-primary)) 15%, transparent), transparent 62%),
     radial-gradient(60% 120% at 96% 12%, var(--tex-warm), transparent 64%);
   -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
           mask-image: linear-gradient(180deg, #000 0%, transparent 100%);

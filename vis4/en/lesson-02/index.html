@@ -220,12 +220,49 @@ svg.selectAll(<span class="str">".stage"</span>).data(STAGES).join(<span class="
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> Original · A spec-driven mini renderer (Graphical-spec Generator)</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ① Data transform: group by the X channel → aggregate by the Y channel (hand-rolled rollup)</span>
+<span class="kw">const</span> cell = <span class="kw">new</span> Map();                        <span class="cmt">// "xVal|colorVal" → aggregate</span>
+<span class="kw">const</span> grp = students.filter(d =&gt; d[xKey] === xv &amp;&amp; d[colorKey] === cv);
+<span class="kw">const</span> v = yKey === <span class="str">"count"</span>
+  ? grp.length                                     <span class="cmt">// y.aggregate = count</span>
+  : grp.reduce((s, d) =&gt; s + d.age, <span class="num">0</span>) / grp.length; <span class="cmt">// mean(age)</span>
+cell.set(xv + <span class="str">"|"</span> + cv, v);
+
+<span class="cmt">// ② The spec JSON: rewritten wholesale on every dropdown change</span>
+<span class="kw">const</span> spec = {
+  mark,                                            <span class="cmt">// "bar" / "point"</span>
+  encoding: {
+    x: { field: xKey, type: <span class="str">"nominal"</span> },
+    y: { aggregate: <span class="str">"count"</span>, type: <span class="str">"quantitative"</span> },
+  },
+};
+
+<span class="cmt">// ③ The renderer only reads the spec: it walks xVals × cVals and builds the SVG live —</span>
+<span class="cmt">//    ticks, grouped offsets and the legend are all derived, not a single hardcoded coordinate</span></code></pre>
+              <div class="key-point">
+                <p><strong>Corresponding demo:</strong> Graphical-spec Generator (chart left, spec right, in sync). One dropdown change = one spec line changed, and the whole chart redraws — the renderer never "draws", it merely <strong>derives</strong> the chart from the description. A minimal runnable version of Vega-Lite's "the encoding is the chart".</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
           <p class="demo-hint">Click "▶ Step through" to light the pipeline up stage by stage, or just click any stage — the right panel shows that stage's duty, typical operations, and how it maps onto the three models.</p>
           <div class="demo-mount" data-demo="d-2-1"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">Original demo · Graphical-spec Generator: assign fields to the X / Y / color channels and pick a mark — the chart on the left redraws live while the right panel writes out a "graphical spec JSON". A chart is described, not drawn: the playable version of the pipeline's second half.</p>
+          <div class="demo-mount" data-demo="d-2-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>Theory lens · Grammar of Graphics:</strong> a chart is not drawn stroke by stroke — it is <strong>described by a specification</strong>: data + statistical transformation + mark + channel mapping (encoding) + scales, all five parts indispensable. Wilkinson formalized the idea in 1999, and Vega-Lite distilled it into "the encoding is the chart": declare what x binds, how y aggregates, where color goes — and the axes, legends and grouped offsets are all <strong>derived</strong> by the renderer. In this demo, changing one dropdown = changing one line of the spec, and the whole chart redraws — the exact divide between declarative and imperative: imperative code moves coordinates, declarative code edits the description. One dataset, a different channel binding, a completely different chart — chart choice becomes a reasoned decision instead of an inspiration.</p>
         </div>
 
         <div class="takeaway">

@@ -40,6 +40,7 @@
   // 存储键：统一 vis4- 前缀，与门户 / 章节页的命名风格保持一致
   var KEY_WRONG    = 'vis4-quiz-wrong';
   var KEY_HISTORY  = 'vis4-quiz-history';
+  var KEY_ACT      = 'vis4-activity';   // 每日活动计数（与 progress.js 同键同格式）
 
   /* =======================================================
    * 二、界面文案表
@@ -342,6 +343,18 @@
     if (book[id]) { delete book[id]; writeStore(KEY_WRONG, book); }
   }
 
+  // 学习动作计数：与 progress.js 的 vis4-activity 同键同格式（首页热力图数据源）。
+  // quiz.js 是普通脚本无法 import ES Module，故就地实现一份，两边互不依赖。
+  // pad2 是函数声明（第六节），存在变量提升，这里可以直接调用。
+  function bumpActivity() {
+    var all = readStore(KEY_ACT, {});
+    if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
+    var d = new Date();
+    var day = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    all[day] = (all[day] || 0) + 1;
+    writeStore(KEY_ACT, all);
+  }
+
   /* =======================================================
    * 六、时间 / 评级
    * ===================================================== */
@@ -466,6 +479,7 @@
       } else {
         var rec = book[d.q.id] || { count: 0 };
         rec.type = d.q.type;
+        rec.chapter = d.q.chapter;      // 章节归属：门户「学习画像」雷达按章统计薄弱点
         rec.count = (rec.count || 0) + 1;
         rec.lastAt = Date.now();
         rec.myAnswer = d.picked;
@@ -473,6 +487,7 @@
       }
     });
     writeStore(KEY_WRONG, book);
+    bumpActivity();   // 一次完整的答题提交 = 一次学习动作
 
     // 历史成绩：只记正式测验
     if (state.mode === 'quiz') {
@@ -934,7 +949,16 @@
   });
 
   /* =======================================================
-   * 十、启动
+   * 十、启动（支持门户「学习画像」卡深链：
+   *      quiz.html#review → 直接重做错题；quiz.html#wrong → 打开错题本）
    * ===================================================== */
+  var entryHash = (location.hash || '').replace(/^#/, '');
   render();
+  if (entryHash === 'review') {
+    startReview();                 // 错题本为空时自动给出提示并转入错题本视图
+  } else if (entryHash === 'wrong') {
+    state.phase = 'wrong';
+    state.notice = '';
+    render();
+  }
 })();

@@ -380,12 +380,43 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> 原创 · 三种平滑器与两个读数（平滑窗口实验室）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// EWMA：递推一步，内存 O(1)，滞后 ≈ (1−α)/α 年</span>
+<span class="kw">const</span> out = [vals[<span class="num">0</span>]];
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt; vals.length; i++)
+  out.push(a * vals[i] + (<span class="num">1</span> - a) * out[i - <span class="num">1</span>]);
+
+<span class="cmt">// 移动平均 / 中位数：半窗 half = (k−1)/2 的滑动窗口</span>
+<span class="kw">const</span> win = vals.slice(Math.max(<span class="num">0</span>, i - half), i + half + <span class="num">1</span>);
+<span class="cmt">// 平均 = 算术均值；中位数 = 排序取中位（对离群值近乎免疫）</span>
+
+<span class="cmt">// 两个实时读数：峰值滞后 &amp; 噪声（一阶差分标准差）</span>
+<span class="kw">const</span> lag = years[argmax(sm)] - years[argmax(vals)];
+<span class="kw">const</span> noise = a =&gt; Math.sqrt(
+  a.slice(<span class="num">1</span>).reduce((s, v, i) =&gt; s + (v - a[i]) ** <span class="num">2</span>, <span class="num">0</span>) / (a.length - <span class="num">1</span>));</code></pre>
+              <div class="key-point">
+                <p><strong>对应演示：</strong>平滑窗口实验室（原始线 + 平滑线叠加）。调大 k 或调小 α，噪声读数降得越多、峰值滞后也越大 —— <strong>粒度–噪声–滞后</strong>三角在两个数字里直接可见。平滑线永远是模型：把原始线半透明叠在旁边，就是这条伦理的代码形式。</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
           <p class="demo-hint">上方是原案例的标准折线图（法国人名，可勾选切换、鼠标移上去看数值）；下方是同一份 2024 日气温的<strong>多尺度对照</strong> —— 点「原始日数据 / 按周聚合 / 按月聚合」比较形态与点数。</p>
           <div class="demo-mount" data-demo="d-5-2"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">原创演示 · 平滑窗口实验室：同一条真实时序（法国人名），现场调窗口 k、切换移动平均 / 中位数 / EWMA，读出「峰值滞后几年、噪声降低多少」—— 亲手体验粒度 – 噪声 – 滞后的三角权衡。</p>
+          <div class="demo-mount" data-demo="d-5-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>理论透视 · 平滑 = 低通滤波：</strong>平滑的数学本质是<strong>保留低频趋势、抑制高频噪声</strong>，三种平滑器是同一目标的三条实现路径——<strong>移动平均</strong>等权开窗，k 越大越平滑、滞后 ≈ (k−1)/2 年；<strong>中位数滤波</strong>用顺序统计量替换中心值，对离群值近乎免疫，代价是曲线带台阶感；<strong>EWMA</strong> 递推 s<sub>t</sub> = α·y<sub>t</sub> + (1−α)·s<sub>t−1</sub>，指数加权、只存一个数（内存 O(1)），滞后 ≈ (1−α)/α 年。三者共同面对<strong>粒度 – 噪声 – 滞后</strong>的三角权衡：窗口越大噪声越小，峰值却被削平、位置后移——没有完美参数，只有与问题匹配的取舍。最后一条伦理：平滑线是<strong>模型</strong>，不是数据——展示时永远把原始线叠在旁边，就像本演示做的那样。</p>
         </div>
 
         <div class="takeaway">

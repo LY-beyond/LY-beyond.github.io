@@ -37,7 +37,9 @@
       <nav class="topnav" aria-label="页面导航">
         <a href="#path">学习路径</a>
         <a href="#chapters">课程章节</a>
+        <a href="#profile">学习画像</a>
         <a href="#tools">学习工具</a>
+        <a href="#kg">知识图谱</a>
         <a href="#guide">图表速查</a>
         <a href="#about">关于</a>
       </nav>
@@ -56,7 +58,7 @@
     <section class="hero">
       <div class="hero__lead">
         <p class="hero__tag">VISUALIZATION · INTRODUCTION</p>
-        <h1 class="hero__title">《可视化<em>导论</em>》</h1>
+        <h1 class="hero__title">《可视化导论》</h1>
         <p class="hero__sub">从数据到图表：JavaScript + D3.js 实战课程。先看懂数据是什么，再决定该用什么图形去表达它。</p>
         <p class="hero__meta">
           中国石油大学（华东）· 主要参考教材：陈为《可视化导论》
@@ -386,6 +388,36 @@
       </div>
     </section>
 
+    <!-- ================= 学习画像 ================= -->
+    <section class="section" id="profile">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">LEARNING PROFILE</span>
+        <h2>我的学习画像</h2>
+        <p>雷达图按<strong>小节阅读 50% + 学习目标 30% + 测验表现 20%</strong>合成每章掌握度（未参加测验时按前两项折算）；热力图记录近 18 周每天的学习动作。所有数据只保存在本机浏览器。</p>
+      </div>
+
+      <div class="profile-card" id="profile-card">
+        <div class="profile-grid">
+          <figure class="profile-panel">
+            <figcaption>章节掌握度</figcaption>
+            <svg id="profile-radar" viewBox="0 0 320 230" role="img" aria-label="五章掌握度雷达图"></svg>
+          </figure>
+          <figure class="profile-panel">
+            <figcaption>学习热力图 · 近 18 周</figcaption>
+            <svg id="profile-heat" viewBox="0 0 316 126" role="img" aria-label="近 18 周每日学习热力图"></svg>
+            <div class="profile-legend" aria-hidden="true">
+              <span>少</span><i class="ph-l0"></i><i class="ph-l1"></i><i class="ph-l2"></i><i class="ph-l3"></i><i class="ph-l4"></i><span>多</span>
+            </div>
+          </figure>
+        </div>
+        <p class="profile-meta" id="profile-meta"></p>
+        <div class="profile-actions">
+          <a class="btn btn--primary" id="profile-review" href="quiz.html#review" hidden>重练错题</a>
+          <a class="btn btn--ghost" href="quiz.html">去章节测验</a>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= 学习工具 ================= -->
     <section class="section" id="tools">
       <div class="sec-head">
@@ -454,6 +486,19 @@
             <p class="tool__desc">8 个环节，从零用 D3 画出柱状图：写一点、看一眼、验一点，只判效果不判写法，成品可导出 SVG。</p>
           </span>
         </a>
+      </div>
+    </section>
+
+    <!-- ================= 知识图谱 ================= -->
+    <section class="section" id="kg">
+      <div class="sec-head">
+        <span class="sec-head__eyebrow">KNOWLEDGE GRAPH</span>
+        <h2>课程知识图谱</h2>
+        <p>把 5 章 27 小节摊成一张关系网：<strong>章 → 小节 → 关键点 → 案例 / 数据集</strong>。节点按章节上色，可自由拖动（松手即记住位置），点击节点直达对应正文。</p>
+      </div>
+      <div class="home-kg">
+        <div id="home-kg-root" class="home-kg__stage"></div>
+        <p class="home-kg__hint">提示：拖动节点重新布局 · 点「适应窗口」居中 · 点击节点跳转到对应章节 / 小节</p>
       </div>
     </section>
 
@@ -625,6 +670,14 @@
     </p>
     <p>零构建静态站 · 内联 SVG 图形 · 无视频 · 支持中英双语与深色模式</p>
   </footer>
+
+  <!-- 知识图谱：d3-force（本地内置）+ 全站知识数据 -->
+  <script src="vendor/d3-quadtree.min.js"></script>
+  <script src="vendor/d3-dispatch.min.js"></script>
+  <script src="vendor/d3-timer.min.js"></script>
+  <script src="vendor/d3-force.min.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="home-graph.js"></script>
 
   <!-- 门户交互（进度回填 / 顶栏高亮）；file:// 下模块被 CORS 拦截时静默降级 -->
   <script type="module" src="portal.js"></script>

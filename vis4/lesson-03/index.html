@@ -1377,12 +1377,44 @@ svg.querySelectorAll(<span class="str">'[data-orig-fill]'</span>).forEach((el) =
               </div>
             </div>
           </details>
+
+          <details class="code-fold">
+            <summary><span class="code-fold__badge">④</span> 原创 · CVD 复查滤镜与病例判定（配色急诊室）</summary>
+            <div class="code-fold__body">
+<pre class="code-block"><code><span class="cmt">// ① 一行矩阵乘法换一双眼睛：给任意 hex 上 CVD 滤镜</span>
+<span class="kw">function</span> filt(hex) {
+  <span class="kw">if</span> (mode === <span class="str">"normal"</span>) <span class="kw">return</span> hex;
+  <span class="kw">return</span> <span class="str">"#"</span> + cvdSim(hex2rgb(hex), mode)         <span class="cmt">// 与 ③ Machado 同一套矩阵</span>
+    .map(v =&gt; v.toString(<span class="num">16</span>).padStart(<span class="num">2</span>, <span class="str">"0"</span>)).join(<span class="str">""</span>);
+}
+
+<span class="cmt">// ② 病例判定：选对即「治愈」换安全色板，选错留下病理分析</span>
+btn.addEventListener(<span class="str">"click"</span>, () =&gt; {
+  <span class="kw">const</span> o = patient.options[+btn.dataset.i];
+  <span class="kw">if</span> (o.ok) cured.add(patient.id);          <span class="cmt">// 治愈 → 用 o.colors 重上色</span>
+  <span class="kw">else</span> { patient.note = o.why; o._bad = <span class="kw">true</span>; } <span class="cmt">// 误诊 → 划线 + 病理分析</span>
+  render();
+});</code></pre>
+              <div class="key-point">
+                <p><strong>对应演示：</strong>配色急诊室（每病例三选一开药方）。滤镜与 3.8 的 Machado 矩阵是同一套代码 —— 病例全部治愈后切到 CVD 模式，就能<strong>复查新色板</strong>在色觉缺陷下是否仍可区分；<code>_bad</code> 划线让误诊成为教学素材，而不是一罚了之。</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
           <p class="demo-hint">点「正常 / 红盲 / 绿盲 / 蓝盲」切换模拟模式，右侧三张真实论文图（5 类别散点、顺序型热图、红绿对比）会同时重着色；再点「颜色 + 形状双编码」看红绿对比加上形状后是否救得回来。数据来自 <code>crime.csv</code> 的真实州级记录。</p>
           <div class="demo-mount" data-demo="d-3-8"></div>
+        </div>
+
+        <div class="demo-card">
+          <p class="demo-hint">原创演示 · 配色急诊室：4 个「配色生病」的病例，每个病例三选一开药方 —— 选对即治愈并复色，选错给病理分析；全部治愈后可用 CVD 滤镜复查。通关即复习完本章四条配色底线。</p>
+          <div class="demo-mount" data-demo="d-3-x"></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <p><strong>理论透视 · 配色的第一定律：</strong><strong>数据类型决定色阶类型</strong>——顺序数据（量的大小）用单色亮度渐变，发散数据（以中点为界）用双端发散色阶，类别数据（无序集合）用类别色板（色相区分、亮度相近）。四个病例对应四种典型病：彩虹色阶的色相<strong>没有感知顺序</strong>；红绿对是色觉障碍的高危组合（约 8% 男性红绿色弱，deuteranopia 下两色几乎重合）；双线明度过近让颜色通道失效；渐变硬画无序类别会凭空暗示顺序。修复思路各有讲究：顺序靠亮度单调递进、对错改用蓝橙对、区分叠加亮度差、类别直接换 Okabe-Ito 安全色板。最后一条通用原则：<strong>重要区分永远不要只靠色相</strong>——叠加形状、标签或线型做冗余编码，才是万无一失的图。</p>
         </div>
 
         <div class="takeaway">

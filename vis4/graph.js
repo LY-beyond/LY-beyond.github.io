@@ -601,6 +601,7 @@
     fullLabelBandX: 44,
     fullLabelBandY: 22,
     settleTicks: 22,
+    dragTicks: 5,   /* 拖动中每帧跑的 tick 数：少而勤，避免一次性 burst 卡顿 */
   };
 
   var CAT_RADIUS = { part: 30, chapter: 26, section: 15, key: 12, case: 15, dataset: 17, tool: 19 };
@@ -753,12 +754,15 @@
     syncPosFromSim();
     redrawPositions();
   }
-  function scheduleSettle() {
-    if (state.settleTimer) clearTimeout(state.settleTimer);
-    state.settleTimer = setTimeout(function () {
-      state.settleTimer = null;
-      settle();
-    }, 40);
+  /* 拖动中每帧增量松弛：只跑少量 tick，把力逐步传播给邻接点，
+     避免一次跑 20+ tick + 全量重绘造成的卡顿/跳变。 */
+  function settleDrag() {
+    if (!state.sim || !state.simNodes) return;
+    state.sim.alpha(0.22);
+    for (var i = 0; i < SIM.dragTicks; i++) state.sim.tick();
+    state.sim.stop();
+    syncPosFromSim();
+    redrawPositions();
   }
 
   /* =======================================================
@@ -789,7 +793,8 @@
   function readMode() { try { return localStorage.getItem(LS_VIEW) === 'list' ? 'list' : 'graph'; } catch (e) { return 'graph'; } }
   function saveMode(m) { try { localStorage.setItem(LS_VIEW, m); } catch (e) { /* 忽略 */ } }
 
-  /* 把持久化的坐标套回当前布局（并钉住 fx/fy，使其在松弛中保持不动） */
+  /* 把持久化的坐标套回当前布局（只设 x/y，不钉 fx/fy——
+     让所有节点保持自由，拖动任一节点时邻接点才能被弹簧吸引/排斥跟随） */
   function applySaved(view, saved) {
     view.nodes.forEach(function (n) {
       var s = saved[n.id];
@@ -797,7 +802,7 @@
       state.pos[n.id].x = s.x;
       state.pos[n.id].y = s.y;
       var sn = simNodeOf(n.id);
-      if (sn) { sn.x = s.x; sn.y = s.y; sn.fx = s.x; sn.fy = s.y; }
+      if (sn) { sn.x = s.x; sn.y = s.y; }
     });
   }
 
@@ -955,18 +960,22 @@
       } else {
         var w = toWorldCoords(ev.clientX, ev.clientY);
         moveNode(state.drag.id, w.x + state.drag.dx, w.y + state.drag.dy);
-        scheduleSettle();   /* 防抖：稍后手动 tick 让邻接点跟随 */
+        settleDrag();   /* 每帧少量 tick：邻接点平滑跟随，不卡顿 */
       }
     });
 
     var endDrag = function () {
       var wasNode = state.drag && !state.drag.pan;
+      var dragId = wasNode ? state.drag.id : null;
       if (state.drag && state.drag.pan) el.svg.classList.remove('is-panning');
       el.svg.classList.remove('is-dragging-node');
       state.drag = null;
       if (wasNode) {
         if (state.settleTimer) { clearTimeout(state.settleTimer); state.settleTimer = null; }
         settle();                       /* 立即跑一轮，位置确定性落定 */
+        // 松手解除被拖节点的 fx/fy，让它重新参与力导向（否则它会被永久钉住）
+        var sn = simNodeOf(dragId);
+        if (sn) { sn.fx = null; sn.fy = null; }
         savePos(state.viewId, state.pos); /* 松开即持久化 */
       }
     };
