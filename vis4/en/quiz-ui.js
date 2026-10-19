@@ -50,7 +50,7 @@ window.QUIZ_UI = {
   idleRuleScore: 'Chapter-balanced sampling: spreads picks across as many chapters as possible, with no repeated question',
   idleRuleShuffle: 'Option order is shuffled and answer indexes are recomputed; no letter labels are shown',
   idleRuleJudge: 'Scoring happens once on submit, with the total score, accuracy, per-question explanations and links to weak chapters',
-  idleRuleWrong: 'Wrong answers enter the "wrong-answer book" automatically and leave it once you answer them correctly',
+  idleRuleWrong: 'Wrong answers enter the "wrong-answer book" automatically and leave it once answered correctly',
   idleRuleHistory: '{n} attempts recorded so far, best {best} pts',
   idleRuleLocal: 'Scores are stored only in this browser (localStorage) and never sync across devices',
   btnStart: 'Start the quiz',
@@ -78,7 +78,7 @@ window.QUIZ_UI = {
   weakItem: '{name} · {n} wrong',
   flagOk: '✓ Correct',
   flagBad: '✗ Wrong',
-  yourAnswer: 'Your answer: ',
+  yourAnswer: 'Selected answer: ',
   correctAnswer: 'Correct answer: ',
   answerSep: ' — ',
   explainTag: 'Explanation',
@@ -91,15 +91,15 @@ window.QUIZ_UI = {
 
   /* ---- Wrong-answer book ---- */
   wrongTitle: 'Wrong-answer book',
-  wrongDesc: 'Questions you get wrong are collected here automatically and removed once you answer them correctly. Records are stored only in this browser (localStorage).',
+  wrongDesc: 'Questions answered wrong are collected here automatically and removed once answered correctly. Records are stored only in this browser (localStorage).',
   btnRedoWrong: 'Redo wrong answers',
   btnNewQuiz: 'Start a new quiz',
   btnBack: 'Back',
-  lastPick: ' — last time you picked: ',
+  lastPick: ' — last pick: ',
   wrongCount: 'Wrong ×{n}',
   btnRemove: 'Remove from book',
   btnBackToChapter: 'Revisit: {name}',
-  wrongEmpty: 'The wrong-answer book is empty — either you are doing well, or you have not taken a quiz yet.',
+  wrongEmpty: 'The wrong-answer book is empty — either the answers were solid, or no quiz has been taken yet.',
 
   /* ---- History ---- */
   historyTitle: 'History',

@@ -737,7 +737,7 @@ DEMOS['d-2-4'] = (mount) => {
           <p>e.target = <code>span.label</code> (the first element hit)</p>
           <p>· span.label → li → ul (bubbling upward level by level)</p>
           <p>· The <strong>single</strong> delegated listener on <code>ul</code> catches the event and locates the row via <code>e.target.closest("li")</code></p>
-          <p>· One listener in total handles "telling which row you clicked, whether you hit span or li"</p>`;
+          <p>· One listener in total handles "telling which row was clicked, whether the hit was span or li"</p>`;
       }, 1200));
     }
   }
@@ -821,7 +821,7 @@ DEMOS['d-2-x'] = async (mount) => {
         <p class="l2x-hint">One dropdown change = one spec rewrite → redraw. A chart is not "drawn"; it is "described by a spec".</p>
       </div>
     </div>
-    <p class="demo-note"><strong>Mapping to the theory:</strong> this demo is the second half of the Card pipeline — "data transformation" (rollup aggregation) → "visual mapping" (field → channel) → "view generation" (SVG built on the spot). Drag-drop interfaces in Vega-Lite, Plot or Tableau are, at heart, helping you write this spec.</p>
+    <p class="demo-note"><strong>Mapping to the theory:</strong> this demo is the second half of the Card pipeline — "data transformation" (rollup aggregation) → "visual mapping" (field → channel) → "view generation" (SVG built on the spot). Drag-drop interfaces in Vega-Lite, Plot or Tableau are, at heart, helping write this spec.</p>
   `;
 
   const els = {

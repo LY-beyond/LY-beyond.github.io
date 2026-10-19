@@ -137,7 +137,7 @@ async function setupVolumeRendering() {
     try {
         // 加载真实的体积数据
         const volumeData = await loadRawVolumeData(
-            'path/to/your/volume.raw',
+            'path/to/the/volume.raw',
             { width: 256, height: 256, depth: 100 },
             'uint16'
         );

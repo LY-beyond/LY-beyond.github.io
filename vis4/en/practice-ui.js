@@ -21,7 +21,7 @@ window.PRACTICE_UI = {
   check: '✅ Check this stage',
   checkOk: 'All checkpoints of this stage passed ✅',
   checkNo: '{n} item(s) still short of the goal',
-  checkIdle: 'Click “✅ Check this stage” or “▶ Run” to start judging; 500 ms after you stop typing it re-runs automatically.',
+  checkIdle: 'Click “✅ Check this stage” or “▶ Run” to start judging; 500 ms after typing stops it re-runs automatically.',
   checkNoDoc: 'The preview document cannot be read, so judging is impossible: click “▶ Run” once to reload the preview.',
   checkErr: 'The checker itself failed: {msg}',
   runError: 'Run error: {msg}',

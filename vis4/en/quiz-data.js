@@ -40,7 +40,7 @@ window.QUIZ_BANK = {
       id: 'c-02', chapter: 1, topic: 'd3.csv row callback',
       q: 'In d3.csv(url, row => …), what problem does the second argument (the per-row callback) mainly solve?',
       options: [
-        'It makes parsing finish synchronously, so you no longer need to await',
+        'It makes parsing finish synchronously, so awaiting is no longer needed',
         'It cleans and converts fields row by row while reading (e.g. trim, unary + for numbers), saving a full pass',
         'It automatically converts wide format to long format',
         'It automatically fills in missing columns'
@@ -70,7 +70,7 @@ window.QUIZ_BANK = {
         'Annual income (yuan)'
       ],
       answer: 2,
-      explain: 'An interval scale has equal units but no true zero — 0°C does not mean "no temperature", so you cannot claim 20°C is twice as hot as 10°C. Height, mass and income all have a true zero and are ratio scales, where multiples make sense. This directly determines whether a chart may draw a zero baseline and proportional encoding.'
+      explain: 'An interval scale has equal units but no true zero — 0°C does not mean "no temperature", so 20°C cannot be claimed to be twice as hot as 10°C. Height, mass and income all have a true zero and are ratio scales, where multiples make sense. This directly determines whether a chart may draw a zero baseline and proportional encoding.'
     },
     {
       id: 'c-05', chapter: 1, topic: 'Visual channel tiers',
@@ -143,12 +143,12 @@ window.QUIZ_BANK = {
         'A Promise'
       ],
       answer: 1,
-      explain: 'rollup returns a Map (group key → reducer result); with several key functions it returns nested Maps. To draw you must first spread it with [...map]. It returns neither an array, a selection, nor a Promise — the counterpart of d3.group, which keeps the raw members of each group.'
+      explain: 'rollup returns a Map (group key → reducer result); with several key functions it returns nested Maps. To draw, it must first be spread with [...map]. It returns neither an array, a selection, nor a Promise — the counterpart of d3.group, which keeps the raw members of each group.'
     },
     /* ---------- Chapter 3 Color · Color Spaces & Colormaps (4) ---------- */
     {
       id: 'c-11', chapter: 3, topic: 'Color spaces and Lab interpolation',
-      q: 'When designing a colormap, in which color space should you interpolate to get smoother, perceptually uniform transitions?',
+      q: 'When designing a colormap, in which color space should the interpolation be done to get smoother, perceptually uniform transitions?',
       options: [
         'RGB (additive / device-dependent)',
         'HSL',
@@ -172,7 +172,7 @@ window.QUIZ_BANK = {
     },
     {
       id: 'c-13', chapter: 3, topic: 'Three colormap families',
-      q: 'To encode "deviation from 0 (positive or negative)" as color, which colormap family should you choose?',
+      q: 'To encode "deviation from 0 (positive or negative)" as color, which colormap family should be chosen?',
       options: [
         'Qualitative',
         'Sequential',
@@ -218,7 +218,7 @@ window.QUIZ_BANK = {
         'D3 forces parallel coordinates to be normalized'
       ],
       answer: 1,
-      explain: 'Axes differ in units and range (e.g. population vs crime rate); scaling each to the same height is what lets polyline shapes be compared side by side. The cost: across axes only relative positions can be read — you cannot take one line\'s heights on different axes and compare absolute values.'
+      explain: 'Axes differ in units and range (e.g. population vs crime rate); scaling each to the same height is what lets polyline shapes be compared side by side. The cost: across axes only relative positions can be read — one line\'s heights on different axes cannot be compared as absolute values.'
     },
     {
       id: 'c-17', chapter: 4, topic: 'Coefficient of determination R²',
@@ -255,7 +255,7 @@ window.QUIZ_BANK = {
         'Cycle'
       ],
       answer: 1,
-      explain: 'An interval is the difference between two instants (a duration); an instant is a single point in time; a span is one continuous stretch of coverage (a season, a term in office); a cycle returns to its start and can repeat. Which attribute you ask with decides whether to draw points, brackets, bands or loops.'
+      explain: 'An interval is the difference between two instants (a duration); an instant is a single point in time; a span is one continuous stretch of coverage (a season, a term in office); a cycle returns to its start and can repeat. Which attribute is asked about decides whether to draw points, brackets, bands or loops.'
     },
     {
       id: 'c-20', chapter: 5, topic: 'Aggregation scale and line charts',
@@ -300,12 +300,12 @@ window.QUIZ_BANK = {
       q: 'What is the correct order of the course\'s chart-choice decision tree?',
       options: [
         'Chart → data → task',
-        'Task → data → chart: first ask what you want to do, then look at the data, and only then pick the chart',
+        'Task → data → chart: first ask what the goal is, then look at the data, and only then pick the chart',
         'Data → chart → task',
         'Color → chart → data'
       ],
       answer: 1,
-      explain: 'First clarify the task (comparison / distribution / relationship / change over time / composition), then the data type and size, and only then pick the chart. Reverse the order and you end up forcing data into a chart type simply because you like it — the tail wagging the dog.'
+      explain: 'First clarify the task (comparison / distribution / relationship / change over time / composition), then the data type and size, and only then pick the chart. Reverse the order and the data ends up forced into a chart type picked by taste — the tail wagging the dog.'
     },
     {
       id: 'c-24', chapter: 6, topic: 'Channel readability ranking',
@@ -384,7 +384,7 @@ window.QUIZ_BANK = {
     },
     {
       id: 'j-06', chapter: 2, topic: 'DOM event phases and delegation',
-      q: 'Browser DOM events fire listeners during the capture phase by default, so event delegation only works if you explicitly pass useCapture = true.',
+      q: 'Browser DOM events fire listeners during the capture phase by default, so event delegation only works if useCapture = true is passed explicitly.',
       answer: false,
       explain: 'The default is the bubbling phase (addEventListener\'s third argument defaults to false). Event delegation relies precisely on bubbling to hand child events to a parent container; useCapture = true is not needed. Capture runs outside-in, bubbling inside-out — opposite orders.'
     },    /* ---------- Chapter 3 (3) ---------- */
@@ -392,7 +392,7 @@ window.QUIZ_BANK = {
       id: 'j-07', chapter: 3, topic: 'Gamut and out-of-gamut handling',
       q: 'On an sRGB display, colors outside the sRGB gamut make the browser throw an error and refuse to render.',
       answer: false,
-      explain: 'No error is thrown; the value is silently clamped — out-of-gamut components are cut to the boundary, visually "the color changes without anyone telling you". Gamuts nest: sRGB ⊂ Adobe RGB ⊂ Rec.2020, and the excess can only be compressed.'
+      explain: 'No error is thrown; the value is silently clamped — out-of-gamut components are cut to the boundary, visually "the color changes without notice". Gamuts nest: sRGB ⊂ Adobe RGB ⊂ Rec.2020, and the excess can only be compressed.'
     },
     {
       id: 'j-08', chapter: 3, topic: 'WCAG contrast',
@@ -412,7 +412,7 @@ window.QUIZ_BANK = {
       id: 'j-10', chapter: 4, topic: 'True scales in scatterplot matrices',
       q: 'Every panel of a scatterplot matrix (SPLOM) should use the true data scale, not be normalized to fill its own frame.',
       answer: true,
-      explain: 'Correct. Normalizing each panel to fill its frame hides unit differences between variables and manufactures false correlations. Only true scales let you compare across panels which variable pairs relate more strongly.'
+      explain: 'Correct. Normalizing each panel to fill its frame hides unit differences between variables and manufactures false correlations. Only true scales allow comparing across panels which variable pairs relate more strongly.'
     },
     {
       id: 'j-11', chapter: 4, topic: 'Marching Squares cases',
@@ -456,9 +456,9 @@ window.QUIZ_BANK = {
     },
     {
       id: 'j-17', chapter: 6, topic: 'Decision-tree order misuse',
-      q: 'When choosing a chart, you can first pick your favorite chart type and then find a way to fit the data into it — that is the most efficient approach.',
+      q: 'When choosing a chart, picking a favorite chart type first and then finding a way to fit the data into it is the most efficient approach.',
       answer: false,
-      explain: 'That puts the cart before the horse. The decision tree demands "task → data → chart": clarify the intent and the data shape first, then choose. "Pick the chart, then squeeze the data in" easily leads to wrong encodings (e.g. one-dimensional magnitude as area) without you even noticing.'
+      explain: 'That puts the cart before the horse. The decision tree demands "task → data → chart": clarify the intent and the data shape first, then choose. "Pick the chart, then squeeze the data in" easily leads to wrong encodings (e.g. one-dimensional magnitude as area) that go unnoticed.'
     },
     {
       id: 'j-18', chapter: 6, topic: 'Rainbow colormap',

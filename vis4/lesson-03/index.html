@@ -99,7 +99,7 @@
         <h2>3.1 颜色模型基础</h2>
         <p class="chapter-subtitle">为什么需要 4 种颜色空间？它们各自擅长什么？色盲眼中看到的世界又是什么样？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>本章从头到尾只用一份数据：<strong>美国各州犯罪统计（<code>data/crime.csv</code>）</strong>，含 50 个州、13 列（人口、抢劫、谋杀、纵火等）。数据本身不是重点 —— 重点是<strong>同一份数据换一套配色，读者对它的理解会完全不同</strong>。</p>
 
         <table class="theory-table">
@@ -133,7 +133,7 @@
         </div>
 
         <div class="callout callout--warn">
-          <p><strong>CVD（色觉缺陷）：</strong>约 <b>8% 男性</b>、0.5% 女性存在色觉缺陷。常见三种：红色盲（protanopia，约 1% 男性）、<strong>绿色盲（deuteranopia，约 6% 男性，最常见）</strong>、蓝色盲（tritanopia，极罕见）。也就是说，你的一页幻灯片大概率至少有一位读者看不出红绿差别。</p>
+          <p><strong>CVD（色觉缺陷）：</strong>约 <b>8% 男性</b>、0.5% 女性存在色觉缺陷。常见三种：红色盲（protanopia，约 1% 男性）、<strong>绿色盲（deuteranopia，约 6% 男性，最常见）</strong>、蓝色盲（tritanopia，极罕见）。也就是说，一页幻灯片大概率至少有一位读者看不出红绿差别。</p>
         </div>
 
         <figure class="figure">
@@ -293,7 +293,7 @@
         <h2>3.2 colormap 三类选择</h2>
         <p class="chapter-subtitle">顺序型 / 发散型 / 定性型 —— 选错类型不是「不好看」，而是误导读者。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <table class="theory-table">
           <caption>三类 colormap 对应三种数据语义</caption>
           <thead><tr><th>类型</th><th>数据语义</th><th>颜色特征</th><th>典型方案</th></tr></thead>
@@ -445,8 +445,8 @@
         <h2>3.3 CIE Lab 色域图</h2>
         <p class="chapter-subtitle">在感知均匀的颜色空间里，「能显示的颜色」到底长什么样？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
-        <p>你要给 <code>crime.csv</code> 配一条「高饱和的纯绿 → 纯红」色阶。在 Lab 里算出来的颜色很漂亮，但 LCD 屏幕上显示出来的绿却「闷」了一截 —— 因为<strong>你算的那个绿已经跑出屏幕的色域了</strong>。</p>
+        <span class="sec-label"><i>1</i> 原案例</span>
+        <p>给 <code>crime.csv</code> 配一条「高饱和的纯绿 → 纯红」色阶。在 Lab 里算出来的颜色很漂亮，但 LCD 屏幕上显示出来的绿却「闷」了一截 —— 因为<strong>算出来的那个绿已经跑出屏幕的色域了</strong>。</p>
         <table class="theory-table">
           <thead><tr><th>色域</th><th>标准 / 场景</th><th>相对大小</th><th>本课用途</th></tr></thead>
           <tbody>
@@ -459,7 +459,7 @@
         <span class="sec-label"><i>2</i> 嵌入理论</span>
         <div class="theory-card">
           <h4>为什么是「嵌套」，为什么会被 clamp</h4>
-          <p>三个色域是<strong>包含关系</strong>：sRGB ⊂ Adobe RGB ⊂ Rec.2020。用 Lab 坐标算出来的颜色如果落在 sRGB 之外，标准转换流程会把它<strong>夹（clamp）</strong>回 sRGB 边界 —— 结果不是报错，而是「颜色看起来变了」，而且是在你毫无察觉的情况下变。</p>
+          <p>三个色域是<strong>包含关系</strong>：sRGB ⊂ Adobe RGB ⊂ Rec.2020。用 Lab 坐标算出来的颜色如果落在 sRGB 之外，标准转换流程会把它<strong>夹（clamp）</strong>回 sRGB 边界 —— 结果不是报错，而是「颜色看起来变了」，而且是在毫无察觉的情况下变。</p>
           <p><strong>实战三条：</strong>① <code>d3.lab(L, a, b).rgb()</code> 会静默 clamp；② 设计 colormap 用 <code>d3.interpolateLab</code>，比 <code>interpolateRgb</code> 平滑；③ 高饱和色只在打印 / 4K 屏幕上「真的存在」，Web 上看不一定准。</p>
         </div>
 
@@ -512,7 +512,7 @@
     ? v * <span class="num">12.92</span> : <span class="num">1.055</span> * Math.pow(v, <span class="num">1</span> / <span class="num">2.4</span>) - <span class="num">0.055</span>) .map((v) =&gt; v * <span class="num">255</span>);
 }</code></pre>
               <div class="key-point">
-                <p><strong>关键就在「不 clamp」这一步。</strong>如果转换函数内部先把结果夹到 [0,255]，你永远发现不了自己算的颜色已经跑出 sRGB。本站演示用「不 clamp 的转换 + 之后再判断」来找出色域边界，画出的那条边界线就是这样求出来的。</p>
+                <p><strong>关键就在「不 clamp」这一步。</strong>如果转换函数内部先把结果夹到 [0,255]，就永远发现不了算出的颜色已经跑出 sRGB。本站演示用「不 clamp 的转换 + 之后再判断」来找出色域边界，画出的那条边界线就是这样求出来的。</p>
               </div>
             </div>
           </details>
@@ -556,7 +556,7 @@
 <span class="cmt">// d3.interpolateLab(c1, c2)(0.5)   ← 感知均匀</span>
 <span class="cmt">// d3.interpolateRgb(c1, c2)(0.5)   ← 不是感知中点</span></code></pre>
               <div class="key-point">
-                <p>演示里的三层色域、色域内的色块阵列，全部是<strong>实时算出来的</strong>（不是图片），所以你拖动 L* 时能看到色域面积整体收缩 —— 这正是「暗色的可饱和范围更窄」这句话的视觉证据。</p>
+                <p>演示里的三层色域、色域内的色块阵列，全部是<strong>实时算出来的</strong>（不是图片），所以拖动 L* 时能看到色域面积整体收缩 —— 这正是「暗色的可饱和范围更窄」这句话的视觉证据。</p>
               </div>
             </div>
           </details>
@@ -579,7 +579,7 @@
 
         <div class="selftest" data-selftest data-answer="b">
           <div class="selftest__head">自测 · 1 题</div>
-          <p class="selftest__q">你在 Lab 空间里构造了一个高饱和纯绿（超出 sRGB），再把它转成 RGB 显示在一台普通 LCD 上，会发生什么？</p>
+          <p class="selftest__q">在 Lab 空间里构造一个高饱和纯绿（超出 sRGB），再转成 RGB 显示在一台普通 LCD 上，会发生什么？</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="a"><span>屏幕会原样显示更鲜艳的绿</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-3-3" value="b"><span>会被 clamp 到 sRGB 边界，颜色失真，并且不会有任何报错</span></label></li>
@@ -590,7 +590,7 @@
             <button type="button" class="selftest__btn">提交答案</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>转换流程把每个通道夹进 [0, 1]，超出的那部分直接丢掉 —— 于是「超饱和的绿」变成了「sRGB 能表现的最饱和的绿」。它不报错，所以你只能靠本节的色域图提前发现：绿色的取样点越出了 sRGB 轮廓。</p>
+          <p class="selftest__why" hidden>转换流程把每个通道夹进 [0, 1]，超出的那部分直接丢掉 —— 于是「超饱和的绿」变成了「sRGB 能表现的最饱和的绿」。它不报错，所以只能靠本节的色域图提前发现：绿色的取样点越出了 sRGB 轮廓。</p>
         </div>
       </article>
 
@@ -599,8 +599,8 @@
         <h2>3.4 色系搭配规则（5 大类）</h2>
         <p class="chapter-subtitle">单色 / 类比 / 互补 / 三等分 / 分裂互补 —— 什么时候该用哪一个？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
-        <p>还是 <code>crime.csv</code>：你打算把「东部 / 中西部 / 南部 / 西部」四个地区画成四组柱状图。四个类别、没有顺序 —— 这就要在色轮上「挑角度」了：挑错角度，四组柱子会互相打架；挑对角度，一眼就能对上图例。</p>
+        <span class="sec-label"><i>1</i> 原案例</span>
+        <p>还是 <code>crime.csv</code>：打算把「东部 / 中西部 / 南部 / 西部」四个地区画成四组柱状图。四个类别、没有顺序 —— 这就要在色轮上「挑角度」了：挑错角度，四组柱子会互相打架；挑对角度，一眼就能对上图例。</p>
         <table class="theory-table">
           <thead><tr><th>规则</th><th>色相关系</th><th>特点</th><th>什么时候用</th></tr></thead>
           <tbody>
@@ -777,8 +777,8 @@
         <h2>3.5 科研经典配色</h2>
         <p class="chapter-subtitle">Wong / Paul Tol / Okabe–Ito / Tableau / Paired / Viridis —— 顶刊到底在用哪一套？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
-        <p>你给 <code>crime.csv</code> 画一张五地区对比图，需要 5 个颜色。选项太多：Tableau 10 好看、Paired 12 色齐全、彩虹色最「显眼」—— 但顶刊在用的其实是那几套看起来「有点土」的色板。为什么？</p>
+        <span class="sec-label"><i>1</i> 原案例</span>
+        <p>给 <code>crime.csv</code> 画一张五地区对比图，需要 5 个颜色。选项太多：Tableau 10 好看、Paired 12 色齐全、彩虹色最「显眼」—— 但顶刊在用的其实是那几套看起来「有点土」的色板。为什么？</p>
         <table class="theory-table">
           <thead><tr><th>配色</th><th>来源</th><th>色数</th><th>特点 / 风险</th></tr></thead>
           <tbody>
@@ -926,7 +926,7 @@
         <h2>3.6 对错案例对比</h2>
         <p class="chapter-subtitle">同一份数据、两种配色 —— 点一下切换，亲眼看看错误的配色是怎么把数据讲错的。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>用 <code>crime.csv</code> 里 8 个州的谋杀案数画柱状图，数据不变，只换配色方案：</p>
         <table class="theory-table">
           <thead><tr><th>方案</th><th>配色做法</th><th>结论</th><th>错在哪</th></tr></thead>
@@ -945,7 +945,7 @@
         </div>
 
         <div class="callout callout--ok">
-          <p><strong>教学要点：</strong>光看理论不如下场选错一次。本节演示故意让你在三种错方案里切换，每一次都告诉你「错在哪」—— 亲手看到红绿在绿盲模拟下糊成一片，比读一百遍规则都记得住。</p>
+          <p><strong>教学要点：</strong>光看理论不如下场选错一次。本节演示故意提供三种错方案供切换，每一次都指出「错在哪」—— 亲手看到红绿在绿盲模拟下糊成一片，比读一百遍规则都记得住。</p>
         </div>
 
         <figure class="figure">
@@ -999,7 +999,7 @@
 <span class="cmt">// 12 色过载同理：色相平均切 12 份，人眼已经分不清相邻两色</span>
 <span class="kw">const</span> overloaded = (i) =&gt; hsl2rgb(i * <span class="num">30</span>, <span class="num">72</span>, <span class="num">52</span>);</code></pre>
               <div class="key-point">
-                <p><strong>除本处之外，本章演示一律只用令牌色。</strong>保留这一段是因为它演示的正是「不该这样做」：你可以用同一份数据切到这一档，亲眼看到彩虹色阶的假台阶与红绿塌陷。请对照 3.8 的 CVD 模拟验证。</p>
+                <p><strong>除本处之外，本章演示一律只用令牌色。</strong>保留这一段是因为它演示的正是「不该这样做」：可以用同一份数据切到这一档，亲眼看到彩虹色阶的假台阶与红绿塌陷。请对照 3.8 的 CVD 模拟验证。</p>
               </div>
             </div>
           </details>
@@ -1081,8 +1081,8 @@
         <h2>3.7 鲜艳 + 低饱和 哲学生成器</h2>
         <p class="chapter-subtitle">颜色数量 ≤ 7、鲜艳色相 + 低饱和度 —— 好看，而且耐看。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
-        <p>你要给 <code>crime.csv</code> 的五个地区各配一个色，还想让整套图看起来「有设计感」。把饱和度全开（S=100%）会刺眼，全部低饱和又会发灰 —— 于是有了本章这套经验规则：</p>
+        <span class="sec-label"><i>1</i> 原案例</span>
+        <p>给 <code>crime.csv</code> 的五个地区各配一个色，还想让整套图看起来「有设计感」。把饱和度全开（S=100%）会刺眼，全部低饱和又会发灰 —— 于是有了本章这套经验规则：</p>
         <table class="theory-table">
           <thead><tr><th>规则</th><th>参数</th><th>为什么</th></tr></thead>
           <tbody>
@@ -1214,7 +1214,7 @@
 
         <span class="sec-label"><i>4</i> 可运行演示</span>
         <div class="demo-card">
-          <p class="demo-hint">拖动<strong>基准色相偏移 / 饱和度 / 亮度</strong>三个滑块，右侧实时生成 7 色方案、列出每个色的 hex，并用这套色在真实图表上画一遍。点「复制全部 hex」把 7 个值一次性拿走（自动复制失败时会给你一个可手动复制的文本框）。</p>
+          <p class="demo-hint">拖动<strong>基准色相偏移 / 饱和度 / 亮度</strong>三个滑块，右侧实时生成 7 色方案、列出每个色的 hex，并用这套色在真实图表上画一遍。点「复制全部 hex」把 7 个值一次性拿走（自动复制失败时会给出可手动复制的文本框）。</p>
           <div class="demo-mount" data-demo="d-3-7"></div>
         </div>
 
@@ -1247,10 +1247,10 @@
       <!-- ============ 3.8 CVD 论文图测 ============ -->
       <article class="chapter" id="ch-3-8">
         <h2>3.8 CVD 论文图测</h2>
-        <p class="chapter-subtitle">你的图在色盲读者眼里还看得懂吗？拿真实数据现场测一遍。</p>
+        <p class="chapter-subtitle">图表在色盲读者眼里还看得懂吗？拿真实数据现场测一遍。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
-        <p>你投出去一张论文图，审稿人回了句「figure 2 is hard to read」。你自查了排版、字号、图例，都没问题 —— 有没有可能，是因为审稿人是色觉缺陷者（CVD）？约 8% 的男性读不出你靠颜色区分的那几类。先看三张最常见的「论文图」在 CVD 下的实测结果：</p>
+        <span class="sec-label"><i>1</i> 原案例</span>
+        <p>投出去一张论文图，审稿人回了句「figure 2 is hard to read」。自查排版、字号、图例，都没问题 —— 有没有可能，是因为审稿人是色觉缺陷者（CVD）？约 8% 的男性读不出靠颜色区分的那几类。先看三张最常见的「论文图」在 CVD 下的实测结果：</p>
         <table class="theory-table">
           <thead><tr><th>论文图</th><th>配色方案</th><th>CVD 实测结论</th></tr></thead>
           <tbody>

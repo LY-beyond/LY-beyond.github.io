@@ -64,7 +64,7 @@ try {
   console.error(`✗ 访问不到 ${SITE}`);
   console.error('  本脚本需要一个本地静态服务器（其它自检脚本不需要）。先在仓库目录启动：');
   console.error('    python -m http.server 8099');
-  console.error('  如果你的端口不同，用环境变量指定：');
+  console.error('  如果端口不同，用环境变量指定：');
   console.error(`    SITE_URL=http://127.0.0.1:8080/ node ${basename(process.argv[1] || 'audit.mjs')}`);
   process.exit(2);
 }

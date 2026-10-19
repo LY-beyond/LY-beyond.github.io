@@ -244,7 +244,7 @@ DEMOS['d-5-1'] = function (mount) {
   const ATTRS = [
     {
       name: 'Instant', en: 'instant', icon: '·', token: 'var(--c-primary)',
-      desc: 'A single instantaneous point on the time axis: it has position, not length. Subtract two timestamps and you get a "duration".',
+      desc: 'A single instantaneous point on the time axis: it has position, not length. Subtracting two timestamps gives a "duration".',
       example: 'A train arriving at 08:12, a log timestamp, the instant a single heartbeat occurs',
       viz: 'Scatter plot / event markers (point + label): time on x, measure on y',
       tip: 'Do not draw several records at the same instant as a line implying an order — an instant has no length.'
@@ -614,7 +614,7 @@ DEMOS['d-5-3'] = async function (mount) {
     + '</div>'
     + '<div class="l5-wrap"><svg class="l5-svg" viewBox="0 0 760 140" role="img" aria-label="2024 daily maximum temperature calendar heatmap: weeks on x, weekdays on y, color for temperature"></svg><div class="l5-tip" hidden></div></div>'
     + '<div class="l5-ctrl"><div class="l5-strip-row"><span>' + TEMP_LO + '°C cold</span><span class="l5-strip" data-role="strip"></span><span>' + TEMP_HI + '°C hot</span></div></div>'
-    + '<p class="demo-note">A line chart answers "how it changes over time", a calendar heatmap answers "how it changes with season / weekday": with the same data, the calendar aligns "seven cells to a week" into a column, and seasonality instantly becomes color patches you can scan at a glance.</p>';
+    + '<p class="demo-note">A line chart answers "how it changes over time", a calendar heatmap answers "how it changes with season / weekday": with the same data, the calendar aligns "seven cells to a week" into a column, and seasonality instantly becomes color patches scannable at a glance.</p>';
 
   const svg = mount.querySelector('.l5-svg');
   const wrap = mount.querySelector('.l5-wrap');
@@ -1057,7 +1057,7 @@ DEMOS['d-5-x'] = async function (mount) {
     </div>
     <div data-chart></div>
     <div class="l5x-read" data-read style="margin-top:12px"></div>
-    <p class="demo-note"><strong>The three-way trade-off:</strong> a wider window → a smoother curve (noise ↓), but peaks get flattened and shifted later (lag ↑); EWMA tracks tightly with tiny memory (lag ≈ (1−α)/α years) yet is sensitive to abrupt changes; the median filter is nearly immune to outliers but leaves a staircase look. Ask what question you need to answer first, then choose the smoothing strength — smoothing exists to "reveal the trend", never to "beautify the data".</p>
+    <p class="demo-note"><strong>The three-way trade-off:</strong> a wider window → a smoother curve (noise ↓), but peaks get flattened and shifted later (lag ↑); EWMA tracks tightly with tiny memory (lag ≈ (1−α)/α years) yet is sensitive to abrupt changes; the median filter is nearly immune to outliers but leaves a staircase look. First ask what question needs answering, then choose the smoothing strength — smoothing exists to "reveal the trend", never to "beautify the data".</p>
   `;
 
   const nameSel = mount.querySelector('[data-name]');

@@ -433,7 +433,7 @@ body::after {
 .chapter a { color: var(--c-primary); font-weight: 600; }
 .chapter a:hover { text-decoration: underline; }
 
-/* 段首小标签（① 你的原案例 / ② 嵌入理论 …） */
+/* 段首小标签（① 原案例 / ② 嵌入理论 …） */
 .sec-label {
   display: inline-flex;
   align-items: center;

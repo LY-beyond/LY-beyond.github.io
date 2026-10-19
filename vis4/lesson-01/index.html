@@ -96,7 +96,7 @@
         <h2>1.1 数据生成</h2>
         <p class="chapter-subtitle">一切可视化的起点：先把「现实世界」装进一张表格。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>本章从头到尾只用一份数据：<strong>中国石油大学（华东）2025 级新生名册</strong>。它由 DeepSeek 大模型合成，含 <strong>80 条记录、8 列</strong>。</p>
 
         <table class="theory-table">
@@ -271,7 +271,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
           <div class="selftest__head">自测 · 1 题</div>
           <p class="selftest__q">用 <code>d3.csv(url, transformRow)</code> 的第二参传入行回调，相比「先 await 再 .map() 转换」，主要好处是？</p>
           <ul class="selftest__opts">
-            <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="a"><span>自动帮你做了类型转换，所以不必写 trim()</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="a"><span>会自动做类型转换，所以不必写 trim()</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="b"><span>每行解析后立即转换，省掉一次完整的数组遍历，内存更省</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="c"><span>让加载变成同步的，代码顺序更好理解</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="d"><span>可以把 CSV 里的中文列名自动改成英文</span></label></li>
@@ -280,7 +280,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
             <button type="button" class="selftest__btn">提交答案</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>行回调在<strong>每一行解析完的那一刻</strong>就被调用，所以不必先把整份字符串数组读进内存再遍历一次。<code>d3.csv</code> 依然是异步的（必须 await），也不会自动改名或做类型转换 —— 那两件事都要你自己在回调里写。</p>
+          <p class="selftest__why" hidden>行回调在<strong>每一行解析完的那一刻</strong>就被调用，所以不必先把整份字符串数组读进内存再遍历一次。<code>d3.csv</code> 依然是异步的（必须 await），也不会自动改名或做类型转换 —— 那两件事都要在回调里自己写。</p>
         </div>
       </article>
 
@@ -289,7 +289,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
         <h2>1.2 数据定义</h2>
         <p class="chapter-subtitle">同样是「18」，它到底是三个数字、一条信息，还是能支撑决策的知识？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>DIKW 金字塔把「从观察到决策」分成四层，每一层回答一个不同的问题：</p>
         <table class="theory-table">
           <thead>
@@ -314,7 +314,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
           <li>❌ <strong>Knowledge → Wisdom</strong>：决策与战略超出可视化的能力范围。</li>
         </ul>
         <div class="callout callout--tip">
-          <p><strong>Rowley (2007) 的批评：</strong>DIKW 是过度简化的层次模型。但它作为<strong>教学脚手架</strong>仍然最有价值 —— 它逼你先问「我现在手上是数据还是信息」。</p>
+          <p><strong>Rowley (2007) 的批评：</strong>DIKW 是过度简化的层次模型。但它作为<strong>教学脚手架</strong>仍然最有价值 —— 它逼人先问「现在手上是数据还是信息」。</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
@@ -393,7 +393,7 @@ svg.append(<span class="str">"g"</span>)
         <h2>1.3 数据属性</h2>
         <p class="chapter-subtitle">数据的「类型」决定了哪些视觉通道能用 —— 这是本章最重要的一条规则。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <table class="theory-table">
           <thead><tr><th>类别</th><th>本课例子</th><th>说明</th></tr></thead>
           <tbody>
@@ -405,7 +405,7 @@ svg.append(<span class="str">"g"</span>)
 
         <span class="sec-label"><i>2</i> 嵌入理论</span>
         <div class="theory-card">
-          <h4>Stevens 测量尺度（1946）：比你原文更精细的 4 类</h4>
+          <h4>Stevens 测量尺度（1946）：比教材原文更精细的 4 类</h4>
           <table class="theory-table">
             <thead><tr><th>尺度</th><th>允许的运算</th><th>典型示例</th><th>对应原文</th></tr></thead>
             <tbody>
@@ -568,7 +568,7 @@ const color = d3.scaleDiverging(d3.interpolateRdBu);</code></pre>
         <h2>1.4 数据变换</h2>
         <p class="chapter-subtitle">D3 的 8 个数组函数：把「原始数据」加工成「可以画的数据」。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <table class="theory-table">
           <thead><tr><th>#</th><th>函数</th><th>用途</th><th>类比</th></tr></thead>
           <tbody>
@@ -714,7 +714,7 @@ const countByClass = d3.rollup(
         <h2>1.5 D3 数据选择器</h2>
         <p class="chapter-subtitle">D3 的核心不是「画图」，而是「把数据绑定到 DOM，并在数据变化时算出该增、该改、该删」。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <table class="theory-table">
           <thead><tr><th>方法</th><th>返回</th></tr></thead>
           <tbody>
@@ -784,7 +784,7 @@ const countByClass = d3.rollup(
     exit   =&gt; exit.remove()                                  <span class="cmt">// 删除</span>
   );</code></pre>
               <div class="key-point">
-                <p><code>join</code> 的三个回调分别在 enter / update / exit 阶段被调用，比 v3 的 <code>enter().append()</code> + <code>exit().remove()</code> 更简洁，也更不容易漏掉一支。<strong>类比：</strong>这就是 React 的 diff + patch —— 只不过 React 帮你做了，D3 让你自己写变换函数。</p>
+                <p><code>join</code> 的三个回调分别在 enter / update / exit 阶段被调用，比 v3 的 <code>enter().append()</code> + <code>exit().remove()</code> 更简洁，也更不容易漏掉一支。<strong>类比：</strong>这就是 React 的 diff + patch —— 只不过这一步 React 自动代劳，D3 则要自己写变换函数。</p>
               </div>
             </div>
           </details>

@@ -382,7 +382,7 @@ DEMOS['d-4-1'] = async (mount) => {
       <div class="demo-detail" data-role="detail"></div>
     </div>
 
-    <p class="demo-note"><strong>联动刷选（linked brushing）：</strong>在一根轴上框出一段范围，被选中的州在平行坐标（连成<span style="color: var(--c-primary)">加粗蓝线</span>）与散点矩阵（点变<span style="color: var(--c-primary)">蓝色</span>）里<strong>同步</strong>亮起来 —— 于是你能追问「这些州在其他指标上也有共同点吗」。</p>
+    <p class="demo-note"><strong>联动刷选（linked brushing）：</strong>在一根轴上框出一段范围，被选中的州在平行坐标（连成<span style="color: var(--c-primary)">加粗蓝线</span>）与散点矩阵（点变<span style="color: var(--c-primary)">蓝色</span>）里<strong>同步</strong>亮起来 —— 于是可以追问「这些州在其他指标上也有共同点吗」。</p>
     ${dataNote(ok)}
   `;
 
@@ -425,7 +425,7 @@ DEMOS['d-4-1'] = async (mount) => {
     detail.innerHTML = `
       <h4>刷选：${METRICS[axis].label} ∈ [${short(loRaw)}, ${short(hiRaw)}]</h4>
       <p>命中 <strong>${n}</strong> 个州（共 ${rows.length} 个）。</p>
-      <p><strong>在别的指标上怎样？</strong>看上图里这些加粗蓝线的走向 —— 它们是否整体偏高或偏低，就是「联动」要帮你发现的东西。</p>
+      <p><strong>在别的指标上怎样？</strong>看上图里这些加粗蓝线的走向 —— 它们是否整体偏高或偏低，就是「联动」要帮助发现的东西。</p>
       <p class="l4-mono" style="font-size: 12px;">${picked.slice(0, 12).join(' · ') || '（没有州落在区间内）'}${picked.length > 12 ? ' …' : ''}</p>`;
   }
 

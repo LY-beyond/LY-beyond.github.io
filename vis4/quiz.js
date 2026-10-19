@@ -118,7 +118,7 @@
     weakItem: '{name} · {n} 题出错',
     flagOk: '✓ 正确',
     flagBad: '✗ 错误',
-    yourAnswer: '你的答案：',
+    yourAnswer: '所选答案：',
     correctAnswer: '正确答案：',
     answerSep: '　',
     explainTag: '解析',
@@ -135,11 +135,11 @@
     btnRedoWrong: '重做错题',
     btnNewQuiz: '开始新测验',
     btnBack: '返回',
-    lastPick: '　上次你选：',
+    lastPick: '　上次选择：',
     wrongCount: '错 {n} 次',
     btnRemove: '移出错题本',
     btnBackToChapter: '回看：{name}',
-    wrongEmpty: '错题本是空的 —— 要么你答得不错，要么还没开始测验。',
+    wrongEmpty: '错题本是空的 —— 要么答得不错，要么还没开始测验。',
 
     /* ---- 历史成绩 ---- */
     historyTitle: '历史成绩',

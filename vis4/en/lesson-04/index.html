@@ -50,7 +50,7 @@
         <h1>Chapter 4 · Low-Dimensional Data</h1>
         <p class="subtitle">Turning tables into graphics — <b>wide/long reshape · three-layer coordinates · curve fitting · 45° slope · contours</b></p>
       </div>
-      <div class="header-tip">Read as you go · demos render in place · self-checks score instantly</div>
+      <div class="header-tip">Read along the way · demos render in place · self-checks score instantly</div>
     </div>
 
     <div class="learn-goals">
@@ -96,7 +96,7 @@
         <h2>4.1 Data Reshaping</h2>
         <p class="chapter-subtitle">Wide format is for people, long format is for programs — one flatMap completes the conversion.</p>
 
-        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <span class="sec-label"><i>1</i> Original Case</span>
         <p>From start to finish this chapter uses a single dataset: <strong>crime.csv, 1985 crime statistics for the 50 US states</strong>. It holds <strong>50 rows × 12 columns</strong>, one row per state and one metric per column — a classic <strong>wide format</strong>.</p>
 
         <table class="theory-table">
@@ -165,7 +165,7 @@
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
         <div class="sec-code">
           <details class="code-fold" open>
-            <summary><span class="code-fold__badge">①</span> d3.autoType: type inference as you load</summary>
+            <summary><span class="code-fold__badge">①</span> d3.autoType: type inference at load time</summary>
             <div class="code-fold__body">
 <pre class="code-block"><code><span class="cmt">// Pass d3.autoType as the second argument to skip a +d.field per column</span>
 const raw = <span class="kw">await</span> d3.csv(<span class="str">'./data/crime.csv'</span>, d3.autoType);
@@ -174,7 +174,7 @@ const raw = <span class="kw">await</span> d3.csv(<span class="str">'./data/crime
 console.log(raw[<span class="num">0</span>].population);        <span class="cmt">// 3979000 (a Number, not "3979000")</span>
 console.log(<span class="kw">typeof</span> raw[<span class="num">0</span>].state);      <span class="cmt">// "string"</span></code></pre>
               <div class="key-point">
-                <p>Internally, <code>autoType</code> walks every column and tries <code>Number()</code> / <code>Date()</code> / boolean literals: whatever it can recognise it converts, and whatever it cannot it <strong>leaves as a string</strong>. So it is convenient but also conservative — a thousands-separated number like <code>"1,234"</code> is <em>not</em> converted for you and still needs its own cleaning.</p>
+                <p>Internally, <code>autoType</code> walks every column and tries <code>Number()</code> / <code>Date()</code> / boolean literals: whatever it can recognise it converts, and whatever it cannot it <strong>leaves as a string</strong>. So it is convenient but also conservative — a thousands-separated number like <code>"1,234"</code> is <em>not</em> converted automatically and still needs its own cleaning.</p>
               </div>
             </div>
           </details>
@@ -212,7 +212,7 @@ const norm = (values) =&gt; {
 };
 const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
               <div class="key-point">
-                <p><strong>The biggest trap of parallel coordinates:</strong> each axis has a <em>different</em> scale. After normalization, comparing across axes compares "relative position", not absolute values — so you may say "this state sits high on the murder axis and low on the theft axis", but not "murder 350 = theft 350". <strong>Scatterplot matrices</strong> do not have this problem: for pairwise comparison both axes keep their real scales.</p>
+                <p><strong>The biggest trap of parallel coordinates:</strong> each axis has a <em>different</em> scale. After normalization, comparing across axes compares "relative position", not absolute values — so "this state sits high on the murder axis and low on the theft axis" is a valid statement, but "murder 350 = theft 350" is not. <strong>Scatterplot matrices</strong> do not have this problem: for pairwise comparison both axes keep their real scales.</p>
               </div>
             </div>
           </details>
@@ -234,7 +234,7 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
           <ul>
             <li>Wide format: one row per entity (human-friendly); long format: one row per observation (program-friendly); <code>flatMap</code> does wide → long in a single line.</li>
             <li><code>d3.autoType</code> infers column types at load time, but it only makes conversions it can "guess", so dirty data still needs cleaning.</li>
-            <li>Parallel coordinates need <strong>per-axis normalization</strong> (across axes you read only relative position); scatterplot matrices compare with real scales — two different strategies for projecting multivariate data.</li>
+            <li>Parallel coordinates need <strong>per-axis normalization</strong> (across axes only relative position is readable); scatterplot matrices compare with real scales — two different strategies for projecting multivariate data.</li>
           </ul>
         </div>
 
@@ -256,7 +256,7 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
 
         <div class="selftest" data-selftest data-answer="b">
           <div class="selftest__head">Self-check · Question 2</div>
-          <p class="selftest__q">Taking the 50-row wide crime.csv and <code>flatMap</code>-ing it into long format with the three metrics <code>['murder', 'robbery', 'burglary']</code>, how many rows do you get?</p>
+          <p class="selftest__q">Taking the 50-row wide crime.csv and <code>flatMap</code>-ing it into long format with the three metrics <code>['murder', 'robbery', 'burglary']</code>, how many rows result?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="a"><span>50 rows (the count is unchanged)</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-4-1b" value="b"><span>150 rows (50 × 3)</span></label></li>
@@ -276,13 +276,13 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
         <h2>4.2 Coordinate Transforms</h2>
         <p class="chapter-subtitle">Data space → normalized space → screen-pixel space: three layers with clear duties; mix them up and everything falls apart.</p>
 
-        <span class="sec-label"><i>1</i> Your Original Case</span>
-        <p>The original §5.1.2 uses a scatterplot to show <strong>murder vs robbery</strong> in crime.csv. The trouble: murders run from 32 (Vermont) to 3082 (California) and robberies from 489 (Wyoming) to 254707 (California) — if you feed the raw values directly as pixels, the canvas simply cannot hold them.</p>
+        <span class="sec-label"><i>1</i> Original Case</span>
+        <p>The original §5.1.2 uses a scatterplot to show <strong>murder vs robbery</strong> in crime.csv. The trouble: murders run from 32 (Vermont) to 3082 (California) and robberies from 489 (Wyoming) to 254707 (California) — if the raw values are fed directly as pixels, the canvas simply cannot hold them.</p>
 
         <table class="theory-table">
           <thead><tr><th>Layer</th><th>Coordinate meaning</th><th>Value in this case</th><th>Who owns it</th></tr></thead>
           <tbody>
-            <tr><td><b>① Data space</b></td><td>Raw values (real units)</td><td>murder = 3082</td><td>Your data</td></tr>
+            <tr><td><b>① Data space</b></td><td>Raw values (real units)</td><td>murder = 3082</td><td>The data itself</td></tr>
             <tr><td><b>② Normalized space</b></td><td>Standardized coordinates squeezed into <code>0..innerW</code></td><td>x' = 0.98</td><td><code>scaleLinear / scaleLog / scaleSqrt</code></td></tr>
             <tr><td><b>③ Screen-pixel space</b></td><td>Final pixel position after adding the margin offset</td><td>X = 48 + 0.98×560 ≈ 597 px</td><td>The second-layer scale or <code>d3.axisBottom</code></td></tr>
           </tbody>
@@ -292,7 +292,7 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
         <div class="theory-card">
           <h4>Why three layers are mandatory</h4>
           <p>Splitting "value → coordinate" from "coordinate → pixel" buys <strong>decoupling</strong>: the normalized result depends only on the <em>data</em>, while the screen pixel depends only on the <em>canvas size</em>. So resizing the canvas (responsive layout, exporting charts at different sizes) recomputes only the third layer, and the first layer's normalized result is reused as-is.</p>
-          <p>If you take the shortcut of "one scale that handles both domain=data and range=[margin, margin+innerW]", then every change to the margin forces you back into the data layer — and coordinates shared between elements (say the position of a reference line) can no longer be reused.</p>
+          <p>With the shortcut of "one scale that handles both domain=data and range=[margin, margin+innerW]", every change to the margin forces a return to the data layer — and coordinates shared between elements (say the position of a reference line) can no longer be reused.</p>
         </div>
 
         <figure class="figure">
@@ -329,7 +329,7 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
         </figure>
 
         <div class="callout callout--warn">
-          <p><strong>A common slip:</strong> writing "data domain → pixel domain" into a <em>single</em> scale (<code>domain=[0, maxMurder]</code>, <code>range=[margin, margin+innerW]</code>). At the time nothing looks wrong, until you need to change the margin, go responsive, or overlay a shared reference line — and only then discover that every scale has to be edited in two places.</p>
+          <p><strong>A common slip:</strong> writing "data domain → pixel domain" into a <em>single</em> scale (<code>domain=[0, maxMurder]</code>, <code>range=[margin, margin+innerW]</code>). At the time nothing looks wrong, until the margin needs changing, responsiveness is required, or a shared reference line must be overlaid — and only then is it discovered that every scale has to be edited in two places.</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
@@ -390,7 +390,7 @@ const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).ran
 
         <div class="selftest" data-selftest data-answer="a">
           <div class="selftest__head">Self-check · 1 question</div>
-          <p class="selftest__q">Splitting "data space → normalized space → screen-pixel space" into two scales mainly gives you what?</p>
+          <p class="selftest__q">Splitting "data space → normalized space → screen-pixel space" into two scales mainly buys what?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="a"><span>Decoupling the normalized result from canvas size, so a screen change only recomputes the outermost margin mapping</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-4-2" value="b"><span>Because d3 scales must come in pairs or they throw an error</span></label></li>
@@ -401,16 +401,16 @@ const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).ran
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>The second layer depends only on canvas size and the first only on the data. When you change the canvas, the first layer's normalized result is reused as-is — and shared elements (grid lines, reference lines, other mini-charts) all share the same set of coordinates. d3 does <strong>not</strong> force two layers.</p>
+          <p class="selftest__why" hidden>The second layer depends only on canvas size and the first only on the data. When the canvas changes, the first layer's normalized result is reused as-is — and shared elements (grid lines, reference lines, other mini-charts) all share the same set of coordinates. d3 does <strong>not</strong> force two layers.</p>
         </div>
       </article>
 
       <!-- ============ 4.3 Curve fitting ============ -->
       <article class="chapter" id="ch-4-3">
         <h2>4.3 Curve Fitting</h2>
-        <p class="chapter-subtitle">For the same set of points, a different model is a different trend line — what tells you which one fits better?</p>
+        <p class="chapter-subtitle">For the same set of points, a different model is a different trend line — what says which one fits better?</p>
 
-        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <span class="sec-label"><i>1</i> Original Case</span>
         <p>The original §5.1.3 shows the trend across 50 states with "polyline + points", and the code says <code>curveCatmullRom</code> — but <strong>never explains why</strong>, so the result is a curve that overfits and draws out every state's jitter.</p>
 
         <span class="sec-label"><i>2</i> Embedded Theory</span>
@@ -448,7 +448,7 @@ const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).ran
               <circle cx="250" cy="32" r="4" style="fill: var(--c-ch-2);"/>
             </g>
 
-            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">The left preserves every point's jitter, the right preserves the overall rise — <tspan style="fill: var(--c-text); font-weight: 700;">both are correct, it depends on the question you are asking</tspan></text>
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">The left preserves every point's jitter, the right preserves the overall rise — <tspan style="fill: var(--c-text); font-weight: 700;">both are correct, it depends on the question being asked</tspan></text>
           </svg>
           <figcaption>Same data, two drawings: interpolation draws the noise in, fitting pulls the trend out</figcaption>
         </figure>
@@ -519,7 +519,7 @@ const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// ca
           <ul>
             <li>Interpolation passes all points (keeps information and noise); fitting only reflects the trend (drops detail, sees clearly); the point count is the main criterion.</li>
             <li><code>d3.line().curve()</code> changes style in one line: ordered data → <code>monotoneX</code>, heavy jitter → a smooth spline, discrete states → <code>step</code>.</li>
-            <li>Fitting unifies everything under least squares via "linearization"; when comparing goodness with R² you must also weigh model complexity, or you'll pick the overfitted one.</li>
+            <li>Fitting unifies everything under least squares via "linearization"; when comparing goodness with R², model complexity must also be weighed, or the overfitted one gets picked.</li>
           </ul>
         </div>
 
@@ -561,7 +561,7 @@ const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// ca
         <h2>4.4 Slope Perception (the 45° golden angle)</h2>
         <p class="chapter-subtitle">The eye's estimate of slope is <strong>not</strong> linear — 45° is the visual "midpoint".</p>
 
-        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <span class="sec-label"><i>1</i> Original Case</span>
         <p>The original §5.1.4 mentions "the optimal average inclination is 45°" but never explains why. And for data spanning 50× like crime.csv, drawn on a <strong>linear axis</strong>, most states clump together and the trend line's slope is nearly horizontal (&lt; 20°), so readers can barely read the slope.</p>
 
         <span class="sec-label"><i>2</i> Embedded Theory</span>
@@ -605,7 +605,7 @@ const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// ca
         </figure>
 
         <div class="callout callout--ok">
-          <p><strong>Design principles:</strong> ① keep the key data's slopes within <strong>30°–60°</strong>; ② when comparing growth curves, use a <strong>log axis</strong> to pull the steepness back toward about 45°; ③ avoid trend comparisons below 5° or above 85° — there the perceptual error is enough to lead you to a wrong conclusion.</p>
+          <p><strong>Design principles:</strong> ① keep the key data's slopes within <strong>30°–60°</strong>; ② when comparing growth curves, use a <strong>log axis</strong> to pull the steepness back toward about 45°; ③ avoid trend comparisons below 5° or above 85° — there the perceptual error is enough to cause a wrong conclusion.</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key Code</span>
@@ -673,7 +673,7 @@ honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num"
 <span class="cmt">// Exaggeration factor = seen height ratio ÷ true height ratio</span>
 <span class="kw">const</span> trueRatio = A.rate / Bv.rate;                <span class="cmt">// from zero, e.g. 1.04</span>
 <span class="kw">const</span> seenRatio = (A.rate - y0) / (Bv.rate - y0);  <span class="cmt">// truncated, e.g. 1.27</span>
-<span class="kw">const</span> factor = seenRatio / trueRatio;              <span class="cmt">// → 1.2×, growing as you truncate</span></code></pre>
+<span class="kw">const</span> factor = seenRatio / trueRatio;              <span class="cmt">// → 1.2×, growing as truncation deepens</span></code></pre>
               <div class="key-point">
                 <p><strong>Corresponding demo:</strong> Chart-lie Magnifier (two charts side by side + live readout). The truncated-axis lie is <strong>computable</strong>, not a "feeling": as y0 approaches the shorter bar's value, seenRatio → ∞; stacking a <code>stretch</code>× aspect distortion warps area perception a second time. Note that line charts are exempt — their contract is position, not length, so this rule <strong>binds bar charts only</strong>.</p>
               </div>
@@ -711,14 +711,14 @@ honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num"
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="a"><span>The error is unchanged, the eye always estimates slope steadily</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="b"><span>The error first grows and then shrinks</span></label></li>
-            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="c"><span>The error grows monotonically as you move away from 45°, and 85° is already in the danger zone</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="c"><span>The error grows monotonically with distance from 45°, and 85° is already in the danger zone</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-4-4" value="d"><span>The error becomes negative</span></label></li>
           </ul>
           <div class="selftest__actions">
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>Both sides of the U shape <strong>rise monotonically</strong>: starting from 45°, whether you move toward 0° or toward 90°, the error grows. Both 85° and 5° are in the "danger zone"; comparing trends at such inclinations lets perceptual error directly swamp the real difference.</p>
+          <p class="selftest__why" hidden>Both sides of the U shape <strong>rise monotonically</strong>: starting from 45°, moving toward either 0° or 90° grows the error. Both 85° and 5° are in the "danger zone"; comparing trends at such inclinations lets perceptual error directly swamp the real difference.</p>
         </div>
       </article>
 
@@ -727,7 +727,7 @@ honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num"
         <h2>4.5 Contours (Marching Squares)</h2>
         <p class="chapter-subtitle">Given a scalar field and a threshold, trace out the curve where "value = threshold".</p>
 
-        <span class="sec-label"><i>1</i> Your Original Case</span>
+        <span class="sec-label"><i>1</i> Original Case</span>
         <p>The original §5.2.2 extracts contours from crime.csv with Marching Squares, but the original code is <strong>a screenshot placeholder</strong> — in this lesson we complete it into a genuinely runnable algorithm and lay out every step.</p>
         <p>The idea: first treat two metrics of the 50 states (say murder and robbery) as points on a 2D plane, use kernel density estimation (KDE) to lay out a <strong>scalar field</strong>, then take contours of this continuous field — what the contours enclose are regions of "similar density".</p>
 
@@ -853,7 +853,7 @@ const center = (tl + tr + bl + br) / <span class="num">4</span>;
 <span class="cmt">// code 5: center &gt; threshold → connect [3,0]; otherwise [1,2]</span>
 <span class="cmt">// code 10: center &gt; threshold → connect [2,3]; otherwise [0,1]</span></code></pre>
               <div class="key-point">
-                <p><strong>Why interpolation is mandatory:</strong> if you take the lazy route of the <em>edge midpoint</em>, the contour becomes a jagged polyline that gets uglier the coarser the grid. Linear interpolation slides the crossing point along the edge in proportion to the values, giving a smooth curve even on a coarse grid.</p>
+                <p><strong>Why interpolation is mandatory:</strong> the lazy route of the <em>edge midpoint</em> makes the contour a jagged polyline that gets uglier the coarser the grid. Linear interpolation slides the crossing point along the edge in proportion to the values, giving a smooth curve even on a coarse grid.</p>
               </div>
             </div>
           </details>
@@ -861,7 +861,7 @@ const center = (tl + tr + bl + br) / <span class="num">4</span>;
 
         <span class="sec-label"><i>4</i> Runnable Demo</span>
         <div class="demo-card">
-          <p class="demo-hint">Click "Next" to walk through the algorithm step by step: <strong>sample the grid → mark cells above the threshold → interpolate crossing points on edges → connect into polylines</strong>; you can also "Play" to run it automatically, and drag the threshold slider to watch the contour deform — sometimes splitting into two loops.</p>
+          <p class="demo-hint">Click "Next" to walk through the algorithm step by step: <strong>sample the grid → mark cells above the threshold → interpolate crossing points on edges → connect into polylines</strong>; "Play" runs it automatically, and dragging the threshold slider shows the contour deform — sometimes splitting into two loops.</p>
           <div class="demo-mount" data-demo="d-4-5"></div>
         </div>
 

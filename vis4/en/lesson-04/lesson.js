@@ -385,7 +385,7 @@ DEMOS['d-4-1'] = async (mount) => {
       <div class="demo-detail" data-role="detail"></div>
     </div>
 
-    <p class="demo-note"><strong>Linked brushing:</strong> draw a range on one axis and the selected states light up <strong>in sync</strong> in the parallel coordinates (joined by <span style="color: var(--c-primary)">bold blue lines</span>) and in the scatterplot matrix (points turn <span style="color: var(--c-primary)">blue</span>) — so you can then ask "do these states also agree on the other metrics?".</p>
+    <p class="demo-note"><strong>Linked brushing:</strong> draw a range on one axis and the selected states light up <strong>in sync</strong> in the parallel coordinates (joined by <span style="color: var(--c-primary)">bold blue lines</span>) and in the scatterplot matrix (points turn <span style="color: var(--c-primary)">blue</span>) — so the natural next question is "do these states also agree on the other metrics?".</p>
     ${dataNote(ok)}
   `;
 

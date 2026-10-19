@@ -716,7 +716,7 @@ DEMOS['d-3-5'] = function (mount) {
       </label>
     </div>
     <div class="l3-harm" data-cards></div>
-    <p class="demo-note">Whether a palette still separates under “grayscale” or “color vision deficiency” is a hard requirement for getting into a paper. If several steps merge into one color in grayscale, you need a second encoding such as shape.</p>`;
+    <p class="demo-note">Whether a palette still separates under “grayscale” or “color vision deficiency” is a hard requirement for getting into a paper. If several steps merge into one color in grayscale, a second encoding such as shape is needed.</p>`;
 
   const cards = mount.querySelector('[data-cards]');
   const grayEl = mount.querySelector('[data-gray]');
@@ -1125,7 +1125,7 @@ DEMOS['d-3-x'] = (mount) => {
     </div>
     <div class="l3x-score" data-score></div>
     <div data-cards style="margin-top:6px"></div>
-    <p class="demo-note"><strong>Winning = revising:</strong> the four cases add up to the chapter's four bottom lines — sequential data takes a sequential ramp, two-pole contrast takes a CVD-safe pair, line charts widen lightness first, unordered classes take a qualitative palette. Before coloring a real project, run this "check-up" in your head.</p>
+    <p class="demo-note"><strong>Winning = revising:</strong> the four cases add up to the chapter's four bottom lines — sequential data takes a sequential ramp, two-pole contrast takes a CVD-safe pair, line charts widen lightness first, unordered classes take a qualitative palette. Before coloring a real project, run this mental "check-up" first.</p>
   `;
 
   const cvdSel = mount.querySelector('[data-cvd]');

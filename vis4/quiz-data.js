@@ -394,7 +394,7 @@ window.QUIZ_BANK = {
       id: 'j-07', chapter: 3, topic: '色域与超色域处理',
       q: '在 sRGB 显示屏上，超出 sRGB 色域的颜色会被浏览器报错并拒绝渲染。',
       answer: false,
-      explain: '不会报错，而是静默 clamp —— 把超色域分量裁到边界，视觉上表现为「颜色变了但没人告诉你」。色域是嵌套关系：sRGB ⊂ Adobe RGB ⊂ Rec.2020，超出的部分只能被压缩。'
+      explain: '不会报错，而是静默 clamp —— 把超色域分量裁到边界，视觉上表现为「颜色变了却没有任何提示」。色域是嵌套关系：sRGB ⊂ Adobe RGB ⊂ Rec.2020，超出的部分只能被压缩。'
     },
     {
       id: 'j-08', chapter: 3, topic: 'WCAG 对比度',

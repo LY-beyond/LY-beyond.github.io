@@ -46,7 +46,7 @@ window.CHART_HELP_I18N = {
       ]
     },
     cmp: {
-      q: 'What exactly are you comparing?',
+      q: 'What exactly is being compared?',
       opts: [
         { t: 'Several categories on one variable', s: 'e.g. average age by class' },
         { t: 'Categories split into subcategories', s: 'e.g. gender × major, two groups side by side' },
@@ -61,7 +61,7 @@ window.CHART_HELP_I18N = {
       ]
     },
     dst: {
-      q: 'Which side of the distribution do you want to see?',
+      q: 'Which side of the distribution should be shown?',
       opts: [
         { t: 'Overall shape: peaks, skew, bimodality', s: 'Continuous values, the shape after binning' },
         { t: 'A smooth outline, unaffected by binning', s: 'Shape matters more than exact counts' },
@@ -77,7 +77,7 @@ window.CHART_HELP_I18N = {
       ]
     },
     rel: {
-      q: 'How many variables do you have?',
+      q: 'How many variables are involved?',
       opts: [
         { t: 'Two numeric variables', s: 'e.g. height vs weight' },
         { t: 'One category + one numeric', s: 'e.g. age distribution by class' },
@@ -85,14 +85,14 @@ window.CHART_HELP_I18N = {
       ]
     },
     'rel-2': {
-      q: 'Do you also want a trend / fitted line?',
+      q: 'Is a trend / fitted line also wanted?',
       opts: [
         { t: 'No, just correlation and outliers', s: 'Keep the data as-is, no model' },
         { t: 'Yes, show the trend direction', s: 'A fitted line reveals rise or fall' }
       ]
     },
     tim: {
-      q: 'What kind of time data do you have?',
+      q: 'What kind of time data is at hand?',
       opts: [
         { t: 'Evenly spaced continuous time points', s: 'Regular daily / monthly / yearly series' },
         { t: 'Daily events, compared across years', s: 'Weekday and monthly patterns' },

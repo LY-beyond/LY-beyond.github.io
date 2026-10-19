@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chapter Quiz · Test Your Learning · Introduction to Visualization</title>
+  <title>Chapter Quiz · Learning Outcome Check · Introduction to Visualization</title>
   <meta name="description" content="Introduction to Visualization chapter quizzes: covering the 5 chapters plus the 'Chart Guide' special topic, 44 questions in total (26 multiple-choice + 18 true/false). Draw questions by length and scope, sample randomly with balanced chapter coverage, and score once on submit — with per-question explanations, weak-chapter links, a wrong-answer book and score history. Zero-build static site, dark mode supported.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 
@@ -48,7 +48,7 @@
   <header class="lesson-header">
     <div class="lesson-header__row">
       <div>
-        <h1>Chapter Quiz · Test Your Learning</h1>
+        <h1>Chapter Quiz · Learning Outcome Check</h1>
         <p class="subtitle">Covers the 5 chapters plus the "Chart Guide" special topic — <b>26 multiple-choice · 18 true/false</b>, drawn randomly with balanced chapter coverage</p>
       </div>
       <div class="header-tip">Choose the length · Choose the scope · Scored on submit</div>
@@ -58,6 +58,9 @@
   <!-- ================= Main ================= -->
   <main class="quiz-main" id="main">
     <div id="quiz-root" role="region" aria-label="Chapter quiz"></div>
+    <!-- Deep-link anchors: quiz.js reads #review (redo wrong answers) / #wrong (open the wrong-answer book) on startup -->
+    <span id="review" hidden></span>
+    <span id="wrong" hidden></span>
   </main>
 
   <!-- ================= Footer ================= -->

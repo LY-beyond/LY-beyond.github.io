@@ -61,7 +61,7 @@
         <li><label><input type="checkbox"><span>Given a dataset plus an intent, follow the decision tree to a concrete chart</span></label></li>
         <li><label><input type="checkbox"><span>Name each common chart's main visual channel, and the data size at which it breaks down</span></label></li>
         <li><label><input type="checkbox"><span>Recognize the four most common misuses: precise comparison by angle, truncated value axes, one-dimensional size encoded as area, and rainbow scales</span></label></li>
-        <li><label><input type="checkbox"><span>When arguing about “which chart to draw”, justify your choice with the channel rules in the quick-reference matrix</span></label></li>
+        <li><label><input type="checkbox"><span>When arguing about “which chart to draw”, justify the choice with the channel rules in the quick-reference matrix</span></label></li>
       </ol>
     </div>
   </header>
@@ -80,8 +80,8 @@
         <b>How to use this page</b><br>
         ① Tick the learning goals above first;<br>
         ② Actually walk the decision tree in Section 1 and see what it recommends;<br>
-        ③ Use the Section 2 matrix to look back: once you know what you want, come check the channel;<br>
-        ④ After the Section 4 quiz, go back and find which rule you misremembered.
+        ③ Use the Section 2 matrix to look back: once the goal is clear, come check the channel;<br>
+        ④ After the Section 4 quiz, go back and find which rule was misremembered.
       </div>
     </aside>
 
@@ -155,7 +155,7 @@
 
         <span class="sec-label"><i>3</i> Hands-on: walk the decision tree</span>
         <div class="demo-card cg-wizard">
-          <p class="demo-hint">Answer 2–3 questions and the wizard recommends a chart, its main visual channel, the scale it fits and its common misuses. You can step back with “Back” at any point, or “Start over” anytime.</p>
+          <p class="demo-hint">Answer 2–3 questions and the wizard recommends a chart, its main visual channel, the scale it fits and its common misuses. “Back” steps back at any point, and “Start over” restarts anytime.</p>
           <div class="cg-crumbs" id="cg-crumbs" hidden></div>
           <div class="cg-stage" id="cg-stage"></div>
           <div class="cg-wizard__foot">
@@ -177,7 +177,7 @@
       <!-- ============ 2. 图表速查矩阵 ============ -->
       <article class="chapter" id="cg-2">
         <h2>2. The quick-reference matrix</h2>
-        <p class="chapter-subtitle">Once you know what you want, come back and look it up: which channel does this chart use? When does it fail?</p>
+        <p class="chapter-subtitle">Once the goal is clear, come back and look it up: which channel does this chart use? When does it fail?</p>
 
         <span class="sec-label"><i>1</i> Look up by five task types</span>
         <p>The table below is grouped by the five most common intents. Every row gives the <strong>recommended chart</strong>, the <strong>main visual channel</strong> it relies on, and where it most easily goes wrong — the last item often matters more than the first two, because it decides “whether the chart will lie”.</p>
@@ -338,14 +338,14 @@
         </div>
 
         <div class="callout callout--tip">
-          <p><strong>Using the matrix properly:</strong> first walk the Section 1 decision tree to a candidate, then check this table's “use with care” column against your data size; if it bites, switch to the neighboring chart in the same row (e.g. bars → horizontal bars, pie → 100% stacked bars).</p>
+          <p><strong>Using the matrix properly:</strong> first walk the Section 1 decision tree to a candidate, then check this table's “use with care” column against the data size at hand; if it bites, switch to the neighboring chart in the same row (e.g. bars → horizontal bars, pie → 100% stacked bars).</p>
         </div>
       </article>
 
       <!-- ============ 3. 正误用图对照 ============ -->
       <article class="chapter" id="cg-3">
         <h2>3. Right vs wrong charts</h2>
-        <p class="chapter-subtitle">Same data: drawn right, you see the conclusion; drawn wrong, you see “the chart's lie”.</p>
+        <p class="chapter-subtitle">Same data: drawn right, the conclusion shows; drawn wrong, “the chart's lie” shows.</p>
 
         <span class="sec-label"><i>1</i> Four pairs</span>
 
@@ -501,7 +501,7 @@
       <!-- ============ 4. 选图小测 ============ -->
       <article class="chapter" id="cg-4">
         <h2>4. Chart selection quiz (6 questions)</h2>
-        <p class="chapter-subtitle">Every question hands you a dataset and an intent, then asks what to draw — exactly like the questions of real work.</p>
+        <p class="chapter-subtitle">Every question presents a dataset and an intent, then asks what to draw — exactly like the questions of real work.</p>
 
         <span class="sec-label"><i>1</i> Start answering</span>
         <div class="cg-score">
@@ -511,7 +511,7 @@
 
         <div class="selftest" data-selftest data-answer="b">
           <div class="selftest__head">Question 1</div>
-          <p class="selftest__q">You have GDP data for 30 provincial-level regions and want readers to see at a glance “who is high and who is low”, ranking them without comparing one by one. Which chart?</p>
+          <p class="selftest__q">With GDP data for 30 provincial-level regions at hand, the goal is to let readers see at a glance “who is high and who is low”, ranking them without comparing one by one. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="a"><span>Pie chart — see each region's share at a glance</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-1" value="b"><span>Horizontal bar chart, sorted by value from large to small</span></label></li>
@@ -527,7 +527,7 @@
 
         <div class="selftest" data-selftest data-answer="c">
           <div class="selftest__head">Question 2</div>
-          <p class="selftest__q">A club has only 7 students and you want to see each student's own height. Which chart?</p>
+          <p class="selftest__q">A club has only 7 students and the goal is to see each student's own height. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="a"><span>Box plot — read the five statistics directly</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-2" value="b"><span>Density plot — smooth the distribution into a curve</span></label></li>
@@ -543,7 +543,7 @@
 
         <div class="selftest" data-selftest data-answer="b">
           <div class="selftest__head">Question 3</div>
-          <p class="selftest__q">You want to show how the crime mix across provinces changes over time, focusing on how each crime type's <strong>share</strong> rises and falls rather than absolute counts. Which chart?</p>
+          <p class="selftest__q">The goal is to show how the crime mix across provinces changes over time, focusing on how each crime type's <strong>share</strong> rises and falls rather than absolute counts. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="a"><span>Stacked bar chart — three bars per year</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-3" value="b"><span>100% stacked area chart — normalize each year to 100%</span></label></li>
@@ -559,7 +559,7 @@
 
         <div class="selftest" data-selftest data-answer="d">
           <div class="selftest__head">Question 4</div>
-          <p class="selftest__q">You hold 30 years of daily temperature records for one place and want to see “the seasonal cycle repeating”. Which chart?</p>
+          <p class="selftest__q">With 30 years of daily temperature records for one place at hand, the goal is to see “the seasonal cycle repeating”. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="a"><span>Line chart — 30 years drawn as one line</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-4" value="b"><span>Calendar heatmap — a weekday × week grid</span></label></li>
@@ -575,7 +575,7 @@
 
         <div class="selftest" data-selftest data-answer="c">
           <div class="selftest__head">Question 5</div>
-          <p class="selftest__q">A dataset has 6 numeric variables (age, grade, height, weight, commute distance, weekly study hours) and you want to see their <strong>overall structure</strong> at once, not just pairwise relations. Which chart?</p>
+          <p class="selftest__q">A dataset has 6 numeric variables (age, grade, height, weight, commute distance, weekly study hours) and the goal is to see their <strong>overall structure</strong> at once, not just pairwise relations. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="a"><span>One scatter plot — pick two variables</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-5" value="b"><span>Grouped bar chart — one bar per variable</span></label></li>
@@ -586,12 +586,12 @@
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>6 variables combine into 15 pairs — too many scatter plots to inspect one by one. A scatterplot matrix lays every pair out as a small multiple, letting you sweep out correlated pairs at once; parallel coordinates draw each observation as a polyline, good for overall cluster structure. Box plots treat variables one at a time and cannot show <strong>between-variable</strong> relations.</p>
+          <p class="selftest__why" hidden>6 variables combine into 15 pairs — too many scatter plots to inspect one by one. A scatterplot matrix lays every pair out as a small multiple, sweeping out correlated pairs at once; parallel coordinates draw each observation as a polyline, good for overall cluster structure. Box plots treat variables one at a time and cannot show <strong>between-variable</strong> relations.</p>
         </div>
 
         <div class="selftest" data-selftest data-answer="b">
           <div class="selftest__head">Question 6</div>
-          <p class="selftest__q">You must present “each student's time at school from enrollment to graduation” — the data is an <strong>interval with start and end dates</strong>, not an instant. Which chart?</p>
+          <p class="selftest__q">The task is to present “each student's time at school from enrollment to graduation” — the data is an <strong>interval with start and end dates</strong>, not an instant. Which chart?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="a"><span>Line chart — connect the enrollment dates</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="cgq-6" value="b"><span>Storyline / Gantt chart — one interval segment per student</span></label></li>

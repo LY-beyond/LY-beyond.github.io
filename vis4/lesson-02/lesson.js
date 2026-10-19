@@ -814,7 +814,7 @@ DEMOS['d-2-x'] = async (mount) => {
         <p class="l2x-hint">改一个下拉 = 改一条规范 → 图形重画。图表不是「画」出来的，是「被规范描述」出来的。</p>
       </div>
     </div>
-    <p class="demo-note"><strong>对应流程理论：</strong>这几十行演示 = Card 管道的后半段——「数据变换」（rollup 聚合）→「视觉映射」（字段 → 通道）→「视图生成」（SVG 现场构建）。Vega-Lite、Plot、Tableau 的拖放界面，本质都是在帮你写这份 spec。</p>
+    <p class="demo-note"><strong>对应流程理论：</strong>这几十行演示 = Card 管道的后半段——「数据变换」（rollup 聚合）→「视觉映射」（字段 → 通道）→「视图生成」（SVG 现场构建）。Vega-Lite、Plot、Tableau 的拖放界面，本质都是在替使用者写这份 spec。</p>
   `;
 
   const els = {

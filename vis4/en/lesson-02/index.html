@@ -59,7 +59,7 @@
         <li><label><input type="checkbox"><span>Explain what each of the Card / Mackinlay / van Wijk pipeline models answers, and draw the four stages of the data-flow pipeline</span></label></li>
         <li><label><input type="checkbox"><span>Use <code>d3.rollup</code> to aggregate the freshman records into a nested Map by "class → gender", and explain how it differs from <code>d3.group</code></span></label></li>
         <li><label><input type="checkbox"><span>Explain which D3 function implements each of the four data-transformation operations (clean / aggregate / join / derive)</span></label></li>
-        <li><label><input type="checkbox"><span>Explain the three Reingold–Tilford passes in your own words, and why tree layout is equivalent to "visual mapping with the position channel"</span></label></li>
+        <li><label><input type="checkbox"><span>Explain the three Reingold–Tilford passes in plain words, and why tree layout is equivalent to "visual mapping with the position channel"</span></label></li>
         <li><label><input type="checkbox"><span>Explain the three DOM event phases and event delegation, and what problem <code>stopPropagation</code> solves in "toggle vs select"</span></label></li>
       </ol>
     </div>
@@ -95,7 +95,7 @@
         <h2>2.1 The Visualization Pipeline (Card · Mackinlay · van Wijk)</h2>
         <p class="chapter-subtitle">Three classic models describe three faces of the same thing: a pipeline, an automatic decision procedure, and a feedback loop.</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>This chapter only ever uses one dataset: <strong>the China University of Petroleum (East China) 2025 freshman roster <code>newstudent.csv</code></strong>, with <strong>80 records and 8 columns</strong> (No. / Name / Gender / Birthday / Age / Class / Hometown / Ethnicity).</p>
         <p>The original site's 2.1 gave a concept diagram of "<strong>3 visualization pipeline models</strong>". In this lesson we redraw it as an interactive <strong>data-flow pipeline diagram</strong>: click any stage to see what it corresponds to in each of the three models.</p>
 
@@ -169,7 +169,7 @@
         </figure>
 
         <div class="callout callout--tip">
-          <p><strong>Core teaching point:</strong> the three models <strong>stack rather than conflict</strong>. <strong>Card</strong> tells you "after transform comes mapping, after mapping comes view"; <strong>Mackinlay</strong> tells you "how the mapping step decides automatically"; <strong>van Wijk</strong> tells you "after view you still feed user actions back".</p>
+          <p><strong>Core teaching point:</strong> the three models <strong>stack rather than conflict</strong>. <strong>Card</strong> states "after transform comes mapping, after mapping comes view"; <strong>Mackinlay</strong> states "how the mapping step decides automatically"; <strong>van Wijk</strong> states "after view, user actions are still fed back".</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
@@ -190,7 +190,7 @@ svg.append(<span class="str">"line"</span>)
    .attr(<span class="str">"marker-end"</span>, <span class="str">"url(#arrowhead)"</span>)
    .attr(<span class="str">"x1"</span>, x1).attr(<span class="str">"y1"</span>, y).attr(<span class="str">"x2"</span>, x2).attr(<span class="str">"y2"</span>, y);</code></pre>
               <div class="key-point">
-                <p><code>marker-end="url(#arrowhead)"</code> is SVG's <strong>reference</strong> mechanism — a URL reuses a shape defined in <code>&lt;defs&gt;</code> at the end of a line. <code>refX</code> sets the arrow tip's offset relative to the line's endpoint, and <code>orient="auto"</code> makes the arrow rotate automatically. <strong>A single marker can serve all lines</strong>; you don't have to draw a separate triangle for each arrow.</p>
+                <p><code>marker-end="url(#arrowhead)"</code> is SVG's <strong>reference</strong> mechanism — a URL reuses a shape defined in <code>&lt;defs&gt;</code> at the end of a line. <code>refX</code> sets the arrow tip's offset relative to the line's endpoint, and <code>orient="auto"</code> makes the arrow rotate automatically. <strong>A single marker can serve all lines</strong>; no separate triangle is needed for each arrow.</p>
               </div>
             </div>
           </details>
@@ -202,7 +202,7 @@ svg.append(<span class="str">"line"</span>)
 svg.selectAll(<span class="str">".node"</span>)
    .classed(<span class="str">"selected"</span>, n =&gt; n.id === d.id);   <span class="cmt">// takes a boolean function</span></code></pre>
               <div class="key-point">
-                <p><code>classed(name, predicate)</code> takes a <strong>boolean function</strong> and toggles the class of every node at once, far more concise than writing your own <code>forEach</code> + <code>classList.toggle</code>. It only <strong>changes the class</strong>; the actual appearance (highlight, stroke) is left to CSS — a textbook example of D3 separating "state" from "style".</p>
+                <p><code>classed(name, predicate)</code> takes a <strong>boolean function</strong> and toggles the class of every node at once, far more concise than a hand-written <code>forEach</code> + <code>classList.toggle</code>. It only <strong>changes the class</strong>; the actual appearance (highlight, stroke) is left to CSS — a textbook example of D3 separating "state" from "style".</p>
               </div>
             </div>
           </details>
@@ -296,14 +296,14 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
         <h2>2.2 Data Transformation: Raw Data → Data Tables</h2>
         <p class="chapter-subtitle">Upgrading "group by class" to "group by a combination of dimensions" — this is the pipeline's first arrow, and visualization's "first mile".</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>Following the pipeline from the previous section, this section's <strong>2.2</strong> deals with exactly the first arrow, "<strong>raw data → data tables</strong>", i.e. <strong>data transformation</strong>.</p>
         <p>The original case uses the freshman data to do <strong>rollup bucket aggregation</strong> by "class / major", centered on chaining calls to <code>d3.rollup</code> — one function completes multi-dimensional grouping. This lesson turns it into a <strong>step-by-step folding animation</strong>: 80 detail rows → group and count by class → nested aggregation by gender.</p>
 
         <span class="sec-label"><i>2</i> Embedded theory</span>
         <div class="theory-card">
           <h4>The four data-transformation operations (Card 1999 · D layer)</h4>
-          <p>Going from "raw data" to "data tables", the D layer performs four kinds of operations. The original 2.2 only covered "bucket aggregation"; here we place it in the full framework — you'll see aggregation is just one row.</p>
+          <p>Going from "raw data" to "data tables", the D layer performs four kinds of operations. The original 2.2 only covered "bucket aggregation"; here it is placed in the full framework — aggregation turns out to be just one row.</p>
           <table class="theory-table">
             <thead><tr><th>Operation</th><th>What it does</th><th>D3 implementation</th></tr></thead>
             <tbody>
@@ -313,7 +313,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
               <tr><td><b>Derive / Produce</b></td><td>Compute a new column from an existing one (cut the "major" out of "class")</td><td>compute a new field in the row callback</td></tr>
             </tbody>
           </table>
-          <p><strong>The rollup aggregation demoed in this section is the "aggregate" row.</strong> Once you understand this table, you'll see that data transformation is the whole pipeline's "first mile" — if the data table isn't tidy, the mapping and rendering that follow are wasted.</p>
+          <p><strong>The rollup aggregation demoed in this section is the "aggregate" row.</strong> Once this table is understood, data transformation shows itself as the whole pipeline's "first mile" — if the data table isn't tidy, the mapping and rendering that follow are wasted.</p>
         </div>
         <div class="theory-card">
           <h4>d3.rollup = a functional composition of "bucket by key, then reduce once"</h4>
@@ -400,7 +400,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
   students,
   v =&gt; v.length,          <span class="cmt">// reduce each group to one value (count the people)</span>
   d =&gt; d.class,           <span class="cmt">// outer key</span>
-  d =&gt; d.gender           <span class="cmt">// inner key (a rest parameter; you can add more)</span>
+  d =&gt; d.gender           <span class="cmt">// inner key (a rest parameter; more can be added)</span>
 );
 
 <span class="cmt">// iterate the nested Map:</span>
@@ -444,7 +444,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
 <span class="cmt">// rollup: grouping that AGGREGATES — each key holds a single reduced value</span>
 <span class="kw">const</span> countByClass = d3.rollup(students, v =&gt; v.length, d =&gt; d.class);</code></pre>
               <div class="key-point">
-                <p>Remember it in one line: <strong>group keeps the group, rollup aggregates the group</strong>. If you need both "the count" and "the roster" (to drill down later), use <code>group</code>; if you only need the summary numbers, <code>rollup</code> is more compact. The folding animation demoed in this section uses <code>rollup</code> for both levels.</p>
+                <p>Remember it in one line: <strong>group keeps the group, rollup aggregates the group</strong>. If both "the count" and "the roster" are needed (to drill down later), use <code>group</code>; if only the summary numbers are needed, <code>rollup</code> is more compact. The folding animation demoed in this section uses <code>rollup</code> for both levels.</p>
               </div>
             </div>
           </details>
@@ -452,7 +452,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
 
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
-          <p class="demo-hint">Click "Next" to watch the 80 detail rows fold layer by layer into a nested Map; you can also go "Previous" or "Replay". The left panel prints the <code>d3.rollup</code> output in sync.</p>
+          <p class="demo-hint">Click "Next" to watch the 80 detail rows fold layer by layer into a nested Map; "Previous" and "Replay" are also available. The left panel prints the <code>d3.rollup</code> output in sync.</p>
           <div class="demo-mount" data-demo="d-2-2"></div>
         </div>
 
@@ -503,7 +503,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
         <h2>2.3 Visual Mapping: Data Tables → Visual Structure</h2>
         <p class="chapter-subtitle">Once we have hierarchical data, how do we place the nodes on screen without collisions? — the Reingold–Tilford algorithm, essentially a visual mapping along the "position" channel.</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>Following the previous section, we now have "data tables". This section's <strong>2.3</strong> is the second arrow, "<strong>data tables → visual structure</strong>", i.e. <strong>visual mapping</strong>. It answers one core question: <em>which visual channel should express each attribute in the data?</em></p>
         <p>The original case mentioned "tree-structure visualization". This lesson unfolds the <strong>tree-layout algorithm</strong> — group by "class / gender" to get a hierarchical tree, then place it firmly on screen.</p>
 
@@ -670,7 +670,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden><code>d3.tree</code> outputs <code>x</code> as the <strong>depth direction</strong> (vertical by default) and <code>y</code> as the <strong>horizontal direction</strong> (different nodes at the same depth). To make a horizontal tree, you must give the horizontal direction to x and the depth direction to y — hence <code>x = d.y, y = d.x</code> inside <code>linkHorizontal</code>. Without this swap, the lines connect parents and children in the wrong direction.</p>
+          <p class="selftest__why" hidden><code>d3.tree</code> outputs <code>x</code> as the <strong>depth direction</strong> (vertical by default) and <code>y</code> as the <strong>horizontal direction</strong> (different nodes at the same depth). To make a horizontal tree, the horizontal direction must go to x and the depth direction to y — hence <code>x = d.y, y = d.x</code> inside <code>linkHorizontal</code>. Without this swap, the lines connect parents and children in the wrong direction.</p>
         </div>
 
         <div class="selftest" data-selftest data-answer="d">
@@ -695,7 +695,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
         <h2>2.4 View Rendering and User Interaction</h2>
         <p class="chapter-subtitle">Turning the tree into a collapsible HTML list — tripping over click, bubbling, and delegation along the way, then adding the "time dimension" with animation.</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>Following the previous section, we have "visual structure". This section's <strong>2.4</strong> covers the last two arrows: "<strong>visual structure → views</strong>" (rendering) and "<strong>view ↔ user</strong>" (interactive feedback). The V layer of the Card model plus van Wijk's feedback loop both land here.</p>
         <p>The original document used <code>classed</code> to control node styles and <code>stopPropagation</code> to block bubbling, focusing on turning the D3 tree-layout output into an <strong>interactive HTML list</strong>. This lesson turns "event bubbling" into a clickable, watchable tracing animation.</p>
 
@@ -708,7 +708,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
             <li><strong>Target:</strong> the target element itself</li>
             <li><strong>Bubbling:</strong> target element → … → document → window (inside out)</li>
           </ol>
-          <p>By default, listeners fire in the <strong>bubbling phase</strong>. You can call <code>e.stopPropagation()</code> inside a listener to cut off bubbling so ancestors' listeners no longer fire.</p>
+          <p>By default, listeners fire in the <strong>bubbling phase</strong>. Calling <code>e.stopPropagation()</code> inside a listener cuts off bubbling so ancestors' listeners no longer fire.</p>
         </div>
         <div class="theory-card">
           <h4>Event delegation</h4>
@@ -720,7 +720,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
           <h4>Animation: the "time dimension" of view rendering</h4>
           <p>Animation (transition) isn't "flashy"; it's view rendering unfolding along the <em>time dimension</em>. D3 uses <code>.transition().duration(ms)</code> to <strong>smoothly interpolate</strong> attributes from old values to new ones. The teaching value centers on the single <code>duration</code> parameter:</p>
           <ul>
-            <li><code>duration = 0</code>: an instant jump; you can't see the "process of change";</li>
+            <li><code>duration = 0</code>: an instant jump; the "process of change" is invisible;</li>
             <li><code>duration = 500</code>: a 0.5-second transition that clearly shows expanding / collapsing / moving smoothly;</li>
             <li><code>duration &gt; 1500</code>: too slow; students start to zone out.</li>
           </ul>
@@ -750,7 +750,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
             <text x="320" y="111" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">ul　★ delegated listener here</text>
 
             <rect x="238" y="126" width="164" height="26" rx="7" style="fill: var(--c-surface-2); stroke: var(--c-border-2);"/>
-            <text x="320" y="143" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">li　(you can stopPropagation here)</text>
+            <text x="320" y="143" text-anchor="middle" style="fill: var(--c-text-soft); font-size: 11.5px;">li　(stopPropagation can be called here)</text>
 
             <rect x="238" y="158" width="164" height="26" rx="7" style="fill: color-mix(in srgb, var(--c-accent-2) 24%, transparent); stroke: color-mix(in srgb, var(--c-accent) 60%, transparent);"/>
             <text x="320" y="175" text-anchor="middle" style="fill: var(--c-text); font-size: 11.5px; font-weight: 700;">span ← target (e.target)</text>
@@ -840,7 +840,7 @@ ng.attr(<span class="str">"opacity"</span>, <span class="num">0</span>)
             <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="a"><span>Clicks respond faster because the listener is on the parent, closer to the screen center</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="b"><span>Only 1 listener is needed, and new elements work automatically without rebinding</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="c"><span>It automatically stops events from bubbling to document</span></label></li>
-            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="d"><span>You can tell which row was clicked without <code>e.target</code></span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-2-4" value="d"><span>Which row was clicked can be told without <code>e.target</code></span></label></li>
           </ul>
           <div class="selftest__actions">
             <button type="button" class="selftest__btn">Submit answer</button>

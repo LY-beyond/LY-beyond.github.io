@@ -96,8 +96,8 @@
         <h2>5.1 Temporal attributes</h2>
         <p class="chapter-subtitle">Before drawing a time-series chart, answer one question: is the "time" I have an instant, an interval, or a cycle?</p>
 
-        <span class="sec-label"><i>1</i> Your original example</span>
-        <p>The original Section 6.1 listed temporal attributes in a "glossary table", yet after reading it you still wouldn't know how to use them. This section puts them on a <strong>circular wheel</strong>: click an attribute and its definition, a real-life example, and its most typical visualization appear right next to it.</p>
+        <span class="sec-label"><i>1</i> Original example</span>
+        <p>The original Section 6.1 listed temporal attributes in a "glossary table", yet after reading it, how to use them would still be unclear. This section puts them on a <strong>circular wheel</strong>: click an attribute and its definition, a real-life example, and its most typical visualization appear right next to it.</p>
         <p>The wheel holds five attributes that map directly onto axes: <strong>instant</strong>, <strong>interval</strong>, <strong>span</strong>, <strong>frequency</strong>, and <strong>cycle</strong>. They are not five mutually exclusive data types, but five angles from which "the same time column" can be questioned — a phone-number table asks about instants, a heart-rate curve asks about intervals, and a monthly sales report asks about cycles.</p>
 
         <span class="sec-label"><i>2</i> Theory</span>
@@ -145,7 +145,7 @@
             <path d="M486 234 l-9 -3 l3 9" style="stroke: var(--c-success); stroke-width: 2; fill: none;" stroke-linecap="round"/>
             <text x="500" y="252" style="fill: var(--c-text-soft); font-size: 11.5px;">a repeating segment that returns to its start</text>
           </svg>
-          <figcaption>The same "time" can be questioned as five different quantities — which one you pick decides whether you draw a point, a bracket, a band, evenly spaced ticks, or a circle.</figcaption>
+          <figcaption>The same "time" can be questioned as five different quantities — which one is picked decides whether to draw a point, a bracket, a band, evenly spaced ticks, or a circle.</figcaption>
         </figure>
 
         <div class="callout callout--warn">
@@ -176,7 +176,7 @@ const TIME_ATTRIBUTES = [
     viz:   <span class="str">'Spiral chart, calendar heatmap, polar chart'</span> },
 ];</code></pre>
               <div class="key-point">
-                <p><strong>Why an array of objects:</strong> the wheel, the detail panel, and the legend all need to read the same set of attributes. Written as one data source, changing one place updates the whole thing, so you never "change the card but forget the legend". <strong>By the way:</strong> colors are <em>not hard-coded</em> as literal values but recorded as design-token names (<code>'--c-primary'</code>), read at runtime via <code>getComputedStyle</code> — so dark mode follows automatically.</p>
+                <p><strong>Why an array of objects:</strong> the wheel, the detail panel, and the legend all need to read the same set of attributes. Written as one data source, changing one place updates the whole thing, so "changing the card but forgetting the legend" never happens. <strong>By the way:</strong> colors are <em>not hard-coded</em> as literal values but recorded as design-token names (<code>'--c-primary'</code>), read at runtime via <code>getComputedStyle</code> — so dark mode follows automatically.</p>
               </div>
             </div>
           </details>
@@ -256,12 +256,12 @@ const nodeAt = (i) =&gt; {
         <h2>5.2 Standard time visualization (line charts)</h2>
         <p class="chapter-subtitle">x axis = time, y axis = measure. The most common time-series chart — and the one whose conclusions are most easily swayed by "aggregation scale".</p>
 
-        <span class="sec-label"><i>1</i> Your original example</span>
+        <span class="sec-label"><i>1</i> Original example</span>
         <p>The original Section 6.2.1 used a line chart to show how the usage frequency of French names (Marie / Jean / Camille) changed from 1900 to 2020. The original page also had a "word cloud + hover highlight + time-range filter", but the code only showed the few key lines of the line chart.</p>
         <table class="theory-table">
           <caption>Three kinds of data → three scales of line: this section places the "same series" side by side under different aggregation scales</caption>
           <thead>
-            <tr><th>Aggregation scale</th><th>Points (2024 daily temps)</th><th>What you can see</th><th>What you lose</th></tr>
+            <tr><th>Aggregation scale</th><th>Points (2024 daily temps)</th><th>What is visible</th><th>What is lost</th></tr>
           </thead>
           <tbody>
             <tr><td>Raw daily data</td><td>366</td><td>Day-to-day jitter, extreme weather</td><td>Long-term trend (drowned in noise)</td></tr>
@@ -411,7 +411,7 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
         </div>
 
         <div class="demo-card">
-          <p class="demo-hint">Original demo · Smoothing Lab: one real time series (French names) — tune the window k and switch between moving average / median / EWMA live, and read out "how many years the peak lags, how much noise drops" — feel the granularity–noise–lag trade-off with your own hands.</p>
+          <p class="demo-hint">Original demo · Smoothing Lab: one real time series (French names) — tune the window k and switch between moving average / median / EWMA live, and read out "how many years the peak lags, how much noise drops" — feel the granularity–noise–lag trade-off hands-on.</p>
           <div class="demo-mount" data-demo="d-5-x"></div>
         </div>
 
@@ -466,9 +466,9 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
         <h2>5.3 Calendar heatmap (van Wijk)</h2>
         <p class="chapter-subtitle">Spread "a whole year" into a grid: x = week, y = weekday, color = value — seasonality surfaces at a glance.</p>
 
-        <span class="sec-label"><i>1</i> Your original example</span>
+        <span class="sec-label"><i>1</i> Original example</span>
         <p>The original Section 6.2.2 used a calendar heatmap to show Beijing's daily maximum temperature in 2024, with a red line separating each month. This section reuses the same data (<code>data/weather_2024.csv</code>, 366 days) and fully explains "why this layout is easier to read than a line chart".</p>
-        <p>A line chart answers "<strong>how it changes over time</strong>"; a calendar heatmap answers "<strong>how it changes with season / weekday</strong>". The same 366 days of data become 366 peaks and troughs in a line chart, yet in a calendar you can see at a glance: winter is all blue, summer is all red, plus a column rhythm repeating every 7 days.</p>
+        <p>A line chart answers "<strong>how it changes over time</strong>"; a calendar heatmap answers "<strong>how it changes with season / weekday</strong>". The same 366 days of data become 366 peaks and troughs in a line chart, yet a calendar shows at a glance: winter is all blue, summer is all red, plus a column rhythm repeating every 7 days.</p>
 
         <span class="sec-label"><i>2</i> Theory</span>
         <div class="theory-card">
@@ -602,7 +602,7 @@ g.selectAll(<span class="str">'line.mdiv'</span>)
   .attr(<span class="str">'y1'</span>, (d) =&gt; dayRow(d.date) * cellSize)
   .attr(<span class="str">'y2'</span>, (d) =&gt; dayRow(d.date) * cellSize + cellSize);</code></pre>
               <div class="key-point">
-                <p>With the intuitive "find the first day of each month" approach, you would have to handle 28 / 29 / 30 / 31-day differences and easily miss "column crossings". <strong>The "look back 7 days" approach uses only a single O(n) pass</strong>, naturally covering every month length and leap years — this is the ingenuity of van Wijk's algorithm.</p>
+                <p>With the intuitive "find the first day of each month" approach, 28 / 29 / 30 / 31-day differences would all need handling, and "column crossings" are easily missed. <strong>The "look back 7 days" approach uses only a single O(n) pass</strong>, naturally covering every month length and leap years — this is the ingenuity of van Wijk's algorithm.</p>
               </div>
             </div>
           </details>
@@ -636,7 +636,7 @@ g.selectAll(<span class="str">'line.mdiv'</span>)
             <button type="button" class="selftest__btn">Submit</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>Handing "is this a month crossing" to a comparison of two adjacent weeks sidesteps the question of "how many days each month has": regardless of 28 / 29 / 30 / 31 days, you only look 7 days ahead, completing it in one traversal. It neither computes temperatures nor decides colors — that is the job of the reducer and the colormap.</p>
+          <p class="selftest__why" hidden>Handing "is this a month crossing" to a comparison of two adjacent weeks sidesteps the question of "how many days each month has": regardless of 28 / 29 / 30 / 31 days, only a 7-day look-ahead is needed, completing it in one traversal. It neither computes temperatures nor decides colors — that is the job of the reducer and the colormap.</p>
         </div>
       </article>
 
@@ -645,11 +645,11 @@ g.selectAll(<span class="str">'line.mdiv'</span>)
         <h2>5.4 Cyclic time visualization (Archimedean spiral)</h2>
         <p class="chapter-subtitle">A line expresses trend, a circle expresses cycle; a spiral = a circle + continuous unwinding — coil a year into a spiral and periodicity is visible at a glance.</p>
 
-        <span class="sec-label"><i>1</i> Your original example</span>
+        <span class="sec-label"><i>1</i> Original example</span>
         <p>The original Section 6.2.3 used an Archimedean spiral (constant-speed spiral) to lay out dates: each loop represents 1 year / 1 month / 1 week, and each date maps to one ring segment on the spiral. This section continues with the 2024 daily temperatures and offers a three-way switch for "each loop = 1 year / 1 season / 1 month" — the same data, wound into different numbers of loops, reveals different levels of cycles.</p>
         <table class="theory-table">
           <thead>
-            <tr><th>Each loop represents</th><th>Loops (one year, 2024)</th><th>Cycles you can see</th></tr>
+            <tr><th>Each loop represents</th><th>Loops (one year, 2024)</th><th>Visible cycles</th></tr>
           </thead>
           <tbody>
             <tr><td>1 year</td><td>1 loop</td><td>A single seasonal cycle across the year</td></tr>
@@ -806,7 +806,7 @@ function segmentPath(t0, t1, r0, r1, halfWidth) {
         <h2>5.5 Storyline timeline (Jurassic Park)</h2>
         <p class="chapter-subtitle">Multiple "lifelines" laid side by side on a time axis: lines converging = encounter / conflict, lines diverging = separation — turning a narrative into a chart.</p>
 
-        <span class="sec-label"><i>1</i> Your original example</span>
+        <span class="sec-label"><i>1</i> Original example</span>
         <p>The original Section 6.2.4 built a Storyline timeline from Jurassic Park's five characters (Alan &amp; Kids / T-REX / Raptors / Malcolm / Dilophosaurus), with the event layer marking key conflicts as translucent red circles. This section reuses that narrative data (rewritten as an inline constant inside <code>lesson.js</code>) and adds "click a line to read its appearance interval and key nodes".</p>
 
         <span class="sec-label"><i>2</i> Theory</span>
@@ -859,7 +859,7 @@ function segmentPath(t0, t1, r0, r1, halfWidth) {
         </figure>
 
         <div class="callout callout--tip">
-          <p><strong>Why Catmull-Rom rather than monotoneX?</strong> monotoneX guarantees "no over-bending", but it draws lines <em>too straight</em> and loses the narrative's "river feel". Catmull-Rom's tension of 0.5 is an empirical value: softer than 0 (that sense of story) and steadier than 1.0 (no oscillation). Only when fitting scientific curves do you drop the tension to 0.2–0.3.</p>
+          <p><strong>Why Catmull-Rom rather than monotoneX?</strong> monotoneX guarantees "no over-bending", but it draws lines <em>too straight</em> and loses the narrative's "river feel". Catmull-Rom's tension of 0.5 is an empirical value: softer than 0 (that sense of story) and steadier than 1.0 (no oscillation). Only when fitting scientific curves is the tension dropped to 0.2–0.3.</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>

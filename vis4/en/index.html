@@ -41,6 +41,9 @@
         <a href="#tools">Study tools</a>
         <a href="#kg">Knowledge graph</a>
         <a href="#guide">Chart cheat sheet</a>
+        <a href="../topic-chart-guide/">Chart Guide</a>
+        <a href="../quiz.html">Chapter Quiz</a>
+        <a href="../practice.html">Practice Workbench</a>
         <a href="#about">About</a>
       </nav>
 
@@ -142,7 +145,7 @@
       <div class="sec-head">
         <span class="sec-head__eyebrow">LEARNING PATH</span>
         <h2>Learning path</h2>
-        <p>Walk these 5 steps in order and you will go from “getting data into the browser” all the way to “picking the right graphic for time data at different granularities”. Every step states <strong>what you can do after finishing it</strong> — click a node to jump straight into the chapter.</p>
+        <p>Walk these 5 steps in order to go from “getting data into the browser” all the way to “picking the right graphic for time data at different granularities”. Every step states <strong>what can be done after finishing it</strong> — click a node to jump straight into the chapter.</p>
       </div>
 
       <div class="progress-line" id="progress-line" hidden>
@@ -159,7 +162,7 @@
               <span class="path-step__title">Data</span>
               <span class="path-step__desc">Fit the real world into a single table</span>
               <span class="path-step__out">
-                <b>After it you can</b>
+                <b>After it, one can</b>
                 look at a column of data and tell whether it is a “name” or a “number”, and pick the right visual channels to encode it.
               </span>
             </span>
@@ -172,7 +175,7 @@
               <span class="path-step__title">The visualization pipeline</span>
               <span class="path-step__desc">From raw data to a chart on screen</span>
               <span class="path-step__out">
-                <b>After it you can</b>
+                <b>After it, one can</b>
                 explain what each stage of “raw data → data table → visual structure → view” actually does, and where a mistake can creep in.
               </span>
             </span>
@@ -185,7 +188,7 @@
               <span class="path-step__title">Color in depth</span>
               <span class="path-step__desc">Color is not decoration — it is a channel</span>
               <span class="path-step__out">
-                <b>After it you can</b>
+                <b>After it, one can</b>
                 pick a readable, color-blind-friendly palette that passes contrast checks for any chart.
               </span>
             </span>
@@ -198,7 +201,7 @@
               <span class="path-step__title">Low-dimensional visualization</span>
               <span class="path-step__desc">Every trick on a two-dimensional plane</span>
               <span class="path-step__out">
-                <b>After it you can</b>
+                <b>After it, one can</b>
                 encode two variables, one trend and several outliers in a single chart, and tell where reading error comes from.
               </span>
             </span>
@@ -211,7 +214,7 @@
               <span class="path-step__title">Temporal visualization</span>
               <span class="path-step__desc">Time is the most common dimension</span>
               <span class="path-step__out">
-                <b>After it you can</b>
+                <b>After it, one can</b>
                 choose calendar, spiral or storyline views for time data of different granularity (instant / interval / cycle / span).
               </span>
             </span>
@@ -225,7 +228,7 @@
       <div class="sec-head">
         <span class="sec-head__eyebrow">CHAPTERS</span>
         <h2>Chapters</h2>
-        <p>Every chapter is written for <strong>continuous reading</strong>: each section follows the fixed six-part flow “original case → theory → key code → runnable demo → summary → self-test”, with code folded in place and demos rendered in place as you read.</p>
+        <p>Every chapter is written for <strong>continuous reading</strong>: each section follows the fixed six-part flow “original case → theory → key code → runnable demo → summary → self-test”, with code folded in place and demos rendered in place as the reading progresses.</p>
       </div>
 
       <div class="cards">
@@ -423,7 +426,7 @@
       <div class="sec-head">
         <span class="sec-head__eyebrow">STUDY TOOLS</span>
         <h2>Study tools</h2>
-        <p>Four companion tools: see how the knowledge fits together, look up which chart to draw by task, quiz yourself anytime, and write some D3 code by hand. They share the same design tokens and bilingual mechanism.</p>
+        <p>Four companion tools: see how the knowledge fits together, look up which chart to draw by task, take a quiz anytime, and write some D3 code by hand. They share the same design tokens and bilingual mechanism.</p>
       </div>
 
       <div class="tools">
@@ -512,10 +515,10 @@
 
       <div class="cheat">
         <table>
-          <caption>Quick-reference matrix: look up charts by “what you want to express” (the full version — 20 rows, an interactive decision tree, right-vs-wrong comparisons and a 6-question quiz — lives in the Chart Selection Guide topic page)</caption>
+          <caption>Quick-reference matrix: look up charts by “what to express” (the full version — 20 rows, an interactive decision tree, right-vs-wrong comparisons and a 6-question quiz — lives in the Chart Selection Guide topic page)</caption>
           <thead>
             <tr>
-              <th scope="col">You want to show</th>
+              <th scope="col">To show</th>
               <th scope="col">Recommended chart</th>
               <th scope="col">Main visual channel</th>
               <th scope="col">Use with care / common mistakes</th>
@@ -532,7 +535,7 @@
               <td>See the distribution shape of one variable</td>
               <td><span class="chipicon" aria-hidden="true"><svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor"><rect x="2" y="11" width="4" height="7" rx="1"/><rect x="7" y="5" width="4" height="13" rx="1"/><rect x="12" y="13" width="4" height="5" rx="1"/><rect x="16" y="8" width="3" height="10" rx="1"/></svg></span><span class="cheat__rec">Histogram / density plot</span></td>
               <td>Length (binned counts)</td>
-              <td class="cheat__no">Bin width decides the shape — change the width and you change the story</td>
+              <td class="cheat__no">Bin width decides the shape — change the width and the story changes</td>
             </tr>
             <tr>
               <td>See the relationship between two variables</td>

@@ -23,7 +23,7 @@ window.KG_UI = {
   legend: 'Relation legend',
   filterTitle: 'Filter by category',
   filterAll: 'All',
-  hint: 'Press and hold a node to drag it freely (it stops where you release, and the position is remembered) · hover to highlight neighbors · scroll to zoom · drag empty space to pan · clicking a node does not navigate — use the side panel instead',
+  hint: 'Press and hold a node to drag it freely (it stops where released, and the position is remembered) · hover to highlight neighbors · scroll to zoom · drag empty space to pan · clicking a node does not navigate — use the side panel instead',
   listHead: 'Node list of the current view',
   listHint: 'The table view is easy to browse with a keyboard or a screen reader, and is the most efficient entry point on phones; clicking a node never navigates — all actions live in the side-panel buttons.',
   colNode: 'Node',

@@ -75,7 +75,7 @@ window.PRACTICE_CASE = {
    * the site's tokens.css — so the colors here are site-neutral, chart-demo
    * values (common picks from the Okabe–Ito and Blues scales), chosen purely so
    * the preview stays readable. When writing the exercises, just use sandbox
-   * variables such as var(--ch-1) instead of writing raw colors yourself.
+   * variables such as var(--ch-1) instead of writing raw colors by hand.
    * ----------------------------------------------------- */
   baseCss: `
 :root {
@@ -108,7 +108,7 @@ body {
   /* ---------------- Starting code of stage 1 ---------------- */
   startCode: {
     js: `// ===== D3 practice: new students by major, as a bar chart =====
-// The data is given; your job is to build the canvas and the scales.
+// The data is given; the task is to build the canvas and the scales.
 
 // Data: 2025 first-year headcounts for 5 majors of one college (note: not sorted here)
 const DATA = [
@@ -158,7 +158,7 @@ const PAD = { t: 32, r: 24, b: 48, l: 48 };
       hints: [
         'The canvas is a drawing board: after d3.select(\'#stage\').append(\'svg\'), use .attr() to set class, viewBox, width and height one by one.',
         'Division of labor between the two scales: scaleBand handles "categories" (major names in the domain, a pixel interval in the range); scaleLinear handles "values" (the domain runs from 0 to the max, and the range must be written [bottom edge, top edge] to flip vertically).',
-        'If you cannot get the max, use d3.max(DATA, d => d.count); a reversed range sends the bars into the sky — remember SVG’s y axis grows downward.',
+        'If the max will not come out, use d3.max(DATA, d => d.count); a reversed range sends the bars into the sky — remember SVG’s y axis grows downward.',
       ],
       syntax: [
         { code: "d3.select('#stage').append('svg')", note: 'Selects the container and inserts an SVG element, returning a reference to the selection' },
@@ -225,7 +225,7 @@ const y = d3.scaleLinear()
       hints: [
         'This is D3’s "data join": selectAll() reserves empty slots, .data() attaches the array, and .join() creates whatever is missing.',
         'Of the five attributes, height is the easiest to get wrong: writing y(d.count) directly makes "bars stretch to the top", because that is a coordinate, not a length — write y(0) - y(d.count).',
-        "You can also stash the datum on each bar: .attr('data-value', d => d.count) — handy to read back when you add interaction later.",
+        "The datum can also be stashed on each bar: .attr('data-value', d => d.count) — handy to read back when interaction is added later.",
       ],
       syntax: [
         { code: ".selectAll('rect.bar').data(DATA).join('rect')", note: 'Data join: enter creates / update reuses / exit removes, all in one stroke' },
@@ -317,10 +317,10 @@ bars.selectAll('rect.bar')
         { code: ".call(g => g.select('.domain').remove())", note: 'The .domain selector points at the axis line itself; removing it leaves only ticks' },
       ],
       checks: [
-        { type: 'noError', label: 'The code runs without errors', hint: 'If you see “g.call is not a function”, axisLeft was probably written as axisBottom, or the call is missing.' },
+        { type: 'noError', label: 'The code runs without errors', hint: 'If “g.call is not a function” shows up, axisLeft was probably written as axisBottom, or the call is missing.' },
         { type: 'exists', selector: 'svg g.axis-y', label: 'There is a value axis <g class="axis axis-y">', hint: "svg.append('g').attr('class', 'axis axis-y').call(d3.axisLeft(y).ticks(5))" },
         { type: 'attr', selector: 'svg g.axis-y', prop: 'class', mode: 'contains', value: 'axis', label: 'The axis group carries the axis class (easy to select later)', hint: ".attr('class', 'axis axis-y')" },
-        { type: 'count', selector: 'svg g.axis-y text', min: 3, label: 'At least 3 tick values on the y axis', hint: 'After .ticks(5) you should see 0, 5, 10 … and other numbers.' },
+        { type: 'count', selector: 'svg g.axis-y text', min: 3, label: 'At least 3 tick values on the y axis', hint: 'After .ticks(5), expect to see 0, 5, 10 … and other numbers.' },
         { type: 'count', selector: 'svg g.axis-y line', min: 3, label: 'The grid lines matching the ticks are drawn too', hint: '.tickSize(-(W - PAD.l - PAD.r))' },
         { type: 'style', selector: 'svg g.axis-y text', prop: 'fill', mode: 'set', label: 'Tick labels have a color (the default black also passes)', hint: ".selectAll('text').style('fill', 'var(--muted)')" },
       ],
@@ -404,7 +404,7 @@ bars.selectAll('rect.bar')
       ],
       hints: [
         'Text is a graphical element just like a rectangle, and binds to data in exactly the same way: selectAll → data → join.',
-        'You must compute the label coordinates yourself: horizontal = the bar’s left edge + half the bar width; vertical = a little above the bar top (smaller y is higher).',
+        'The label coordinates must be computed by hand: horizontal = the bar’s left edge + half the bar width; vertical = a little above the bar top (smaller y is higher).',
         'For the category axis use axisBottom(x); do not forget .attr(\'transform\', \'translate(0,\' + (H - PAD.b) + \')\') to move it onto the bottom baseline.',
       ],
       syntax: [
@@ -532,10 +532,10 @@ svg.append('g')
         { code: '.style(\'fill\', d => COLOR(d.count))', note: 'Maps each datum to a color string (it returns an rgb(...) string)' },
       ],
       checks: [
-        { type: 'noError', label: 'The code runs without errors', hint: 'If you see “COLOR is not a function”, check whether the scale was written as scaleOrdinal.' },
+        { type: 'noError', label: 'The code runs without errors', hint: 'If “COLOR is not a function” shows up, check whether the scale was written as scaleOrdinal.' },
         { type: 'count', selector: 'rect.bar', min: 5, label: 'There are still 5 bars', hint: 'Sorting does not change the count; if it drops, the join’s data source was clobbered.' },
         { type: 'order', selector: 'rect.bar', by: 'height', dir: 'desc', label: 'The bars are sorted from most to fewest students (tallest on the left)', hint: 'Sort the data first, then use the sorted array as x’s domain and as the join’s data.' },
-        { type: 'any', label: 'Color varies with the values (colormap or opacity both count)', hint: 'd3.scaleSequential(d3.interpolateBlues).domain([0, max]); if you skip the colormap, vary fill-opacity instead.', checks: [
+        { type: 'any', label: 'Color varies with the values (colormap or opacity both count)', hint: 'd3.scaleSequential(d3.interpolateBlues).domain([0, max]); if the colormap is skipped, vary fill-opacity instead.', checks: [
           { type: 'vary', selector: 'rect.bar', prop: 'fill', min: 3, label: 'The bars use at least 3 different fills', hint: 'Map the values to colors with a sequential colormap.' },
           { type: 'vary', selector: 'rect.bar', prop: 'fill-opacity', min: 2, label: 'The bars use at least 2 different fill opacities', hint: '.style(\'fill-opacity\', d => …) also encodes magnitude.' },
         ] },
@@ -645,8 +645,8 @@ svg.append('g')
         "Add an outline while the pointer is over a bar: .on('mouseover', function () { … })",
         'Remove it when the pointer leaves: .on(\'mouseout\', …)',
         "Give each bar a native tooltip: append('title').text(d => d.major + ': ' + d.count + ' students')",
-        "While you are at it, make the cursor a pointer: .style('cursor', 'pointer')",
-        '⚠️ When the callback needs this to select the current element, you must write function () {}, not an arrow function',
+        "While at it, make the cursor a pointer: .style('cursor', 'pointer')",
+        '⚠️ When the callback needs this to select the current element, write function () {}, not an arrow function',
       ],
       hints: [
         'D3 binds events with .on(eventName, callback); inside the callback, this is "the current element".',
@@ -661,7 +661,7 @@ svg.append('g')
       ],
       checks: [
         { type: 'noError', label: 'The code runs without errors', hint: 'If the error mentions this, replace the arrow function with function () {}.' },
-        { type: 'count', selector: 'rect.bar', min: 5, label: 'The bar count did not change when the interaction was added', hint: 'Changing styles and events never adds or removes bars; if the count changed, check whether you appended a second time.' },
+        { type: 'count', selector: 'rect.bar', min: 5, label: 'The bar count did not change when the interaction was added', hint: 'Changing styles and events never adds or removes bars; if the count changed, check whether the append ran a second time.' },
         { type: 'count', selector: 'rect.bar > title', min: 5, label: 'Every bar carries a native <title> tooltip', hint: "bars.selectAll('rect.bar').append('title').text(d => …)" },
         { type: 'text', selector: 'rect.bar > title', contains: ['students'], label: 'The tooltip states the headcount (e.g. “Data Science: 34 students”)', hint: ".text(d => d.major + ': ' + d.count + ' students')" },
         { type: 'style', selector: 'rect.bar', prop: 'cursor', mode: 'eq', value: 'pointer', label: 'The cursor turns into a pointer over the bars', hint: ".style('cursor', 'pointer')" },
@@ -795,7 +795,7 @@ bars.selectAll('rect.bar')
         { code: "svg.append('text').attr('text-anchor', 'end')", note: 'text-anchor=end means "the coordinate is the right end" of the text' },
       ],
       checks: [
-        { type: 'noError', label: 'The code runs without errors', hint: 'If you see “MEAN is not defined”, check that d3.mean runs before it is used.' },
+        { type: 'noError', label: 'The code runs without errors', hint: 'If “MEAN is not defined” shows up, check that d3.mean runs before it is used.' },
         { type: 'exists', selector: 'svg line.guide', label: 'There is a horizontal reference line <line class="guide">', hint: "svg.append('line').attr('class', 'guide')" },
         { type: 'attr', selector: 'line.guide', prop: 'y1', mode: 'min', min: 1, label: 'The reference line sits inside the plot area (y1 > 0)', hint: 'Take y1 and y2 both as y(MEAN); the value should land between 32 and 272.' },
         { type: 'attr', selector: 'line.guide', prop: 'x2', mode: 'min', min: 200, label: 'The reference line spans the whole plot area', hint: ".attr('x1', PAD.l).attr('x2', W - PAD.r)" },

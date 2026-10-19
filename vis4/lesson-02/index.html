@@ -95,7 +95,7 @@
         <h2>2.1 数据可视化流程（Card · Mackinlay · van Wijk）</h2>
         <p class="chapter-subtitle">三套经典模型描述同一件事的三个侧面：一条管道、一套自动决策、一个反馈环。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>本章从头到尾只用一份数据：<strong>中国石油大学（华东）2025 级新生名册 <code>newstudent.csv</code></strong>，含 <strong>80 条记录、8 列</strong>（序号 / 姓名 / 性别 / 生日 / 年龄 / 班级 / 籍贯 / 民族）。</p>
         <p>原站的 2.1 给出的是一张「<strong>3 个可视化流程模型</strong>」的概念图。本节课我们把它重画成一张可交互的<strong>数据流管道图</strong>：点击任意一段，就能看到它在三套模型里分别对应什么。</p>
 
@@ -169,7 +169,7 @@
         </figure>
 
         <div class="callout callout--tip">
-          <p><strong>核心教学要点：</strong>三个模型是<strong>叠加关系，不是冲突关系</strong>。<strong>Card</strong> 告诉你「transform 之后该 mapping，mapping 之后该 view」；<strong>Mackinlay</strong> 告诉你「mapping 这一步怎么自动决策」；<strong>van Wijk</strong> 告诉你「view 之后还要把用户操作 feed 回去」。</p>
+          <p><strong>核心教学要点：</strong>三个模型是<strong>叠加关系，不是冲突关系</strong>。<strong>Card</strong> 指明「transform 之后该 mapping，mapping 之后该 view」；<strong>Mackinlay</strong> 解决「mapping 这一步怎么自动决策」；<strong>van Wijk</strong> 补上「view 之后还要把用户操作 feed 回去」。</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
@@ -262,7 +262,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
         </div>
 
         <div class="callout callout--tip">
-          <p><strong>理论透视 · 图形语法（Grammar of Graphics）：</strong>图形不是逐笔「画」出来的，而是被一份<strong>规范</strong>描述出来的——数据 + 统计变换 + 标记（mark）+ 通道映射（encoding）+ 标尺，五件套缺一不可。Wilkinson 在 1999 年提出这套思想，Vega-Lite 把它简化成「encoding 即图表」：你只需声明「x 绑什么、y 怎么聚合、颜色给谁」，轴、图例、分组错位全部由渲染器从规范<strong>推导</strong>出来。本演示里改一个下拉框 = 改一条规范，图形随之整体重画——这正是声明式与命令式的分水岭：命令式改坐标，声明式改「描述」。同一份数据，换一组通道绑定就得到完全不同的图——图表的选择因此变成可推理的决策，而不是灵感。</p>
+          <p><strong>理论透视 · 图形语法（Grammar of Graphics）：</strong>图形不是逐笔「画」出来的，而是被一份<strong>规范</strong>描述出来的——数据 + 统计变换 + 标记（mark）+ 通道映射（encoding）+ 标尺，五件套缺一不可。Wilkinson 在 1999 年提出这套思想，Vega-Lite 把它简化成「encoding 即图表」：只需声明「x 绑什么、y 怎么聚合、颜色给谁」，轴、图例、分组错位全部由渲染器从规范<strong>推导</strong>出来。本演示里改一个下拉框 = 改一条规范，图形随之整体重画——这正是声明式与命令式的分水岭：命令式改坐标，声明式改「描述」。同一份数据，换一组通道绑定就得到完全不同的图——图表的选择因此变成可推理的决策，而不是灵感。</p>
         </div>
 
         <div class="takeaway">
@@ -296,14 +296,14 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
         <h2>2.2 数据变换：原数据 → 数据表</h2>
         <p class="chapter-subtitle">把「按班级分」升级成「按维度组合分」—— 这是管道的第一段箭头，也是可视化的「第一公里」。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>接上节的管道，本节的 <strong>2.2</strong> 处理的正是第一段箭头「<strong>原始数据 → 数据表</strong>」，也就是 <strong>数据变换（Data Transformation）</strong>。</p>
         <p>原案例用新生数据按「班级 / 专业」做 <strong>rollup 分桶聚合</strong>，核心是 <code>d3.rollup</code> 的链式调用 —— 一个函数完成多维度分组。本节课把它做成一段可单步的<strong>折叠动画</strong>：80 条明细 → 按班级分组计数 → 再按性别嵌套聚合。</p>
 
         <span class="sec-label"><i>2</i> 嵌入理论</span>
         <div class="theory-card">
           <h4>数据变换的四大操作（Card 1999 · D 层）</h4>
-          <p>从「原始数据」到「数据表」，D 层做四类操作。原文 2.2 只讲了「分桶聚合」，这里把它放进完整的框架里 —— 你会看到聚合只是其中一行。</p>
+          <p>从「原始数据」到「数据表」，D 层做四类操作。原文 2.2 只讲了「分桶聚合」，这里把它放进完整的框架里 —— 可以看到聚合只是其中一行。</p>
           <table class="theory-table">
             <thead><tr><th>操作</th><th>做什么</th><th>D3 实现</th></tr></thead>
             <tbody>
@@ -313,7 +313,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
               <tr><td><b>派生 / 衍生</b></td><td>由已有列算出新列（从「班级」切出「专业」）</td><td>row 回调里算一个新字段</td></tr>
             </tbody>
           </table>
-          <p><strong>本节演示的 rollup 聚合，属于「聚合」这一行。</strong>读懂这张表，你才知道数据变换是整个流水线的「第一公里」—— 数据表没整理好，后面的映射与渲染全都白搭。</p>
+          <p><strong>本节演示的 rollup 聚合，属于「聚合」这一行。</strong>读懂这张表，才知道数据变换是整个流水线的「第一公里」—— 数据表没整理好，后面的映射与渲染全都白搭。</p>
         </div>
         <div class="theory-card">
           <h4>d3.rollup = 「按 key 分桶、再 reduce 一次」的函数式组合</h4>
@@ -503,7 +503,7 @@ cell.set(xv + <span class="str">"|"</span> + cv, v);
         <h2>2.3 视觉映射：数据表 → 视觉结构</h2>
         <p class="chapter-subtitle">拿到层级数据后，怎么把节点摆到屏幕上不打架？—— Reingold–Tilford 算法，本质是一次「位置通道」的视觉映射。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>接上节，我们有了「数据表」。本节的 <strong>2.3</strong> 是第二段箭头「<strong>数据表 → 视觉结构</strong>」，也就是 <strong>视觉映射（Visual Mapping）</strong>。它回答一个核心问题：<em>数据里每个属性，该用哪个视觉通道来表达？</em></p>
         <p>原案例提到「树形结构可视化」。本节课展开<strong>树布局算法</strong>原理 —— 用「班级 / 性别」分组得到一棵层级树，然后把它稳稳地摆到屏幕上。</p>
 
@@ -695,7 +695,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
         <h2>2.4 视图渲染与用户交互</h2>
         <p class="chapter-subtitle">把树画成可折叠的 HTML 列表 —— 一路踩过点击、冒泡、委托三个坑，最后用动画补上「时间维」。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>接上节，我们有了「视觉结构」。本节 <strong>2.4</strong> 是最后两段箭头：「<strong>视觉结构 → 视图</strong>」（渲染）和「<strong>视图 ↔ 用户</strong>」（交互反馈）。Card 模型的 V 层，加上 van Wijk 的反馈环，都落在这里。</p>
         <p>原文档用了 <code>classed</code> 控制节点样式、用 <code>stopPropagation</code> 阻止冒泡，重点是把 D3 树布局的输出变成<strong>可交互的 HTML 列表</strong>。本节课把「事件冒泡」做成一段可点、可看的示踪动画。</p>
 
@@ -708,7 +708,7 @@ g.selectAll(<span class="str">".link"</span>).data(treeData.links()).join(<span 
             <li><strong>目标（target）：</strong>目标元素本身</li>
             <li><strong>冒泡（bubbling）：</strong>目标元素 → … → document → window（从内到外）</li>
           </ol>
-          <p>默认监听的是<strong>冒泡阶段</strong>。你可以在监听器里 <code>e.stopPropagation()</code> 截断冒泡，让上层的监听器不再触发。</p>
+          <p>默认监听的是<strong>冒泡阶段</strong>。可以在监听器里用 <code>e.stopPropagation()</code> 截断冒泡，让上层的监听器不再触发。</p>
         </div>
         <div class="theory-card">
           <h4>事件委托（Event Delegation）</h4>

@@ -22,9 +22,9 @@ const LESSONS = [
 
 const WORD = {
   zh: { cont: '继续学习', restart: '重头开始', read: '已读', unit: '小节', reset: '重置学习进度', confirm: '确定清空全部学习进度吗？此操作不可撤销。',
-    reviewBtn: '重练错题', profileEmpty: '还没有学习记录 —— 从第 1 章开始阅读，或去做一次章节测验，这里会长出你的专属画像。' },
+    reviewBtn: '重练错题', profileEmpty: '还没有学习记录 —— 从第 1 章开始阅读，或去做一次章节测验，这里会长出专属画像。' },
   en: { cont: 'Continue', restart: 'Start over', read: 'Read', unit: 'sections', reset: 'Reset progress', confirm: 'Clear all learning progress? This cannot be undone.',
-    reviewBtn: 'Redo wrong answers', profileEmpty: 'No study records yet — start with Chapter 1 or take a quiz, and your profile will grow here.' }
+    reviewBtn: 'Redo wrong answers', profileEmpty: 'No study records yet — start with Chapter 1 or take a quiz, and a personal profile will grow here.' }
 };
 
 const SITE_TOTAL = LESSONS.reduce((sum, l) => sum + l.total, 0);

@@ -96,7 +96,7 @@
         <h2>5.1 时间属性</h2>
         <p class="chapter-subtitle">动手画时序图之前，先回答一个问题：我手上这条「时间」，到底是时刻、间隔，还是周期？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 6.1 节把时间属性列成了一张「名词解释表」，读完还是不知道该怎么用。本节把它们搬上一个<strong>环形轮盘</strong>：点某个属性，旁边立刻显示它的定义、一个生活例子，以及它最典型的可视化方式。</p>
         <p>轮盘上放的是 5 个可以直接落到坐标轴上的属性：<strong>时刻（instant）</strong>、<strong>间隔（interval）</strong>、<strong>跨度（span）</strong>、<strong>频率（frequency）</strong>、<strong>周期（cycle）</strong>。它们不是互相排斥的 5 类数据，而是「同一列时间」可以被提问的 5 个角度 —— 电话号码表要问时刻，心率曲线要问间隔，销售额月报要问周期。</p>
 
@@ -145,7 +145,7 @@
             <path d="M486 234 l-9 -3 l3 9" style="stroke: var(--c-success); stroke-width: 2; fill: none;" stroke-linecap="round"/>
             <text x="500" y="252" style="fill: var(--c-text-soft); font-size: 11.5px;">回到起点、可循环重复的一段</text>
           </svg>
-          <figcaption>同一个「时间」可以被问成 5 个不同的量 —— 用哪一个，决定了你该画点、画括号、画带、画等距刻度，还是画圈。</figcaption>
+          <figcaption>同一个「时间」可以被问成 5 个不同的量 —— 用哪一个，决定了该画点、画括号、画带、画等距刻度，还是画圈。</figcaption>
         </figure>
 
         <div class="callout callout--warn">
@@ -256,7 +256,7 @@ const nodeAt = (i) =&gt; {
         <h2>5.2 标准时间可视化（折线图）</h2>
         <p class="chapter-subtitle">x 轴 = 时间，y 轴 = 度量。最常见的时序图，也是最能被「聚合尺度」左右结论的一张图。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 6.2.1 节用折线图展示法国人名（Marie / Jean / Camille）在 1900–2020 年的使用频率变化。原始页面还配了「词云 + 鼠标高亮 + 时间段筛选」，但代码只给出了关键折线那几行。</p>
         <table class="theory-table">
           <caption>三类数据 → 三种尺度的折线：本节把「同一份序列」放到不同聚合尺度下并排对照</caption>
@@ -466,7 +466,7 @@ svg.append(<span class="str">'rect'</span>)                                  <sp
         <h2>5.3 日历热图（van Wijk）</h2>
         <p class="chapter-subtitle">把「一整年」摊成一张网格：x = 周、y = 星期、颜色 = 数值 —— 季节性一下就浮出来了。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 6.2.2 节用日历热图展示 2024 年北京每日最高温度，每月之间用一条红线分隔。本节沿用同一份数据（<code>data/weather_2024.csv</code>，366 天），并把「为什么这样排比折线更易读」讲透。</p>
         <p>折线图回答的是「<strong>随时间变化</strong>」；日历热图回答的是「<strong>随季节 / 星期变化</strong>」。同一份 366 天的数据，在折线图里是 366 个此起彼伏的锯齿，在日历里却能一眼看出：冬季整片偏蓝、夏季整片偏红，以及每 7 天重复一次的列节律。</p>
 
@@ -645,7 +645,7 @@ g.selectAll(<span class="str">'line.mdiv'</span>)
         <h2>5.4 周期时间可视化（阿基米德螺旋）</h2>
         <p class="chapter-subtitle">直线表达趋势，圆圈表达周期，螺旋 = 圆 + 持续展开 —— 把一年卷成螺旋，周期性一眼可见。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 6.2.3 节用阿基米德螺旋（等速螺旋）布局日期：每个回路代表 1 年 / 1 月 / 1 周，每个日期对应螺旋上的一个扇环。本节继续用 2024 日气温，并提供「每圈 = 1 年 / 1 季 / 1 月」三档切换 —— 同一份数据，卷的圈数不同，能看出的周期层级也不同。</p>
         <table class="theory-table">
           <thead>
@@ -806,7 +806,7 @@ function segmentPath(t0, t1, r0, r1, halfWidth) {
         <h2>5.5 Storyline 时间线（侏罗纪公园）</h2>
         <p class="chapter-subtitle">多条「生命线」并排铺在时间轴上：线靠近 = 相遇 / 冲突，线分开 = 分离 —— 把叙事画成一张图。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 6.2.4 节用《侏罗纪公园》的 5 个角色（Alan &amp; Kids / T-REX / Raptors / Malcolm / Dilophosaurus）做 Storyline 时间线，事件层用红色半透明圆圈标注关键冲突。本节沿用这份叙事数据（改写成 <code>lesson.js</code> 内的中文注释常量），并把「点击一条线就能读它的出场区间与关键节点」补上。</p>
 
         <span class="sec-label"><i>2</i> 嵌入理论</span>

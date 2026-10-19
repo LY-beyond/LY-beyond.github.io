@@ -228,7 +228,7 @@ DEMOS['d-1-1'] = async (mount) => {
       tableEl.innerHTML = '';
       say('✗ Load failed: ' + (err && err.message || err));
       say('');
-      say('Hint: when you open the page directly via file://, the browser blocks fetch with a CORS error.');
+      say('Hint: when the page is opened directly via file://, the browser blocks fetch with a CORS error.');
       say('     Open it through a local static server (for example python -m http.server) and try again.');
     }
   }
@@ -252,7 +252,7 @@ DEMOS['d-1-2'] = (mount) => {
       desc: 'Refining information further into patterns, regularities and relationships.',
       asks: 'How',
       viz: 'Statistical models, machine-learning predictions',
-      edge: '⚠️ Needs statistical models; graphics alone rarely get you there' },
+      edge: '⚠️ Needs statistical models; graphics alone rarely suffice' },
     { cn: '信息', en: 'Information', token: 'var(--ch-3)', topW: 142, h: 88, yTop: 154,
       desc: 'Data that has been processed, organized and given context.',
       asks: 'Who / what / when / where',
@@ -392,7 +392,7 @@ DEMOS['d-1-3'] = (mount) => {
       </svg>
     </div>
 
-    <p class="demo-note">Conclusion: for the same dataset, <strong>choosing the right channel</strong> lets you read differences and order; choosing the wrong one leaves only "a riot of colors". That is the practical meaning of the Stevens × Mackinlay matching matrix.</p>
+    <p class="demo-note">Conclusion: for the same dataset, <strong>choosing the right channel</strong> makes differences and order readable; choosing the wrong one leaves only "a riot of colors". That is the practical meaning of the Stevens × Mackinlay matching matrix.</p>
   `;
 };
 
@@ -460,7 +460,7 @@ DEMOS['d-1-4'] = (mount) => {
     </svg>
 
     <div class="console" data-role="log"></div>
-    <p class="demo-note"><strong>Key point:</strong> every function returns a <em>new</em> array; the input array itself stays unchanged — so you can safely chain one layer after another (that is what "data-flow pipe" means).</p>
+    <p class="demo-note"><strong>Key point:</strong> every function returns a <em>new</em> array; the input array itself stays unchanged — so chaining one layer after another is safe (that is what "data-flow pipe" means).</p>
   `;
 
   const sel = mount.querySelector('[data-role="sel"]');

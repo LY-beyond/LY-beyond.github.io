@@ -96,7 +96,7 @@
         <h2>4.1 数据转换</h2>
         <p class="chapter-subtitle">宽格式给人看，长格式给程序用 —— 一次 flatMap 完成转换。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>本章从头到尾只用一份数据：<strong>1985 年美国 50 州犯罪统计 crime.csv</strong>。它含 <strong>50 行 × 12 列</strong>，每行一个州、每列一个指标 —— 这是典型的<strong>宽格式</strong>。</p>
 
         <table class="theory-table">
@@ -174,7 +174,7 @@ const raw = <span class="kw">await</span> d3.csv(<span class="str">'./data/crime
 console.log(raw[<span class="num">0</span>].population);        <span class="cmt">// 3979000（Number，不是 "3979000"）</span>
 console.log(<span class="kw">typeof</span> raw[<span class="num">0</span>].state);      <span class="cmt">// "string"</span></code></pre>
               <div class="key-point">
-                <p><code>autoType</code> 内部就是遍历每一列，试探 <code>Number()</code> / <code>Date()</code> / 布尔字面量：能识别的就转，识别不了的<strong>保持字符串</strong>。所以它很省事、但也很保守 —— 像 <code>"1,234"</code> 这种带千分位的数字它<em>不会</em>帮你转，仍要自己清洗。</p>
+                <p><code>autoType</code> 内部就是遍历每一列，试探 <code>Number()</code> / <code>Date()</code> / 布尔字面量：能识别的就转，识别不了的<strong>保持字符串</strong>。所以它很省事、但也很保守 —— 像 <code>"1,234"</code> 这种带千分位的数字它<em>不会</em>自动转，仍要自己清洗。</p>
               </div>
             </div>
           </details>
@@ -276,13 +276,13 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
         <h2>4.2 坐标轴变换</h2>
         <p class="chapter-subtitle">数据空间 → 归一化空间 → 屏幕像素空间，三层职责分明，错了就乱套。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 5.1.2 节用散点图展示 crime.csv 的 <strong>谋杀（murder）vs 抢劫（robbery）</strong>。麻烦在于：谋杀数从 32（Vermont）到 3082（California），抢劫数从 489（Wyoming）到 254707（California）—— 如果直接把原始数值当像素用，画布根本装不下。</p>
 
         <table class="theory-table">
           <thead><tr><th>层</th><th>坐标含义</th><th>本例数值</th><th>谁负责</th></tr></thead>
           <tbody>
-            <tr><td><b>① 数据空间</b></td><td>原始数值（真实单位）</td><td>murder = 3082</td><td>你的数据</td></tr>
+            <tr><td><b>① 数据空间</b></td><td>原始数值（真实单位）</td><td>murder = 3082</td><td>数据本身</td></tr>
             <tr><td><b>② 归一化空间</b></td><td>压缩到 <code>0..innerW</code> 的标准化坐标</td><td>x' = 0.98</td><td><code>scaleLinear / scaleLog / scaleSqrt</code></td></tr>
             <tr><td><b>③ 屏幕像素空间</b></td><td>加上 margin 偏移后的最终像素位置</td><td>X = 48 + 0.98×560 ≈ 597 px</td><td>第二层 scale 或 <code>d3.axisBottom</code></td></tr>
           </tbody>
@@ -329,7 +329,7 @@ const yOfMurder = norm(raw.map(d =&gt; d.murder));</code></pre>
         </figure>
 
         <div class="callout callout--warn">
-          <p><strong>常见错位：</strong>把「数据域 → 像素域」写进<em>同一个</em> scale（<code>domain=[0, maxMurder]</code>、<code>range=[margin, margin+innerW]</code>）。当时看不出问题，直到你要改 margin、做响应式或叠加一条共享参考线 —— 才发现每个 scale 都得改两处。</p>
+          <p><strong>常见错位：</strong>把「数据域 → 像素域」写进<em>同一个</em> scale（<code>domain=[0, maxMurder]</code>、<code>range=[margin, margin+innerW]</code>）。当时看不出问题，直到需要改 margin、做响应式或叠加一条共享参考线 —— 才发现每个 scale 都得改两处。</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
@@ -410,7 +410,7 @@ const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).ran
         <h2>4.3 曲线拟合</h2>
         <p class="chapter-subtitle">同一组散点，换一种模型就是另一条趋势线 —— 靠什么判断哪种更贴合？</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 5.1.3 节用「折线 + 散点」展示 50 个州的趋势，代码里写的是 <code>curveCatmullRom</code>，但<strong>没讲为什么</strong> —— 结果就是曲线过拟合地把每个州的抖动都画了出来。</p>
 
         <span class="sec-label"><i>2</i> 嵌入理论</span>
@@ -448,7 +448,7 @@ const xSqrt = d3.scaleSqrt().domain([<span class="num">0</span>, maxMurder]).ran
               <circle cx="250" cy="32" r="4" style="fill: var(--c-ch-2);"/>
             </g>
 
-            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">左边保住了每个点的抖动，右边保住了整体上升 —— <tspan style="fill: var(--c-text); font-weight: 700;">两种都对，取决于你要回答什么问题</tspan></text>
+            <text x="320" y="170" text-anchor="middle" style="fill: var(--c-muted); font-size: 11.5px;">左边保住了每个点的抖动，右边保住了整体上升 —— <tspan style="fill: var(--c-text); font-weight: 700;">两种都对，取决于要回答什么问题</tspan></text>
           </svg>
           <figcaption>同一组数据、两种画法：插值把噪声也画了进去，拟合把趋势抽了出来</figcaption>
         </figure>
@@ -561,7 +561,7 @@ const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// �
         <h2>4.4 倾角感知（45° 黄金角）</h2>
         <p class="chapter-subtitle">人眼对斜率的估计<strong>不是</strong>线性的 —— 45° 是视觉上的「中点」。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 5.1.4 节提到「平均倾斜度最优为 45°」，但没有解释原因。而对 crime.csv 这种跨 50 倍的数据，画在<strong>线性轴</strong>上时，多数州挤成一团、趋势线的倾角接近水平（&lt; 20°），读者几乎读不出斜率。</p>
 
         <span class="sec-label"><i>2</i> 嵌入理论</span>
@@ -605,7 +605,7 @@ const r2 = <span class="num">1</span> - ssRes / ssTot;   <span class="cmt">// �
         </figure>
 
         <div class="callout callout--ok">
-          <p><strong>设计原则：</strong>① 关键数据的斜率落在 <strong>30°–60°</strong>；② 对比增长曲线时，用 <strong>log 轴</strong>把陡度拉回 45° 左右；③ 避免在 5° 以下或 85° 以上做趋势对比 —— 那里的感知误差足以让你得出错误结论。</p>
+          <p><strong>设计原则：</strong>① 关键数据的斜率落在 <strong>30°–60°</strong>；② 对比增长曲线时，用 <strong>log 轴</strong>把陡度拉回 45° 左右；③ 避免在 5° 以下或 85° 以上做趋势对比 —— 那里的感知误差足以让人得出错误结论。</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ 关键代码</span>
@@ -693,7 +693,7 @@ honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num"
         </div>
 
         <div class="callout callout--tip">
-          <p><strong>理论透视 · 条形图的隐含契约：</strong>条形长度<strong>从零起</strong>编码数量——这是读者与图形的无声约定，截断 y 轴等于撕毁契约：4% 的真实差距被画成 27% 的视觉悬崖。Cleveland & McGill 的感知实验为此给出理论依据：<strong>位置比较最准、长度次之、面积最差</strong>——截断轴把本该是「位置/长度」的比较悄悄降级成「面积」比较，而纵横比拉伸会进一步放大面积感（同一份数据，拉一拉高宽比就能讲出另一个故事）。夸大倍数 = 画面比例 ÷ 真实比例，本演示把它实时算给你看。防御性读图三问：<strong>y 轴从哪起？纵横比是多少？绝对差到底是多少？</strong>——三问问完，大多数谎言不攻自破。注意折线图不受此约束：它的契约是「位置」而非「长度」，适度截断反而合理。</p>
+          <p><strong>理论透视 · 条形图的隐含契约：</strong>条形长度<strong>从零起</strong>编码数量——这是读者与图形的无声约定，截断 y 轴等于撕毁契约：4% 的真实差距被画成 27% 的视觉悬崖。Cleveland & McGill 的感知实验为此给出理论依据：<strong>位置比较最准、长度次之、面积最差</strong>——截断轴把本该是「位置/长度」的比较悄悄降级成「面积」比较，而纵横比拉伸会进一步放大面积感（同一份数据，拉一拉高宽比就能讲出另一个故事）。夸大倍数 = 画面比例 ÷ 真实比例，本演示把它实时算出来。防御性读图三问：<strong>y 轴从哪起？纵横比是多少？绝对差到底是多少？</strong>——三问问完，大多数谎言不攻自破。注意折线图不受此约束：它的契约是「位置」而非「长度」，适度截断反而合理。</p>
         </div>
 
         <div class="takeaway">
@@ -727,7 +727,7 @@ honestEl.innerHTML = barSvg(A, Bv, <span class="num">0</span>, <span class="num"
         <h2>4.5 等值线（Marching Squares）</h2>
         <p class="chapter-subtitle">给定标量场 + 阈值，把「值 = 阈值」的那条曲线追踪出来。</p>
 
-        <span class="sec-label"><i>1</i> 你的原案例</span>
+        <span class="sec-label"><i>1</i> 原案例</span>
         <p>原 5.2.2 节用 Marching Squares 从 crime.csv 里提取等值线，但原始代码是<strong>一张截图占位</strong> —— 这节课我们把它补成真能跑的算法，并把每一步摊开来看。</p>
         <p>思路：先把 50 个州的两个指标（如谋杀、抢劫）当成 2D 平面上的散点，用核密度估计（KDE）铺出一张<strong>标量场</strong>，再对这个连续场取等值线 —— 等值线包围的就是「密度相仿」的区域。</p>
 

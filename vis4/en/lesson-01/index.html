@@ -50,7 +50,7 @@
         <h1>Chapter 1 · Data</h1>
         <p class="subtitle">First understand what data is, then decide which graphic expresses it — <b>Generation · Definition · Attributes · Transformation · Selectors</b></p>
       </div>
-      <div class="header-tip">Read as you go · Demos render in place · Self-tests scored instantly</div>
+      <div class="header-tip">Read along the way · Demos render in place · Self-tests scored instantly</div>
     </div>
 
     <div class="learn-goals">
@@ -58,7 +58,7 @@
       <ol>
         <li><label><input type="checkbox"><span>Explain the essence of data and place a concrete case in one layer of the DIKW pyramid</span></label></li>
         <li><label><input type="checkbox"><span>Given a column of data, judge which of Stevens' scales of measurement it belongs to</span></label></li>
-        <li><label><input type="checkbox"><span>Write in your own words the matching rules between Stevens' 4 scales and Mackinlay's visual channels, and state the consequences of a mismatch</span></label></li>
+        <li><label><input type="checkbox"><span>Restate the matching rules between Stevens' 4 scales and Mackinlay's visual channels, and state the consequences of a mismatch</span></label></li>
         <li><label><input type="checkbox"><span>Confidently call D3's 8 data-transformation functions and explain the difference between group and rollup</span></label></li>
         <li><label><input type="checkbox"><span>Explain clearly the three states of Data-Join — enter / update / exit — and why the key function is the soul of animation</span></label></li>
       </ol>
@@ -96,7 +96,7 @@
         <h2>1.1 Data Generation</h2>
         <p class="chapter-subtitle">The starting point of every visualization: first pack the "real world" into a table.</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>From start to finish this chapter uses a single dataset: the <strong>2025 freshman roster of China University of Petroleum (East China)</strong>. It was synthesized by the DeepSeek large model and contains <strong>80 records and 8 columns</strong>.</p>
 
         <table class="theory-table">
@@ -205,7 +205,7 @@ const data = <span class="kw">await</span> d3.csv(<span class="str">"data/newstu
 console.log(<span class="kw">typeof</span> data[<span class="num">0</span>].age);                <span class="cmt">// "number"</span>
 console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceof</span> Date); <span class="cmt">// true</span></code></pre>
               <div class="key-point">
-                <p><strong>Why this line matters:</strong> ① it is an async function, so you must <code>await</code> it; ② the row callback in the second argument is called <strong>right after each row is parsed</strong>, saving one full in-memory pass compared with "load first, then <code>.map()</code>"; ③ asynchronous loading does not block page rendering, so the user can keep interacting.</p>
+                <p><strong>Why this line matters:</strong> ① it is an async function, so <code>await</code> is required; ② the row callback in the second argument is called <strong>right after each row is parsed</strong>, saving one full in-memory pass compared with "load first, then <code>.map()</code>"; ③ asynchronous loading does not block page rendering, so the user can keep interacting.</p>
               </div>
             </div>
           </details>
@@ -271,7 +271,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
           <div class="selftest__head">Self-test · 1 question</div>
           <p class="selftest__q">Passing a row callback as the second argument of <code>d3.csv(url, transformRow)</code>, compared with "await first, then .map() to convert", has what main benefit?</p>
           <ul class="selftest__opts">
-            <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="a"><span>It does the type conversion for you automatically, so you don't need to write trim()</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="a"><span>It does the type conversion automatically, so there is no need to write trim()</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="b"><span>Each row is converted right after it is parsed, saving a full array pass and using less memory</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="c"><span>It makes loading synchronous, so the code order is easier to follow</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-1" value="d"><span>It can automatically rename the Chinese CSV columns to English</span></label></li>
@@ -280,7 +280,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>The row callback is invoked <strong>the moment each row is parsed</strong>, so there is no need to read the whole string array into memory and then traverse it again. <code>d3.csv</code> is still asynchronous (await is required), and it neither renames columns nor converts types — you must do both yourself inside the callback.</p>
+          <p class="selftest__why" hidden>The row callback is invoked <strong>the moment each row is parsed</strong>, so there is no need to read the whole string array into memory and then traverse it again. <code>d3.csv</code> is still asynchronous (await is required), and it neither renames columns nor converts types — both must be done inside the callback.</p>
         </div>
       </article>
 
@@ -289,7 +289,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
         <h2>1.2 Defining Data</h2>
         <p class="chapter-subtitle">The same "18" — is it three digits, a piece of information, or knowledge that can support a decision?</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <p>The DIKW pyramid divides "from observation to decision" into four layers, each answering a different question:</p>
         <table class="theory-table">
           <thead>
@@ -314,7 +314,7 @@ console.log(data[<span class="num">0</span>].birthday <span class="kw">instanceo
           <li>❌ <strong>Knowledge → Wisdom</strong>: decision-making and strategy are beyond the reach of visualization.</li>
         </ul>
         <div class="callout callout--tip">
-          <p><strong>Rowley's (2007) critique:</strong> DIKW is an oversimplified hierarchical model. But as a <strong>teaching scaffold</strong> it is still the most valuable — it forces you to first ask "is what I have in hand data or information?"</p>
+          <p><strong>Rowley's (2007) critique:</strong> DIKW is an oversimplified hierarchical model. But as a <strong>teaching scaffold</strong> it is still the most valuable — it forces one to first ask "is what I have in hand data or information?"</p>
         </div>
 
         <span class="sec-label sec-label-code"><i>3</i> ⭐ Key code</span>
@@ -339,7 +339,7 @@ const path = <span class="str">`
           </details>
 
           <details class="code-fold">
-            <summary><span class="code-fold__badge">②</span> Events: why you must use function instead of an arrow function</summary>
+            <summary><span class="code-fold__badge">②</span> Events: why function is required instead of an arrow function</summary>
             <div class="code-fold__body">
 <pre class="code-block"><code><span class="cmt">// ⚠️ function required: because the callback uses this to access the current element</span>
 svg.append(<span class="str">"g"</span>)
@@ -367,7 +367,7 @@ svg.append(<span class="str">"g"</span>)
           <ul>
             <li>The four DIKW layers answer four different questions: Data (no context) → Information (who/what/when/where) → Knowledge (how) → Wisdom (why).</li>
             <li>Visualization's main battlefield is <strong>Data → Information</strong>; going one layer higher relies on statistical models, not on "making the chart prettier".</li>
-            <li>Once <code>this</code> is used in a D3 event callback, you must write <code>function</code> and not an arrow function.</li>
+            <li>Once <code>this</code> is used in a D3 event callback, <code>function</code> is required, not an arrow function.</li>
           </ul>
         </div>
 
@@ -384,16 +384,16 @@ svg.append(<span class="str">"g"</span>)
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>Aggregating context-free discrete records into "the number of students per major" and giving them the context of "major" and "count" is exactly <strong>Data → Information</strong>. To rise further to Knowledge you must distill patterns from the information (e.g. "Data Science majors tend to be older"), which looking at a chart alone cannot do.</p>
+          <p class="selftest__why" hidden>Aggregating context-free discrete records into "the number of students per major" and giving them the context of "major" and "count" is exactly <strong>Data → Information</strong>. To rise further to Knowledge, patterns must be distilled from the information (e.g. "Data Science majors tend to be older"), which looking at a chart alone cannot do.</p>
         </div>
       </article>
 
       <!-- ============ 1.3 Data Attributes ============ -->
       <article class="chapter" id="ch-1-3">
         <h2>1.3 Data Attributes</h2>
-        <p class="chapter-subtitle">The "type" of data decides which visual channels you may use — the single most important rule in this chapter.</p>
+        <p class="chapter-subtitle">The "type" of data decides which visual channels may be used — the single most important rule in this chapter.</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <table class="theory-table">
           <thead><tr><th>Category</th><th>Example in this course</th><th>Notes</th></tr></thead>
           <tbody>
@@ -405,7 +405,7 @@ svg.append(<span class="str">"g"</span>)
 
         <span class="sec-label"><i>2</i> Embedded theory</span>
         <div class="theory-card">
-          <h4>Stevens' scales of measurement (1946): the 4 finer categories beyond your original text</h4>
+          <h4>Stevens' scales of measurement (1946): the 4 finer categories beyond the original text</h4>
           <table class="theory-table">
             <thead><tr><th>Scale</th><th>Allowed operations</th><th>Typical examples</th><th>Original category</th></tr></thead>
             <tbody>
@@ -517,7 +517,7 @@ const color = d3.scaleDiverging(d3.interpolateRdBu);</code></pre>
 
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
-          <p class="demo-hint">The first three are <em>correct</em> "attribute → channel" matches; the fourth is a deliberate mistake for contrast — compare them and you will see exactly what a "mismatch" throws away.</p>
+          <p class="demo-hint">The first three are <em>correct</em> "attribute → channel" matches; the fourth is a deliberate mistake for contrast — comparing them shows exactly what a "mismatch" throws away.</p>
           <div class="demo-mount" data-demo="d-1-3"></div>
         </div>
 
@@ -543,7 +543,7 @@ const color = d3.scaleDiverging(d3.interpolateRdBu);</code></pre>
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>A nominal scale has no order, so you can only use channels that express categorical difference — hue (qualitative) is the first choice. Using luminance would imply an order that does not exist; sorting by position would fabricate a false relation like "Software Engineering &gt; Data Science".</p>
+          <p class="selftest__why" hidden>A nominal scale has no order, so only channels that express categorical difference are usable — hue (qualitative) is the first choice. Using luminance would imply an order that does not exist; sorting by position would fabricate a false relation like "Software Engineering &gt; Data Science".</p>
         </div>
 
         <div class="selftest" data-selftest data-answer="b">
@@ -559,16 +559,16 @@ const color = d3.scaleDiverging(d3.interpolateRdBu);</code></pre>
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>An interval scale <strong>has no true zero</strong>, so you can compare differences (20°C is 10°C higher than 10°C) but cannot say "20°C is twice 10°C". Only ratio scales (such as age and price) have a true zero and thus allow multiplication and division.</p>
+          <p class="selftest__why" hidden>An interval scale <strong>has no true zero</strong>, so differences can be compared (20°C is 10°C higher than 10°C) but "20°C is twice 10°C" cannot be claimed. Only ratio scales (such as age and price) have a true zero and thus allow multiplication and division.</p>
         </div>
       </article>
 
       <!-- ============ 1.4 Data Transformation ============ -->
       <article class="chapter" id="ch-1-4">
         <h2>1.4 Data Transformation</h2>
-        <p class="chapter-subtitle">D3's 8 array functions: turning "raw data" into "data you can draw".</p>
+        <p class="chapter-subtitle">D3's 8 array functions: turning "raw data" into "data ready to draw".</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <table class="theory-table">
           <thead><tr><th>#</th><th>Function</th><th>Purpose</th><th>Analogy</th></tr></thead>
           <tbody>
@@ -679,14 +679,14 @@ const countByClass = d3.rollup(
 
         <span class="sec-label"><i>4</i> Runnable demo</span>
         <div class="demo-card">
-          <p class="demo-hint">Switch the dropdown to pick a function — the "data-flow pipe" above lights up the matching segment, and below you see the input and output.</p>
+          <p class="demo-hint">Switch the dropdown to pick a function — the "data-flow pipe" above lights up the matching segment, and below the input and output are shown.</p>
           <div class="demo-mount" data-demo="d-1-4"></div>
         </div>
 
         <div class="takeaway">
           <h4>Section summary</h4>
           <ul>
-            <li>D3's array functions are <strong>immutable + pure + chainable</strong>, so you can process data layer by layer like a pipe.</li>
+            <li>D3's array functions are <strong>immutable + pure + chainable</strong>, so data can be processed layer by layer like a pipe.</li>
             <li><code>map</code> reshapes, <code>filter</code> picks a subset, <code>reduce</code> reduces to a value; chaining the three gives the most common data-cleaning pipeline.</li>
             <li><code>group</code> keeps the elements of each group, <code>rollup</code> keeps only the aggregate — the former builds trees, the latter builds summaries.</li>
           </ul>
@@ -694,18 +694,18 @@ const countByClass = d3.rollup(
 
         <div class="selftest" data-selftest data-answer="c">
           <div class="selftest__head">Self-test · 1 question</div>
-          <p class="selftest__q">To count "how many people are in each class" while also keeping each class's student list for later drill-down, which should you use?</p>
+          <p class="selftest__q">To count "how many people are in each class" while also keeping each class's student list for later drill-down, which one should be used?</p>
           <ul class="selftest__opts">
             <li><label class="selftest__opt"><input type="radio" name="st-1-4" value="a"><span><code>d3.rollup</code>, because it returns the fewest entries</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-4" value="b"><span><code>d3.cross</code>, first making a Cartesian product of classes and students</span></label></li>
-            <li><label class="selftest__opt"><input type="radio" name="st-1-4" value="c"><span><code>d3.group</code>, which gives you each group's elements and lets you take each group's length</span></label></li>
+            <li><label class="selftest__opt"><input type="radio" name="st-1-4" value="c"><span><code>d3.group</code>, which keeps each group's elements so each group's length can be taken</span></label></li>
             <li><label class="selftest__opt"><input type="radio" name="st-1-4" value="d"><span><code>d3.transpose</code>, transposing classes and students</span></label></li>
           </ul>
           <div class="selftest__actions">
             <button type="button" class="selftest__btn">Submit answer</button>
             <span class="selftest__verdict"></span>
           </div>
-          <p class="selftest__why" hidden>Every key in the Map returned by <code>group</code> retains the <strong>full array of elements</strong>, so you can both count with <code>v.length</code> and keep reading the list. <code>rollup</code> discards the elements and keeps only the aggregate — more compact, but no longer drill-down-able.</p>
+          <p class="selftest__why" hidden>Every key in the Map returned by <code>group</code> retains the <strong>full array of elements</strong>, so counting with <code>v.length</code> and reading the list are both possible. <code>rollup</code> discards the elements and keeps only the aggregate — more compact, but no longer drill-down-able.</p>
         </div>
       </article>
 
@@ -714,7 +714,7 @@ const countByClass = d3.rollup(
         <h2>1.5 D3 Data Selectors</h2>
         <p class="chapter-subtitle">The core of D3 is not "drawing" but "binding data to the DOM and, when the data changes, working out what to add, change or remove".</p>
 
-        <span class="sec-label"><i>1</i> Your original case</span>
+        <span class="sec-label"><i>1</i> Original case</span>
         <table class="theory-table">
           <thead><tr><th>Method</th><th>Returns</th></tr></thead>
           <tbody>
@@ -786,7 +786,7 @@ const countByClass = d3.rollup(
     exit   =&gt; exit.remove()                                  <span class="cmt">// removed</span>
   );</code></pre>
               <div class="key-point">
-                <p><code>join</code>'s three callbacks are invoked in the enter / update / exit stages respectively, which is more concise than v3's <code>enter().append()</code> + <code>exit().remove()</code> and far less likely to miss a branch. <strong>Analogy:</strong> this is React's diff + patch — except React does it for you, while D3 makes you write the transformation functions yourself.</p>
+                <p><code>join</code>'s three callbacks are invoked in the enter / update / exit stages respectively, which is more concise than v3's <code>enter().append()</code> + <code>exit().remove()</code> and far less likely to miss a branch. <strong>Analogy:</strong> this is React's diff + patch — except React does it automatically, while D3 requires writing the transformation functions by hand.</p>
               </div>
             </div>
           </details>
