@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：成像测井裂缝智能识别</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">W3 · 测井 · 计算机视觉</div>
+    <h1>成像测井裂缝智能识别</h1>
+    <p class="lead">深色底是电成像展开图，横轴方位角 0—360°，纵轴井深。亮条纹是裂缝响应，倾斜裂缝在展开图上呈正弦。拖动倾角与密度，看正弦形态怎么变，自动检测线、倾角误差和人工一致率如何同步变化。</p>
+  </header>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">01</span>成像展开图与正弦裂缝</h2>
+      <span class="tag" id="depth-tag">3320—3325 m · 井径 0.20 m · 64 扇区</span>
+    </div>
+    <p class="hint">深度方向做了拉伸显示，便于观察正弦形态；右侧灰色区域为极板覆盖盲区。金色实线为成像裂缝响应，青色虚线为自动检测的拟合正弦。</p>
+    <svg id="img" viewBox="0 0 760 430" role="img" aria-label="成像测井展开图与裂缝检测"></svg>
+    <div class="legend">
+      <span><i class="lg-line gold"></i>裂缝响应（成像）</span>
+      <span><i class="lg-line jade"></i>自动检测拟合</span>
+      <span><i class="lg-box"></i>检测框</span>
+      <span><i class="lg-blind"></i>无覆盖盲区</span>
+      <span class="lg-note">方位角 0°—360°，井深 3320—3325 m</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">02</span>检测参数与读数</h2>
+      <span class="tag" id="cov-tag">井壁覆盖 85%</span>
+    </div>
+    <div class="ctls">
+      <div class="ctl">
+        <label>裂缝倾角 α <output id="o-dip">45°</output></label>
+        <input type="range" id="s-dip" min="0" max="90" step="1" value="45">
+        <span class="tip">0° = 水平缝，90° = 垂直缝；低角度与层理最难分</span>
+      </div>
+      <div class="ctl">
+        <label>裂缝线密度 <output id="o-den">2.5 条/m</output></label>
+        <input type="range" id="s-den" min="0.5" max="5" step="0.1" value="2.5">
+        <span class="tip">每米井段的裂缝条数，5 m 窗口约 13 条</span>
+      </div>
+      <div class="ctl">
+        <label>井壁覆盖率 <output id="o-cov">85%</output></label>
+        <input type="range" id="s-cov" min="55" max="100" step="1" value="85">
+        <span class="tip">极板贴壁比例；覆盖率越低，盲区越大、一致率越低</span>
+      </div>
+    </div>
+    <div class="readrow">
+      <div class="read"><span>检出裂缝</span><b id="r-num">—</b></div>
+      <div class="read"><span>倾角估计误差</span><b id="r-err">—</b></div>
+      <div class="read"><span>与人工解释一致率</span><b id="r-agr">—</b></div>
+      <div class="read"><span>有效覆盖</span><b id="r-cov">—</b></div>
+    </div>
+    <div class="verdict" id="verdict">—</div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">03</span>倾角估计误差随真实倾角的变化</h2>
+      <span class="tag" id="curve-tag">覆盖率 85%</span>
+    </div>
+    <p class="hint">近水平（&lt;10°）与近垂直（&gt;80°）裂缝的正弦振幅过小或过大，拟合误差显著上升；虚线为 4° 可用门槛。</p>
+    <svg id="curve" viewBox="0 0 760 200" role="img" aria-label="倾角估计误差曲线"></svg>
+  </section>
+
+  <p class="foot">示意展开图与检测结果由前端实时生成，用于说明参数关系，不代表任何单一成像仪器的实测精度。真实解释还需方位校正、井径归一、诱导缝剔除与岩心标定。</p>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+{
+  "id": "c2-cement-opt",
+  "sceneId": "c2",
+  "methods": [
+    "opt"
+  ],
+  "title": "注水泥参数智能优化：顶替效率与密度窗口",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "固井的核心动作是注水泥：把水泥浆泵入套管与井眼之间的环空，顶替出原来的钻井液，等待凝固后形成封隔。这个过程只有一次机会——固完就不能重来。水泥浆密度、排量、替浆量三个参数的组合，决定了顶替效率和施工安全性。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "物理模型 + 参数优化",
+          "desc": "顶替效率有成熟公式，优化器负责找最优组合"
+        },
+        {
+          "label": "标注成本",
+          "value": "低",
+          "desc": "历史施工记录可作标签，也可用仿真数据"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "一次注水泥失败损失数十万元"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "多目标约束，样本量有限"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>传统注水泥设计流程是：工程师查井况数据 → 用水力计算软件逐方案试算 → 选出一个\"可行\"方案。一套参数组合（密度 × 排量 × 替浆量）的三维空间里，人工只能试几个点，很容易错过真正的最优解。</p><p>现场常见问题：<b>漏失</b>——水泥浆密度过高，压裂地层，浆液漏走，水泥返高不够；<b>窜槽</b>——排量太低或密度差不够，水泥浆驱替不干净，留下钻井液通道；<b>替空</b>——替浆量算错，要么套管内留水泥塞，要么把水泥浆顶出环空。</p><div class='figure'><svg viewBox='0 0 720 270' width='100%' role='img' aria-label='孔隙压力与破裂压力之间的水泥浆密度窗口'><rect x='0' y='0' width='720' height='270' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>A · 地层压力梯度与水泥浆密度窗口</text><line x1='60' y1='40' x2='60' y2='230' stroke='var(--line)'/><line x1='60' y1='230' x2='660' y2='230' stroke='var(--line)'/><line x1='60' y1='135' x2='660' y2='135' stroke='var(--line)' stroke-dasharray='3 3' opacity='0.6'/><text x='52' y='44' font-size='9' fill='var(--ink-3)' text-anchor='end'>0 m</text><text x='52' y='139' font-size='9' fill='var(--ink-3)' text-anchor='end'>2500</text><text x='52' y='234' font-size='9' fill='var(--ink-3)' text-anchor='end'>5000</text><path d='M97 40 L266 40 L590 230 L355 230 Z' fill='var(--jade)' opacity='0.1'/><path d='M97 40 L355 230' fill='none' stroke='var(--ok)' stroke-width='1.8'/><path d='M266 40 L590 230' fill='none' stroke='var(--bad)' stroke-width='1.8'/><line x1='465' y1='50' x2='465' y2='228' stroke='var(--c-opt)' stroke-width='2.5'/><text x='105' y='70' font-size='9' fill='var(--ok)'>孔隙压力线（下限）</text><text x='300' y='70' font-size='9' fill='var(--bad)'>破裂压力线（上限）</text><text x='300' y='185' font-size='10' fill='var(--jade)'>密度窗口</text><text x='475' y='60' font-size='9' fill='var(--c-opt)'>设计密度 1.58</text><line x1='355' y1='218' x2='559' y2='218' stroke='var(--ink-3)' stroke-width='1'/><line x1='355' y1='214' x2='355' y2='222' stroke='var(--ink-3)'/><line x1='559' y1='214' x2='559' y2='222' stroke='var(--ink-3)'/><line x1='465' y1='214' x2='465' y2='222' stroke='var(--c-opt)'/><text x='457' y='212' font-size='9' fill='var(--ink-3)' text-anchor='middle'>窗口宽度</text><line x1='60' y1='230' x2='60' y2='235' stroke='var(--line)'/><line x1='207' y1='230' x2='207' y2='235' stroke='var(--line)'/><line x1='354' y1='230' x2='354' y2='235' stroke='var(--line)'/><line x1='501' y1='230' x2='501' y2='235' stroke='var(--line)'/><line x1='648' y1='230' x2='648' y2='235' stroke='var(--line)'/><text x='60' y='248' font-size='9' fill='var(--ink-3)' text-anchor='middle'>1.0</text><text x='207' y='248' font-size='9' fill='var(--ink-3)' text-anchor='middle'>1.2</text><text x='354' y='248' font-size='9' fill='var(--ink-3)' text-anchor='middle'>1.4</text><text x='501' y='248' font-size='9' fill='var(--ink-3)' text-anchor='middle'>1.6</text><text x='648' y='248' font-size='9' fill='var(--ink-3)' text-anchor='middle'>1.8</text><text x='360' y='266' font-size='9.5' fill='var(--ink-3)' text-anchor='middle'>当量密度 (g/cm³)</text><text x='28' y='135' font-size='9' fill='var(--ink-3)' text-anchor='middle' transform='rotate(-90 28 135)'>深度</text></svg><div class='figcap'><b>图 1</b><span>孔隙压力与破裂压力两条包络线之间即安全密度窗口；水泥浆当量密度须落在窗口内，并保留一定裕度</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>AI 的角色是<b>高效的方案搜索器</b>。核心公式（环空顶替效率、浆柱当量密度、摩阻压降）都是物理方程，AI 不替代它们，而是用<b>代理模型 + 多目标优化</b>在三维参数空间里快速找到\"既安全又高效\"的帕累托前沿。</p><p>优化目标通常是：① 密度在压力窗口内（不压裂、不气窜）；② 顶替效率最大化（界面混合段最小化）；③ 施工时间最短。约束条件包括：泵排量上限、套管抗内压强度、设备额定功率。AI 可以用高斯过程回归建立代理模型，再用贝叶斯优化逐点评估，几十个样本就能勾出有效前沿。</p><div class='figure'><svg viewBox='0 0 720 250' width='100%' role='img' aria-label='排量与顶替效率、泵压的关系'><rect x='0' y='0' width='720' height='250' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>B · 排量—顶替效率与泵压的折中</text><line x1='60' y1='40' x2='60' y2='195' stroke='var(--line)'/><line x1='60' y1='195' x2='660' y2='195' stroke='var(--line)'/><line x1='60' y1='79' x2='660' y2='79' stroke='var(--ink-3)' stroke-width='1' stroke-dasharray='4 3'/><text x='66' y='73' font-size='9' fill='var(--ink-3)'>η 85%</text><rect x='288' y='40' width='96' height='155' fill='var(--c-opt)' opacity='0.1'/><line x1='288' y1='40' x2='288' y2='195' stroke='var(--c-opt)' stroke-dasharray='3 3' opacity='0.7'/><line x1='384' y1='40' x2='384' y2='195' stroke='var(--c-opt)' stroke-dasharray='3 3' opacity='0.7'/><text x='336' y='56' font-size='9' fill='var(--c-opt)' text-anchor='middle'>推荐区间</text><path d='M80 178 C150 174 230 140 320 108 C410 86 520 78 640 74' fill='none' stroke='var(--jade)' stroke-width='2.2'/><path d='M80 168 C170 158 250 128 330 106 C430 80 540 66 640 58' fill='none' stroke='var(--bad)' stroke-width='1.6' stroke-dasharray='5 3'/><text x='648' y='76' font-size='9' fill='var(--jade)'>η</text><text x='648' y='54' font-size='9' fill='var(--bad)'>泵压</text><line x1='70' y1='48' x2='92' y2='48' stroke='var(--jade)' stroke-width='2'/><text x='98' y='51' font-size='9' fill='var(--ink-3)'>顶替效率</text><line x1='160' y1='48' x2='182' y2='48' stroke='var(--bad)' stroke-width='1.6' stroke-dasharray='5 3'/><text x='188' y='51' font-size='9' fill='var(--ink-3)'>泵压</text><text x='52' y='44' font-size='9' fill='var(--ink-3)' text-anchor='end'>100%</text><text x='52' y='192' font-size='9' fill='var(--ink-3)' text-anchor='end'>40%</text><text x='160' y='210' font-size='9' fill='var(--ink-3)' text-anchor='middle'>10</text><text x='320' y='210' font-size='9' fill='var(--ink-3)' text-anchor='middle'>20</text><text x='480' y='210' font-size='9' fill='var(--ink-3)' text-anchor='middle'>30</text><text x='640' y='210' font-size='9' fill='var(--ink-3)' text-anchor='middle'>40</text><text x='360' y='228' font-size='9.5' fill='var(--ink-3)' text-anchor='middle'>排量 Q (L/s)</text><text x='60' y='246' font-size='9' fill='var(--ink-3)'>低排量顶替不净易窜槽，高排量泵压与漏失风险上升；推荐区间取折中</text></svg><div class='figcap'><b>图 2</b><span>排量提高可改善顶替效率，但泵压同步上升、漏失风险增加；推荐区间取效率与安全的折中</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">注水泥优化需要的数据比居中度多，但都是常规资料：</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井况基础数据</span><span class=\"cl-s\">井深、套管程序、井径、井斜、地温梯度</span></span><span class=\"cl-n\">设计资料</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">地层压力剖面</span><span class=\"cl-s\">孔隙压力、破裂压力梯度</span></span><span class=\"cl-n\">决定密度窗口</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">水泥浆配方参数</span><span class=\"cl-s\">密度、流变性 n/k、稠化时间</span></span><span class=\"cl-n\">实验数据</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">历史施工记录</span><span class=\"cl-s\">同区块密度、排量、结果</span></span><span class=\"cl-n\">数百井次</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">设备参数</span><span class=\"cl-s\">水泥车额定排量、泵压上限</span></span><span class=\"cl-n\">现场资料</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>中</b>。物理模型本身成熟，但问题在于<b>\"好\"的定义不唯一</b>——密度高安全但可能漏失，密度低不容易漏失但可能气窜；排量大顶替好但可能超泵压。多目标优化没有单一最优解，只能给决策层展示帕累托前沿，由工程师现场权衡。</p><p>更难的是<b>压力剖面的可信度</b>——破裂压力梯度通常只有钻前估算值，实际施工时可能偏差 10% 以上。这意味着模型输出必须带上不确定性区间，不能只给一个数。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">代理模型<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">贝叶斯优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">多目标进化算法<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">水力计算<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "一口高压气井的注水泥方案优化",
+      "lead": [
+        "某区块一口高压气井，设计井深 4800 m，储层段压力系数 1.55，邻井曾出现过注水泥漏失。需要设计套管鞋处的水泥浆密度和排量，确保既不漏失又能封住高压气。",
+        "传统设计靠工程师手动试算 3—5 个方案，耗时半天。用代理模型优化，20 个样本就能画出有效前沿，5 分钟内找到候选方案。"
+      ],
+      "stats": [
+        [
+          "井深",
+          "4800 m"
+        ],
+        [
+          "压力系数",
+          "1.55"
+        ],
+        [
+          "密度窗口",
+          "1.52—1.68 g/cm³"
+        ],
+        [
+          "传统试算方案",
+          "5 个"
+        ],
+        [
+          "代理模型样本",
+          "20 个"
+        ],
+        [
+          "优化耗时",
+          "< 5 min"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "压力剖面计算",
+          "role": "基础",
+          "do": "整合孔隙压力梯度（Eaton 法或 Miller 法）和破裂压力梯度（Hall-Niu 公式），沿井深算出两条关键曲线。两者之间就是\"密度窗口\"——水泥浆当量密度必须落在这个窗口内。",
+          "effect": "得到沿井深的 [最低密度, 最高密度] 约束区间",
+          "trap": "破裂压力通常只有估算值，井底处可能有 ±0.1 g/cm³ 的误差带"
+        },
+        {
+          "name": "水力计算模型",
+          "role": "物理",
+          "do": "建立一维稳态环空流动模型：给定密度 ρ、排量 Q、环空几何 D，算出沿程摩阻、浆柱当量密度、顶替效率。公式是确定性的，可以批量仿真。",
+          "effect": "对任意 (ρ, Q) 参数组合，输出 顶替效率 η、当量密度 ECD、泵压 P",
+          "trap": "水平段摩阻计算需要考虑岩屑床，模型要分段"
+        },
+        {
+          "name": "代理模型训练",
+          "role": "算法核心",
+          "do": "用水力模型批量生成 200—500 个样本点的 (ρ, Q) → (η, ECD, P) 映射。用高斯过程回归或随机森林训练代理模型，拟合物理计算的输入输出关系。",
+          "effect": "代理模型可以微秒级预测任意参数组合的结果，替代秒级的物理仿真",
+          "trap": "代理模型的外推能力差，超出训练范围的参数不可信"
+        },
+        {
+          "name": "多目标优化",
+          "role": "搜索",
+          "do": "在代理模型上用 NSGA-II 或贝叶斯优化搜索，目标：最大化顶替效率 η，约束：ECD 落在密度窗口内、泵压 ≤ 设备上限。得到帕累托前沿上的 10—20 个候选方案。",
+          "effect": "工程师不需要再试参数，只需从候选方案中挑一个最保守或最激进的",
+          "trap": "纯数学最优不一定工程上可实现（比如要求排量精确到小数点后），要加离散化"
+        },
+        {
+          "name": "方案评审与锁定",
+          "role": "人",
+          "do": "团队评审候选方案：结合邻井经验、设备实际能力、天气等因素，锁定一个方案。同时准备 1—2 个备份方案，防止施工中出现紧急情况。",
+          "effect": "方案从\"计算出来\"变成\"能执行\"",
+          "trap": "AI 不能替代最终决策，工程师要对所有约束条件负责"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算\"方案好\"",
+        "html": "<p>注水泥方案不能用单一指标评价。通常的评价维度：</p><table class=\"dtable\"><thead><tr><th>维度</th><th>指标</th><th>合格标准</th><th>本例最优方案</th></tr></thead><tbody><tr><td>密度安全</td><td>ECD 与破裂压力裕度</td><td>≥ 0.03 g/cm³</td><td>0.05</td></tr><tr><td>顶替效率</td><td>η</td><td>≥ 85%</td><td>91%</td></tr><tr><td>泵压</td><td>P</td><td>≤ 额定值 90%</td><td>82%</td></tr><tr><td>施工时间</td><td>T</td><td>≤ 设计时间</td><td>节省 22 min</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "代理模型预测偏差大",
+          "why": "训练样本没覆盖的区域，高斯过程回归的不确定性会爆炸。解决：主动学习策略，让贝叶斯优化优先采样\"感兴趣\"的区域。"
+        },
+        {
+          "name": "密度窗口太窄",
+          "why": "当破裂压力与孔隙压力差 < 0.05 g/cm³ 时，几乎没有可行解。这种情况下优化器应该返回\"无解\"并建议改变固井程序。"
+        },
+        {
+          "name": "水平段摩阻模型不准",
+          "why": "岩屑床会显著增加水平段摩阻，导致实际泵压远超计算值。需要在物理模型里加入岩屑床修正项。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动密度和排量，看当量密度怎么在压力窗口里滑动、顶替效率怎么变化。帕累托前沿上的点是\"在安全前提下最有效率\"的候选方案。",
+      "height": 760
+    }
+  }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：三维地震断层自动解释</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">S1 · 物探 · 计算机视觉</div>
+    <h1>三维地震断层自动解释 · 交互式演示</h1>
+    <p class="lead">剖面里的水平条纹是同相轴，中间两组被错断的反射层对应两条真实断层，最右侧还有一条断距 8 m 的小断层。模型先输出断层概率，再在阈值与最小断距约束下提取断层线。</p>
+  </header>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">01</span>地震剖面与断层线</h2>
+      <span class="tag" id="tag">2 ms 采样 · 25 × 25 m 面元</span>
+    </div>
+    <p class="hint">蓝色虚线是人工解释结果，金色实线是模型检出。拖动下方两个滑杆，看检出的断层线、位置误差和与人工解释的重合率如何变化。</p>
+    <svg id="seis" viewBox="0 0 760 372" role="img" aria-label="地震剖面与断层解释"></svg>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">02</span>检测阈值与最小断距</h2>
+      <span class="tag" id="mode-tag">概率阈值 0.60</span>
+    </div>
+    <div class="ctl2">
+      <div class="ctl">
+        <label>检测阈值 <output id="o-thr">0.60</output></label>
+        <input type="range" id="s-thr" min="0.3" max="0.9" step="0.02" value="0.6">
+        <span class="tip">概率高于该值的候选才进入后处理；调高会漏掉弱反射断层</span>
+      </div>
+      <div class="ctl">
+        <label>最小断距 <output id="o-throw">12 m</output></label>
+        <input type="range" id="s-throw" min="5" max="60" step="1" value="12">
+        <span class="tip">断距小于该值的断层被过滤；地震调谐厚度约 25 m</span>
+      </div>
+    </div>
+    <div class="readrow">
+      <div class="read"><span>检出断层线数量</span><b id="r-n">—</b></div>
+      <div class="read"><span>平均位置误差</span><b id="r-err">—</b></div>
+      <div class="read"><span>与人工解释重合率</span><b id="r-ov">—</b></div>
+    </div>
+    <div class="verdict" id="verdict">—</div>
+  </section>
+
+  <p class="foot">示意剖面按 24 条同相轴、4 条候选断层模拟：真实断距 42 / 26 / 14 / 8 m，模型概率 0.92 / 0.79 / 0.63 / 0.46。人工解释只收录前三条，断距 8 m 的小断层作为误检诱饵。位置误差按 1 像元 ≈ 8.6 m 折算。</p>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

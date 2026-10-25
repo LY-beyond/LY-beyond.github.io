@@ -1,0 +1,41 @@
+/* ========= 窜槽识别示范样式 ========= */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #fbfaf6;
+  color: #242b2e;
+  padding: 32px 28px;
+  line-height: 1.65;
+}
+.panel { max-width: 920px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+h2 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #235f51; }
+.lead { color: #4d565b; margin-bottom: 16px; }
+.hint { font-size: 12.5px; color: #79828a; margin-bottom: 12px; }
+.section { background: #fff; border: 1px solid #e9e4d8; border-radius: 9px; padding: 20px 22px; margin-bottom: 18px; }
+
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: #f5f2ea; border-radius: 7px; }
+.ctl label { font-size: 13px; display: flex; justify-content: space-between; font-weight: 500; }
+.ctl output { font-family: 'JetBrains Mono', Consolas, monospace; color: #235f51; font-weight: 600; }
+.ctl input[type="range"] { accent-color: #2f7d6b; }
+.ctl .tip { font-size: 11.5px; color: #9ba3a9; }
+
+.view-row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.view-col { flex: 1; min-width: 280px; }
+.view-col h3 { font-size: 12px; color: #79828a; margin: 0 0 6px; letter-spacing: .1em; text-transform: uppercase; }
+.view-col svg { background: #fdfcf9; border-radius: 8px; width: 100%; }
+
+.info-list { font-size: 13px; }
+.info-list .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e9e4d8; }
+.info-list .row b { font-family: 'JetBrains Mono', Consolas, monospace; color: #235f51; }
+.info-list .row.warn b { color: #a97a1c; }
+.info-list .row.bad b { color: #b05a51; }
+
+.verdict { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; }
+.verdict.ok { background: #e7f3ea; color: #3f8560; }
+.verdict.warn { background: #f9efd7; color: #a97a1c; }
+.verdict.bad { background: #f9e9e5; color: #b05a51; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 11.5px; color: #5d666d; }
+.legend i { display: inline-block; width: 12px; height: 12px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }

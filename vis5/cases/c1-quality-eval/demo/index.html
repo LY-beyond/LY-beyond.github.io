@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：固井质量 CBL/VDL 智能评价</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>CBL/VDL 固井质量 · 智能评价演示</h1>
+  <p class="lead">下面是一口<b>程序合成的"半真半假"井</b>——真实井段里被人工塞了一段窜槽（D 级），看 AI 能不能找到它。拖动滑杆调整窜槽位置和长度。</p>
+
+  <!-- CBL 曲线 + 评级结果 -->
+  <div class="section">
+    <h2>① CBL 曲线 + AI 分段评级</h2>
+    <p class="hint">绿色 = A（好，低幅度），浅绿 = B（中低幅度），橙色 = C（差，高幅度），红色 = D（窜槽，极高幅度）。AI 自动识别每一段的等级，相邻同等级段合并。</p>
+    <svg id="cbl" viewBox="0 0 760 300" role="img" aria-label="CBL 曲线"></svg>
+    <div class="cbl-legend">
+      <span><i style="background:#3f8560"></i>A 好</span>
+      <span><i style="background:#7ab890"></i>B 中</span>
+      <span><i style="background:#c9a15a"></i>C 差</span>
+      <span><i style="background:#b05a51"></i>D 窜槽</span>
+      <span><i class="ai-line"></i>AI 分段</span>
+      <span><i class="truth-line"></i>真实边界</span>
+    </div>
+  </div>
+
+  <!-- VDL 变密度图 -->
+  <div class="section">
+    <h2>② VDL 变密度图（简化版）</h2>
+    <p class="hint">VDL 展示"时间 × 深度 × 能量"。好胶结段：左侧强套管波衰减、右侧出现地层波。差胶结段：套管波强、地层波弱——声波没被水泥环吸收，直接穿过套管。</p>
+    <div class="vdl-wrap">
+      <canvas id="vdl" width="720" height="180"></canvas>
+    </div>
+  </div>
+
+  <!-- 控制参数 -->
+  <div class="section">
+    <h2>③ 模拟控制</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>窜槽起始位置 (%)<output id="o-gap-s">55</output></label>
+        <input type="range" id="s-gap-s" min="10" max="90" step="1" value="55">
+        <span class="tip">在井段的 % 位置开始窜槽</span>
+      </div>
+      <div class="ctl">
+        <label>窜槽长度 (%)<output id="o-gap-l">8</output></label>
+        <input type="range" id="s-gap-l" min="1" max="25" step="1" value="8">
+        <span class="tip">模拟窜槽占总长度的比例</span>
+      </div>
+      <div class="ctl">
+        <label>背景噪声<output id="o-noise">低</output></label>
+        <input type="range" id="s-noise" min="1" max="5" step="1" value="2">
+        <span class="tip">高噪声 = 真实井况，AI 更难评级</span>
+      </div>
+      <div class="ctl">
+        <label>微环隙模拟<output id="o-micro">关</output></label>
+        <input type="checkbox" id="c-micro">
+        <span class="tip">加一段假弱胶结，测试 AI 能否区分</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button id="btn-run" class="primary">🔍 运行 AI 评级</button>
+      <span class="result-stat" id="result-stat">等待分析…</span>
+    </div>
+  </div>
+
+  <!-- 评级结果详情 -->
+  <div class="section">
+    <h2>④ AI 评级详情（逐段）</h2>
+    <table class="seg-table" id="seg-table">
+      <thead><tr><th>段#</th><th>深度 (m)</th><th>长度 (m)</th><th>CBL 均值</th><th>AI 评级</th><th>各等级概率</th><th>真实等级</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

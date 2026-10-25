@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：输油管道泄漏智能检测与定位</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>输油管道泄漏智能检测与定位</h1>
+  <p class="lead">拖动检测阈值、泄漏位置与泄漏量，看上下游压力与流量的时序响应。阈值越低越容易检出，但工况扰动带来的误报也越多。</p>
+
+  <div class="section">
+    <h2>① 上下游压力 / 流量时序</h2>
+    <p class="hint">青线为上游压力，金线为下游流量。泄漏在 50 s 注入，负压波沿管道向两端传播；虚线是检测阈值，三角标记是报警时刻。</p>
+    <div class="chart-wrap"><svg id="chart" viewBox="0 0 760 430" role="img" aria-label="管道上下游压力流量时序"></svg></div>
+    <div class="readouts" style="margin-top:10px">
+      <div class="ro"><span>检测延迟（相对泄漏注入）</span><b id="r-delay">—</b></div>
+      <div class="ro"><span>定位误差</span><b id="r-err">—</b></div>
+      <div class="ro"><span>年误报次数（估算）</span><b id="r-fp">—</b></div>
+    </div>
+    <div class="status" id="status" style="margin-top:12px"></div>
+  </div>
+
+  <div class="section">
+    <h2>② 调整检测条件</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>检测阈值 <output id="o-thr">0.12 MPa</output></label>
+        <input type="range" id="s-thr" min="0.02" max="0.30" step="0.01" value="0.12">
+        <span class="tip">压力下降超过阈值即报警。阈值降低会缩短检测延迟，也会放大噪声误报。</span>
+      </div>
+      <div class="ctl">
+        <label>泄漏位置（距上游）<output id="o-pos">48 km</output></label>
+        <input type="range" id="s-pos" min="5" max="90" step="1" value="48">
+        <span class="tip">管道全长 96 km。距离越远，负压波衰减越大、定位误差越大。</span>
+      </div>
+      <div class="ctl">
+        <label>泄漏量（占输送流量）<output id="o-leak">2.0%</output></label>
+        <input type="range" id="s-leak" min="0.5" max="8" step="0.5" value="2">
+        <span class="tip">小于 1% 的泄漏压力波很弱，常被噪声淹没，需要流量平衡辅助。</span>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button id="btn-dist">叠加启泵扰动</button>
+      <button id="btn-reset">恢复默认</button>
+      <span class="btn-note">管道 96 km · 负压波速 1,100 m/s · 采样 0.2 s</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>③ 为什么不能只靠单一阈值</h2>
+    <p class="hint">启停泵与阀门操作会造成压力、流量同时跳变，形态与泄漏相似但方向不同。实际系统需要接入泵阀状态做工况识别，再用负压波时差与流量平衡联合定位，才能把误报压到可接受水平。</p>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

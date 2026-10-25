@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：岩屑岩性细粒度识别</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">M1 · 录井 · 计算机视觉</div>
+    <h1>岩屑岩性细粒度识别</h1>
+    <p class="lead">一包岩屑里有 30—80 颗 1—5 mm 的颗粒，人工在显微镜下逐包定名。这里把颗粒级概率、样品级投票和训练样本量的影响放在一起，看模型什么时候能辅助、什么时候必须转人工。</p>
+  </header>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">01</span>颗粒样本与五类概率</h2>
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-g="0">样本组 A · 细砂岩</button>
+        <button class="tab" data-g="1">样本组 B · 灰质泥岩</button>
+        <button class="tab" data-g="2">样本组 C · 白云岩</button>
+      </div>
+    </div>
+    <p class="hint">点击任意颗粒切换目标；右侧条形图为该颗粒的类别概率。真值标注显示在下方，方便对照模型是否判对。</p>
+    <div class="grid2">
+      <div>
+        <svg id="samples" viewBox="0 0 420 300" role="img" aria-label="岩屑颗粒样本缩略图"></svg>
+        <p class="hint" id="sample-hint">—</p>
+      </div>
+      <div>
+        <svg id="probs" viewBox="0 0 460 300" role="img" aria-label="五类岩性概率条形图"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="num">02</span>训练样本数与少数类召回</h2>
+      <span class="tag" id="n-tag">N = 800 张</span>
+    </div>
+    <div class="ctl">
+      <label>训练样本数 <output id="o-n">800</output></label>
+      <input type="range" id="s-n" min="50" max="5000" step="50" value="800">
+      <span class="tip">50—5000 张颗粒图。样本越多，总准确率上升，但少数类召回提升更慢</span>
+    </div>
+    <svg id="curve" viewBox="0 0 760 230" role="img" aria-label="准确率与少数类召回随样本数变化"></svg>
+    <div class="readrow">
+      <div class="read"><span>总准确率</span><b id="r-acc">—</b></div>
+      <div class="read"><span>少数类召回（白云岩）</span><b id="r-min">—</b></div>
+      <div class="read"><span>混淆最多</span><b id="r-conf">—</b></div>
+    </div>
+    <div class="verdict" id="verdict">—</div>
+  </section>
+
+  <p class="foot">示意数据基于松辽盆地某区块 12 口探井的岩屑图像统计；概率与指标随样本量实时重算，用于说明趋势，不代表任何单一模型的实测精度。</p>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

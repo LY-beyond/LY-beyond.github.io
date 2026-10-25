@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：压裂参数智能优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>压裂参数智能优化 · 排量 / 砂比 / 段簇</h1>
+  <p class="lead">拖动排量、砂比与段数，看裂缝半长、导流能力、成本与砂堵风险如何联动。点击帕累托寻优，观察「成本—产量」权衡空间里的非支配前沿。</p>
+
+  <div class="section">
+    <h2>① 裂缝几何与施工指标</h2>
+    <p class="hint">水平井筒上方与下方对称的线条代表压裂裂缝，长度按裂缝半长缩放。段数增加会缩短簇间距，但单段液量减少，半长与导流能力都会变化。</p>
+    <div class="split">
+      <div class="chart-wrap"><svg id="geom" viewBox="0 0 720 300" role="img" aria-label="水平井多段压裂裂缝示意"></svg></div>
+      <div>
+        <div class="readouts" style="grid-template-columns:repeat(2,1fr)">
+          <div class="ro"><span>裂缝半长</span><b id="r-xf">—</b></div>
+          <div class="ro"><span>导流能力</span><b id="r-cond">—</b></div>
+          <div class="ro"><span>压裂成本</span><b id="r-cost">—</b></div>
+          <div class="ro"><span>砂堵概率</span><b id="r-risk">—</b></div>
+        </div>
+        <div class="status" id="status" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>② 调整泵注与分段参数</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>排量 <output id="o-q">12 m³/min</output></label>
+        <input type="range" id="s-q" min="4" max="16" step="0.5" value="12">
+        <span class="tip">排量越高，缝内净压力与裂缝半长越大，但设备与摩阻成本上升。</span>
+      </div>
+      <div class="ctl">
+        <label>砂比 <output id="o-sand">18%</output></label>
+        <input type="range" id="s-sand" min="5" max="30" step="1" value="18">
+        <span class="tip">砂比决定支撑剂铺置浓度与导流能力；过高且排量不足时砂堵风险陡增。</span>
+      </div>
+      <div class="ctl">
+        <label>段数 <output id="o-seg">16</output></label>
+        <input type="range" id="s-seg" min="5" max="20" step="1" value="16">
+        <span class="tip">水平段 1,200 m，每段 3 簇。段数越多，簇间距越密，但单段规模下降。</span>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="btn-pareto">帕累托寻优</button>
+      <button id="btn-reset">恢复默认</button>
+      <span class="btn-note">候选空间：排量 4—16 m³/min · 砂比 5%—30% · 段数 5—20</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>③ 成本—产量权衡空间</h2>
+    <p class="hint">每个灰点是一组候选参数，金色大点是当前方案。点击帕累托寻优后，绿色点与折线表示在不增加成本的前提下无法再提高产量的非支配方案。</p>
+    <div class="chart-wrap"><svg id="scatter" viewBox="0 0 720 300" role="img" aria-label="压裂成本与产量散点图"></svg></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#5e8f83"></i>候选方案</span>
+      <span><i class="dot" style="background:#d0a85c"></i>当前方案</span>
+      <span><i class="dot" style="background:#78b7a8"></i>帕累托前沿</span>
+    </div>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

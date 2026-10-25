@@ -1,0 +1,161 @@
+{
+  "id": "d2-drill-risk-warning",
+  "sceneId": "d2",
+  "methods": [
+    "ts"
+  ],
+  "title": "井下复杂事故前兆智能预警（卡钻/井漏/气侵）",
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "卡钻、井漏、气侵一旦发生，损失以小时到天计，一次卡钻的处理成本常在 50—500 万元。多数事故在发生前 5—30 min 就有前兆：扭矩抬升、立压异常、出口流量下降或总烃升高。难点不是「看不见」，而是十几条曲线同时变化、正常工况波动又很大。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "多变量时序异常检测",
+          "desc": "分工况建基线，输出分级预警"
+        },
+        {
+          "label": "标注成本",
+          "value": "高",
+          "desc": "单区块事故样本只有 20—60 起"
+        },
+        {
+          "label": "可见收益",
+          "value": "极高",
+          "desc": "一次卡钻损失 50—500 万元"
+        },
+        {
+          "label": "难度",
+          "value": "高",
+          "desc": "样本稀少、工况切换、误报成本高"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>钻井现场每秒采一次数据：立压 18—22 MPa、扭矩 6—12 kN·m、出口流量 30—35 L/s、总烃 0.1%—2%、转速 60—120 r/min，典型配置 10—16 个通道。单井一天就是 86,400 点/通道，12 口井 18 个月约 4.7×10⁸ 个数据点。</p><p>传统做法是给每个参数设固定阈值，超限就响铃。问题是<b>工况一直在变</b>：钻进、接单根、起下钻、循环的基线完全不同。接单根时扭矩从 8 猛增到 16 kN·m 只持续 1—2 min，固定阈值必然误报；而卡钻前兆的扭矩只抬升 15%—30%，又常常低于阈值。现场统计，固定阈值每班误报 3—10 次，司钻干脆把报警关掉。</p><p>三类事故的前兆模式也不一样：<b>卡钻</b>是扭矩升、立压升、流量降；<b>井漏</b>是立压降、返出流量降、总池体积降；<b>气侵</b>是总烃升、钻井液密度降、出口流量波动。单通道阈值只能抓住其中一条，组合前兆才是关键。</p><div class='figure'><svg viewBox='0 0 720 240' width='100%' role='img' aria-label='立压扭矩流量三通道时序与卡钻前兆'><rect x='0' y='0' width='720' height='240' fill='var(--paper-2)' rx='6'/><text x='18' y='20' font-size='11' fill='var(--ink-2)'>A · 三通道归一化时序（1 min 聚合）</text><line x1='40' y1='40' x2='40' y2='190' stroke='var(--line)'/><line x1='40' y1='190' x2='690' y2='190' stroke='var(--line)'/><line x1='40' y1='55' x2='690' y2='55' stroke='var(--line)' stroke-dasharray='3 3' opacity='0.5'/><line x1='40' y1='115' x2='690' y2='115' stroke='var(--line)' stroke-dasharray='3 3' opacity='0.5'/><line x1='40' y1='175' x2='690' y2='175' stroke='var(--line)' stroke-dasharray='3 3' opacity='0.5'/><text x='34' y='58' font-size='8.5' fill='var(--ink-3)' text-anchor='end'>100</text><text x='34' y='118' font-size='8.5' fill='var(--ink-3)' text-anchor='end'>50</text><text x='34' y='178' font-size='8.5' fill='var(--ink-3)' text-anchor='end'>0</text><text x='30' y='120' font-size='9' fill='var(--ink-3)' text-anchor='middle' transform='rotate(-90 30 120)'>归一化幅值</text><rect x='387' y='40' width='59' height='150' fill='var(--gold)' opacity='0.10'/><line x1='387' y1='34' x2='387' y2='196' stroke='var(--gold)' stroke-width='1.2' stroke-dasharray='4 3'/><text x='390' y='33' font-size='8.5' fill='var(--gold)'>前兆 128 min</text><line x1='446' y1='34' x2='446' y2='196' stroke='var(--bad)' stroke-width='1.6'/><text x='450' y='33' font-size='8.5' fill='var(--bad)'>卡钻 150 min</text><path d='M40 116 C120 110 200 118 280 113 S380 118 446 112 L500 96 L560 80 L690 74' fill='none' stroke='var(--c-ts)' stroke-width='2'/><path d='M40 118 C120 124 200 116 280 120 S380 118 387 118 L430 98 L470 82 L560 72 L690 70' fill='none' stroke='var(--gold)' stroke-width='2'/><path d='M40 112 C120 118 200 110 280 114 S380 116 387 116 L430 132 L470 146 L560 155 L690 160' fill='none' stroke='var(--c-cv)' stroke-width='2'/><text x='400' y='62' font-size='8.5' fill='var(--gold)'>前兆：扭矩 ↑、立压 ↑、流量 ↓</text><text x='40' y='212' font-size='8.5' fill='var(--ink-3)'>0</text><text x='202' y='212' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>60</text><text x='365' y='212' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>120</text><text x='527' y='212' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>180</text><text x='690' y='212' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>240</text><text x='365' y='230' font-size='9.5' fill='var(--ink-3)' text-anchor='middle'>时间 (min)</text><line x1='40' y1='226' x2='58' y2='226' stroke='var(--c-ts)' stroke-width='2'/><text x='63' y='229' font-size='8.5' fill='var(--ink-2)'>立压</text><line x1='110' y1='226' x2='128' y2='226' stroke='var(--gold)' stroke-width='2'/><text x='133' y='229' font-size='8.5' fill='var(--ink-2)'>扭矩</text><line x1='180' y1='226' x2='198' y2='226' stroke='var(--c-cv)' stroke-width='2'/><text x='203' y='229' font-size='8.5' fill='var(--ink-2)'>出口流量</text></svg><div class='figcap'><b>图 1</b><span>卡钻前 20 min 的三通道前兆：扭矩持续抬升、立压上升、出口流量下降；单看任何一条都不足以判断</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>核心是「<b>先分工况，再比基线</b>」：① 用规则加聚类把时间轴切成钻进、接单根、起下钻、循环四类工况；② 每个工况单独估计 30 min 滑窗的均值与协方差；③ 用 Mahalanobis 距离或 PCA 残差计算多变量偏离分数；④ 分数连续 3 min 超阈值、并带 0.3 的迟滞才报警；⑤ 按偏离幅度分黄、橙、红三级。</p><p>数据少的时候不要一上来就上深度模型。12 口井、23 起事故的样本量，先用「工况分段 + 统计基线 + 多变量距离」就能拿到大部分收益；LSTM 自编码器适合作为第二阶段的残差模型，但需要至少 50—100 起事故才能稳定训练。</p><p>报警必须给理由：输出「扭矩贡献 52%、流量贡献 31%、立压贡献 17%」，司钻才会信。只给一个红点、不说哪条曲线异常，现场三次之后就会把报警静音。</p><div class='figure'><svg viewBox='0 0 720 220' width='100%' role='img' aria-label='正常工况到前兆特征再到分级报警'><rect x='0' y='0' width='720' height='220' fill='var(--paper-2)' rx='6'/><text x='20' y='24' font-size='9.5' fill='var(--ink-2)'>A · 正常工况基线</text><rect x='18' y='40' width='200' height='132' fill='#0e130d' stroke='var(--line)'/><rect x='30' y='86' width='176' height='40' fill='var(--acc)' opacity='0.15'/><line x1='30' y1='106' x2='206' y2='106' stroke='var(--acc)' stroke-width='1.2' stroke-dasharray='4 3'/><circle cx='46' cy='102' r='2.2' fill='var(--acc)'/><circle cx='72' cy='110' r='2.2' fill='var(--acc)'/><circle cx='98' cy='100' r='2.2' fill='var(--acc)'/><circle cx='124' cy='112' r='2.2' fill='var(--acc)'/><circle cx='150' cy='104' r='2.2' fill='var(--acc)'/><circle cx='176' cy='108' r='2.2' fill='var(--acc)'/><text x='30' y='58' font-size='8.5' fill='var(--ink-3)'>立压 18.2 MPa</text><text x='30' y='72' font-size='8.5' fill='var(--ink-3)'>扭矩 8.1 kN·m</text><text x='30' y='150' font-size='8.5' fill='var(--acc)'>±2σ 基线带</text><text x='30' y='166' font-size='8.5' fill='var(--ink-4)'>按工况分别统计</text><text x='226' y='110' font-size='16' fill='var(--ink-3)'>→</text><text x='260' y='24' font-size='9.5' fill='var(--ink-2)'>B · 前兆特征</text><rect x='258' y='40' width='200' height='132' fill='#0e130d' stroke='var(--line)'/><path d='M270 118 C300 116 330 114 360 108 C390 102 410 94 446 84' fill='none' stroke='var(--gold)' stroke-width='2'/><path d='M270 112 C300 114 330 116 360 120 C390 126 410 132 446 142' fill='none' stroke='var(--c-cv)' stroke-width='2'/><line x1='270' y1='100' x2='446' y2='100' stroke='var(--bad)' stroke-width='1' stroke-dasharray='3 3'/><text x='272' y='96' font-size='8.5' fill='var(--bad)'>报警线</text><text x='272' y='64' font-size='8.5' fill='var(--gold)'>扭矩</text><text x='272' y='78' font-size='8.5' fill='var(--c-cv)'>流量</text><text x='272' y='160' font-size='8.5' fill='var(--ink-4)'>两条曲线反向背离</text><text x='466' y='110' font-size='16' fill='var(--ink-3)'>→</text><text x='500' y='24' font-size='9.5' fill='var(--ink-2)'>C · 分级预警</text><rect x='498' y='40' width='200' height='132' fill='#0e130d' stroke='var(--line)'/><circle cx='540' cy='72' r='12' fill='var(--gold)'/><text x='540' y='77' font-size='12' fill='#12160f' text-anchor='middle'>!</text><text x='560' y='66' font-size='9.5' fill='var(--gold)'>卡钻前兆</text><text x='560' y='82' font-size='9' fill='var(--ink-2)'>提前 14 min</text><rect x='518' y='108' width='160' height='9' rx='4' fill='#20261b'/><rect x='518' y='108' width='104' height='9' rx='4' fill='var(--gold)'/><text x='518' y='136' font-size='8.5' fill='var(--ink-3)'>阈值 3.2σ</text><text x='678' y='136' font-size='8.5' fill='var(--gold)' text-anchor='end'>黄 / 橙 / 红</text><text x='518' y='158' font-size='8.5' fill='var(--ink-4)'>扭矩 52% · 流量 31% · 立压 17%</text><text x='20' y='204' font-size='8.5' fill='var(--ink-4)'>工况分段 → 正常基线 → 多变量残差 → 持续 3 min 确认 → 分级预警（带通道贡献）</text></svg><div class='figcap'><b>图 2</b><span>先把正常工况建成基线，再检测多通道的联合偏离，最后给出带原因的分级预警</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style='margin-bottom:14px'>时序数据量很大，但「事故标签」极少。真正的门槛不是存储，而是把 20—60 起事故的时间、类型、处理过程对上秒级数据，并标出工况切换。</p><div class='checklist'><div class='cl-head'><span>数据准备清单 · 5 项</span><span class='cl-prog'><span id='cl-txt'>0 / 5</span><span class='cl-bar'><i id='cl-fill'></i></span></span></div><div class='cl-item' data-cl='0'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>多通道钻井时序</span><span class='cl-s'>立压、扭矩、流量、总烃等 10—16 通道，1 Hz，≥ 12 个月</span></span><span class='cl-n'>缺测段 < 5%，时间戳统一到 UTC</span></div><div class='cl-item' data-cl='1'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>事故台账</span><span class='cl-s'>单区块 20—60 起，时间精确到 1 min</span></span><span class='cl-n'>类型、处理过程、损失工时</span></div><div class='cl-item' data-cl='2'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>工况标签</span><span class='cl-s'>钻进 / 接单根 / 起下钻 / 循环，4 类</span></span><span class='cl-n'>规则自动分段，人工抽检 5%</span></div><div class='cl-item' data-cl='3'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>传感器元数据</span><span class='cl-s'>量程、精度、采样延迟，流量计延迟 5—15 s</span></span><span class='cl-n'>用于时间对齐与漂移校正</span></div><div class='cl-item' data-cl='4'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>井身与钻具组合</span><span class='cl-s'>井深、钻头类型、排量、钻具组合</span></span><span class='cl-n'>用于跨井归一化，避免把井差异当异常</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>高</b>。① <b>标签稀少</b>——一个区块 18 个月只有 20—60 起事故，异常样本占比不到 0.5%，监督学习很难直接训；② <b>工况切换</b>——接单根、起下钻会让扭矩和立压瞬间跳变，占误报的 60% 以上；③ <b>误报成本</b>——每班超过 3 次误报，司钻就会关报警，模型再准也没用；④ <b>传感器问题</b>——流量计零点漂移 2 L/s、时钟漂移 30—90 s，足够把前兆淹没。</p><p>评估不能只看召回。建议用「<b>提前量 ≥ 10 min 的召回率</b>」加「<b>每班误报次数 ≤ 1</b>」双指标；只优化召回会把阈值压得很低，误报爆炸。另一个关键指标是<b>首次报警时刻误差</b>，中位数应控制在 ±3 min。</p><p style='margin-top:14px'><span style='color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em'>可借鉴的通用技术</span></p><div class='refs'><a class='ref' href='#/method/ts'>多变量异常检测<span class='ar'>↗</span></a><a class='ref' href='#/method/ts'>时序分段<span class='ar'>↗</span></a><a class='ref' href='#/method/ts'>自编码器残差<span class='ar'>↗</span></a><a class='ref' href='#/method/ts'>变化点检测<span class='ar'>↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "四川盆地某区块 12 口井的卡钻前兆预警",
+      "lead": [
+        "区块 12 口井、12 个通道、18 个月共约 4.7×10⁸ 个数据点，事故台账记录 23 起：卡钻 11 起、井漏 7 起、气侵 5 起。目标是提前 10 min 以上给出预警，同时把每班误报压到 1 次以内。",
+        "第一版没有上深度模型，只用「工况分段 + 30 min 滑窗协方差 + Mahalanobis 距离」，在 23 起事故上做到中位提前 14 min、每班误报 0.8 次。第二版才用 LSTM 自编码器补残差。"
+      ],
+      "stats": [
+        [
+          "监测井数",
+          "12 口"
+        ],
+        [
+          "采样率",
+          "1 Hz"
+        ],
+        [
+          "通道数",
+          "12"
+        ],
+        [
+          "累计数据量",
+          "18 个月 / 4.7×10⁸ 点"
+        ],
+        [
+          "事故样本",
+          "23 起（卡钻 11 / 井漏 7 / 气侵 5）"
+        ],
+        [
+          "预警提前量",
+          "中位 14 min"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "数据清洗与时间对齐",
+          "role": "数据",
+          "do": "12 通道 1 Hz 数据统一到 UTC，流量计按 8 s 延迟做补偿，剔除起下钻段与检修段，缺测超过 2 min 的片段整体丢弃。",
+          "effect": "4.7×10⁸ 点清洗后保留约 3.1×10⁸ 有效点",
+          "trap": "不同设备时钟漂移 30—90 s，不对齐会把因果关系错位，前兆看起来像噪声"
+        },
+        {
+          "name": "工况分段",
+          "role": "预处理",
+          "do": "用转速、扭矩、大钩负荷规则先粗分，再用 K-means 聚类修正，得到钻进、接单根、起下钻、循环四类工况；每种工况单独建模。",
+          "effect": "工况识别准确率 94%，接单根段与钻进段彻底分开",
+          "trap": "不分工况时，接单根扭矩尖峰占全部误报的 62%"
+        },
+        {
+          "name": "正常基线建模",
+          "role": "算法核心",
+          "do": "每个工况用 30 min 滑窗估计 12 通道均值与协方差，计算 Mahalanobis 距离；协方差奇异时用 PCA 保留前 5 个主成分做残差。",
+          "effect": "正常钻进段 95% 的分数低于 2.5，前兆段升到 4—8",
+          "trap": "基线随井深和钻头磨损漂移，固定基线两周后失效，必须滚动更新"
+        },
+        {
+          "name": "异常评分与报警",
+          "role": "推理",
+          "do": "多变量分数取 3 min 滑动平均，连续 2 min 超过阈值且带 0.3 迟滞才确认报警；输出各通道贡献度，按 3.0σ / 4.5σ / 6.0σ 分黄、橙、红。",
+          "effect": "召回 0.78（提前 ≥ 10 min），每班误报 0.8 次",
+          "trap": "单通道阈值会漏掉「扭矩升 + 流量降」的组合前兆；只看瞬时值又会把噪声当异常"
+        },
+        {
+          "name": "分级预警与闭环",
+          "role": "质控",
+          "do": "黄级推送司钻平板，橙级同步值班工程师，红级触发电话；每次处置结果回标到台账，按月重估阈值并更新基线。",
+          "effect": "23 起事故中 18 起提前 ≥ 10 min，中位提前 14 min，卡钻平均处理时间从 6.5 h 降到 3.1 h",
+          "trap": "只报警不给原因，司钻会关闭报警；不回标处置结果，阈值永远调不准"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「预警好用」",
+        "html": "<p>预警系统的价值是<b>用可接受的误报换提前量</b>。只报召回没有意义——把阈值降到 1.5σ，召回能到 0.95，但每班误报 20 次，现场一定关掉。建议双门槛：提前 ≥ 10 min 的召回 ≥ 0.70，且每班误报 ≤ 1.0。</p><table class='dtable'><thead><tr><th>指标</th><th>定义</th><th>固定阈值</th><th>多变量模型</th></tr></thead><tbody><tr><td>召回（提前 ≥ 10 min）</td><td>23 起事故中及时预警的比例</td><td>0.39</td><td>0.78</td></tr><tr><td>每班误报</td><td>12 h 班内的误报次数</td><td>5.2</td><td>0.8</td></tr><tr><td>中位提前量</td><td>首次报警到事故的时间</td><td>—</td><td>14 min</td></tr><tr><td>卡钻平均处理时间</td><td>从发生到解卡</td><td>6.5 h</td><td>3.1 h</td></tr><tr><td>非生产时间占比</td><td>事故导致的停钻比例</td><td>4.2%</td><td>2.7%</td></tr><tr><td>工况切换误报占比</td><td>误报中发生在工况切换的比例</td><td>62%</td><td>18%</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "接单根误报",
+          "why": "扭矩从 8 瞬间升到 16 kN·m，只持续 1—2 min，和卡钻前兆很像。需要 90 s 的工况切换屏蔽窗口，并在新工况稳定 3 min 后再开始计分。"
+        },
+        {
+          "name": "流量计零点漂移",
+          "why": "零点漂移 2 L/s 会让基线整体偏移，连续 3 天误报。必须做日校准和自适应基线，不能用三个月前标定的均值。"
+        },
+        {
+          "name": "前兆被工况切换切断",
+          "why": "钻进转循环时基线突变，异常分数瞬间归零，提前量从 18 min 掉到 4 min。需要跨工况累积证据，切换后保留前 3 min 的分数。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动报警阈值与提前量目标，看首次报警时刻、提前分钟数和误报次数如何变化，以及系统给出安全、预警还是报警。",
+      "height": 720
+    }
+  }
+}

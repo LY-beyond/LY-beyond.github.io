@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：固井漏失风险预测</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>固井漏失风险 · 交互式预测演示</h1>
+  <p class="lead">调节下面的五个关键因素，看漏失概率怎么变化。右侧条形图显示 <b>LightGBM 模型当前预测中各因素的贡献度</b>——红色越高，说明这个因素在本次预测里"越危险"。</p>
+
+  <!-- 风险仪表盘 -->
+  <div class="section risk-top">
+    <div class="gauge-wrap">
+      <svg id="gauge" viewBox="0 0 260 160" role="img" aria-label="漏失概率仪表盘"></svg>
+    </div>
+    <div class="risk-result">
+      <div class="rr-row"><span class="rr-l">漏失概率</span><b id="rr-p">—</b></div>
+      <div class="rr-row"><span class="rr-l">风险等级</span><b id="rr-level">—</b></div>
+      <div class="rr-row"><span class="rr-l">建议</span><b id="rr-advice">—</b></div>
+      <div class="rr-detail" id="rr-detail"></div>
+    </div>
+  </div>
+
+  <!-- 因素控制 -->
+  <div class="section">
+    <h2>① 五个关键因素（调节看效果）</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>密度窗口裕度 Δ (g/cm³)<output id="o-margin">0.08</output></label>
+        <input type="range" id="s-margin" min="0.01" max="0.20" step="0.01" value="0.08">
+        <span class="tip">最小 ECD 到破裂压力的距离，<b>越小越危险</b></span>
+      </div>
+      <div class="ctl">
+        <label>天然裂缝密度 (条/m)<output id="o-frac">0.3</output></label>
+        <input type="range" id="s-frac" min="0" max="3.0" step="0.1" value="0.3">
+        <span class="tip">成像测井解释，≥1 条/m 为高风险</span>
+      </div>
+      <div class="ctl">
+        <label>ECD 安全系数<output id="o-safety">0.95</output></label>
+        <input type="range" id="s-safety" min="0.85" max="1.05" step="0.01" value="0.95">
+        <span class="tip">ECD / 破裂压力，>1.0 = 必然漏失</span>
+      </div>
+      <div class="ctl">
+        <label>环空返速 (m/s)<output id="o-v">1.2</output></label>
+        <input type="range" id="s-v" min="0.5" max="2.5" step="0.1" value="1.2">
+        <span class="tip">返速高 → 摩阻大 → ECD 升高</span>
+      </div>
+      <div class="ctl">
+        <label>储层渗透率 (mD)<output id="o-k">250</output></label>
+        <input type="range" id="s-k" min="10" max="5000" step="10" value="250">
+        <span class="tip">高渗透储层漏失通道容易打开</span>
+      </div>
+      <div class="ctl preset">
+        <label>快捷场景</label>
+        <div class="preset-btns">
+          <button data-p="safe">✅ 安全井</button>
+          <button data-p="warn">⚠️ 临界</button>
+          <button data-p="risk">❌ 高风险</button>
+          <button data-p="frac">🪨 裂缝发育</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 因素贡献图 -->
+  <div class="section">
+    <h2>② 当前预测的因素贡献度</h2>
+    <p class="hint">条形长度 = 该因素在 <b>LightGBM 分裂节点</b>中本次预测贡献的信息增益。红色表示该因素当前值"朝危险方向"。</p>
+    <svg id="bars" viewBox="0 0 600 220" role="img" aria-label="因素重要性"></svg>
+  </div>
+
+  <!-- 沿井深风险曲线 -->
+  <div class="section">
+    <h2>③ 沿井深的漏失风险热图</h2>
+    <p class="hint">假设井斜、裂缝密度沿井深变化，不同井段的漏失风险也不同。<b>红色段</b>是需要特别关注的区域——固井时这些位置最可能出问题。</p>
+    <svg id="depth-risk" viewBox="0 0 720 200" role="img" aria-label="沿井深风险曲线"></svg>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

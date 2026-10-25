@@ -1,0 +1,161 @@
+{
+  "id": "g1-remote-lithology",
+  "sceneId": "g1",
+  "methods": [
+    "cv"
+  ],
+  "title": "遥感地质剖面岩性解译",
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "一幅 1:5 万图幅约 1,600 km²，目视解译要 7—15 天，同一影像不同解释员勾绘的岩性界线可差 100—300 m。多光谱卫星已经把地表反射率采到 10—30 m 网格，语义分割可以把这件事变成「逐像元分类 + 边界矢量化」，人只保留质检与修正。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "语义分割 + 边缘提取",
+          "desc": "逐像元判岩性，再追踪类间边界"
+        },
+        {
+          "label": "标注成本",
+          "value": "中",
+          "desc": "精修掩膜稀少，可用历史地质图做弱监督"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "单幅解译从 7—15 天压到 2—3 天"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "类别不均衡、阴影与植被遮挡、跨区迁移"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>传统流程是解释员在 GIS 里对着假彩色影像逐条勾绘岩性界线和断层：一幅 1:5 万图幅约 1,600 km²，熟手要 7—15 天；两个人对同一影像勾出的同一条界线，平面位置常差 100—300 m。图幅越靠西、植被越密，差异越大。</p><p>可用影像是现成的：Sentinel-2 有 13 个波段，B2/B3/B4/B8 为 10 m，B5—B7/B11/B12 为 20 m，单幅约 1.1 亿像元；Landsat-8 全色 15 m、多光谱 30 m。岩性解译常用 <b>7-5-3</b> 组合（SWIR2/NIR/Green）突出黏土矿物与碳酸盐岩，用 B7/B5、B11/B12 比值放大差异，再叠 DEM 坡度去除地形阴影。</p><p>三个硬约束：<b>空间分辨率</b>——10—30 m 像元内常混合 2—3 种岩性，薄层与岩脉直接消失；<b>阴影与植被</b>——阴坡反射率整体下降 20%—35%，NDVI 大于 0.4 的黄土塬区有效像元不足 40%；<b>类别不均衡</b>——白云岩、玄武岩等目标岩性常不到总像元的 3%，模型容易整体偏向砂岩与泥岩。</p><div class='figure'><svg viewBox='0 0 720 250' width='100%' role='img' aria-label='多光谱波段组合与岩性光谱曲线'><rect x='0' y='0' width='720' height='250' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>A · 三个波段 → 假彩色合成</text><rect x='18' y='34' width='140' height='44' fill='#4a3b2a' stroke='var(--line)'/><text x='24' y='51' font-size='9.5' fill='#f3efe3'>B7 SWIR2 2.2 µm</text><text x='24' y='68' font-size='9' fill='#cfc7b4'>黏土 / 碳酸盐吸收</text><rect x='18' y='90' width='140' height='44' fill='#3d4a3a' stroke='var(--line)'/><text x='24' y='107' font-size='9.5' fill='#f3efe3'>B5 NIR 0.86 µm</text><text x='24' y='124' font-size='9' fill='#cfc7b4'>植被与水体敏感</text><rect x='18' y='146' width='140' height='44' fill='#38494b' stroke='var(--line)'/><text x='24' y='163' font-size='9.5' fill='#f3efe3'>B3 Green 0.56 µm</text><text x='24' y='180' font-size='9' fill='#cfc7b4'>铁质矿物反射</text><text x='166' y='113' font-size='14' fill='var(--ink-3)'>→</text><text x='212' y='34' font-size='9.5' fill='var(--ink-2)'>B · 假彩色 R:G:B = 7:5:3</text><rect x='212' y='42' width='140' height='150' fill='#0e130d' stroke='var(--line)'/><path d='M212 150 L352 122 L352 192 L212 192 Z' fill='#b08a5f'/><path d='M212 96 L300 78 L352 96 L352 144 L212 168 Z' fill='#8a8f6d'/><path d='M212 56 L300 42 L352 58 L352 92 L300 78 L212 94 Z' fill='#9aa79a'/><path d='M268 78 L312 100 L300 132 L252 118 Z' fill='#d6cbaa' opacity='0.8'/><text x='222' y='186' font-size='8.5' fill='#e8e3d5'>碳酸盐岩呈亮黄绿</text><text x='420' y='22' font-size='11' fill='var(--ink-2)'>C · 岩性光谱曲线</text><line x1='430' y1='212' x2='700' y2='212' stroke='var(--line)'/><line x1='430' y1='44' x2='430' y2='212' stroke='var(--line)'/><text x='565' y='236' font-size='9.5' fill='var(--ink-3)' text-anchor='middle'>波长 (µm)</text><text x='420' y='120' font-size='9.5' fill='var(--ink-3)' text-anchor='middle' transform='rotate(-90 420 120)'>反射率</text><text x='443' y='224' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>0.5</text><text x='509' y='224' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>1.0</text><text x='573' y='224' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>1.5</text><text x='638' y='224' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>2.0</text><text x='690' y='224' font-size='8.5' fill='var(--ink-3)' text-anchor='middle'>2.4</text><polyline points='430,121 456,106 490,94 521,106 560,128 599,134 638,139 664,145 690,150' fill='none' stroke='var(--gold)' stroke-width='2'/><polyline points='430,167 456,156 490,139 521,145 560,164 599,156 638,150 664,167 690,170' fill='none' stroke='var(--ink-3)' stroke-width='2'/><polyline points='430,94 456,80 490,72 521,83 560,91 599,100 638,117 664,128 681,156 690,150' fill='none' stroke='var(--acc)' stroke-width='2'/><polyline points='430,111 456,97 490,86 521,94 560,100 599,106 638,111 664,120 681,142 690,134' fill='none' stroke='var(--c-cv)' stroke-width='2'/><circle cx='560' cy='91' r='2.6' fill='var(--acc)'/><text x='566' y='86' font-size='8.5' fill='var(--acc)'>1.4 µm 羟基</text><circle cx='681' cy='142' r='2.6' fill='var(--c-cv)'/><text x='660' y='138' font-size='8.5' fill='var(--c-cv)'>2.33 µm 碳酸盐</text><text x='696' y='154' font-size='8.5' fill='var(--gold)' text-anchor='end'>砂岩</text><text x='696' y='176' font-size='8.5' fill='var(--ink-3)' text-anchor='end'>泥岩</text><text x='696' y='128' font-size='8.5' fill='var(--acc)' text-anchor='end'>灰岩</text><text x='696' y='90' font-size='8.5' fill='var(--c-cv)' text-anchor='end'>白云岩</text><text x='430' y='246' font-size='8.5' fill='var(--ink-4)'>波段比值 B7/B5 放大泥岩与碳酸盐岩的差异</text></svg><div class='figcap'><b>图 1</b><span>多光谱波段组合与四类岩性的反射率光谱：1.4 µm 与 2.33 µm 的吸收谷是区分泥岩、灰岩、白云岩的关键</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>把解译拆成一条可质检的链路：<b>预处理</b>（大气校正、云与云影掩膜、地形校正、10 m 重采样）→ <b>语义分割</b>（U-Net / DeepLabv3+，输入 6—8 个波段 + NDVI + DEM 坡度）→ <b>概率图</b>（每个像元 6—10 类概率）→ <b>置信度阈值与形态学去噪</b>（3×3 开闭运算、最小图斑 20 像素）→ <b>边界追踪</b>（marching squares）→ <b>矢量图层入库</b>，最后人工抽检 10%。</p><p>训练用 512 × 512 的 patch，重叠 128 像素，随机翻转与旋转做增广。类别不均衡用 Focal Loss（γ=2）加类别权重，重点岩性权重给到 1:8；空间上必须按图幅分块做 5 折交叉验证，否则相邻 patch 泄漏会把 mIoU 抬高 10—15 个百分点。</p><p>模型输出不是一个「非黑即白」的图，而是概率图。阈值决定哪些像元进入初稿、哪些交人工：阈值 0.55 时通常 10%—15% 像元未分类，集中在阴影、植被和岩性过渡带。工程上更看重<b>边界位置</b>而不是总精度——一条界线偏 50 m，后续剖面和井位就可能错一个构造。</p><div class='figure'><svg viewBox='0 0 720 214' width='100%' role='img' aria-label='影像到分类掩膜再到边界矢量'><defs><pattern id='maskhatch' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><rect width='5' height='5' fill='#20261b'/><line x1='0' y1='0' x2='0' y2='5' stroke='#4a5540' stroke-width='1.5'/></pattern></defs><rect x='0' y='0' width='720' height='214' fill='var(--paper-2)' rx='6'/><text x='20' y='24' font-size='9.5' fill='var(--ink-2)'>A · 输入影像（10 m）</text><rect x='20' y='34' width='196' height='140' fill='#0e130d' stroke='var(--line)'/><path d='M20 104 L216 76 L216 174 L20 174 Z' fill='#8d7f66'/><path d='M20 60 L112 44 L156 66 L64 90 Z' fill='#6f7a63'/><path d='M112 44 L216 34 L216 80 L156 66 Z' fill='#7f8c74'/><rect x='146' y='116' width='48' height='30' fill='#b09a72' opacity='0.85'/><circle cx='60' cy='120' r='2' fill='#0b0f0a' opacity='0.5'/><circle cx='92' cy='140' r='1.6' fill='#0b0f0a' opacity='0.5'/><circle cx='180' cy='100' r='2.2' fill='#0b0f0a' opacity='0.45'/><text x='226' y='110' font-size='16' fill='var(--ink-3)'>→</text><text x='260' y='24' font-size='9.5' fill='var(--ink-2)'>B · 类别掩膜（斜线 = 未分类）</text><rect x='260' y='34' width='196' height='140' fill='#0e130d' stroke='var(--line)'/><path d='M260 104 L456 76 L456 174 L260 174 Z' fill='#78b7a8' opacity='0.8'/><path d='M260 60 L352 44 L396 66 L304 90 Z' fill='#909a84' opacity='0.8'/><path d='M352 44 L456 34 L456 80 L396 66 Z' fill='#c9b98e' opacity='0.8'/><rect x='386' y='116' width='48' height='30' fill='url(#maskhatch)'/><text x='466' y='110' font-size='16' fill='var(--ink-3)'>→</text><text x='502' y='24' font-size='9.5' fill='var(--ink-2)'>C · 边界矢量入库</text><rect x='502' y='34' width='196' height='140' fill='#0e130d' stroke='var(--line)'/><path d='M516 150 C560 126 610 96 690 82' fill='none' stroke='#d0a85c' stroke-width='2'/><path d='M516 170 C570 150 630 118 690 108' fill='none' stroke='#78b7a8' stroke-width='2'/><path d='M600 44 C612 78 636 120 676 148' fill='none' stroke='#7fa7cf' stroke-width='1.6' stroke-dasharray='4 3'/><circle cx='560' cy='126' r='2.4' fill='#d0a85c'/><circle cx='630' cy='118' r='2.4' fill='#78b7a8'/><circle cx='636' cy='120' r='2.4' fill='#7fa7cf'/><text x='510' y='188' font-size='8.5' fill='var(--ink-3)'>简化容差 0.5 像元 = 5 m</text><text x='20' y='200' font-size='8.5' fill='var(--ink-4)'>预处理 → 语义分割 → 概率图 → 阈值 / 形态学 → marching squares → 矢量图层</text></svg><div class='figcap'><b>图 2</b><span>从假彩色影像到类别掩膜，再到可入库的岩性边界：掩膜中的未分类像元不参与成图，只交人工复核</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style='margin-bottom:14px'>数据门槛中等：公开影像不缺，缺的是「像元级岩性真值」。建议先用 20 幅精修掩膜加历史地质图弱标签起步，不要等全覆盖标注。</p><div class='checklist'><div class='cl-head'><span>数据准备清单 · 5 项</span><span class='cl-prog'><span id='cl-txt'>0 / 5</span><span class='cl-bar'><i id='cl-fill'></i></span></span></div><div class='cl-item' data-cl='0'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>多光谱影像</span><span class='cl-s'>Sentinel-2 10—20 m，单幅 1.1 亿像元，≥ 8 景不同季节</span></span><span class='cl-n'>云量 < 10%，已做 Sen2Cor 大气校正</span></div><div class='cl-item' data-cl='1'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>岩性真值掩膜</span><span class='cl-s'>20 幅 1:5 万图幅人工精修，≥ 50 万像元/幅</span></span><span class='cl-n'>6—10 类，边界误差 ≤ 2 像元</span></div><div class='cl-item' data-cl='2'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>历史地质图矢量化</span><span class='cl-s'>同区域 1:20 万 / 1:5 万，已转 WGS84 / UTM</span></span><span class='cl-n'>弱标签，直接栅格化后降权使用</span></div><div class='cl-item' data-cl='3'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>DEM 与坡度</span><span class='cl-s'>30 m SRTM / ASTER GDEM，与影像同网格</span></span><span class='cl-n'>无需标注，用于地形校正与阴影掩膜</span></div><div class='cl-item' data-cl='4'><span class='cl-box'><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12.5l5 5L20 6.5'/></svg></span><span><span class='cl-t'>非地质掩膜</span><span class='cl-s'>NDVI、云影、水体、居民点</span></span><span class='cl-n'>NDVI > 0.4 的像元不参与精度统计</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>中偏高</b>。挑战按影响排序：① <b>类别不均衡</b>——白云岩、玄武岩常小于 3%，不加权时召回接近 0；② <b>标签噪声</b>——历史地质图界线本身有 ±100 m 误差，直接当强标签会把模型带偏；③ <b>阴影与植被遮挡</b>——NDVI 大于 0.4 的区域不宜强行分类，正确做法是输出「基岩出露区」并留白；④ <b>跨区迁移</b>——湿润区训练的模型到干旱区，mIoU 可能掉 20 个百分点，需要目标区少量样本微调。</p><p>评估不要只看总体精度。建议同时看 <b>mIoU</b>（≥ 0.65 可用）、<b>边界 F1</b>（1 像元缓冲内，≥ 0.75）、<b>重点岩性召回</b>（≥ 0.70）和<b>图斑面积误差</b>（≤ 10%）。如果只报总体精度，大面积砂岩会把小岩体的错误完全掩盖。</p><p style='margin-top:14px'><span style='color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em'>可借鉴的通用技术</span></p><div class='refs'><a class='ref' href='#/method/cv'>语义分割<span class='ar'>↗</span></a><a class='ref' href='#/method/cv'>弱监督学习<span class='ar'>↗</span></a><a class='ref' href='#/method/cv'>多光谱特征融合<span class='ar'>↗</span></a><a class='ref' href='#/method/cv'>边缘提取<span class='ar'>↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "鄂尔多斯盆地某 1:5 万图幅的岩性解译",
+      "lead": [
+        "某 1:5 万图幅面积 1,600 km²，地表以黄土覆盖与基岩残丘为主，目标岩性 8 类，重点是把白云岩与灰岩的界线勾准。人工解译一版需要 12 天，解释员之间的界线差异中位数 180 m。",
+        "项目用 20 幅已精修图幅做训练、2 幅做独立验证，输入 Sentinel-2 6 个 10 m 波段加 DEM 坡度。目标不是替代解释员，而是把「勾第一遍」的时间压到小时级，让人只做抽检和局部修正。"
+      ],
+      "stats": [
+        [
+          "图幅面积",
+          "1,600 km²"
+        ],
+        [
+          "影像分辨率",
+          "10 m（B2—B4/B8）"
+        ],
+        [
+          "单幅像元数",
+          "1.1 亿"
+        ],
+        [
+          "训练掩膜",
+          "20 幅 / 8.2×10⁷ 像元"
+        ],
+        [
+          "人工解译周期",
+          "12 天"
+        ],
+        [
+          "模型推理耗时",
+          "3.5 小时"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "影像预处理与波段组合",
+          "role": "数据",
+          "do": "用 Sen2Cor 做大气校正，云与云影掩膜后保留 6 个 10 m 波段，按 7-5-3 合成假彩色，再用 DEM 做坡度与地形阴影校正，统一到 UTM 50N 网格。",
+          "effect": "得到约 5.8 GB 的地表反射率立方体，单幅 1.1 亿像元",
+          "trap": "不做地形校正，阴坡反射率整体偏低 15%—25%，会被模型学成深色岩性"
+        },
+        {
+          "name": "样本与弱标签构建",
+          "role": "标注",
+          "do": "20 幅精修掩膜切 512 × 512 patch、重叠 128 像素，叠加 1:20 万地质图栅格化后的弱标签并降权 0.3；按图幅做 5 折空间分块交叉验证。",
+          "effect": "训练集约 18,000 个 patch，覆盖 8 类岩性",
+          "trap": "随机切 patch 会让相邻图块同时进训练和验证，mIoU 虚高 10—15 个百分点"
+        },
+        {
+          "name": "语义分割训练",
+          "role": "算法核心",
+          "do": "U-Net + ResNet-34 编码器，Focal Loss（γ=2），重点岩性类别权重 1:8；Adam 学习率 1e-4，训练 80 epoch，batch 16。",
+          "effect": "验证集 mIoU 0.71，重点岩性召回 0.68",
+          "trap": "少数类不加权时，模型会把白云岩、玄武岩整体预测成砂岩或泥岩"
+        },
+        {
+          "name": "阈值与后处理",
+          "role": "推理",
+          "do": "对 8 类概率图取最大类，置信度低于 0.55 的像元置为未分类；3×3 开闭运算去噪，最小图斑 20 像素（约 0.2 ha）以下并入邻类。",
+          "effect": "未分类像元约 10%—15%，图斑碎片减少约 60%",
+          "trap": "阈值降到 0.35，噪声图斑数量翻 3 倍；升到 0.75，薄层岩性成片丢失"
+        },
+        {
+          "name": "边界矢量化与人工抽检",
+          "role": "质控",
+          "do": "用 marching squares 提取类间边界，按 0.5 像元（5 m）容差简化，投影入库为面图层；按 10% 图幅随机抽检，重点核对白云岩与灰岩界线。",
+          "effect": "边界 F1 0.78，图斑面积误差 6.4%，单幅交付周期 2—3 天",
+          "trap": "只抽检大面积岩性，会漏掉宽 30—50 m 的岩脉和孤立小岩体"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「解译可用」",
+        "html": "<p>先看能不能进业务流程，再看精度。可用的最低门槛是 <b>mIoU ≥ 0.65</b>、<b>边界 F1 ≥ 0.75</b>、<b>重点岩性召回 ≥ 0.70</b>；达不到就只能当参考图，不能进数据库。另一个常被忽略的指标是<b>重复性</b>——同一影像跑两遍结果是否一致，模型应接近 1.0，人工只有 0.7 左右。</p><table class='dtable'><thead><tr><th>指标</th><th>定义</th><th>人工目视解译</th><th>语义分割</th></tr></thead><tbody><tr><td>单幅周期</td><td>从拿到影像到成图</td><td>12 天</td><td>3.5 小时 + 2 天质检</td></tr><tr><td>界线位置差异</td><td>与专家参考线的中位距离</td><td>180 m</td><td>65 m</td></tr><tr><td>重点岩性召回</td><td>白云岩、玄武岩正确检出比例</td><td>0.82</td><td>0.71</td></tr><tr><td>重复性</td><td>两次解译的边界重合度</td><td>0.74</td><td>0.98</td></tr><tr><td>相对成本</td><td>按人工为 1.0 折算</td><td>1.0</td><td>0.18</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "阴影区被误判为深色玄武岩",
+          "why": "阴坡反射率整体下降 20%—35%，模型把地形阴影当成暗色岩性。必须先做地形校正并把阴影掩膜单独剔除。"
+        },
+        {
+          "name": "植被覆盖区大面积未分类",
+          "why": "黄土塬区 NDVI 常大于 0.4，有效基岩像元不足 40%。正确做法是把输出限定为「基岩出露区」，不要强行填满整幅图。"
+        },
+        {
+          "name": "小岩体被最小图斑过滤",
+          "why": "20 像素（约 0.2 ha）的阈值会抹掉宽 30—50 m 的岩脉。对岩脉、孤立小岩体应单独用低阈值和更小的最小图斑。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动置信度阈值，看右侧掩膜哪些像元被保留、哪些转为未分类；图例计数、像素准确率和漏判率会同步变化。",
+      "height": 720
+    }
+  }
+}

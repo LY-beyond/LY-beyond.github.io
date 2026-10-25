@@ -1,0 +1,43 @@
+/* ========= 漏失风险预测示范样式 ========= */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #fbfaf6;
+  color: #242b2e;
+  padding: 32px 28px;
+  line-height: 1.65;
+}
+.panel { max-width: 940px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+h2 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: #235f51; }
+.lead { color: #4d565b; margin-bottom: 14px; }
+.hint { font-size: 12.5px; color: #79828a; margin-bottom: 10px; }
+.section { background: #fff; border: 1px solid #e9e4d8; border-radius: 9px; padding: 18px 22px; margin-bottom: 16px; }
+
+.risk-top { display: flex; gap: 28px; align-items: center; }
+.gauge-wrap { flex-shrink: 0; }
+.risk-result { flex: 1; }
+.rr-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e9e4d8; font-size: 13px; }
+.rr-l { color: #79828a; }
+.rr-row b { font-family: 'JetBrains Mono', Consolas, monospace; font-weight: 600; }
+.rr-row b.low { color: #3f8560; }
+.rr-row b.mid { color: #a97a1c; }
+.rr-row b.high { color: #b05a51; }
+.rr-detail { margin-top: 10px; padding: 12px 14px; border-radius: 6px; font-size: 13px; }
+.rr-detail.ok { background: #e7f3ea; color: #3f8560; }
+.rr-detail.warn { background: #f9efd7; color: #a97a1c; }
+.rr-detail.bad { background: #f9e9e5; color: #b05a51; }
+
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; padding: 11px 14px; background: #f5f2ea; border-radius: 7px; }
+.ctl.preset { grid-column: span 2; }
+.ctl label { font-size: 13px; display: flex; justify-content: space-between; font-weight: 500; }
+.ctl output { font-family: 'JetBrains Mono', Consolas, monospace; color: #235f51; font-weight: 600; }
+.ctl input[type="range"] { accent-color: #2f7d6b; }
+.ctl .tip { font-size: 11.5px; color: #9ba3a9; }
+.preset-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.preset-btns button {
+  padding: 6px 12px; border-radius: 6px; border: 1px solid #c9c2b0;
+  background: #fff; cursor: pointer; font-size: 12.5px;
+}
+.preset-btns button:hover { border-color: #2f7d6b; color: #2f7d6b; }

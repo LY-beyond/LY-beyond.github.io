@@ -1,0 +1,109 @@
+{
+  "id": "c5-channeling-detect",
+  "sceneId": "c5",
+  "methods": ["cv"],
+  "title": "环空窜槽智能识别：超声成像语义分割",
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "固井的终极目标是层间封隔。如果水泥环里残留了未胶结的通道（窜槽），高压层的油气水就会沿着通道窜到低压层甚至井口，整口井的封隔就失效了。CBL 只能看套管-水泥界面的整体胶结，看不到水泥环内部的窜流通道；超声成像能看到截面，但人工判读既慢又主观。",
+      "judge": [
+        { "label": "任务类型", "value": "图像语义分割", "desc": "在水泥环截面上标出窜槽区域" },
+        { "label": "标注成本", "value": "中", "desc": "需要验窜结果做真值，标注窜槽位置" },
+        { "label": "可见收益", "value": "高", "desc": "漏判窜槽 = 后续层间封隔彻底失效" },
+        { "label": "难度", "value": "中", "desc": "窜槽形态多样，易与微环隙混淆" }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>判断固井后有没有窜槽，传统做法是看 <b>CBL 幅度</b>：套管波强说明套管-水泥界面胶结差，可能有窜。但 CBL 是一维曲线，只能反映套管外壁一圈的平均胶结，<b>看不到水泥环内部的通道分布</b>。</p><p>超声成像 / 扇区水泥胶结测井（SBT）能给出 360° 水泥环截面，理论上可以直接看到窜槽。但实际判读有三个问题：<b>慢</b>——一口井几千帧，人工逐幅看要数小时；<b>主观</b>——不同解释员对同一帧的窜槽判定可不一致；<b>易混淆</b>——微环隙（套管与水泥间有缝隙但水泥本身完好）、仪器偏心造成的假特征，和真窜槽在图像上很像。</p><div class='figure'><svg viewBox='0 0 720 280' width='100%' role='img' aria-label='水泥环截面：正常 vs 窜槽 vs 微环隙'><rect x='0' y='0' width='720' height='280' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>A · 水泥环截面三种状态</text><text x='160' y='46' font-size='10' fill='var(--ink-2)' text-anchor='middle'>正常胶结</text><circle cx='160' cy='140' r='68' fill='none' stroke='var(--ink-2)' stroke-width='1.2'/><circle cx='160' cy='140' r='50' fill='var(--jade)' opacity='0.18'/><circle cx='160' cy='140' r='30' fill='var(--paper-2)' stroke='var(--ink)' stroke-width='1.2'/><text x='160' y='240' font-size='10' fill='var(--ok)' text-anchor='middle'>水泥环连续完整</text><text x='380' y='46' font-size='10' fill='var(--ink-2)' text-anchor='middle'>窜槽（通道）</text><circle cx='380' cy='140' r='68' fill='none' stroke='var(--ink-2)' stroke-width='1.2'/><path d='M380 72 A68 68 0 0 1 448 140 A68 68 0 0 1 380 208 A68 68 0 0 1 312 140 A68 68 0 0 1 380 72 Z M350 92 A50 50 0 0 0 330 140 A50 50 0 0 0 350 188 A50 50 0 0 0 410 140 A50 50 0 0 0 350 92 Z' fill='var(--jade)' opacity='0.18'/><path d='M362 96 A44 44 0 0 1 424 140 A44 44 0 0 1 362 184 A44 44 0 0 1 300 140 A44 44 0 0 1 362 96 Z M358 100 A40 40 0 0 0 320 140 A40 40 0 0 0 358 180 A40 40 0 0 0 396 140 A40 40 0 0 0 358 100 Z' fill='var(--bad)' opacity='0.25'/><circle cx='380' cy='140' r='30' fill='var(--paper-2)' stroke='var(--ink)' stroke-width='1.2'/><text x='380' y='240' font-size='10' fill='var(--bad)' text-anchor='middle'>水泥环有缺口，形成通道</text><text x='600' y='46' font-size='10' fill='var(--ink-2)' text-anchor='middle'>微环隙</text><circle cx='600' cy='140' r='68' fill='none' stroke='var(--ink-2)' stroke-width='1.2'/><circle cx='600' cy='140' r='52' fill='var(--jade)' opacity='0.18'/><circle cx='600' cy='140' r='48' fill='none' stroke='var(--warn)' stroke-width='1.6' stroke-dasharray='3 2'/><circle cx='600' cy='140' r='30' fill='var(--paper-2)' stroke='var(--ink)' stroke-width='1.2'/><text x='600' y='240' font-size='10' fill='var(--warn)' text-anchor='middle'>套管-水泥间缝隙，水泥完好</text><text x='18' y='268' font-size='9' fill='var(--ink-3)'>CBL 对微环隙和真窜槽都表现为套管波增强，无法区分；超声成像可直接看到截面差异</text></svg><div class='figcap'><b>图 1</b><span>水泥环截面三种状态：正常胶结水泥连续；窜槽有贯穿通道；微环隙只是套管与水泥间有缝，水泥环本身完好</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>把问题转成<b>图像语义分割</b>：输入一帧 360° 水泥环截面图，输出一张同尺寸的 mask，标出哪些像素属于窜槽。模型用 U-Net 或 DeepLab 这类编码器-解码器结构，在标注好的成像图上训练。</p><p>关键在于<b>区分真窜槽和微环隙</b>。两者在单帧截面图上都表现为\"套管外有一圈低密度\"，区别在于：微环隙是整圈均匀的薄缝，窜槽是局部、不规则、且沿深度方向连续延伸的通道。所以模型不能只看单帧，还要<b>叠加相邻深度帧的时间/深度维度</b>（用 3D 卷积或把连续几帧拼成 2.5D 输入），沿深度方向的连续性是区分两者的关键特征。</p><p>输出不只是\"有无窜槽\"，而是<b>窜槽的角度范围、径向位置、沿深度延伸长度</b>，工程师据此判断是否需要挤水泥补救。</p><div class='figure'><svg viewBox='0 0 720 255' width='100%' role='img' aria-label='超声成像帧输入分割模型输出窜槽掩码'><rect x='0' y='0' width='720' height='255' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>B · 连续深度帧 → 分割模型 → 窜槽 mask</text><g transform='translate(30,44)'><rect x='0' y='0' width='70' height='70' fill='none' stroke='var(--line)'/><circle cx='35' cy='35' r='28' fill='var(--ink-3)' opacity='0.15'/><path d='M35 7 A28 28 0 0 1 63 35 A28 28 0 0 1 35 63 A28 28 0 0 1 7 35 A28 28 0 0 1 35 7 Z' fill='var(--jade)' opacity='0.2'/><path d='M20 15 A20 20 0 0 0 15 35 A20 20 0 0 0 20 55' fill='var(--bad)' opacity='0.3'/><text x='35' y='86' font-size='9' fill='var(--ink-3)' text-anchor='middle'>z = 1000m</text></g><g transform='translate(30,110)'><rect x='0' y='0' width='70' height='70' fill='none' stroke='var(--line)'/><circle cx='35' cy='35' r='28' fill='var(--ink-3)' opacity='0.15'/><path d='M35 7 A28 28 0 0 1 63 35 A28 28 0 0 1 35 63 A28 28 0 0 1 7 35 A28 28 0 0 1 35 7 Z' fill='var(--jade)' opacity='0.2'/><path d='M18 12 A20 20 0 0 0 12 35 A20 20 0 0 0 18 58' fill='var(--bad)' opacity='0.35'/><text x='35' y='86' font-size='9' fill='var(--ink-3)' text-anchor='middle'>z = 1001m</text></g><g transform='translate(30,176)'><rect x='0' y='0' width='70' height='70' fill='none' stroke='var(--line)'/><circle cx='35' cy='35' r='28' fill='var(--ink-3)' opacity='0.15'/><path d='M35 7 A28 28 0 0 1 63 35 A28 28 0 0 1 35 63 A28 28 0 0 1 7 35 A28 28 0 0 1 35 7 Z' fill='var(--jade)' opacity='0.2'/><path d='M22 18 A20 20 0 0 0 16 35 A20 20 0 0 0 22 52' fill='var(--bad)' opacity='0.4'/><text x='35' y='86' font-size='9' fill='var(--ink-3)' text-anchor='middle'>z = 1002m</text></g><path d='M108 140 L200 140' stroke='var(--ink-3)' stroke-width='1.2'/><path d='M200 136 L208 140 L200 144 Z' fill='var(--ink-3)'/><rect x='220' y='70' width='140' height='140' rx='5' fill='var(--paper-2)' stroke='var(--line)'/><text x='290' y='92' font-size='9.5' fill='var(--ink-2)' text-anchor='middle'>2.5D U-Net</text><text x='290' y='108' font-size='9' fill='var(--ink-3)' text-anchor='middle'>连续 3 帧拼接输入</text><text x='290' y='124' font-size='9' fill='var(--ink-3)' text-anchor='middle'>编码器-解码器</text><text x='290' y='140' font-size='9' fill='var(--ink-3)' text-anchor='middle'>输出窜槽概率图</text><path d='M368 140 L430 140' stroke='var(--ink-3)' stroke-width='1.2'/><path d='M430 136 L438 140 L430 144 Z' fill='var(--ink-3)'/><g transform='translate(450,70)'><rect x='0' y='0' width='140' height='140' rx='5' fill='var(--paper-2)' stroke='var(--line)'/><circle cx='70' cy='70' r='56' fill='var(--jade)' opacity='0.15'/><path d='M70 14 A56 56 0 0 1 126 70 A56 56 0 0 1 70 126 A56 56 0 0 1 14 70 A56 56 0 0 1 70 14 Z' fill='none' stroke='var(--line)'/><path d='M40 24 A40 40 0 0 0 28 70 A40 40 0 0 0 40 116' fill='var(--bad)' opacity='0.5'/><path d='M40 24 A40 40 0 0 0 28 70 A40 40 0 0 0 40 116' fill='none' stroke='var(--bad)' stroke-width='1.6'/><text x='70' y='156' font-size='9' fill='var(--ink-3)' text-anchor='middle'>窜槽 mask（红色 = 通道）</text></g><text x='450' y='236' font-size='9' fill='var(--ink-2)'>输出：窜槽角度范围、径向位置、深度延伸长度</text><text x='18' y='248' font-size='9' fill='var(--ink-3)'>沿深度方向的连续性是区分真窜槽与微环隙的关键特征</text></svg><div class='figcap'><b>图 2</b><span>连续 3 帧深度截面拼成 2.5D 输入 U-Net，输出窜槽 mask；模型利用沿深度的连续性区分真窜槽与微环隙</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">立项前先对着这张清单打勾。核心数据是超声成像图，配合验窜结果做真值。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 4 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 4</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">超声成像 / 扇区胶结测井图</span><span class=\"cl-s\">全井段，每帧 360° 扇区</span></span><span class=\"cl-n\">最好有同井段多帧连续数据</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">CBL / VDL 曲线</span><span class=\"cl-s\">同井段，0.5 m 采样</span></span><span class=\"cl-n\">作为辅助特征输入</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">验窜 / 试压结果</span><span class=\"cl-s\">是否窜、窜通层位</span></span><span class=\"cl-n\">作为真值，决定标签质量</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">图像标注（窜槽 mask）</span><span class=\"cl-s\">由解释员在成像图上勾出</span></span><span class=\"cl-n\">至少 200 井段，含正负样本</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>中</b>——成像图本身信息量够，模型架构也成熟（U-Net 是分割标配），真正的难点在<b>标签</b>：验窜结果是二值的（窜/不窜），但模型需要像素级 mask，所以需要解释员在成像图上手动勾出窜槽区域，标注成本不低。另一个难点是<b>类不均衡</b>——窜槽像素通常只占水泥环截面的 5%—15%，训练时需要 dice loss 或加权交叉熵。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/cv\">语义分割<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">U-Net<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">图像形态学<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">多模态融合<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "一口问题井的窜槽识别与补救决策",
+      "lead": [
+        "某区块一口固井后验窜发现油层与水层之间窜通，需要定位窜槽位置和形态，决定挤水泥补救方案。",
+        "下面的流程把\"看 CBL 猜有没有窜\"变成\"成像图分割 + 量化窜槽参数\"——模型给出窜槽的角度范围和深度延伸，工程师据此决定挤水泥量。"
+      ],
+      "stats": [
+        ["成像井段", "1200—1500 m"],
+        ["成像帧率", "每 0.1 m 一帧"],
+        ["总帧数", "3000 帧"],
+        ["人工判读耗时", "6—8 小时"],
+        ["模型推理耗时", "约 3 分钟"],
+        ["识别窜槽段", "3 处，共 18 m"]
+      ],
+      "steps": [
+        {
+          "name": "成像数据预处理",
+          "role": "数据",
+          "do": "读取超声成像原始数据，对每帧做去噪、强度归一化、仪器偏心校正。把 360° 扇区展开成 2D 图像（深度 × 角度），相邻 3 帧拼成 2.5D 输入。",
+          "effect": "得到标准化的连续深度帧序列，消除仪器偏心造成的假特征",
+          "trap": "偏心校正不到位会让模型把偏心造成的一侧低密度误判为窜槽"
+        },
+        {
+          "name": "窜槽 mask 分割",
+          "role": "推理",
+          "do": "用训练好的 2.5D U-Net 对每帧输出窜槽概率图，阈值 0.5 二值化得到 mask。对连续帧的 mask 做沿深度的连通域分析，合并相邻的窜槽区域。",
+          "effect": "得到沿井深分布的窜槽段，每段带角度范围和径向位置",
+          "trap": "单帧独立预测会产生孤立噪点，必须做深度方向的连通域过滤"
+        },
+        {
+          "name": "窜槽参数量化",
+          "role": "后处理",
+          "do": "对每个连通的窜槽段计算：深度起止、角度范围（几度到几度）、径向位置（套管侧/地层侧/中间）、最大宽度。与验窜结果交叉验证。",
+          "effect": "输出结构化的窜槽报告，不再是\"有窜/没窜\"的二值判断",
+          "trap": "微环隙是整圈均匀薄缝，角度范围接近 360°，据此可与真窜槽区分"
+        },
+        {
+          "name": "补救方案推荐",
+          "role": "决策",
+          "do": "根据窜槽参数推荐挤水泥方案：窜槽角度 < 90° 且深度短 → 定点挤水泥；角度大或多段 → 全井段重注。给出挤水泥量估算。",
+          "effect": "工程师不再凭经验决定挤水泥量，有量化依据",
+          "trap": "模型识别的窜槽可能与验窜结果不完全吻合，需要人工复核边界"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算\"识别准不准\"",
+        "html": "<p>窜槽识别的精度不能只用\"准确率\"，因为窜槽像素占比很低（类不均衡）。核心指标是<b>Dice 系数</b>（预测 mask 与真值 mask 的重叠度）和<b>漏检率</b>（漏判的窜槽段占比）——漏检比误检代价高得多，因为漏判的窜槽会直接导致层间封隔失效。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>目标值</th></tr></thead><tbody><tr><td>Dice 系数</td><td>预测与真值 mask 的重叠度</td><td>≥ 0.75</td></tr><tr><td>窜槽段漏检率</td><td>漏判窜槽段 / 真值窜槽段</td><td>≤ 10%</td></tr><tr><td>段级准确率</td><td>正确识别段 / 预测段</td><td>≥ 85%</td></tr><tr><td>单井处理时间</td><td>3000 帧推理</td><td>≤ 5 分钟</td></tr></tbody></table>"
+      },
+      "fails": [
+        { "name": "把微环隙判成窜槽", "why": "微环隙是套管-水泥间的整圈缝隙，单帧看和窜槽相似。需要用沿深度方向的均匀性来区分——微环隙整圈均匀且沿深度连续，真窜槽局部不规则。" },
+        { "name": "仪器偏心造成假窜槽", "why": "仪器不在井眼中心时，一侧距离远导致回波弱，看起来像低密度。预处理必须做偏心校正。" },
+        { "name": "标注一致性差", "why": "不同解释员对同一帧窜槽边界的勾画可差 10—20 度，训练标签本身有噪声，需要多人标注取交集。" }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "调节水泥环偏心、窜槽角度和微环隙，实时生成模拟超声成像图，看分割模型怎么识别窜槽区域。",
+      "height": 720
+    }
+  }
+}

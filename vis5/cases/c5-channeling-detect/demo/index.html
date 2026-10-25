@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：环空窜槽智能识别</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>环空窜槽识别 · 交互式演示</h1>
+  <p class="lead">模拟一口井的水泥环截面：调节偏心、窜槽角度、微环隙，看超声成像图怎么变，以及分割模型如何标出窜槽区域。</p>
+
+  <div class="section">
+    <h2>① 水泥环截面与模拟超声成像</h2>
+    <p class="hint">左图是物理截面（井眼=灰大圆、套管=深灰圆、水泥环=绿色环、窜槽=红色缺口）；中图是模拟超声成像强度图（颜色越暗回波越弱=低密度=可能窜槽）；右图是模型分割出的窜槽 mask。</p>
+    <div class="view-row">
+      <div class="view-col">
+        <h3>物理截面</h3>
+        <svg id="cross" viewBox="0 0 300 300" role="img" aria-label="水泥环物理截面"></svg>
+      </div>
+      <div class="view-col">
+        <h3>模拟超声成像（360° 展开）</h3>
+        <svg id="image" viewBox="0 0 300 300" role="img" aria-label="模拟超声成像图"></svg>
+      </div>
+      <div class="view-col">
+        <h3>分割结果（窜槽 mask）</h3>
+        <svg id="mask" viewBox="0 0 300 300" role="img" aria-label="窜槽分割结果"></svg>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#2f7d6b"></i>水泥（胶结好）</span>
+      <span><i style="background:#b05a51"></i>窜槽（低密度）</span>
+      <span><i style="background:#a97a1c"></i>微环隙</span>
+      <span><i style="background:#4d565b"></i>套管</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>② 调节条件</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>套管偏心 (mm)<output id="o-ecc">0</output></label>
+        <input type="range" id="s-ecc" min="0" max="25" step="1" value="0">
+        <span class="tip">套管偏离井眼中心</span>
+      </div>
+      <div class="ctl">
+        <label>窜槽角度 (°)<output id="o-ch">45</output></label>
+        <input type="range" id="s-ch" min="0" max="360" step="1" value="45">
+        <span class="tip">0° = 无窜槽；45° = 45° 扇区有窜槽</span>
+      </div>
+      <div class="ctl">
+        <label>窜槽起始角 (°)<output id="o-cs">0</output></label>
+        <input type="range" id="s-cs" min="0" max="360" step="1" value="0">
+        <span class="tip">窜槽在圆周上的起始位置</span>
+      </div>
+      <div class="ctl">
+        <label>微环隙 (mm)<output id="o-mic">0</output></label>
+        <input type="range" id="s-mic" min="0" max="2" step="0.1" value="0">
+        <span class="tip">套管-水泥间的整圈缝隙</span>
+      </div>
+      <div class="ctl">
+        <label>分割阈值<output id="o-th">0.45</output></label>
+        <input type="range" id="s-th" min="0.1" max="0.9" step="0.01" value="0.45">
+        <span class="tip">低于此强度被判为窜槽</span>
+      </div>
+      <div class="ctl">
+        <label>噪声<output id="o-noise">8</output></label>
+        <input type="range" id="s-noise" min="0" max="30" step="1" value="8">
+        <span class="tip">成像图随机噪声（%）</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>③ 识别结果</h2>
+    <div class="info-list" id="results"></div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+{
+  "id": "c4-casing-centering",
+  "sceneId": "c4",
+  "methods": [
+    "opt"
+  ],
+  "title": "套管居中度智能评估与扶正器优化",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "固井时，套管在井眼里是否\"居中\"，直接决定水泥环能不能均匀包住整个圆周。如果套管贴在井壁一侧，另一侧水泥环会很薄甚至完全缺失，形成窜槽通道——后续任何层间封隔都会失效。居中度就是量化这件事的核心指标。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "几何计算 + 组合优化",
+          "desc": "以物理公式为主，AI 负责方案搜索"
+        },
+        {
+          "label": "标注成本",
+          "value": "低",
+          "desc": "井径井斜数据现成，不需要人工标注"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "差的居中度 = 直接的固井失败风险"
+        },
+        {
+          "label": "难度",
+          "value": "低",
+          "desc": "几何模型清晰，可解释性强"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>套管居中度由<b>井径、井斜、套管尺寸、扶正器外径与安放间距</b>共同决定。传统做法是工程师用 Excel 或简单公式逐井计算，扶正器间距多沿用\"经验公式\"（通常每 2—3 根套管一个）。</p><p>问题有三：<b>井径不规则时误差大</b>——实际井径沿井段起伏，经验公式假设井径恒定；<b>井斜变化处估算偏差</b>——水平段和大斜度段的居中度与垂直段完全不同；<b>扶正器安放缺乏全局优化</b>——只按局部规则放，无法保证整井段居中度达标。</p><div class='figure'><svg viewBox='0 0 720 270' width='100%' role='img' aria-label='套管偏心导致水泥环厚度不均'><rect x='0' y='0' width='720' height='270' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>A · 井眼截面：套管偏心与水泥环厚度</text><text x='180' y='44' font-size='9.5' fill='var(--ink-2)' text-anchor='middle'>居中（e = 0）</text><text x='470' y='44' font-size='9.5' fill='var(--ink-2)' text-anchor='middle'>偏心（e = 30）</text><circle cx='180' cy='135' r='75' fill='none' stroke='var(--ink-2)' stroke-width='1.4'/><circle cx='180' cy='135' r='52' fill='var(--jade)' opacity='0.12'/><circle cx='180' cy='135' r='34' fill='var(--paper-2)' stroke='var(--ink)' stroke-width='1.4'/><circle cx='470' cy='135' r='75' fill='none' stroke='var(--ink-2)' stroke-width='1.4'/><circle cx='500' cy='135' r='52' fill='var(--jade)' opacity='0.12'/><circle cx='500' cy='135' r='34' fill='var(--paper-2)' stroke='var(--ink)' stroke-width='1.4'/><line x1='470' y1='135' x2='500' y2='135' stroke='var(--bad)' stroke-width='1.2'/><line x1='470' y1='130' x2='470' y2='140' stroke='var(--bad)'/><line x1='500' y1='130' x2='500' y2='140' stroke='var(--bad)'/><text x='485' y='124' font-size='9' fill='var(--bad)' text-anchor='middle'>e = 30</text><path d='M540 135 L588 104' stroke='var(--bad)' stroke-width='1'/><text x='592' y='102' font-size='9' fill='var(--bad)'>薄边 → 窜槽</text><path d='M430 135 L392 110' stroke='var(--jade)' stroke-width='1'/><text x='388' y='106' font-size='9' fill='var(--jade)' text-anchor='end'>厚边</text><text x='180' y='244' font-size='10' fill='var(--ok)' text-anchor='middle'>居中度 100%</text><text x='470' y='244' font-size='10' fill='var(--bad)' text-anchor='middle'>居中度 27%</text><text x='18' y='264' font-size='9' fill='var(--ink-3)'>居中度 = 1 − e /（井眼半径 − 套管半径）；薄边水泥环缺失即形成窜槽通道</text></svg><div class='figcap'><b>图 1</b><span>套管偏心距 e 使水泥环一侧变薄甚至缺失，薄边即窜槽通道；居中度随偏心增大而下降</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>核心是<b>居中度的物理计算公式</b>（不是黑箱模型）：给定井径、井斜、套管尺寸和扶正器位置，可以精确算出每个深度点的居中度。AI 的价值在于<b>方案搜索</b>——在\"哪些位置放扶正器、放多大外径\"这个组合空间里，找到总数量最少但整井段居中度都达标的方案。</p><p>具体做法：① 用井径测井数据沿井段逐点计算无扶正器时的居中度曲线；② 在低居中度段插入扶正器候选位置；③ 用贪心或遗传算法搜索\"最少扶正器数 + 所有关键点居中度 ≥ 67%\"的方案。这里 AI 是<b>优化器</b>，不是替代物理模型。</p><div class='figure'><svg viewBox='0 0 720 255' width='100%' role='img' aria-label='井径井斜计算居中度曲线并优化扶正器'><rect x='0' y='0' width='720' height='255' fill='var(--paper-2)' rx='6'/><text x='18' y='22' font-size='11' fill='var(--ink-2)'>B · 井径 + 井斜 → 居中度曲线 → 扶正器方案</text><rect x='22' y='48' width='150' height='30' rx='4' fill='var(--paper-2)' stroke='var(--line)'/><text x='97' y='67' font-size='9' fill='var(--ink-2)' text-anchor='middle'>井径 D(z)</text><rect x='22' y='86' width='150' height='30' rx='4' fill='var(--paper-2)' stroke='var(--line)'/><text x='97' y='105' font-size='9' fill='var(--ink-2)' text-anchor='middle'>井斜 θ(z)</text><rect x='22' y='124' width='150' height='30' rx='4' fill='var(--paper-2)' stroke='var(--line)'/><text x='97' y='143' font-size='9' fill='var(--ink-2)' text-anchor='middle'>套管外径 d</text><rect x='22' y='168' width='150' height='34' rx='4' fill='none' stroke='var(--line)' stroke-dasharray='3 3'/><text x='97' y='189' font-size='9' fill='var(--ink-3)' text-anchor='middle'>CL = 1 − Δ·sinθ / (D−d)</text><path d='M180 128 L232 128' stroke='var(--ink-3)' stroke-width='1.2'/><path d='M232 124.5 L238 128 L232 131.5 Z' fill='var(--ink-3)'/><line x1='240' y1='42' x2='240' y2='225' stroke='var(--line)'/><line x1='421' y1='42' x2='421' y2='225' stroke='var(--warn)' stroke-dasharray='4 3'/><text x='425' y='54' font-size='9' fill='var(--warn)'>67%</text><path d='M334 55 L362 80 L402 105 L456 130 L434 160 L389 190 L334 215' fill='none' stroke='var(--bad)' stroke-width='1.6' stroke-dasharray='5 3'/><path d='M461 55 L443 80 L452 105 L467 130 L456 160 L429 190 L410 215' fill='none' stroke='var(--jade)' stroke-width='2'/><path d='M350 88 l5 9 h-10 z' fill='var(--c-opt)'/><path d='M374 114 l5 9 h-10 z' fill='var(--c-opt)'/><path d='M396 144 l5 9 h-10 z' fill='var(--c-opt)'/><path d='M410 174 l5 9 h-10 z' fill='var(--c-opt)'/><text x='300' y='203' font-size='9' fill='var(--bad)'>优化前</text><text x='500' y='98' font-size='9' fill='var(--jade)'>优化后</text><text x='252' y='52' font-size='9' fill='var(--ink-3)'>CL (%)</text><text x='226' y='135' font-size='9' fill='var(--ink-3)' text-anchor='middle' transform='rotate(-90 226 135)'>深度</text><text x='240' y='240' font-size='9' fill='var(--ink-3)' text-anchor='middle'>0</text><text x='375' y='240' font-size='9' fill='var(--ink-3)' text-anchor='middle'>50</text><text x='510' y='240' font-size='9' fill='var(--ink-3)' text-anchor='middle'>100</text><text x='375' y='252' font-size='9' fill='var(--ink-3)' text-anchor='middle'>居中度 (%)</text><line x1='535' y1='42' x2='535' y2='225' stroke='var(--line)'/><text x='552' y='60' font-size='10' fill='var(--ink-2)'>扶正器方案</text><text x='552' y='90' font-size='18' fill='var(--c-opt)'>31</text><text x='580' y='90' font-size='9' fill='var(--ink-3)'>个</text><text x='552' y='114' font-size='9' fill='var(--ink-3)'>经验方案 48 个</text><text x='552' y='144' font-size='10' fill='var(--ok)'>达标率 96%</text><text x='552' y='164' font-size='9' fill='var(--ink-2)'>平均居中度 81%</text><text x='552' y='190' font-size='9' fill='var(--ink-3)'>▲ 每个 = 1 个扶正器</text></svg><div class='figcap'><b>图 2</b><span>由井径与井斜逐点算居中度曲线，在低于 67% 的井段插入扶正器候选，优化后达标率与用量同时改善</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">立项前先对着这张清单打勾。数据门槛很低——只要有井径测井和井眼轨迹就能开始。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 4 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 4</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井径测井曲线（CAL）</span><span class=\"cl-s\">0.125 m 采样，全井段</span></span><span class=\"cl-n\">常规测井必测项</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井眼轨迹数据</span><span class=\"cl-s\">每 10—30 m 一个测点</span></span><span class=\"cl-n\">井深 / 井斜角 / 方位角</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">套管与扶正器参数</span><span class=\"cl-s\">外径、壁厚、钢级；扶正器外径系列</span></span><span class=\"cl-n\">设计资料</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">固井质量反馈（可选）</span><span class=\"cl-s\">历史 CBL 评价结果</span></span><span class=\"cl-n\">用于校准居中度阈值</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>低</b>——居中度公式是确定性的，几何计算不会出\"反直觉\"的结果；优化空间的搜索也有成熟算法。真正的工程挑战在于：<b>扶正器安放还要考虑套管扶正力、下放摩阻、遇阻风险</b>，不能只看居中度一个指标。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">组合优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">贪心算法<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">遗传算法<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">几何建模<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "一个水平井的扶正器优化安放",
+      "lead": [
+        "某区块一口水平井，完钻井深 3200 m，水平段长 800 m。固井前需要设计扶正器安放方案，目标是整井段居中度 ≥ 67%，且扶正器用量最少。",
+        "下面的流程把\"凭经验放扶正器\"变成\"数据驱动的优化方案\"——物理公式保证结果可信，优化算法负责搜索空间。"
+      ],
+      "stats": [
+        [
+          "井深",
+          "3200 m"
+        ],
+        [
+          "水平段",
+          "800 m"
+        ],
+        [
+          "井径采样",
+          "25,600 点"
+        ],
+        [
+          "经验方案扶正器",
+          "48 个"
+        ],
+        [
+          "优化方案扶正器",
+          "31 个"
+        ],
+        [
+          "平均居中度",
+          "72% → 81%"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "数据准备与对齐",
+          "role": "数据",
+          "do": "读取井径曲线（0.125 m 采样，25,600 点）和测斜数据（100 个测点），沿深度对齐到同一采样率。井斜角用线性插值补密。",
+          "effect": "得到每 0.125 m 一个深度点的井径 D(zi) 和井斜角 θ(zi)",
+          "trap": "井径测井可能有套管鞋附近的异常值，需要预先剔除"
+        },
+        {
+          "name": "无扶正器居中度基线计算",
+          "role": "计算",
+          "do": "逐深度点用公式 CL(zi) = 100 × (1 - (Δ × sinθ(zi)) / (D(zi) - d)) 计算无扶正器时的居中度，其中 Δ 是套管线重、d 是套管外径。",
+          "effect": "得到一条\"裸管\"居中度曲线，直接暴露哪些井段会贴壁",
+          "trap": "井斜角为 0（垂直段）时居中度恒为 100%，不需要扶正器"
+        },
+        {
+          "name": "候选扶正器位置生成",
+          "role": "预处理",
+          "do": "在居中度 < 67% 的井段内，按最小间距 9 m（约 3 根套管）生成候选安放位置。每个位置有 2—3 种可选扶正器外径（略大于套管外径）。",
+          "effect": "把连续搜索空间变成有限候选集，便于后续优化",
+          "trap": "候选位置太密会导致组合爆炸，太稀又可能漏放"
+        },
+        {
+          "name": "贪心 + 局部搜索优化",
+          "role": "算法核心",
+          "do": "① 贪心：每次选\"能提升最多低居中度段\"的位置放扶正器；② 局部搜索：尝试移除/替换某个扶正器，看能否用更少数量维持达标。循环直到无法改进。",
+          "effect": "扶正器数量从经验方案的 48 个降到 31 个，同时居中度更高",
+          "trap": "纯贪心容易陷入局部最优，局部搜索是必须的"
+        },
+        {
+          "name": "工程约束校验",
+          "role": "质控",
+          "do": "检查扶正器间距是否满足套管接头避让、水平段末端加密是否合理、下放摩阻是否超限。必要时调整方案。",
+          "effect": "输出的不只是\"数学最优\"，而是\"能下得去\"的方案",
+          "trap": "只看居中度不管工程约束，方案在现场无法实施"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算\"方案好\"",
+        "html": "<p>居中度不是越高越好——超过 85% 后，再增加扶正器带来的边际收益很小，却显著增加下放阻力和成本。通常以<b>全井段 ≥ 67%</b> 为合格线，<b>≥ 80%</b> 为优良。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>经验方案</th><th>优化方案</th></tr></thead><tbody><tr><td>平均居中度</td><td>全井段算术平均</td><td>72%</td><td>81%</td></tr><tr><td>最低居中度</td><td>最差点的值</td><td>31%</td><td>58%</td></tr><tr><td>达标率</td><td>≥ 67% 的井段占比</td><td>78%</td><td>96%</td></tr><tr><td>扶正器数</td><td>总个数</td><td>48</td><td>31</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "扶正器放不下",
+          "why": "候选位置恰好卡在套管接箍处，需要调整 1—2 m。优化时必须加入接箍位置约束。"
+        },
+        {
+          "name": "水平段末端居中度仍低",
+          "why": "扶正器在水平段的扶正力随摩擦减小，末端可能需要加密到每 2 根一个。"
+        },
+        {
+          "name": "井径异常段误判",
+          "why": "井径测井遇扩径段读数偏大，算法以为居中度够了，实际水泥环还是薄。需要对扩径段做特殊处理。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动井径、井斜角和扶正器位置，实时看居中度怎么变化。体验\"裸管曲线 → 发现问题 → 加扶正器 → 优化\"的完整流程。",
+      "height": 720
+    }
+  }
+}

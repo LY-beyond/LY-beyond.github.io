@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：套管居中度智能评估</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <h1>套管居中度 · 交互式演示</h1>
+  <p class="lead">居中度 = 1 − (套管偏心距 / 最大可能偏心距)。拖动下面的滑杆，看井径、井斜、扶正器怎么改变水泥环的均匀程度。</p>
+
+  <!-- 井眼横截面视图 -->
+  <div class="section">
+    <h2>① 井眼横截面：套管在里面的位置</h2>
+    <p class="hint">灰色大圆是井眼，深灰小圆是套管，外侧圆环是理想水泥环。绿色区域是"有水泥"，白色间隙是"没水泥"——这就是窜槽的源头。</p>
+    <div class="cross-wrap">
+      <svg id="cross" viewBox="0 0 400 400" role="img" aria-label="井眼横截面"></svg>
+      <div class="cross-info">
+        <div class="ci-row"><span class="ci-l">井径 D</span><b id="ci-d">216 mm</b></div>
+        <div class="ci-row"><span class="ci-l">套管外径 d</span><b id="ci-do">178 mm</b></div>
+        <div class="ci-row"><span class="ci-l">扶正器外径</span><b id="ci-f">196 mm</b></div>
+        <div class="ci-row"><span class="ci-l">井斜角 θ</span><b id="ci-theta">60°</b></div>
+        <div class="ci-row"><span class="ci-l">偏心距 e</span><b id="ci-e">24 mm</b></div>
+        <div class="ci-row big"><span class="ci-l">居中度</span><b id="ci-cl">48%</b></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="section">
+    <h2>② 改变条件，看居中度怎么变</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>井径 D (mm)<output id="o-d">216</output></label>
+        <input type="range" id="s-d" min="180" max="300" step="2" value="216">
+        <span class="tip">井径越大，套管越容易偏</span>
+      </div>
+      <div class="ctl">
+        <label>井斜角 θ (°)<output id="o-theta">60</output></label>
+        <input type="range" id="s-theta" min="0" max="90" step="1" value="60">
+        <span class="tip">90° = 水平段，0° = 垂直段</span>
+      </div>
+      <div class="ctl">
+        <label>套管线重 (N/m)<output id="o-wt">260</output></label>
+        <input type="range" id="s-wt" min="100" max="500" step="10" value="260">
+        <span class="tip">越重越容易贴壁，但也能靠扶正器撑住</span>
+      </div>
+      <div class="ctl">
+        <label>扶正器外径 (mm)<output id="o-f">196</output></label>
+        <input type="range" id="s-f" min="180" max="216" step="2" value="196">
+        <span class="tip">等于井径时居中度 = 100%（但放不进去）</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 沿井段曲线视图 -->
+  <div class="section">
+    <h2>③ 沿井段的居中度曲线</h2>
+    <p class="hint">这是一口"模拟井"：左边是垂直段（井斜 0°），中间是增斜段，右边是水平段（井斜 90°）。<b>红色区域</b>是居中度不足 67% 的段——就是需要加扶正器的地方。</p>
+    <svg id="well" viewBox="0 0 760 280" role="img" aria-label="沿井段居中度曲线"></svg>
+    <div class="well-ctl">
+      <button id="btn-add">＋ 在最差点加扶正器</button>
+      <button id="btn-auto" class="primary">⚡ 一键优化（贪心 + 局部搜索）</button>
+      <button id="btn-reset">↻ 重置</button>
+      <span class="well-stat">已放扶正器：<b id="fcount">0</b> 个 · 最低居中度：<b id="fmin">—</b></span>
+    </div>
+  </div>
+
+  <!-- 公式说明 -->
+  <div class="section">
+    <h2>④ 计算公式</h2>
+    <div class="formula">
+      <p><b>无扶正器时</b>：套管在重力分量作用下贴向下井壁，偏心距 e = (套管线重 × sinθ) / (单位扶正力近似)。简化为：</p>
+      <p class="eqn">e = k × sinθ &nbsp;,&nbsp; k 由套管线重与井径决定</p>
+      <p><b>居中度</b>：套管从井眼中心偏移了 e，占了最大可能偏移 (D/2 − d/2) 的比例：</p>
+      <p class="eqn">CL = 100 × (1 − <span class="frac"><span>e</span><span>(D − d) / 2</span></span>)</p>
+      <p><b>有扶正器时</b>：偏心距被限制到 (井径 − 扶正器外径) / 2：</p>
+      <p class="eqn">CL = 100 × <span class="frac"><span>2 × (扶正器外径 − d)</span><span>D − d</span></span> &nbsp;,&nbsp; 仅在扶正器覆盖的井段生效</p>
+    </div>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

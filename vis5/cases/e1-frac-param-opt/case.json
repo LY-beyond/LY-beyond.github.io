@@ -1,0 +1,161 @@
+{
+  "id": "e1-frac-param-opt",
+  "sceneId": "e1",
+  "methods": [
+    "opt"
+  ],
+  "title": "压裂参数智能优化（排量/砂比/段簇）",
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "水力压裂的段数、簇间距、排量与砂比共同决定裂缝半长、导流能力与施工成本。参数偏保守造缝不足，偏激进则砂堵、压窜或成本失控。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "多目标优化 + 代理模型",
+          "desc": "产量、成本、风险同时权衡"
+        },
+        {
+          "label": "标注成本",
+          "value": "中",
+          "desc": "施工曲线易得，裂缝真值需要监测"
+        },
+        {
+          "label": "可见收益",
+          "value": "极高",
+          "desc": "单井 90 天累产可提升 20% 以上"
+        },
+        {
+          "label": "难度",
+          "value": "高",
+          "desc": "地下裂缝不可直接观测，跨区迁移难"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>压裂设计通常沿用邻井经验：水平段 1,200—2,000 m，分 16—20 段，簇间距 20—30 m，排量 10—14 m³/min，砂比 15%—20%。这套参数在现场能施工，但不等于经济最优。</p><p>三个问题最典型：<b>规模边际递减</b>——段数增加会先提高产量，随后被缝间干扰和单段液量不足抵消，而成本近似线性上升；<b>砂堵是突变风险</b>——砂比 22% 配排量 6 m³/min，携砂能力不足，压力会在几分钟内抬升，处理不及时就砂堵；<b>裂缝不可直接观测</b>——半长、缝高、导流能力只能靠微地震、示踪剂或生产反演间接判断，试错成本高。</p><p>因此压裂优化不是「把每个参数调到最大」，而是在产量、成本与砂堵/压窜风险之间找可执行的平衡点。这个平衡点随储层应力、天然裂缝和井距变化，靠人工比选很难覆盖。</p><div class=\"figure\"><svg viewBox=\"0 0 640 240\" width=\"100%\" role=\"img\" aria-label=\"压裂段数与产量成本风险的权衡\">\n<rect x=\"0\" y=\"0\" width=\"640\" height=\"240\" rx=\"6\" fill=\"var(--paper-2)\"/>\n<line x1=\"58\" y1=\"200\" x2=\"604\" y2=\"200\" stroke=\"var(--ink-4)\"/>\n<line x1=\"58\" y1=\"34\" x2=\"58\" y2=\"200\" stroke=\"var(--ink-4)\"/>\n<rect x=\"420\" y=\"34\" width=\"184\" height=\"166\" fill=\"var(--bg-ts)\" opacity=\".45\"/>\n<text x=\"512\" y=\"50\" text-anchor=\"middle\" font-size=\"9\" fill=\"var(--c-ts)\">成本与砂堵风险上升区</text>\n<line x1=\"352\" y1=\"34\" x2=\"352\" y2=\"200\" stroke=\"var(--c-opt)\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/>\n<text x=\"356\" y=\"48\" font-size=\"9\" fill=\"var(--c-opt)\">邻井经验 18 段</text>\n<polyline points=\"58,155 110,150 168,143 226,136 284,128 342,118 400,106 458,94 516,82 604,70\" fill=\"none\" stroke=\"#d0a85c\" stroke-width=\"2\"/>\n<polyline points=\"58,137 110,110 168,92 226,78 284,68 342,62 400,58 458,56 516,55 604,54\" fill=\"none\" stroke=\"var(--c-cv)\" stroke-width=\"2\"/>\n<polyline points=\"58,185 110,182 168,176 226,167 284,155 342,140 400,122 458,101 516,80 604,60\" fill=\"none\" stroke=\"var(--bad)\" stroke-width=\"1.6\" stroke-dasharray=\"4 3\"/>\n<text x=\"608\" y=\"72\" font-size=\"9\" fill=\"#d0a85c\">成本</text>\n<text x=\"608\" y=\"56\" font-size=\"9\" fill=\"var(--c-cv)\">产量</text>\n<text x=\"608\" y=\"86\" font-size=\"9\" fill=\"var(--bad)\">风险</text>\n<rect x=\"588\" y=\"44\" width=\"14\" height=\"3\" fill=\"var(--c-cv)\"/>\n<text x=\"58\" y=\"220\" font-size=\"9\" fill=\"var(--ink-4)\">段数 →</text>\n<text x=\"20\" y=\"42\" font-size=\"9\" fill=\"var(--ink-4)\" transform=\"rotate(-90 20 42)\">相对指标</text>\n<text x=\"68\" y=\"18\" font-size=\"9.5\" fill=\"var(--ink-3)\">段数增加不是线性增产：产量在 16 段后趋缓，成本与砂堵风险继续上升。</text>\n</svg><div class=\"figcap\"><b>图 1</b><span>压裂规模存在明显的边际递减：段数增加会先提高产量，随后被缝间干扰、单段液量不足与砂堵风险抵消，而成本近似线性上升。经验方案常停在 18 段，但并非经济最优。</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>把压裂设计建模成<b>代理模型辅助的多目标优化</b>。输入包括最小水平主应力、杨氏模量、泊松比、天然裂缝密度、水平段长度与井距；决策变量是段数、簇间距、排量、砂比与单段液量；输出是裂缝半长、导流能力、90 天累产、压裂成本与砂堵概率。</p><p>工程路径分三段：先用 Planar3D 或商业压裂软件生成 1,000—3,000 组样本，训练 GBDT 或高斯过程代理模型，把单次评估从小时级降到毫秒级；再用 NSGA-II 搜索「产量最大、成本最小」的 Pareto 前沿；最后叠加砂堵概率、净压力与缝高约束，筛出可施工方案。</p><div class=\"figure\"><svg viewBox=\"0 0 640 236\" width=\"100%\" role=\"img\" aria-label=\"泵注参数到裂缝几何再到产能与成本\">\n<rect x=\"0\" y=\"0\" width=\"640\" height=\"236\" rx=\"6\" fill=\"var(--paper-2)\"/>\n<defs><marker id=\"e1-a1\" markerWidth=\"7\" markerHeight=\"7\" refX=\"6\" refY=\"3\" orient=\"auto\"><path d=\"M0 0L6 3L0 6Z\" fill=\"var(--ink-4)\"/></marker></defs>\n<rect x=\"12\" y=\"30\" width=\"168\" height=\"142\" rx=\"8\" fill=\"var(--card)\" stroke=\"var(--c-opt)\"/>\n<text x=\"26\" y=\"50\" font-size=\"10.5\" font-weight=\"600\" fill=\"var(--c-opt)\">泵注与分段参数</text>\n<text x=\"26\" y=\"72\" font-size=\"9\" fill=\"var(--ink-2)\">排量 4—16 m³/min</text>\n<text x=\"26\" y=\"90\" font-size=\"9\" fill=\"var(--ink-2)\">砂比 5%—30%</text>\n<text x=\"26\" y=\"108\" font-size=\"9\" fill=\"var(--ink-2)\">段数 5—20</text>\n<text x=\"26\" y=\"126\" font-size=\"9\" fill=\"var(--ink-2)\">簇间距 15—40 m</text>\n<text x=\"26\" y=\"150\" font-size=\"8.5\" fill=\"var(--ink-4)\">决策变量 4 个</text>\n<line x1=\"182\" y1=\"101\" x2=\"214\" y2=\"101\" stroke=\"var(--ink-4)\" stroke-width=\"1.2\" marker-end=\"url(#e1-a1)\"/>\n<rect x=\"218\" y=\"30\" width=\"176\" height=\"142\" rx=\"8\" fill=\"var(--card)\" stroke=\"var(--c-cv)\"/>\n<text x=\"232\" y=\"50\" font-size=\"10.5\" font-weight=\"600\" fill=\"var(--c-cv)\">裂缝几何</text>\n<text x=\"232\" y=\"72\" font-size=\"9\" fill=\"var(--ink-2)\">半长 150—190 m</text>\n<text x=\"232\" y=\"90\" font-size=\"9\" fill=\"var(--ink-2)\">导流能力 20—50 D·cm</text>\n<text x=\"232\" y=\"108\" font-size=\"9\" fill=\"var(--ink-2)\">净压力 15—25 MPa</text>\n<text x=\"232\" y=\"126\" font-size=\"9\" fill=\"var(--ink-2)\">缝高 30—60 m</text>\n<text x=\"232\" y=\"150\" font-size=\"8.5\" fill=\"var(--ink-4)\">Planar3D 数值模拟</text>\n<line x1=\"396\" y1=\"101\" x2=\"428\" y2=\"101\" stroke=\"var(--ink-4)\" stroke-width=\"1.2\" marker-end=\"url(#e1-a1)\"/>\n<rect x=\"432\" y=\"30\" width=\"196\" height=\"142\" rx=\"8\" fill=\"var(--card)\" stroke=\"var(--jade)\"/>\n<text x=\"446\" y=\"50\" font-size=\"10.5\" font-weight=\"600\" fill=\"var(--jade)\">产能与成本</text>\n<text x=\"446\" y=\"72\" font-size=\"9\" fill=\"var(--ink-2)\">90 天累产 +26%</text>\n<text x=\"446\" y=\"90\" font-size=\"9\" fill=\"var(--ink-2)\">压裂成本 -9%</text>\n<text x=\"446\" y=\"108\" font-size=\"9\" fill=\"var(--ink-2)\">砂堵概率 ≤ 15%</text>\n<text x=\"446\" y=\"126\" font-size=\"9\" fill=\"var(--ink-2)\">Pareto 前沿 42 个方案</text>\n<text x=\"446\" y=\"150\" font-size=\"8.5\" fill=\"var(--ink-4)\">由代理模型秒级预测</text>\n<rect x=\"82\" y=\"186\" width=\"472\" height=\"34\" rx=\"6\" fill=\"var(--bg-opt)\" stroke=\"var(--c-opt)\" stroke-dasharray=\"4 3\"/>\n<text x=\"96\" y=\"207\" font-size=\"9.5\" fill=\"var(--ink-2)\">2,400 组数值模拟 → GBDT 代理（R² 0.91）→ NSGA-II 多目标搜索</text>\n<text x=\"12\" y=\"18\" font-size=\"9.5\" fill=\"var(--ink-3)\">参数不直接等于产量：必须先经过裂缝几何，再进入产能与成本评估。</text>\n</svg><div class=\"figcap\"><b>图 2</b><span>压裂优化的因果链是「泵注参数 → 裂缝几何 → 产能与成本」。代理模型负责把每组仿真从小时级压到毫秒级，多目标优化负责在产量、成本与砂堵风险之间找非支配解。</span></div></div><p>代理模型不能替代裂缝监测，但可以把「每口井都做几十组数值模拟」变成「每口井做一次快速寻优」。现场仍需用施工压力和微地震结果校准，尤其是砂堵与缝高失控这两类突变风险。</p>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">压裂数据的特点是「施工数据多、地下真值少」。清单里前三项决定模型能不能算，第四项决定模型能不能信。勾选状态只在本页有效。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 4 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 4</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">地质力学参数</span><span class=\"cl-s\">最小水平主应力、杨氏模量、泊松比、天然裂缝，每段一组</span></span><span class=\"cl-n\">测井 + 岩心 + 压裂测试</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">压裂施工曲线</span><span class=\"cl-s\">排量、井口压力、砂比、时间，1 Hz 采样</span></span><span class=\"cl-n\">每段一条曲线</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">裂缝监测与生产数据</span><span class=\"cl-s\">微地震或示踪剂半长、90 天日产与压力</span></span><span class=\"cl-n\">用于校准与回测</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">成本定额</span><span class=\"cl-s\">压裂液、支撑剂、泵注、分段费用，单井一套</span></span><span class=\"cl-n\">财务口径统一</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>高</b>。原因不是算法复杂，而是<b>真值稀缺</b>：裂缝半长和导流能力很难直接测量，微地震提供的是事件云，不是裂缝几何；生产数据又受井距、地层能量和作业制度影响。代理模型容易在训练集内表现很好，跨区块就失效。</p><p>三个必须正视的问题：<b>砂堵突变</b>——风险不是平滑函数，低排量高砂比附近会陡增；<b>缝高失控</b>——隔层应力差小于 3 MPa 时，裂缝可能穿层压窜；<b>多目标权重</b>——产量最高的方案往往成本也最高，必须输出 Pareto 前沿而不是单一答案。</p><p>建议先用同一区块 10—20 口井做迁移验证，把代理模型预测的半长与微地震解释对比，误差控制在 20% 以内再扩大范围；对砂堵与压窜样本，宁可单独建分类模型，也不要混进回归模型。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">多目标优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">代理模型<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">NSGA-II<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">帕累托前沿<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "某致密油水平井 18 段压裂参数优化",
+      "lead": [
+        "某致密油区块一口水平井水平段长 1,800 m，基质渗透率 0.05 mD，储层最小水平主应力 42—48 MPa。邻井采用 18 段、排量 10 m³/min、砂比 15%、簇间距 25 m，单井压裂成本约 1,150 万元，但 90 天累产差异达到 35%。",
+        "项目目标是在成本不增加的前提下，把 90 天累产提高 20% 以上，并把砂堵概率控制在 15% 以内。下面的流程把「照抄邻井」改成「仿真—代理—多目标—现场校准」的闭环。"
+      ],
+      "stats": [
+        [
+          "水平段长",
+          "1,800 m"
+        ],
+        [
+          "设计段数",
+          "5—20 段"
+        ],
+        [
+          "数值模拟样本",
+          "2,400 组"
+        ],
+        [
+          "平均裂缝半长",
+          "152 → 168 m"
+        ],
+        [
+          "单井压裂成本",
+          "1,150 → 1,046 万元"
+        ],
+        [
+          "90 天累产",
+          "+26%"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "地质工程甜点分段",
+          "role": "数据",
+          "do": "用测井曲线、地应力剖面与天然裂缝密度把水平段划分为 18 个候选段，段长 100 m；标出 3 个高应力段与 2 个天然裂缝发育段，作为后续约束。",
+          "effect": "分段方案从「等间距切分」变成「按储层质量切分」",
+          "trap": "只用自然伽马分段、不看应力，会把高应力段与甜点段混在一起"
+        },
+        {
+          "name": "参数空间与数值仿真",
+          "role": "建模",
+          "do": "排量 4—16 m³/min、砂比 5%—30%、段数 5—20、簇间距 15—40 m；用 Planar3D 计算 2,400 组样本的裂缝半长、导流能力、净压力与砂堵概率。",
+          "effect": "得到覆盖常见施工范围的样本库，单组仿真约 20—40 分钟",
+          "trap": "仿真若忽略滤失与天然裂缝，会系统性高估裂缝半长"
+        },
+        {
+          "name": "代理模型训练",
+          "role": "算法核心",
+          "do": "用 GBDT 与高斯过程分别拟合半长、导流能力、成本与砂堵概率，80% 样本训练、20% 验证，R² 达到 0.91；对砂堵概率单独做分类校正。",
+          "effect": "单次评估从 30 分钟降到 5 ms，支持交互式寻优",
+          "trap": "低排量高砂比样本稀疏，代理模型容易低估砂堵风险"
+        },
+        {
+          "name": "多目标优化与约束筛选",
+          "role": "优化",
+          "do": "以 90 天累产最大、压裂成本最小为目标，约束砂堵概率小于 15%、净压力小于 25 MPa、缝高不穿隔层，用 NSGA-II 得到 42 个 Pareto 方案。",
+          "effect": "推荐 16 段、排量 12 m³/min、砂比 18%、簇间距 22 m，预测累产 +26%",
+          "trap": "只按产量排序会选中 20 段高砂比方案，成本与砂堵风险都超标"
+        },
+        {
+          "name": "现场泵注与闭环校准",
+          "role": "落地",
+          "do": "按推荐方案施工，实时监测净压力与砂比，加砂后期控制提速；施工结束后用微地震半长与 90 天产量反演，更新代理模型参数。",
+          "effect": "试验井未发生砂堵，成本下降 9%，90 天累产提高 26%",
+          "trap": "加砂后期提速过快，会在最后 10 分钟诱发砂堵，前功尽弃"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「压裂方案好」",
+        "html": "<p>压裂方案至少要看四个维度：<b>裂缝半长</b>（改造体积）、<b>导流能力</b>（支撑剂铺置质量）、<b>90 天累产</b>（直接收益）与<b>压裂成本</b>。单看产量会把方案推向「段数最多、砂比最高」，单看成本则造缝不足。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>邻井经验</th><th>优化方案</th><th>变化</th></tr></thead><tbody><tr><td>段数</td><td>18</td><td>16</td><td>-2 段</td></tr><tr><td>簇间距</td><td>25 m</td><td>22 m</td><td>-3 m</td></tr><tr><td>排量</td><td>10 m³/min</td><td>12 m³/min</td><td>+2 m³/min</td></tr><tr><td>砂比</td><td>15%</td><td>18%</td><td>+3 个百分点</td></tr><tr><td>平均裂缝半长</td><td>152 m</td><td>168 m</td><td>+10.5%</td></tr><tr><td>压裂成本</td><td>1,150 万元</td><td>1,046 万元</td><td>-9%</td></tr><tr><td>90 天累产</td><td>100%</td><td>126%</td><td>+26%</td></tr></tbody></table><p class=\"small muted\">注：优化方案减少了段数却提高了产量，原因是单段液量与砂比更合理，缝间干扰下降；这说明「规模最大」不等于「效果最好」。</p>"
+      },
+      "fails": [
+        {
+          "name": "砂堵风险被低估",
+          "why": "砂比大于 22% 且排量低于 8 m³/min 时，携砂能力不足，压力会在数分钟内抬升。代理模型若缺少这类样本，会给出偏低的砂堵概率；必须单独建分类模型并设置硬约束。"
+        },
+        {
+          "name": "裂缝高度失控",
+          "why": "隔层与储层的最小水平主应力差小于 3 MPa 时，裂缝可能穿层压窜邻层或水层。仅优化半长与产量不会发现这个问题，需要把缝高约束写入优化。"
+        },
+        {
+          "name": "成本约束缺失",
+          "why": "20 段、30% 砂比、16 m³/min 的方案产量最高，但成本比邻井高 28%。若不做 Pareto 分析，推荐方案在财务上不可执行。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动排量、砂比与段数，实时看裂缝几何、半长、导流能力、成本与砂堵概率的变化；点击「帕累托寻优」，在成本—产量散点图上显示非支配前沿。",
+      "height": 720
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "id": "m5-mudlog-report-nlp",
+  "sceneId": "m5",
+  "methods": [
+    "nlp"
+  ],
+  "title": "录井报告自动生成与要素抽取",
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "录井日报要在班后 1—2 h 内提交，内容却散在综合录井仪、岩屑描述、钻井液班报和工程日报里。人工抄录、换算单位、套模板，一份 2 h 上下，漏项和单位错误很常见。把字段抽取与模板生成分开做，才能既快又可核查。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "信息抽取 + 模板生成",
+          "desc": "12 个字段的结构化抽取与受控生成"
+        },
+        {
+          "label": "标注成本",
+          "value": "中",
+          "desc": "300 份历史日报可做字段级弱标注"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "单份 2.2 h → 3.5 min + 12 min 审核"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "模板固定，但术语、单位与手写体歧义多"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>录井日报是钻井队、地质监督和甲方每天都要看的班报：12 h 一个班次，一份日报包含井深、钻时、气测全烃与 C1—C5、钻井液密度/粘度/失水、岩性描述、工程异常、下步建议等 8—12 个字段。一口 3,000 m 的井要出 60—90 份，每份都要在班后 1—2 h 内提交。</p><p>数据却是散的：综合录井仪以 1 s 或 1 m 采样输出 WITS/WITSML 流；岩屑描述写在纸质记录本或 Excel 里；钻井液性能记在另一张班报；工程异常（憋泵、井漏、气侵）记在工程日报或即时通讯群里。值班员要在 4—6 个来源之间来回找数、换算单位，再往 Word 模板里抄。</p><p>四个具体问题：<b>漏项</b>——一份日报平均漏 1—2 个字段，氯离子、密度、迟到时间最常缺；<b>单位混用</b>——气测原始数据是 ppm，报表要写 %，3.42% 与 34,200 ppm 经常混写；<b>术语歧义</b>——「显示」与「荧光」、「气测异常」与「气测升高」在不同班组含义不同；<b>版本失控</b>——探井、开发井、水平井用不同模板，套错会缺必填段。</p><div class=\"figure\"><svg viewBox=\"0 0 720 250\" width=\"100%\" role=\"img\" aria-label=\"多源记录人工汇总录井日报\"><rect x=\"0\" y=\"0\" width=\"720\" height=\"250\" fill=\"var(--paper-2)\" rx=\"6\"/><text x=\"18\" y=\"24\" font-size=\"11\" fill=\"var(--ink-2)\">图 A · 4—6 个来源、12 个字段，靠人工汇总成一份日报</text><rect x=\"18\" y=\"42\" width=\"145\" height=\"62\" rx=\"6\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"90\" y=\"62\" font-size=\"9.5\" fill=\"var(--ink-2)\" text-anchor=\"middle\">综合录井仪</text><text x=\"90\" y=\"78\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">WITS 1 s · 气测/钻时</text><text x=\"90\" y=\"92\" font-size=\"9\" fill=\"var(--ink-4)\" text-anchor=\"middle\">结构化流</text><rect x=\"171\" y=\"42\" width=\"145\" height=\"62\" rx=\"6\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"243\" y=\"62\" font-size=\"9.5\" fill=\"var(--ink-2)\" text-anchor=\"middle\">岩屑描述</text><text x=\"243\" y=\"78\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">手写记录本 / Excel</text><text x=\"243\" y=\"92\" font-size=\"9\" fill=\"var(--ink-4)\" text-anchor=\"middle\">自由文本</text><rect x=\"18\" y=\"114\" width=\"145\" height=\"62\" rx=\"6\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"90\" y=\"134\" font-size=\"9.5\" fill=\"var(--ink-2)\" text-anchor=\"middle\">钻井液班报</text><text x=\"90\" y=\"150\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">密度 / 粘度 / 失水</text><text x=\"90\" y=\"164\" font-size=\"9\" fill=\"var(--ink-4)\" text-anchor=\"middle\">表格</text><rect x=\"171\" y=\"114\" width=\"145\" height=\"62\" rx=\"6\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"243\" y=\"134\" font-size=\"9.5\" fill=\"var(--ink-2)\" text-anchor=\"middle\">工程日报 / 群消息</text><text x=\"243\" y=\"150\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">泵压 / 漏失 / 气侵</text><text x=\"243\" y=\"164\" font-size=\"9\" fill=\"var(--ink-4)\" text-anchor=\"middle\">非结构化</text><rect x=\"344\" y=\"64\" width=\"94\" height=\"88\" rx=\"7\" fill=\"var(--card-soft)\" stroke=\"var(--c-nlp)\"/><text x=\"391\" y=\"88\" font-size=\"9.5\" fill=\"var(--ink-2)\" text-anchor=\"middle\">人工汇总</text><text x=\"391\" y=\"106\" font-size=\"11\" fill=\"var(--c-nlp)\" text-anchor=\"middle\">1.5—2.5 h</text><text x=\"391\" y=\"124\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">找数 / 换算 / 套模板</text><text x=\"391\" y=\"140\" font-size=\"9\" fill=\"var(--bad)\" text-anchor=\"middle\">平均漏 1—2 项</text><path d=\"M320 96 L338 96\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\"/><path d=\"M330 92 L338 96 L330 100\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\" fill=\"none\"/><path d=\"M320 140 L338 140\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\"/><path d=\"M330 136 L338 140 L330 144\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\" fill=\"none\"/><path d=\"M442 108 L462 108\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\"/><path d=\"M454 104 L462 108 L454 112\" stroke=\"var(--ink-3)\" stroke-width=\"1.3\" fill=\"none\"/><rect x=\"470\" y=\"38\" width=\"230\" height=\"186\" rx=\"5\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><rect x=\"470\" y=\"38\" width=\"230\" height=\"26\" rx=\"5\" fill=\"var(--paper-3)\"/><text x=\"585\" y=\"56\" font-size=\"10\" fill=\"var(--ink-2)\" text-anchor=\"middle\">录井日报（12 h 班报）</text><text x=\"484\" y=\"86\" font-size=\"9\" fill=\"var(--ink-3)\">井深 / 钻时 / 层位</text><text x=\"484\" y=\"106\" font-size=\"9\" fill=\"var(--ink-3)\">气测全烃 / C1—C5</text><text x=\"484\" y=\"126\" font-size=\"9\" fill=\"var(--ink-3)\">钻井液密度 / 粘度</text><text x=\"484\" y=\"146\" font-size=\"9\" fill=\"var(--ink-3)\">岩性描述 / 荧光</text><text x=\"484\" y=\"166\" font-size=\"9\" fill=\"var(--ink-3)\">工程异常 / 下步建议</text><rect x=\"610\" y=\"112\" width=\"78\" height=\"20\" rx=\"3\" fill=\"var(--bad-bg)\"/><text x=\"649\" y=\"126\" font-size=\"8.5\" fill=\"var(--bad)\" text-anchor=\"middle\">缺氯离子</text><rect x=\"514\" y=\"178\" width=\"126\" height=\"20\" rx=\"3\" fill=\"var(--bad-bg)\"/><text x=\"577\" y=\"192\" font-size=\"8.5\" fill=\"var(--bad)\" text-anchor=\"middle\">3.42% 写成 34,200%</text><text x=\"18\" y=\"214\" font-size=\"9\" fill=\"var(--ink-2)\">问题：字段散、模板多、单位混、术语不统一；审核只能靠人逐项对原文</text><text x=\"18\" y=\"232\" font-size=\"9\" fill=\"var(--ink-3)\">结果：单份 2.2 h，格式一致率 82%，数值错漏约 3 处/份</text></svg><div class=\"figcap\"><b>图 1</b><span>录井日报的多源现状：结构化流、手写描述、表格班报和群消息，最后靠人工汇总进模板</span></div></div>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>做法是「抽取 → 校验 → 模板填充 → 审核」，而不是让大模型直接写一篇日报。第一步用正则和词典抽确定性字段：井深、时间、钻时、密度、粘度、全烃与 C1—C5 数值；第二步用微调过的 BERT 或 LLM 做命名实体识别，抽岩性描述、工程异常、下步建议这类自由文本；第三步做单位归一（ppm→%，kg/m³→g/cm³）和量程、相邻班次校验。</p><p>模板生成只允许「引用」抽取结果：固定 12 段模板，数值字段锁定 token，摘要句必须带来源行号，模型不能自己编数字。这样即使生成模型改写措辞，也不会把 3.42% 写成 4.32% 或 34,200%。</p><p>最后是人工审核闭环：置信度低于 0.75 的字段标红，审核界面左侧原文、右侧字段并排；审核员的每次修改都记录为偏好样本，每周回灌。输出直接对接日报系统与井史数据库，报告里每个数字都能点回原文行。</p><div class=\"figure\"><svg viewBox=\"0 0 720 240\" width=\"100%\" role=\"img\" aria-label=\"多源文本到字段抽取再到模板生成与人工审核\"><rect x=\"0\" y=\"0\" width=\"720\" height=\"240\" fill=\"var(--paper-2)\" rx=\"6\"/><text x=\"18\" y=\"24\" font-size=\"11\" fill=\"var(--ink-2)\">多源文本 → 字段抽取 → 模板生成 → 人工审核</text><rect x=\"18\" y=\"48\" width=\"156\" height=\"96\" rx=\"7\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"96\" y=\"68\" font-size=\"10\" fill=\"var(--ink-2)\" text-anchor=\"middle\">① 多源文本</text><text x=\"96\" y=\"88\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">WITS · 手写扫描件</text><text x=\"96\" y=\"104\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">Excel · 群消息</text><text x=\"96\" y=\"126\" font-size=\"9\" fill=\"var(--c-nlp)\" text-anchor=\"middle\">4 类来源 · 带行号</text><rect x=\"194\" y=\"48\" width=\"156\" height=\"96\" rx=\"7\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"272\" y=\"68\" font-size=\"10\" fill=\"var(--ink-2)\" text-anchor=\"middle\">② 字段抽取</text><text x=\"272\" y=\"88\" font-size=\"9\" fill=\"var(--ink-2)\" text-anchor=\"middle\">井深 3245.0—3252.0 m</text><text x=\"272\" y=\"104\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">正则 + NER + 单位归一</text><text x=\"272\" y=\"126\" font-size=\"9\" fill=\"var(--c-nlp)\" text-anchor=\"middle\">置信度 0.98 / 0.68</text><rect x=\"370\" y=\"48\" width=\"156\" height=\"96\" rx=\"7\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"448\" y=\"68\" font-size=\"10\" fill=\"var(--ink-2)\" text-anchor=\"middle\">③ 模板生成</text><text x=\"448\" y=\"88\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">12 段固定模板</text><text x=\"448\" y=\"104\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">数值 token 锁定</text><text x=\"448\" y=\"126\" font-size=\"9\" fill=\"var(--c-nlp)\" text-anchor=\"middle\">每句带来源行号</text><rect x=\"546\" y=\"48\" width=\"156\" height=\"96\" rx=\"7\" fill=\"var(--card)\" stroke=\"var(--line-3)\"/><text x=\"624\" y=\"68\" font-size=\"10\" fill=\"var(--ink-2)\" text-anchor=\"middle\">④ 人工审核</text><text x=\"624\" y=\"88\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">低置信标红</text><text x=\"624\" y=\"104\" font-size=\"9\" fill=\"var(--ink-3)\" text-anchor=\"middle\">左原文 / 右字段</text><text x=\"624\" y=\"126\" font-size=\"9\" fill=\"var(--c-nlp)\" text-anchor=\"middle\">修改回流为偏好样本</text><path d=\"M174 96 L188 96\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\"/><path d=\"M182 92 L190 96 L182 100\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\" fill=\"none\"/><path d=\"M350 96 L364 96\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\"/><path d=\"M358 92 L366 96 L358 100\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\" fill=\"none\"/><path d=\"M526 96 L540 96\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\"/><path d=\"M534 92 L542 96 L534 100\" stroke=\"var(--ink-3)\" stroke-width=\"1.4\" fill=\"none\"/><line x1=\"18\" y1=\"162\" x2=\"702\" y2=\"162\" stroke=\"var(--line)\"/><text x=\"18\" y=\"184\" font-size=\"9\" fill=\"var(--ink-2)\">门控：置信度 &lt; 0.75 的字段标红，人工确认前不得发布；结论性表述（漏失、气侵、井涌）必须人工确认</text><text x=\"18\" y=\"202\" font-size=\"9\" fill=\"var(--ink-3)\">生成阶段只允许引用抽取结果，禁止改写数值与单位；数值 token 回读校验，不一致直接退回</text><rect x=\"18\" y=\"212\" width=\"684\" height=\"16\" rx=\"3\" fill=\"var(--bg-nlp)\"/><text x=\"360\" y=\"224\" font-size=\"9\" fill=\"var(--ink-2)\" text-anchor=\"middle\">输出：12 个字段 + 来源行号 + 置信度 → 审核后写入日报与井史库</text></svg><div class=\"figcap\"><b>图 2</b><span>抽取式流水线：先抽字段并校验来源，再套模板生成，最后用置信度门控把低可信内容交给人</span></div></div>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">字段抽取的门槛不高，但需要「原文 + 字段」逐行对齐的标注；没有审核痕迹的历史日报价值最高。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">历史录井日报</span><span class=\"cl-s\">300—500 份，覆盖 6 口井</span></span><span class=\"cl-n\">含审核修改痕迹</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">综合录井仪原始数据</span><span class=\"cl-s\">WITS/WITSML，1 s 或 1 m</span></span><span class=\"cl-n\">与日报班次对齐</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">岩屑描述记录</span><span class=\"cl-s\">手写扫描件 + Excel 转录</span></span><span class=\"cl-n\">按包对应井深</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">字段级标注</span><span class=\"cl-s\">12 个必填字段，逐行给来源</span></span><span class=\"cl-n\">双人核对，歧义字段留备注</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">术语与单位词典</span><span class=\"cl-s\">约 200 条同义词 + 换算表</span></span><span class=\"cl-n\">区块级维护，季度更新</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<p>难度 <b>中</b>。字段位置和模板相对固定，正则加小模型就能拿到 90% 以上的召回；真正难的是<b>边界情况</b>：手写体 OCR、单位混用、术语歧义，以及生成阶段的「不许编数」。</p><p>三条经验：① 先做字段级抽取，再做模板填充，不要让一个端到端模型同时负责理解和写作；② 所有数值必须带来源行号，审核界面能一键跳回原文；③ 把「人工修改字符占比」作为核心指标，而不是只看 BLEU 或 ROUGE——业务只关心审核员改了多少。</p><p>风险：大模型可能把上一班的数值「顺」到这一班，或把「疑似漏失」写成「确认漏失」。凡是结论性表述（漏失、气侵、井涌）必须由人确认，模型只做提示。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/nlp\">命名实体识别<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/nlp\">信息抽取<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/nlp\">受控生成<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/nlp\">检索增强<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "塔里木 XX 区块 6 口井 428 份录井日报的自动生成",
+      "lead": [
+        "XX 区块 2025 年完成 6 口开发井，累计 428 份 12 h 班报。每份日报 12 个必填字段，原文来自综合录井仪、岩屑记录、钻井液班报和工程日报四类来源，共 1.2 GB 文本与表格。",
+        "试运行目标不是「无人值守」，而是把值班员从 2.2 h 抄录压缩到 15 min 审核，同时把单位错误和漏项压到 1% 以下。"
+      ],
+      "stats": [
+        [
+          "日报份数",
+          "428 份"
+        ],
+        [
+          "必填字段",
+          "12 个"
+        ],
+        [
+          "原始记录",
+          "1.2 GB / 4 类来源"
+        ],
+        [
+          "人工编写",
+          "2.2 h / 份"
+        ],
+        [
+          "自动生成",
+          "3.5 min / 份"
+        ],
+        [
+          "字段召回",
+          "94.2%"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "多源接入与版面解析",
+          "role": "数据",
+          "do": "接入 WITS 实时流（1 s）、PDF 与扫描件（OCR，中文手写 CER 约 8%）、Word/Excel 班报；统一时间戳到 UTC+8，按 12 h 班次切分，给每段文本分配来源 ID 与行号。",
+          "effect": "4 类来源汇成单一时间轴，任意字段都能回溯到原文行",
+          "trap": "手写「3」和「8」、「岩」和「宕」容易混，必须靠数值量程和词典做二次校验"
+        },
+        {
+          "name": "字段抽取与单位归一",
+          "role": "算法核心",
+          "do": "正则加词典抽井深、时间、钻时、密度、粘度、气测；BERT 微调 NER 抽岩性、工程异常、下步建议；统一单位（ppm→%，kg/m³→g/cm³），同时保留原始值与换算值。",
+          "effect": "12 字段召回 94.2%，精确率 96.8%",
+          "trap": "全烃 3.42% 与 C1 2.71% 出现在同一行，正则贪婪匹配会把两个值串在一起"
+        },
+        {
+          "name": "数值一致性校验",
+          "role": "校验",
+          "do": "与上一班次对比：井深回退、密度变化超过 0.08 g/cm³、气测突增 3 倍、泵压下降超过 20% 时触发复核；超量程（全烃 > 100%）直接拒收。",
+          "effect": "拦截 87% 的录入错误，同时把真实气侵标成高优先级",
+          "trap": "真实气侵也会让气测突增，不能一律当错误拒掉，要交人工判断"
+        },
+        {
+          "name": "模板生成与数值回读",
+          "role": "生成",
+          "do": "按井型选模板（探井/开发井/水平井），固定 12 段；数值字段用占位符锁定，摘要句由检索到的字段拼接并附来源行号；生成后再做一次数值回读校验。",
+          "effect": "3.5 min 出草稿，格式一致率 100%",
+          "trap": "生成模型可能改写数值或把「疑似」写成「确认」，必须锁定数值 token 并禁用结论性改写"
+        },
+        {
+          "name": "人工审核闭环",
+          "role": "质控",
+          "do": "置信度低于 0.75 的字段标红，审核界面左侧原文、右侧字段并排；修改记录作为偏好样本每周回灌；词典和模板按区块季度更新。",
+          "effect": "人工修改字符占比 4.8%，日报返工率低于 3%",
+          "trap": "审核员图省事直接点通过，会把错误固化；需要每周抽检 10% 已发布日报"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「报告生成得好」",
+        "html": "<p>日报的「好」不是文采，而是<b>字段齐全、数值可核、审核省时</b>。核心指标是字段级召回与数值完全匹配率，辅以人工修改字符占比。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工编写</th><th>本方法</th></tr></thead><tbody><tr><td>字段完整率</td><td>12 个必填字段齐全的份数占比</td><td>86%</td><td>97.5%</td></tr><tr><td>字段召回</td><td>正确抽出的字段 / 应抽字段</td><td>100%（基准）</td><td>94.2%</td></tr><tr><td>数值错漏</td><td>每份日报错误或缺失的数值</td><td>3.1 处</td><td>0.4 处</td></tr><tr><td>单份耗时</td><td>编写 + 审核</td><td>2.2 h</td><td>3.5 min + 12 min</td></tr><tr><td>格式一致率</td><td>符合模板与必填段要求</td><td>82%</td><td>100%</td></tr><tr><td>人工修改字符</td><td>审核员改动的字符占比</td><td>—</td><td>4.8%</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "手写体连笔字",
+          "why": "「砂岩」连笔被 OCR 识成「砂宕」，字段抽取直接失败。需要图像去噪、地质词典约束，并把低置信结果转人工。"
+        },
+        {
+          "name": "单位混用",
+          "why": "气测原始 ppm 与报表 % 混用，3.42% 被写成 34,200%，放大 10,000 倍。必须强制单位归一，并在模板里锁定单位。"
+        },
+        {
+          "name": "模板套错",
+          "why": "探井模板要求氯离子和迟到时间，开发井模板没有这两项；套错会缺必填段。需先判井型再选模板，并做必填段校验。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "点击「生成报告」，看 6 个字段依次从原始记录里被抽出来；拖动置信度阈值，低置信字段立刻标红并计入人工确认。",
+      "height": 720
+    }
+  }
+}
