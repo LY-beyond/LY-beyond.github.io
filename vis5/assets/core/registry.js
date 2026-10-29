@@ -5,7 +5,7 @@
    案例文件只做一件事：调用 Cases.register({...}) 声明自己。
    外壳不关心案例内部长什么样，只按契约取数据渲染。
 
-   契约参见 assets/cases/_template.case.js
+   契约参见 assets/cases/_template/case.js
    ========================================================= */
 
 (function (global) {

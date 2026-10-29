@@ -146,6 +146,46 @@
     }).join('') + '</div>';
   }
 
+  /* 环节学习路径：锯齿状编号节点连线，点击直达环节页 */
+  function stageZigzag() {
+    var stages = A.stages;
+    var n = stages.length;
+    if (!n) return '';
+    var stepX = 76;
+    var nodeR = 15;
+    var rowGap = 30;
+    var mx = nodeR + 6;
+    var my = nodeR + 4;
+    var W = mx * 2 + (n - 1) * stepX;
+    var H = my * 2 + rowGap + nodeR * 2 + 22;
+    var lines = '';
+    var flows = '';
+    for (var i = 0; i < n - 1; i++) {
+      var x1 = mx + i * stepX;
+      var y1 = my + nodeR + (i % 2 === 0 ? rowGap : 0);
+      var x2 = mx + (i + 1) * stepX;
+      var y2 = my + nodeR + ((i + 1) % 2 === 0 ? rowGap : 0);
+      lines += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+      flows += '<line class="zz-flow-line" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+    }
+    var nodes = stages.map(function (st, i) {
+      var cx = mx + i * stepX;
+      var cy = my + nodeR + (i % 2 === 0 ? rowGap : 0);
+      var ly = cy + nodeR + 16;
+      return '<a href="#/stage/' + st.id + '" class="zz-node">' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + nodeR + '"/>' +
+        '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central">' + pad(st.idx) + '</text>' +
+        '<text class="zz-label" x="' + cx + '" y="' + ly + '" text-anchor="middle">' + esc(st.name) + '</text>' +
+        '</a>';
+    }).join('');
+    return '<div class="zz-wrap" aria-label="环节学习路径">' +
+      '<svg class="zz-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" fill="none">' +
+      '<g class="zz-lines">' + lines + '</g>' +
+      '<g class="zz-flows">' + flows + '</g>' +
+      '<g class="zz-nodes">' + nodes + '</g>' +
+      '</svg></div>';
+  }
+
   /* =========================================================
      三、首页
      ========================================================= */
@@ -237,6 +277,30 @@
       '<svg viewBox="0 0 1200 56" preserveAspectRatio="none" fill="none" ' +
       'stroke="rgba(122,220,192,.55)" stroke-width="1.4" stroke-linecap="round">' + trace + '</svg></div>';
 
+    /* 我的案例总览：把全部已注册案例做成可点击卡片，方便老师逐个查看 */
+    var caseCards = Cases.list().map(function (c) {
+      var sc = A.index.byId[c.sceneId];
+      var st = sc ? A.index.byStage[sc.stageId] : null;
+      var stageLabel = st ? pad(st.idx) + ' ' + st.name : '—';
+      var sceneLabel = sc ? c.sceneId + ' · ' + sc.name : c.sceneId;
+      var hasDemo = c.tabs && c.tabs.demo && typeof c.tabs.demo.mount === 'function';
+      var tags = (c.methods || []).map(function (m) {
+        return caseChip(m);
+      }).join('');
+      return '<a class="case-card" href="#/scene/' + esc(c.sceneId) + '">' +
+        '<div class="cc-top">' +
+        '<span class="cc-stage">' + esc(stageLabel) + '</span>' +
+        (hasDemo ? '<span class="cc-demo">可运行</span>' : '') +
+        '</div>' +
+        '<div class="cc-title">' + esc(c.title) + '</div>' +
+        '<div class="cc-scene">' + esc(sceneLabel) + '</div>' +
+        (tags ? '<div class="cc-tags">' + tags + '</div>' : '') +
+        '<span class="cc-ar">→</span>' +
+        '</a>';
+    }).join('');
+
+    var caseGrid = '<div class="case-grid">' + caseCards + '</div>';
+
     return '<main>' +
       '<section class="hero"><div class="wrap">' + myStageBar() + '<div class="hero-grid">' +
 
@@ -290,6 +354,8 @@
       '</div>' +
       '<div class="chain-wrap"><div class="chain-scroll"><div class="chain">' + chain + '</div></div>' +
       '<div class="chain-hint">← 横向滚动查看全部 ' + A.stages.length + ' 个环节</div></div>' +
+      '<div class="zz-head"><span class="zz-tag">LEARNING PATH</span><span class="zz-hint">沿作业链的 13 个环节，点击节点直达</span></div>' +
+      stageZigzag() +
       '</div></section>' +
 
       /* 按方法找 */
@@ -312,10 +378,21 @@
       matrixHTML() +
       '</div></section>' +
 
+      /* 我的案例总览 */
+      '<section class="section"><div class="wrap">' +
+      '<div class="sec-head">' +
+      '<div class="sec-rail"><span class="sec-num">04</span><span class="kicker jade">MY CASES</span>' +
+      '<span class="r"><a class="btn sm ghost" href="#/cases">案例库 →</a></span></div>' +
+      '<h2>我的案例：' + cs.registered + ' 个，点击直达</h2>' +
+      '<p>下面是目前已接入的全部案例。每张卡片显示所属环节、场景、标题与方法标签，点击直接跳到对应案例页。带「可运行」标记的案例包含交互式示范。</p>' +
+      '</div>' +
+      caseGrid +
+      '</div></section>' +
+
       /* 系统构成 */
       '<section class="section"><div class="wrap">' +
       '<div class="sec-head">' +
-      '<div class="sec-rail"><span class="sec-num">04</span><span class="kicker clay">SYSTEM</span>' +
+      '<div class="sec-rail"><span class="sec-num">05</span><span class="kicker clay">SYSTEM</span>' +
       '<span class="r"><a class="btn primary sm" href="#/guide">接入指南 →</a></span></div>' +
       '<h2>这个系统由三层组成</h2>' +
       '<p>新增一个案例，只动第二层的一个文件，外加 index.html 里一行 script 标签。</p>' +
@@ -984,8 +1061,9 @@
       '│   └── cases/                <span class="dir">← 案例都放这里</span>',
       '│       ├── welllog-layer.case.js   <span class="new">测井分层（示例）</span>',
       '│       ├── welllog-layer.demo.js   <span class="new">它的可运行示范</span>',
-      '│       ├── _template.case.js       <span class="new">插件模板，复制它开始</span>',
-      '│       └── _template.case.json     <span class="new">清单模板（完整包请用弹窗里下载的 zip）</span>',
+      '│       └── _template/              <span class="dir">模板，不算案例</span>',
+      '│           ├── case.js             <span class="new">插件模板，复制它开始</span>',
+      '│           └── case.json           <span class="new">清单模板（完整包请用弹窗里下载的 zip）</span>',
       '└── docs/',
       '    └── 如何添加新案例.md      <span class="cm">本页的离线版</span>'
     ]);
@@ -1126,7 +1204,7 @@
       '<div class="gsteps">' +
       '<div class="gstep"><div class="gn">1</div><div>' +
       '<h3>复制模板，改三处</h3>' +
-      '<p>把 <b>assets/cases/_template.case.js</b> 复制成 <b>你的案例.case.js</b>，然后只改三处：<b>id</b>、<b>sceneId</b>、以及三个 tab 里的内容。</p>' +
+      '<p>把 <b>assets/cases/_template/case.js</b> 复制成 <b>你的案例.case.js</b>，然后只改三处：<b>id</b>、<b>sceneId</b>、以及三个 tab 里的内容。</p>' +
       '<p>id 用 kebab-case，保证唯一；sceneId 必须是 <b>assets/data.js</b> 里已经存在的场景 id（比如 <b>w1</b> 是测井分层）。如果这个场景还不存在，先在 data.js 的对应环节 scenes 数组里加一条元数据。</p>' +
       '</div></div>' +
 
