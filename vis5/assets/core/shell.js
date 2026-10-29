@@ -18,6 +18,30 @@
   var mountedKey = '';
 
   /* =========================================================
+     主题：亮 / 暗模式
+     ---------------------------------------------------------
+     默认暗色（保持首页石油工业视觉）；用户选择存入 localStorage。
+     只切换 <html data-theme> 与首页类名，不改任何案例数据。
+     ========================================================= */
+  var THEME_KEY = 'atlas-theme';
+  function getTheme() {
+    var t = '';
+    try { t = global.localStorage.getItem(THEME_KEY) || ''; } catch (e) { /* 隐私模式忽略 */ }
+    return t === 'light' ? 'light' : 'dark';
+  }
+  function applyTheme() {
+    var t = getTheme();
+    document.documentElement.setAttribute('data-theme', t);
+    document.body.classList.toggle('is-home', !parseHash().parts.length && t === 'dark');
+  }
+  function toggleTheme() {
+    try { global.localStorage.setItem(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark'); }
+    catch (e) { /* 存不了就只在本次会话生效 */ }
+    applyTheme();
+  }
+
+
+  /* =========================================================
      一、路由
      ========================================================= */
   function parseHash() {
@@ -61,6 +85,13 @@
       '<a class="nav-keep' + on('cases') + '" href="#/cases">案例库</a>' +
       '<a class="nav-keep' + on('guide') + '" href="#/guide">接入指南</a>' +
       '<a class="nav-keep' + on('admin') + '" href="#/admin">' + (Admin.loggedIn() ? '管理后台' : '管理') + '</a>' +
+      '<button class="nav-theme" data-theme-toggle type="button" aria-label="切换亮/暗模式" title="切换亮/暗模式">' +
+      '<svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' +
+      '<circle cx="12" cy="12" r="4.2"/>' +
+      '<path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>' +
+      '<svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">' +
+      '<path d="M20 14.5A8.2 8.2 0 0 1 9.5 4a8.2 8.2 0 1 0 10.5 10.5z"/></svg>' +
+      '</button>' +
       '<button class="nav-add" data-import>＋ 添加案例</button>' +
       '</nav></div></header>';
   }
@@ -118,6 +149,32 @@
   /* =========================================================
      三、首页
      ========================================================= */
+  var STAGE_KEY = 'atlas-stage';
+  function getMyStage() {
+    var id = '';
+    try { id = global.localStorage.getItem(STAGE_KEY) || ''; } catch (e) { /* 隐私模式忽略 */ }
+    return A.index.byStage[id] ? id : '';
+  }
+  function myStageBar() {
+    var cur = getMyStage();
+    var st = cur ? A.index.byStage[cur] : null;
+    var opts = '<option value="">选择你负责的环节</option>' + A.stages.map(function (x) {
+      return '<option value="' + x.id + '"' + (x.id === cur ? ' selected' : '') + '>' +
+        pad(x.idx) + ' ' + esc(x.name) + '</option>';
+    }).join('');
+    var nCase = 0;
+    if (st) st.scenes.forEach(function (sc) { nCase += Cases.bySceneAll(sc.id).length; });
+    return '<div class="hp-mine">' +
+      '<span class="hp-mine-tag">MY STAGE</span>' +
+      (st
+        ? '<span class="hp-mine-name">' + pad(st.idx) + ' · ' + esc(st.name) + '</span>' +
+          '<span class="hp-mine-meta">' + st.scenes.length + ' 场景 · ' + nCase + ' 案例</span>'
+        : '<span class="hp-mine-hint">按学号对应的环节，选中后这里可直接进入</span>') +
+      '<select class="hp-mine-sel" data-mine-stage aria-label="选择我负责的环节">' + opts + '</select>' +
+      (st ? '<a class="hp-mine-go" href="#/stage/' + st.id + '">进入环节 →</a>' : '') +
+      '</div>';
+  }
+
   function homeHTML() {
     var s = A.stats();
     var cs = Cases.stats();
@@ -136,9 +193,18 @@
     }).join('');
 
     var coverPct = total ? Math.round(cs.coveredScenes / total * 100) : 0;
-    var coverBar =
-      '<i style="width:' + coverPct + '%;background:var(--jade)"></i>' +
-      '<i style="width:' + (100 - coverPct) + '%;background:var(--line)"></i>';
+    var coverR = 26, coverC = +(2 * Math.PI * coverR).toFixed(1);
+    var coverDash = +(coverC * coverPct / 100).toFixed(1);
+    var coverRing = '<div class="spec-cover">' +
+      '<svg class="cover-ring" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<circle cx="32" cy="32" r="' + coverR + '" fill="none" stroke="var(--line)" stroke-width="6"/>' +
+      '<circle cx="32" cy="32" r="' + coverR + '" fill="none" stroke="var(--jade)" stroke-width="6" ' +
+      'stroke-linecap="round" stroke-dasharray="' + coverDash + ' ' + coverC + '" transform="rotate(-90 32 32)"/>' +
+      '<text x="32" y="32" text-anchor="middle" dominant-baseline="central">' + coverPct + '%</text>' +
+      '</svg>' +
+      '<div class="cover-meta"><b>' + cs.coveredScenes + ' / ' + total + '</b>' +
+      '<span>个场景已有案例 · 待接入 ' + (total - cs.coveredScenes) + ' 个</span></div>' +
+      '</div>';
 
     var diffBar =
       '<i style="width:' + (s.diff.低 / total * 100).toFixed(2) + '%;background:var(--ok)"></i>' +
@@ -161,10 +227,20 @@
         '<div class="cnt"><b>' + (A.index.byMethod[k] || []).length + '</b>个场景</div></a>';
     }).join('');
 
-    return '<main>' +
-      '<section class="hero"><div class="wrap"><div class="hero-grid">' +
+    /* 首屏底部装饰：一道确定性的地震道波形带（纯 SVG，无外部资源） */
+    var trace = '';
+    for (var ti = 0; ti < 132; ti++) {
+      var amp = +(4 + 20 * Math.abs(Math.sin(ti * 0.37 + 0.6)) * Math.abs(Math.cos(ti * 0.11))).toFixed(1);
+      trace += '<line x1="' + (ti * 9 + 4) + '" y1="' + (28 - amp) + '" x2="' + (ti * 9 + 4) + '" y2="' + (28 + amp) + '"/>';
+    }
+    var traceStrip = '<div class="hp-trace" aria-hidden="true">' +
+      '<svg viewBox="0 0 1200 56" preserveAspectRatio="none" fill="none" ' +
+      'stroke="rgba(122,220,192,.55)" stroke-width="1.4" stroke-linecap="round">' + trace + '</svg></div>';
 
-      '<div class="hero-main">' +
+    return '<main>' +
+      '<section class="hero"><div class="wrap">' + myStageBar() + '<div class="hero-grid">' +
+
+      '<div class="hero-main rise">' +
       '<div class="hero-top">' +
       '<span class="hero-badge">' + esc(A.meta.version) + ' · ' + total + ' 个候选场景</span>' +
       '<span class="hero-badge alt">案例系统 · ' + cs.registered + ' 个已接入</span>' +
@@ -180,7 +256,7 @@
       '</div>' +
       '</div>' +
 
-      '<aside class="spec">' +
+      '<aside class="spec rise d2">' +
       '<div class="spec-h"><span class="mono">AT A GLANCE · 速览</span><span class="mono">' + esc(A.meta.version) + '</span></div>' +
       '<div class="spec-body">' +
       '<div class="spec-row"><span class="k">作业环节</span><span class="v">' + A.stages.length + '<small>个</small></span></div>' +
@@ -193,7 +269,7 @@
       '<div class="spec-row"><span class="k">其中可运行示范</span><span class="v">' + cs.withDemo + '<small>个</small></span></div>' +
       '<div class="spec-row"><span class="k">案例覆盖场景</span><span class="v">' + cs.coveredScenes + '<small>/ ' + total + ' · ' + coverPct + '%</small></span></div>' +
       '</div>' +
-      '<div class="spec-bar">' + coverBar + '</div>' +
+      coverRing +
       '<div class="spec-sub"><span class="mono">方法构成 · BY METHOD</span></div>' +
       '<div class="comp">' +
       '<div class="comp-bar">' + compBar + '</div>' +
@@ -201,8 +277,8 @@
       '</div>' +
       '<div class="spec-f"><span>数据截至 2026-10</span><span>教学用途</span></div>' +
       '</aside>' +
-
-      '</div></div></section>' +
+      '</div>' + traceStrip +
+      '</div></section>' +
 
       /* 按环节找 */
       '<section class="section"><div class="wrap">' +
@@ -272,7 +348,7 @@
     var body = A.stages.map(function (st) {
       var c = counts[st.id];
       var rowTotal = st.scenes.length;
-      return '<tr><th><i>' + pad(st.idx) + '</i>' + esc(st.name) + '</th>' +
+      return '<tr data-stage="' + st.id + '"><th><i>' + pad(st.idx) + '</i>' + esc(st.name) + '</th>' +
         keys.map(function (k) {
           var n = c[k] || 0;
           return '<td class="' + (n ? '' : 'zero') + '"><a href="#/stage/' + st.id + '?m=' + k + '">' + (n || '·') + '</a></td>';
@@ -286,6 +362,86 @@
 
     return '<div class="matrix-wrap"><table class="matrix"><thead>' + head + '</thead><tbody>' + body +
       '</tbody><tfoot>' + foot + '</tfoot></table></div>';
+  }
+
+  /* 首页交互：我的环节直达 / 矩阵悬停浮层 */
+  function bindMine() {
+    var sel = view.querySelector('[data-mine-stage]');
+    if (!sel) return;
+    sel.addEventListener('change', function () {
+      try { global.localStorage.setItem(STAGE_KEY, sel.value); } catch (e) { /* 忽略 */ }
+      render();
+    });
+  }
+
+  function bindMatrixHover() {
+    var wrap = view.querySelector('.matrix-wrap');
+    if (!wrap) return;
+    var rows = wrap.querySelectorAll('tbody tr[data-stage]');
+    if (!rows.length) return;
+
+    var old = document.querySelector('.mx-card');
+    if (old) old.parentNode.removeChild(old);
+
+    var card = document.createElement('div');
+    card.className = 'mx-card';
+    card.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(card);
+
+    var cache = {};
+    function info(id) {
+      if (cache[id]) return cache[id];
+      var st = A.index.byStage[id];
+      var counts = A.countByStageMethod()[id] || {};
+      var nCase = 0, rep = '';
+      st.scenes.forEach(function (sc) {
+        var all = Cases.bySceneAll(sc.id);
+        nCase += all.length;
+        if (!rep) {
+          var r = all.filter(function (c) { return c.status === 'ready'; })[0];
+          if (r) rep = r.title || r.name || r.id;
+        }
+      });
+      cache[id] = { st: st, counts: counts, nCase: nCase, rep: rep };
+      return cache[id];
+    }
+
+    function place(x, y) {
+      var w = 252, h = card.offsetHeight || 168;
+      var left = x + 18, top = y + 16;
+      if (left + w > window.innerWidth - 12) left = x - w - 18;
+      if (top + h > window.innerHeight - 12) top = y - h - 16;
+      card.style.left = Math.max(8, left) + 'px';
+      card.style.top = Math.max(8, top) + 'px';
+    }
+
+    function fill(id) {
+      var d = info(id);
+      var keys = Object.keys(M);
+      card.innerHTML = '<div class="mx-h"><span class="mx-idx">' + pad(d.st.idx) + '</span>' +
+        '<b>' + esc(d.st.name) + '</b></div>' +
+        '<div class="mx-m">' + d.st.scenes.length + ' 个场景 · ' + d.nCase + ' 个已接入案例</div>' +
+        '<div class="mx-chips">' + keys.map(function (k) {
+          var n = d.counts[k] || 0;
+          return '<span class="mtag sm' + (n ? '' : ' off') + '" data-m="' + (M[k].colorKey || k) + '">' +
+            '<b>' + M[k].abbr + '</b>' + n + '</span>';
+        }).join('') + '</div>' +
+        (d.rep ? '<div class="mx-rep">代表案例 · ' + esc(d.rep) + '</div>'
+               : '<div class="mx-rep muted">这个环节还没有接入案例</div>') +
+        '<div class="mx-foot">点击格子按方法筛选进入 →</div>';
+    }
+
+    [].forEach.call(rows, function (row) {
+      row.addEventListener('mouseenter', function (e) {
+        fill(row.getAttribute('data-stage'));
+        card.classList.add('on');
+        place(e.clientX, e.clientY);
+      });
+      row.addEventListener('mousemove', function (e) { place(e.clientX, e.clientY); });
+      row.addEventListener('mouseleave', function () { card.classList.remove('on'); });
+    });
+
+    window.addEventListener('scroll', function () { card.classList.remove('on'); }, { passive: true });
   }
 
   /* =========================================================
@@ -1060,6 +1216,8 @@
   function render() {
     var r = parseHash();
     var p = r.parts;
+    /* 应用主题：暗色时首页挂 is-home，亮色时回到原始暖白首页 */
+    applyTheme();
     unmountCurrent();
     window.scrollTo(0, 0);
 
@@ -1082,6 +1240,7 @@
     view.innerHTML = header() + html + footer();
 
     // 页面级交互
+    if (!p.length) { bindMine(); bindMatrixHover(); }
     if (p[0] === 'stage') bindFilters(view);
     if (p[0] === 'scene') {
       var sc2 = A.index.byScene[p[1]];
@@ -1117,6 +1276,14 @@
     return '<main class="wrap"><div class="empty" style="padding:120px 0"><b>' + esc(msg) + '</b>' +
       '检查地址，或<a href="#/" style="color:var(--jade-d)">回到总览</a>。</div></main>';
   }
+
+  /* 主题切换：事件委托，导航每次重渲染后依然有效 */
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('[data-theme-toggle]') : null;
+    if (!b) return;
+    e.preventDefault();
+    toggleTheme();
+  });
 
   window.addEventListener('hashchange', render);
   render();

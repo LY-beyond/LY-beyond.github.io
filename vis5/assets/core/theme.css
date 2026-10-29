@@ -1,0 +1,361 @@
+/* =========================================================
+   主题层：亮 / 暗模式 + 首页石油工业深色视觉
+   ---------------------------------------------------------
+   开关：导航右侧的「切换亮/暗模式」按钮（shell.js 渲染）
+   状态：<html data-theme="light|dark">，选择存入 localStorage
+   规则：
+   1. 暗色令牌只写在 html[data-theme="dark"] 下，
+      tokens.css 的全局浅色值保持不变。
+   2. 不改任何 kit.js 输出的类名，不改路由与 data-import 按钮。
+   3. 亮色模式下首页自动回到原始暖白视觉。
+   ========================================================= */
+
+/* =========================================================
+   一、暗色设计令牌（全站生效）
+   ========================================================= */
+html[data-theme="dark"]{
+  /* ---------- 画布 ---------- */
+  --paper:      #0a1013;
+  --paper-2:    #0e171b;
+  --paper-3:    #122027;
+  --card:       #111b20;
+  --card-soft:  #16242b;
+
+  /* ---------- 描边 ---------- */
+  --line:       #203138;
+  --line-2:     #2a4049;
+  --line-3:     #3a5b66;
+
+  /* ---------- 墨色 ---------- */
+  --ink:        #e8f2f1;
+  --ink-2:      #b6c8c8;
+  --ink-3:      #8aa0a2;
+  --ink-4:      #658083;
+  --ink-inv:    #f7fbfa;
+
+  /* ---------- 主强调 ---------- */
+  --jade:       #39a98f;
+  --jade-d:     #7adcc0;
+  --jade-l:     rgba(57,169,143,.16);
+  --clay:       #cf8a50;
+  --clay-d:     #eab078;
+  --clay-l:     rgba(207,138,80,.16);
+
+  /* ---------- 五类方法色（深底提亮） ---------- */
+  --c-cv:       #4cc0a4;
+  --c-ts:       #e0955a;
+  --c-nlp:      #b094cf;
+  --c-opt:      #77a6dd;
+  --c-kg:       #b2b866;
+
+  --bg-cv:      rgba(76,192,164,.14);
+  --bg-ts:      rgba(224,149,90,.14);
+  --bg-nlp:     rgba(176,148,207,.14);
+  --bg-opt:     rgba(119,166,221,.14);
+  --bg-kg:      rgba(178,184,102,.14);
+
+  /* ---------- 语义色 ---------- */
+  --ok:         #5cba85;
+  --ok-bg:      rgba(92,186,133,.14);
+  --warn:       #d8a74f;
+  --warn-bg:    rgba(216,167,79,.14);
+  --bad:        #d98276;
+  --bad-bg:     rgba(217,130,118,.14);
+
+  /* ---------- 阴影 ---------- */
+  --sh-1: 0 1px 2px rgba(0,0,0,.45);
+  --sh-2: 0 1px 2px rgba(0,0,0,.5), 0 10px 26px -14px rgba(0,0,0,.85);
+  --sh-3: 0 2px 6px rgba(0,0,0,.55), 0 22px 50px -22px rgba(0,0,0,.95);
+
+  color-scheme: dark;
+}
+
+/* =========================================================
+   二、暗色全局背景与滚动条
+   ========================================================= */
+html[data-theme="dark"] body{background:var(--paper)}
+
+html[data-theme="dark"] body::before{
+  background:
+    radial-gradient(1120px 700px at 6% -14%,  rgba(34,120,102,.34) 0%, rgba(34,120,102,0) 62%),
+    radial-gradient(900px 620px at 97% -8%,   rgba(158,99,48,.28) 0%, rgba(158,99,48,0) 60%),
+    radial-gradient(1000px 820px at 76% 104%, rgba(30,84,116,.26) 0%, rgba(30,84,116,0) 62%),
+    radial-gradient(760px 640px at 16% 98%,   rgba(120,60,70,.16) 0%, rgba(120,60,70,0) 60%),
+    var(--paper);
+}
+html[data-theme="dark"] body::after{
+  background-image:
+    linear-gradient(to right,  rgba(150,200,200,.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(150,200,200,.07) 1px, transparent 1px);
+  background-size: 78px 78px;
+  mask-image: radial-gradient(ellipse 72% 50% at 50% 0%, #000 0%, transparent 84%);
+  -webkit-mask-image: radial-gradient(ellipse 72% 50% at 50% 0%, #000 0%, transparent 84%);
+}
+html[data-theme="dark"] ::-webkit-scrollbar-track{background:#0b1216}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#24363d;border-color:#0b1216}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:#31505a}
+
+/* =========================================================
+   三、主题切换按钮（导航右侧）
+   ========================================================= */
+.nav-theme{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;margin-left:8px;border-radius:7px;
+  border:1px solid var(--line-2);background:var(--card-soft);color:var(--ink-2);
+  transition:background .16s,border-color .16s,color .16s,transform .16s;
+  flex-shrink:0;
+}
+.nav-theme:hover{color:var(--jade-d);border-color:rgba(57,169,143,.45);background:rgba(57,169,143,.10)}
+.nav-theme:active{transform:scale(.94)}
+.nav-theme svg{width:15px;height:15px;display:block}
+.nav-theme .ic-sun{display:none}
+html[data-theme="dark"] .nav-theme .ic-sun{display:block}
+html[data-theme="dark"] .nav-theme .ic-moon{display:none}
+html[data-theme="dark"] .nav-theme{
+  background:rgba(255,255,255,.04);border-color:var(--line-2);color:var(--ink-3);
+}
+
+/* =========================================================
+   四、暗色下的通用组件修正
+   （ui.css / layout.css 里写死的浅色底，只在这里覆盖）
+   ========================================================= */
+html[data-theme="dark"] .hdr{
+  background:rgba(10,16,19,.82);
+  border-bottom-color:rgba(57,169,143,.20);
+}
+html[data-theme="dark"] .hdr::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(57,169,143,0), rgba(57,169,143,.42) 22%,
+    rgba(207,138,80,.34) 78%, rgba(207,138,80,0));
+}
+html[data-theme="dark"] .nav a:hover{background:rgba(57,169,143,.12)}
+html[data-theme="dark"] .nav a.on{color:var(--jade-d)}
+html[data-theme="dark"] .nav a.on::after{background:var(--jade-d)}
+
+html[data-theme="dark"] .btn{background:rgba(255,255,255,.035);border-color:var(--line-2);color:var(--ink)}
+html[data-theme="dark"] .btn:hover{
+  background:rgba(57,169,143,.10);border-color:rgba(57,169,143,.45);
+  box-shadow:0 0 0 1px rgba(57,169,143,.10);
+}
+html[data-theme="dark"] .btn.primary{
+  background:var(--jade);border-color:var(--jade);color:#04120f;
+  box-shadow:0 6px 20px -10px rgba(57,169,143,.9);
+}
+html[data-theme="dark"] .btn.primary:hover{background:#45c2a4;border-color:#45c2a4}
+html[data-theme="dark"] .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-3)}
+html[data-theme="dark"] .btn.ghost:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+html[data-theme="dark"] .nav-add{color:#04120f;box-shadow:0 2px 12px -5px rgba(57,169,143,.75)}
+html[data-theme="dark"] .nav-add:hover{background:#45c2a4;box-shadow:0 4px 16px -5px rgba(57,169,143,.85)}
+
+html[data-theme="dark"] .filters{background:rgba(10,16,19,.92)}
+html[data-theme="dark"] .mg-head{background:rgba(10,16,19,.93)}
+html[data-theme="dark"] .tabs{background:rgba(10,16,19,.94)}
+html[data-theme="dark"] .demo-ctl{background:rgba(255,255,255,.03)}
+html[data-theme="dark"] .mrow:hover{background:rgba(255,255,255,.05)}
+html[data-theme="dark"] .chip.on{background:var(--ink);border-color:var(--ink);color:#04120f}
+html[data-theme="dark"] .chip.on[data-m]{color:#04120f}
+
+html[data-theme="dark"] .ftr{background:rgba(12,20,24,.72);border-top-color:var(--line-2)}
+html[data-theme="dark"] .ftr-col a:hover{color:var(--jade-d)}
+
+html[data-theme="dark"] table.matrix td a:hover{color:#04120f;background:var(--jade)}
+html[data-theme="dark"] .imp-row[data-role="page"] .imp-role{color:var(--c-opt)}
+html[data-theme="dark"] .imp-row[data-role="css"] .imp-role{color:var(--c-nlp)}
+
+/* =========================================================
+   五、首页深色视觉（仅首页 + 暗色时生效）
+   ========================================================= */
+body.is-home{background:var(--paper)}
+
+body.is-home .hero{padding:52px 0 0}
+@media (min-width:1081px){
+  body.is-home .hero-grid{grid-template-columns:minmax(0,1fr) 392px;gap:54px}
+}
+body.is-home .hero-badge{
+  background:rgba(57,169,143,.12);border-color:rgba(57,169,143,.32);color:var(--jade-d);
+}
+body.is-home .hero-badge.alt{
+  background:rgba(255,255,255,.04);border-color:var(--line-2);color:var(--ink-3);
+}
+body.is-home .hero h1{color:var(--ink);font-size:clamp(30px,3.5vw,45px);letter-spacing:-.03em}
+body.is-home .hero h1 em{color:var(--jade-d)}
+body.is-home .hero h1 em::after{
+  background:linear-gradient(90deg, rgba(57,169,143,.30), rgba(207,138,80,.30));
+}
+body.is-home .hero-lead{color:var(--ink-2)}
+body.is-home .hero-note{
+  border-left-color:var(--clay);
+  background:linear-gradient(90deg, rgba(207,138,80,.16), rgba(207,138,80,0) 74%);
+}
+body.is-home .hero-note p{color:var(--ink-3)}
+
+/* 首屏底部的地震道装饰带（亮色模式隐藏） */
+.hp-trace{
+  margin:40px 0 -4px;height:56px;opacity:.42;pointer-events:none;
+  mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+.hp-trace svg{display:block;width:100%;height:56px}
+html[data-theme="light"] .hp-trace{display:none}
+
+/* 速览面板 */
+body.is-home .spec{
+  background:linear-gradient(180deg, rgba(22,36,43,.94), rgba(15,25,30,.94));
+  border-color:var(--line-2);box-shadow:var(--sh-3);
+}
+body.is-home .spec::before{
+  height:2px;
+  background:linear-gradient(90deg, var(--jade) 0%, #57c4a9 40%, var(--clay) 100%);
+  box-shadow:0 0 14px rgba(57,169,143,.5);
+}
+body.is-home .spec-h{background:rgba(255,255,255,.025);border-bottom-color:var(--line)}
+body.is-home .spec-f{background:rgba(255,255,255,.02)}
+body.is-home .spec-row .v{color:var(--ink)}
+body.is-home .comp-legend a:hover{color:var(--jade-d)}
+
+/* 章节 / 作业链 */
+body.is-home .section{padding:44px 0}
+body.is-home .sec-num{
+  background:rgba(57,169,143,.14);border-color:rgba(57,169,143,.32);color:var(--jade-d);
+}
+body.is-home .chain::before{
+  background:linear-gradient(90deg,
+    rgba(57,169,143,.10), var(--line-3) 6%, var(--line-2) 94%, rgba(207,138,80,.20));
+}
+body.is-home .step:hover{
+  background:rgba(57,169,143,.08);border-color:rgba(57,169,143,.30);
+  box-shadow:0 10px 26px -16px rgba(0,0,0,.95);
+}
+body.is-home .step:hover::before{
+  background:var(--jade);border-color:var(--jade);box-shadow:0 0 0 4px rgba(57,169,143,.18);
+}
+
+/* 方法面板 / 矩阵 / 三层结构 */
+body.is-home .methods{box-shadow:var(--sh-2)}
+body.is-home .mcard:hover{
+  background:rgba(57,169,143,.07);box-shadow:inset 0 0 0 1px rgba(57,169,143,.14);
+}
+body.is-home .matrix-wrap{box-shadow:var(--sh-2)}
+body.is-home table.matrix thead th{background:rgba(255,255,255,.03)}
+body.is-home table.matrix tfoot td,
+body.is-home table.matrix tfoot th{background:rgba(255,255,255,.03)}
+
+/* =========================================================
+   六、首页信息型组件：我的环节 / 覆盖环 / 矩阵浮层
+   ========================================================= */
+
+/* ---------- 我的环节直达条 ---------- */
+.hp-mine{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:8px 12px;margin:0 0 24px;
+  border:1px solid var(--line-2);border-radius:10px;
+  background:var(--card-soft);box-shadow:var(--sh-1);
+}
+.hp-mine-tag{
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  padding:3px 7px;border-radius:5px;color:var(--jade-d);
+  background:var(--jade-l);border:1px solid color-mix(in srgb, var(--jade) 30%, transparent);
+  white-space:nowrap;
+}
+.hp-mine-name{font-size:12.5px;font-weight:650;color:var(--ink)}
+.hp-mine-meta{font-family:var(--mono);font-size:9.5px;color:var(--ink-4)}
+.hp-mine-hint{font-size:11.5px;color:var(--ink-3)}
+.hp-mine-sel{
+  background:var(--card);border:1px solid var(--line-2);color:var(--ink-2);
+  font-family:var(--sans);font-size:11px;padding:4px 7px;border-radius:6px;
+  cursor:pointer;max-width:190px;
+}
+.hp-mine-sel:hover{color:var(--ink);border-color:color-mix(in srgb, var(--jade) 45%, var(--line-2))}
+.hp-mine-sel:focus{outline:2px solid color-mix(in srgb, var(--jade) 35%, transparent);outline-offset:1px}
+.hp-mine-go{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--jade-d);white-space:nowrap}
+.hp-mine-go:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- 案例覆盖环 ---------- */
+.spec-cover{display:flex;align-items:center;gap:13px;padding:9px 15px 11px}
+.cover-ring{width:66px;height:66px;flex-shrink:0}
+.cover-ring text{font-family:var(--mono);font-size:12.5px;font-weight:600;fill:var(--ink)}
+.cover-meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cover-meta b{font-family:var(--mono);font-size:15.5px;font-weight:600;color:var(--ink)}
+.cover-meta span{font-size:10.5px;color:var(--ink-4);line-height:1.45}
+
+/* ---------- 矩阵悬停浮层 ---------- */
+table.matrix tbody tr:hover th,
+table.matrix tbody tr:hover td{background:var(--card-soft)}
+
+.mx-card{
+  position:fixed;z-index:80;width:252px;padding:12px 13px;border-radius:10px;
+  background:var(--card);border:1px solid var(--line-2);box-shadow:var(--sh-3);
+  opacity:0;transform:translateY(4px);pointer-events:none;
+  transition:opacity .12s ease,transform .12s ease;
+}
+.mx-card.on{opacity:1;transform:none}
+.mx-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.mx-h b{font-size:13px;color:var(--ink);font-weight:650}
+.mx-idx{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--jade-d)}
+.mx-m{font-family:var(--mono);font-size:9.5px;color:var(--ink-4);margin-bottom:8px}
+.mx-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px}
+.mx-chips .mtag.off{opacity:.32}
+.mx-rep{font-size:11px;color:var(--ink-3);line-height:1.5;margin-bottom:8px}
+.mx-rep.muted{color:var(--ink-4)}
+.mx-foot{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;
+  color:var(--jade-d);border-top:1px solid var(--line);padding-top:7px;
+}
+
+/* =========================================================
+   七、首页顶部背景图（background.png）
+   ---------------------------------------------------------
+   仅首页 .hero 使用，其余页面不受影响。
+   图上叠一层随主题变化的渐变压暗，保证标题与面板可读。
+   ========================================================= */
+.hero{position:relative;isolation:isolate}
+.hero::before{
+  content:'';position:absolute;inset:0 0 auto 0;height:min(660px,88vh);z-index:0;
+  background:url("../../background.png?v=20261026") center 42%/cover no-repeat;
+  opacity:.82;pointer-events:none;
+  mask-image:linear-gradient(180deg,#000 0%,#000 66%,rgba(0,0,0,.35) 84%,transparent 100%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,rgba(0,0,0,.35) 84%,transparent 100%);
+}
+.hero::after{
+  content:'';position:absolute;inset:0 0 auto 0;height:min(660px,88vh);z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg, rgba(251,250,246,.48) 0%, rgba(251,250,246,.06) 46%, rgba(251,250,246,.10) 100%),
+    linear-gradient(180deg, rgba(251,250,246,.06) 0%, rgba(251,250,246,.22) 62%, var(--paper) 96%);
+}
+.hero > .wrap{position:relative;z-index:2}
+
+/* 暗色：把米白插画反相成深色底、保留青绿与陶土色相，让图案真正融进深色页面 */
+html[data-theme="dark"] .hero::before{
+  opacity:.95;
+  filter:invert(1) hue-rotate(180deg) saturate(1.12) brightness(1.08);
+}
+html[data-theme="dark"] .hero::after{
+  background:
+    linear-gradient(90deg, rgba(10,16,19,.38) 0%, rgba(10,16,19,.10) 50%, rgba(10,16,19,.18) 100%),
+    linear-gradient(180deg, rgba(10,16,19,.14) 0%, rgba(10,16,19,.36) 60%, var(--paper) 96%);
+}
+
+/* 背景图需要一点上留白，避免 MY STAGE 条贴住导航 */
+body.is-home .hero{padding-top:30px}
+
+/* =========================================================
+   八、响应式
+   ========================================================= */
+@media (max-width:1080px){
+  body.is-home .hero-grid{gap:30px}
+  body.is-home .spec{max-width:540px}
+  /* 窄屏下 cover 会裁掉画面中段，改为偏向左侧构图，让地震波形留在标题后方 */
+  .hero::before{background-position:14% 44%}
+}
+@media (max-width:760px){
+  body.is-home .hero{padding:34px 0 0}
+  body.is-home .hp-trace{margin-top:28px;height:44px}
+  body.is-home .hp-trace svg{height:44px}
+  .nav-theme{margin-left:4px}
+  .hp-mine{gap:8px;padding:7px 10px}
+  .hp-mine-meta{display:none}
+  .hp-mine-go{margin-left:0}
+  .cover-ring{width:58px;height:58px}
+}

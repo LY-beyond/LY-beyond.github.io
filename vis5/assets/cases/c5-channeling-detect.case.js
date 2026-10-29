@@ -14,7 +14,8 @@
   ],
   "title": "环空窜槽智能识别：超声成像语义分割",
   "version": "1.0.0",
-  "updated": "2026-10-25",
+  "updated": "2026-10-26",
+  "status": "ready",
   "tabs": {
     "background": {
       "label": "专业背景",

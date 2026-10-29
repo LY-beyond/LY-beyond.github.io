@@ -14,7 +14,8 @@
   ],
   "title": "水泥候凝强度预测：水化动力学与时序回归",
   "version": "1.0.0",
-  "updated": "2026-10-25",
+  "updated": "2026-10-26",
+  "status": "ready",
   "tabs": {
     "background": {
       "label": "专业背景",
