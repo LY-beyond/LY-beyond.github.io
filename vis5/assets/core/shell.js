@@ -20,14 +20,14 @@
   /* =========================================================
      主题：亮 / 暗模式
      ---------------------------------------------------------
-     默认暗色（保持首页石油工业视觉）；用户选择存入 localStorage。
+     默认亮色；用户选择存入 localStorage。
      只切换 <html data-theme> 与首页类名，不改任何案例数据。
      ========================================================= */
   var THEME_KEY = 'atlas-theme';
   function getTheme() {
     var t = '';
     try { t = global.localStorage.getItem(THEME_KEY) || ''; } catch (e) { /* 隐私模式忽略 */ }
-    return t === 'light' ? 'light' : 'dark';
+    return t === 'dark' ? 'dark' : 'light';
   }
   function applyTheme() {
     var t = getTheme();
