@@ -1,0 +1,170 @@
+/* =========================================================
+   案例插件（静态注册版）：测井曲线智能修复
+   ---------------------------------------------------------
+   由 cases/w5-log-repair/case.json 生成（tools/build-cases.js）。
+   修改案例内容请改源文件后重新生成，不要直接改本文件。
+   ========================================================= */
+(function (global) {
+  'use strict';
+
+  var DATA = {
+    "id": "w5-log-repair",
+    "sceneId": "w5",
+    "methods": [
+      "ts"
+    ],
+    "title": "测井曲线智能修复",
+    "version": "1.0.0",
+    "updated": "2026-10-30",
+    "status": "ready",
+    "tabs": {
+      "background": {
+        "label": "专业背景",
+        "lede": "柴达木盆地西部某油田 74 口老井，测井采样 0.125 m，累计缺失 **3,180 m**、异常跳变 620 处，很多是 5—40 m 的连续空白或井径垮塌段。人工线性插值补出的曲线看着连续，却把真实薄层与异常一起抹平；跨曲线掩码重建把 GR 重建误差从 8.4 API 降到 3.1 API，异常段召回从 64% 提到 91%。",
+        "judge": [
+          {
+            "label": "任务类型",
+            "value": "序列重建 + 异常检测",
+            "desc": "补全缺失段，同时识别跳变与失真段"
+          },
+          {
+            "label": "标注成本",
+            "value": "中",
+            "desc": "异常段可人工标记，缺失段没有真值"
+          },
+          {
+            "label": "可见收益",
+            "value": "高",
+            "desc": "74 口井补曲线 6 天 → 4 h，下游孔隙度误差减半"
+          },
+          {
+            "label": "难度",
+            "value": "中",
+            "desc": "「补得对不对」只能靠人工掩码与下游效果间接判断"
+          }
+        ],
+        "sections": [
+          {
+            "no": 1,
+            "en": "PROBLEM",
+            "title": "当前做法与问题",
+            "html": "<p>老井测井曲线常见三类问题：仪器故障或记录中断造成的 5—40 m 连续空白、井径垮塌引起的 DEN / CNL 失真、以及尖峰与基线漂移。传统处理是人工线性插值或用邻井对比手动补值，一口井 1—2 h，74 口井 6 天。插值没有任何物理依据，补出的曲线平滑但把 0.3—0.5 m 的薄层抹掉；异常段靠肉眼逐段翻，620 处里能查出的不到七成。</p><p>可用的物理基础比想象中多：同一井的 GR、SP、RT、DEN、CNL 之间强相关，尤其 GR 与 SP、DEN 与 CNL 存在稳定的交会关系；同区块 55 口邻井提供了层序与曲线形态参考；井径 CAL 与钻井液、套管记录能解释异常成因。掩码自编码器正好适配这个任务——把缺失段当掩码，用其余曲线与邻井约束重建。</p><p>硬约束：① 缺失段没有真值，重建误差不能自证，只能用「从完整段人工挖掉一段」的准真值来评估；② 井径垮塌段的曲线本身是失真的，正确做法是标为「无效」而不是补一个看似合理的值；③ 过度平滑会把真实薄层与油气显示一起抹掉，重建指标越好反而越危险。</p>"
+          },
+          {
+            "no": 2,
+            "en": "INTERVENTION",
+            "title": "AI 能做什么",
+            "html": "<p>AI 替换的是「人工插值 + 肉眼找异常」：以井为单元，输入可见曲线、井径与邻井约束，用掩码自编码 + 跨曲线注意力重建缺失段，同时用重建残差与规则（跳变 &gt;3σ、基线漂移、CAL 超限）识别异常段，输出逐点置信度与质量旗标。</p><p>训练的关键是掩码方式：必须从完整井段上挖掉 5—40 m 的连续段来模拟真实缺失，随机点掩码会让模型直接抄相邻点，指标虚高一半以上；损失除重建误差外，加 GR—SP、DEN—CNL 的跨曲线一致性项，并对高频成分单独加权，防止过度平滑。</p><p>定位是辅助处理：模型给出修复曲线、异常清单与置信度，解释员确认异常成因、判定垮塌段是否作废。不全自动的原因：缺失机制（仪器故障、套管段、事故）不同，补值语义完全不同，且修复结果会直接进入储量计算。</p>"
+          },
+          {
+            "no": 3,
+            "en": "DATA",
+            "title": "你需要准备什么",
+            "html": "<p style=\"margin-bottom:14px\">先把缺失、异常、无效三类分清，再构造人工掩码测试集，否则无从评价。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">多曲线测井数据</span><span class=\"cl-s\">GR、SP、RT、DEN、CNL，0.125 m，74 口井全井段</span></span><span class=\"cl-n\">620 处异常段人工标记</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">邻井同期曲线</span><span class=\"cl-s\">同区块 55 口井，同层段对比</span></span><span class=\"cl-n\">作为参考，无需标注</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井径与工程记录</span><span class=\"cl-s\">CAL、钻井液、套管程序、事故记录</span></span><span class=\"cl-n\">判定异常与无效段成因</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">人工掩码测试集</span><span class=\"cl-s\">从完整段挖 5—40 m 连续段，186 段</span></span><span class=\"cl-n\">构造准真值，覆盖四档长度</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">下游解释成果</span><span class=\"cl-s\">孔隙度、饱和度与 12 口井试油</span></span><span class=\"cl-n\">用于间接验证</span></div></div>"
+          },
+          {
+            "no": 4,
+            "en": "DIFFICULTY",
+            "title": "技术难度与参考方向",
+            "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">补值没有直接真值，评价体系比模型本身更难建。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战按影响排序：① 评价缺真值——只能靠人工连续段掩码 + 下游解释误差，单看重建 RMSE 会被平滑模型骗过；② 缺失机制混杂——仪器故障、套管段、垮塌段的正确处理方式不同，统一补值会制造假信息；③ 平滑与保真冲突——重建损失偏爱平滑解，薄层与油气显示恰恰是高频异常。</p><p>评估建议：人工掩码段 GR RMSE ≤4 API、DEN ≤0.025 g/cm³；异常段召回 ≥85%、误报 ≤10%；修复后孔隙度误差 ≤1.5 pu；薄层保留率 ≥80%。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/ts\">序列插补<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">掩码自编码器<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">跨曲线生成<span class=\"ar\">↗</span></a></div>"
+          }
+        ]
+      },
+      "workflow": {
+        "label": "案例流程",
+        "title": "柴达木盆地西部某油田 74 口老井的测井曲线修复",
+        "lead": [
+          "油田 74 口老井测井资料跨度 1988—2015 年，采样 0.125 m，累计缺失 3,180 m（单段 5—40 m）、异常跳变 620 处，其中井径垮塌段 770 m。55 口井有同层段邻井曲线可作参考。",
+          "项目做跨曲线掩码重建与异常检测，用 186 段人工连续掩码作准真值。目标：GR 重建 RMSE ≤4 API、异常段召回 ≥85%、修复后孔隙度误差 ≤1.5 pu，74 口井补曲线从 6 天压到 4 h。"
+        ],
+        "stats": [
+          [
+            "修复井数",
+            "74 口"
+          ],
+          [
+            "缺失总长",
+            "3,180 m"
+          ],
+          [
+            "异常段",
+            "620 处"
+          ],
+          [
+            "邻井参考",
+            "55 口"
+          ],
+          [
+            "人工补曲线",
+            "6 天"
+          ],
+          [
+            "模型修复",
+            "4 h"
+          ]
+        ],
+        "steps": [
+          {
+            "name": "缺失与异常盘点",
+            "role": "数据",
+            "do": "逐井标记 5—40 m 缺失段 412 段、跳变与漂移 620 处；用 CAL 与 DEN 一致性判定垮塌段，标为「无效」而非「缺失」。",
+            "effect": "有效缺失 2,410 m、无效段 770 m 单列",
+            "trap": "把井径垮塌段当缺失去补——补出来的是假的致密层，直接抬高孔隙度、压低饱和度"
+          },
+          {
+            "name": "准真值构造",
+            "role": "标注",
+            "do": "从完整井段人工挖掉 5、15、30、40 m 四档连续段共 186 段，作为测试集；训练集只用原始完整段，缺失在训练时动态制造。",
+            "effect": "测试集覆盖四档长度，各 46—48 段",
+            "trap": "随机点掩码让相邻点抄答案——RMSE 虚低 50% 以上，上线遇到 30 m 连续空白直接失效"
+          },
+          {
+            "name": "跨曲线重建模型",
+            "role": "算法核心",
+            "do": "掩码自编码 + 跨曲线注意力，输入可见曲线、井径与邻井同层段约束，输出缺失段与 90% 区间；损失加 GR—SP、DEN—CNL 一致性项。",
+            "effect": "GR RMSE 3.1 API、DEN 0.021 g/cm³",
+            "trap": "只用单曲线自回归——GR 连续缺失 40 m 时本井没有任何信息可用，必须跨曲线 + 邻井"
+          },
+          {
+            "name": "异常检测头",
+            "role": "算法核心",
+            "do": "重建残差 + 规则（跳变 >3σ、基线漂移、CAL 超限）识别异常段，输出异常类型与置信度；与邻井一致的残差标为「待确认」而非直接抹平。",
+            "effect": "620 处召回 91%，误报率 7%",
+            "trap": "把真实薄层高幅异常当噪声——残差大但与邻井同层一致的，应保留并标记，不能一律平滑"
+          },
+          {
+            "name": "下游验证与交付",
+            "role": "质控",
+            "do": "用修复前后曲线分别解释孔隙度与饱和度，与 12 口井岩心、试油对比；交付曲线附质量旗标（实测 / 重建 / 无效）与置信度。",
+            "effect": "孔隙度误差从 2.8 pu 降到 1.4 pu，74 口井 4 h 完成",
+            "trap": "只评估重建误差不看下游——曲线很平滑但解释结论被系统性带偏，储量算错也发现不了"
+          }
+        ],
+        "metrics": {
+          "title": "怎么算「修复过关」",
+          "html": "<p>反直觉的陷阱：重建 RMSE 0.05 的「高分」模型很可能在过度平滑——把 0.3 m 薄层、油气显示与真实异常一起抹平，曲线漂亮但信息丢了。所以除了误差，还要看<b>残差分布是否只在平滑段小</b>、薄层保留率与下游解释误差。另一个陷阱是把异常检测做成「抹平检测」：能找出尖峰不等于能保住真异常，必须用「注入已知薄层后是否保留」的测试。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工插值</th><th>本方案</th></tr></thead><tbody><tr><td>GR 重建 RMSE</td><td>186 段人工掩码</td><td>8.4 API</td><td>3.1 API</td></tr><tr><td>DEN 重建 RMSE</td><td>186 段人工掩码</td><td>0.052 g/cm³</td><td>0.021 g/cm³</td></tr><tr><td>异常段召回</td><td>620 处</td><td>64%</td><td>91%</td></tr><tr><td>异常误报率</td><td>按井统计</td><td>—</td><td>7%</td></tr><tr><td>下游孔隙度误差</td><td>对岩心 / 试油</td><td>2.8 pu</td><td>1.4 pu</td></tr><tr><td>补曲线周期</td><td>74 口井</td><td>6 天</td><td>4 h</td></tr></tbody></table>"
+        },
+        "fails": [
+          {
+            "name": "用插值后的曲线训练",
+            "why": "训练集里含人工插值段，模型学到的是线性插值的平滑偏差，在真实缺失段输出同样平滑的假曲线。解决：训练只用原始完整段，缺失在完整段上人工制造，插值结果不进入训练。"
+          },
+          {
+            "name": "随机点掩码导致指标虚高",
+            "why": "0.125 m 相邻点高度相关，模型直接抄邻近值，RMSE 可以低到不真实；遇到 5—40 m 连续缺失完全失效。解决：按真实缺失长度分布做连续段掩码，测试集单列。"
+          },
+          {
+            "name": "过度平滑抹掉薄层与异常",
+            "why": "重建损失偏爱平滑解，0.3 m 薄层与油气显示被当作噪声抹掉，解释时漏层。解决：加高频保真项与薄层保留测试，交付时输出低置信标记。"
+          },
+          {
+            "name": "井径垮塌段强行补值",
+            "why": "垮塌段 DEN 与 CNL 本就失真，补出的「合理」曲线会误导孔隙度与饱和度计算。解决：CAL 超限段标「无效」，只用邻井给区间参考，不进入参数解释。"
+          }
+        ]
+      }
+    }
+  };
+
+  global.Cases.register(DATA);
+})(window);

@@ -1,53 +1,95 @@
-/* ========= 固井质量评价示范样式 ========= */
+/* ========= 固井质量 CBL/VDL 智能评价 ========= */
 * { box-sizing: border-box; }
+html, body { margin: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: #fbfaf6;
+  background: #f5f4ef;
   color: #242b2e;
-  padding: 32px 28px;
-  line-height: 1.65;
+  font-size: 12px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-.panel { max-width: 960px; margin: 0 auto; }
-h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-h2 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: #235f51; }
-.lead { color: #4d565b; margin-bottom: 14px; }
-.hint { font-size: 12.5px; color: #79828a; margin-bottom: 10px; }
-.section { background: #fff; border: 1px solid #e9e4d8; border-radius: 9px; padding: 18px 22px; margin-bottom: 16px; }
-
-.cbl-legend { display: flex; gap: 16px; font-size: 12px; color: #5d666d; margin-top: 8px; flex-wrap: wrap; }
-.cbl-legend span { display: flex; align-items: center; gap: 5px; }
-.cbl-legend i { width: 12px; height: 12px; border-radius: 2px; }
-.cbl-legend .ai-line { width: 16px; height: 2px; background: #235f51; }
-.cbl-legend .truth-line { width: 16px; height: 2px; background: #b05a51; border-style: dashed; border-width: 0; border-top: 2px dashed #b05a51; }
-
-.vdl-wrap { background: #fdfcf9; border-radius: 6px; padding: 8px; overflow-x: auto; }
-
-.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.ctl { display: flex; flex-direction: column; gap: 4px; padding: 11px 14px; background: #f5f2ea; border-radius: 7px; }
-.ctl label { font-size: 13px; display: flex; justify-content: space-between; font-weight: 500; }
-.ctl output { font-family: 'JetBrains Mono', Consolas, monospace; color: #235f51; font-weight: 600; }
-.ctl input[type="range"] { accent-color: #2f7d6b; }
-.ctl .tip { font-size: 11.5px; color: #9ba3a9; }
-.ctl input[type="checkbox"] { accent-color: #2f7d6b; }
-
-.btn-row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
-.btn-row button {
-  padding: 8px 18px; border-radius: 6px; border: 1px solid #c9c2b0;
-  background: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
+.panel { max-width: none; margin: 0; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 10px; align-items: start; }
+.side { position: sticky; top: 6px; }
+.data-note {
+  font-size: 10.5px; color: #8a9298; margin: 0 0 6px; line-height: 1.5;
+  border-left: 3px solid #c9a15a; padding-left: 8px;
 }
-.btn-row button:hover { border-color: #2f7d6b; color: #2f7d6b; }
-.btn-row button.primary { background: #2f7d6b; border-color: #2f7d6b; color: #fff; }
-.btn-row button.primary:hover { background: #235f51; }
-.result-stat { font-size: 12.5px; color: #79828a; }
+h1 { font-size: 15px; font-weight: 600; margin: 0 0 3px; color: #2f7d6b; letter-spacing: .3px; }
+.lead { color: #4d565b; font-size: 11.5px; margin: 0 0 8px; max-width: none; }
 
-.seg-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.seg-table th { background: #f5f2ea; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 12px; }
-.seg-table td { padding: 7px 10px; border-bottom: 1px solid #efece1; }
-.seg-table tr:hover { background: #f5f2ea; }
-.seg-table .grade { font-family: 'JetBrains Mono', Consolas, monospace; font-weight: 600; }
-.seg-table .grade.a { color: #3f8560; }
-.seg-table .grade.b { color: #5a9a70; }
-.seg-table .grade.c { color: #b58a38; }
-.seg-table .grade.d { color: #b05a51; }
-.prob-cell { display: flex; gap: 2px; height: 14px; align-items: center; }
-.prob-cell .pb { height: 100%; border-radius: 2px; min-width: 1px; }
+.section { background: #fff; border: 1px solid #e6e0d2; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.section h2 { font-size: 12.5px; font-weight: 600; margin: 0 0 4px; color: #2f7d6b; }
+.hint { font-size: 10.5px; color: #79828a; margin: 4px 0 0; line-height: 1.45; }
+
+svg { display: block; width: 100%; max-width: 100%; height: auto; background: #fdfcf8; border-radius: 6px; }
+canvas { display: block; width: 100%; max-width: 100%; height: auto; background: #fdfcf8; border-radius: 6px; }
+
+/* 图表显示尺寸收敛：避免在宽 viz 列里被放大得过高 */
+.viz > .section > svg, .viz > .section > canvas { max-width: 480px; margin-left: auto; margin-right: auto; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 10px; color: #5d666d; margin-top: 4px; }
+.legend span { display: flex; align-items: center; gap: 4px; }
+.legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.metric-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.metric { background: #f5f2ea; border-radius: 7px; padding: 6px 8px; display: flex; flex-direction: column; gap: 1px; }
+.metric span { font-size: 10.5px; color: #79828a; }
+.metric b { font-family: ui-monospace, Consolas, monospace; font-size: 15px; color: #2f7d6b; font-weight: 600; line-height: 1.25; }
+.metric.warn b { color: #c9a15a; }
+.metric.bad b { color: #b05a51; }
+
+.controls { display: grid; grid-template-columns: 1fr !important; gap: 6px; }
+.ctl { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; background: #f5f2ea; border-radius: 7px; min-width: 0; }
+.ctl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.ctl label { font-size: 10.5px; font-weight: 500; color: #3c4448; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctl output { font-family: ui-monospace, Consolas, monospace; color: #2f7d6b; font-weight: 600; font-size: 10.5px; white-space: nowrap; }
+.ctl input[type="range"] { width: 100%; margin: 2px 0 0; accent-color: #2f7d6b; height: 14px; }
+
+.table-wrap { max-height: 180px; overflow: auto; margin-top: 4px; border: 1px solid #efece1; border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+th { position: sticky; top: 0; z-index: 1; background: #f5f2ea; padding: 4px 6px; text-align: left; font-weight: 600; font-size: 9.5px; color: #4d565b; white-space: nowrap; }
+td { padding: 3px 6px; border-bottom: 1px solid #f2efe5; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #faf8f2; }
+.mono { font-family: ui-monospace, Consolas, monospace; }
+.grade { font-family: ui-monospace, Consolas, monospace; font-weight: 600; }
+.grade.a { color: #2f7d6b; }
+.grade.b { color: #5fa88a; }
+.grade.c { color: #c9a15a; }
+.grade.d { color: #b05a51; }
+.prob-bar { display: flex; height: 8px; width: 60px; border-radius: 3px; overflow: hidden; background: #f0ede4; }
+.prob-bar i { display: block; height: 100%; }
+
+/* ===== 邻接联动提示 ===== */
+.sync-note { font-size: 10.5px; color: #79828a; background: #f5f2ea; padding: 5px 8px; border-radius: 6px; margin-bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.sync-note button { font-size: 10px; padding: 2px 8px; border: 1px solid #c9a15a; background: #fff; color: #a97a1c; border-radius: 4px; cursor: pointer; }
+.sync-note button:hover { background: #f9efd7; }
+
+/* ===== 方案对比面板 ===== */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.compare-col { background: #f9f7f0; border: 1px solid #e9e4d8; border-radius: 8px; padding: 8px 10px; }
+.compare-col.rec { border-color: #2f7d6b; background: #f1f7f4; }
+.compare-col h3 { font-size: 11.5px; margin: 0 0 6px; color: #2f7d6b; }
+.compare-col.rec h3 { color: #235f51; }
+.compare-col .metric { background: #fff; border-radius: 6px; padding: 5px 8px; margin-bottom: 5px; display: flex; flex-direction: column; gap: 1px; }
+.compare-col .metric span { font-size: 10px; color: #79828a; }
+.compare-col .metric b { font-family: ui-monospace, Consolas, monospace; font-size: 14px; color: #2f7d6b; font-weight: 600; }
+.compare-actions { margin-top: 8px; display: flex; gap: 8px; }
+.compare-actions button { padding: 5px 10px; border-radius: 6px; border: 1px solid #2f7d6b; background: #2f7d6b; color: #fff; cursor: pointer; font-size: 11px; }
+.compare-actions button:hover { background: #235f51; }
+.compare-actions button.secondary { background: #fff; color: #2f7d6b; }
+.compare-actions button.secondary:hover { background: #f1f7f4; }
+
+@media (max-width: 720px) {
+  body { padding: 8px 10px; }
+  .layout { grid-template-columns: 1fr; }
+  .side { position: static; }
+  .two-col { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .metric-row { grid-template-columns: 1fr 1fr; }
+}

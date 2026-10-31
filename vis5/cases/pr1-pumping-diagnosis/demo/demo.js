@@ -202,8 +202,8 @@
   // ---------- 主示功图渲染 ----------
   function drawDyn(dyn) {
     const svg = document.getElementById('dyn');
-    const W = 380, H = 320;
-    const padL = 54, padR = 14, padT = 20, padB = 32;
+    const W = 360, H = 216;
+    const padL = 36, padR = 8, padT = 16, padB = 26;
     const plotW = W - padL - padR, plotH = H - padT - padB;
 
     const XMAX = dyn.stroke * 1.1;
@@ -217,12 +217,12 @@
     // 网格
     for (let v = 0; v <= XMAX; v += 1) {
       s += `<line x1="${xOf(v)}" y1="${padT}" x2="${xOf(v)}" y2="${padT + plotH}" stroke="#efece1"/>`;
-      s += `<text x="${xOf(v)}" y="${H - 10}" font-size="9" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${v.toFixed(0)}</text>`;
+      s += `<text x="${xOf(v)}" y="${H - 16}" font-size="8" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${v.toFixed(0)}</text>`;
     }
     for (let v = 0; v <= YMAX; v += Math.round(YMAX / 5)) {
       const y = yOf(v);
       s += `<line x1="${padL}" y1="${y}" x2="${padL + plotW}" y2="${y}" stroke="#efece1"/>`;
-      s += `<text x="${padL - 6}" y="${y + 3}" font-size="9" fill="#9ba3a9" text-anchor="end" font-family="monospace">${v.toFixed(0)}</text>`;
+      s += `<text x="${padL - 6}" y="${y + 3}" font-size="8" fill="#9ba3a9" text-anchor="end" font-family="monospace">${v.toFixed(0)}</text>`;
     }
 
     // 冲程中心线
@@ -241,15 +241,15 @@
     s += `<path d="${path}" fill="none" stroke="#235f51" stroke-width="2" stroke-linejoin="round"/>`;
 
     // 冲程起止点标注
-    s += `<circle cx="${xOf(0)}" cy="${yOf(dyn.points[0].y)}" r="4" fill="#2f7d6b"/>`;
-    s += `<text x="${xOf(0) - 6}" y="${yOf(dyn.points[0].y) - 6}" font-size="9" fill="#2f7d6b" font-family="monospace" text-anchor="end">起</text>`;
+    s += `<circle cx="${xOf(0)}" cy="${yOf(dyn.points[0].y)}" r="3" fill="#2f7d6b"/>`;
+    s += `<text x="${xOf(0) - 5}" y="${yOf(dyn.points[0].y) - 5}" font-size="8" fill="#2f7d6b" font-family="monospace" text-anchor="end">起</text>`;
     const midPt = dyn.points[Math.floor(dyn.points.length / 2)];
-    s += `<circle cx="${xOf(midPt.x)}" cy="${yOf(midPt.y)}" r="4" fill="#b26a39"/>`;
-    s += `<text x="${xOf(midPt.x) + 6}" y="${yOf(midPt.y) - 6}" font-size="9" fill="#b26a39" font-family="monospace">满</text>`;
+    s += `<circle cx="${xOf(midPt.x)}" cy="${yOf(midPt.y)}" r="3" fill="#b26a39"/>`;
+    s += `<text x="${xOf(midPt.x) + 5}" y="${yOf(midPt.y) - 5}" font-size="8" fill="#b26a39" font-family="monospace">满</text>`;
 
     // 轴标签
-    s += `<text x="${padL}" y="${padT - 6}" font-size="10" fill="#9ba3a9" font-family="monospace">载荷 kN ↑</text>`;
-    s += `<text x="${padL + plotW / 2}" y="${padT + plotH + 26}" font-size="10" fill="#9ba3a9" text-anchor="middle">位移 m →</text>`;
+    s += `<text x="${padL}" y="${padT - 6}" font-size="8.5" fill="#9ba3a9" font-family="monospace">载荷 kN ↑</text>`;
+    s += `<text x="${padL + plotW / 2}" y="${padT + plotH + 20}" font-size="8.5" fill="#9ba3a9" text-anchor="middle">位移 m →</text>`;
 
     svg.innerHTML = s;
   }
@@ -302,9 +302,9 @@
   // ---------- 典型工况一览 ----------
   function drawGallery() {
     const svg = document.getElementById('gallery');
-    const W = 720, H = 380;
+    const W = 430, H = 230;
     const cols = 3, rows = 2;
-    const pad = 10, margin = 18;
+    const pad = 8, margin = 12;
     const cellW = (W - margin * 2 - pad * (cols - 1)) / cols;
     const cellH = (H - margin * 2 - pad * (rows - 1)) / rows;
 
@@ -314,7 +314,7 @@
       const col = idx % cols, row = Math.floor(idx / cols);
       const cx = margin + col * (cellW + pad);
       const cy = margin + row * (cellH + pad);
-      const innerPad = 14;
+      const innerPad = 10;
       const iW = cellW - innerPad * 2;
       const iH = cellH - innerPad * 2;
 
@@ -341,10 +341,10 @@
         path += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
       }
       path += 'Z';
-      s += `<path d="${path}" fill="rgba(47,125,107,0.18)" stroke="#235f51" stroke-width="1.8" stroke-linejoin="round"/>`;
+      s += `<path d="${path}" fill="rgba(47,125,107,0.18)" stroke="#235f51" stroke-width="1.4" stroke-linejoin="round"/>`;
 
       // 标签
-      s += `<text x="${cx + cellW / 2}" y="${cy + cellH - 5}" font-size="11" font-weight="600" text-anchor="middle" fill="#235f51">${c.label}</text>`;
+      s += `<text x="${cx + cellW / 2}" y="${cy + cellH - 4}" font-size="8.5" font-weight="600" text-anchor="middle" fill="#235f51">${c.label}</text>`;
     });
 
     svg.innerHTML = s;

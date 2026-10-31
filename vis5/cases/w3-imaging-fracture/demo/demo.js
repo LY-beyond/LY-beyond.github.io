@@ -53,16 +53,16 @@
       x = L + Wp * i / 4;
       az = i * 90;
       s += '<line x1="' + x + '" y1="' + T + '" x2="' + x + '" y2="' + (T + Hp) + '" stroke="var(--line)" stroke-width=".7"/>';
-      s += '<text x="' + x + '" y="' + (T - 8) + '" font-size="9.5" fill="var(--tx-3)" text-anchor="middle">' + az + '°</text>';
+      s += '<text x="' + x + '" y="' + (T - 5) + '" font-size="8" fill="var(--tx-3)" text-anchor="middle">' + az + '°</text>';
     }
     for (i = 0; i <= 5; i++) {
       y = T + Hp * i / 5;
       dep = D0 + i;
       s += '<line x1="' + L + '" y1="' + y + '" x2="' + (L + Wp) + '" y2="' + y + '" stroke="var(--line)" stroke-width=".7"/>';
-      s += '<text x="' + (L - 8) + '" y="' + (y + 3.5) + '" font-size="9" fill="var(--tx-3)" text-anchor="end">' + dep + ' m</text>';
+      s += '<text x="' + (L - 5) + '" y="' + (y + 3) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="end">' + dep + ' m</text>';
     }
-    s += '<text x="' + (L + Wp / 2) + '" y="' + (T - 22) + '" font-size="10" fill="var(--tx-2)" text-anchor="middle">方位角 (°)</text>';
-    s += '<text x="' + (L - 40) + '" y="' + (T + Hp / 2) + '" font-size="10" fill="var(--tx-2)" text-anchor="middle" transform="rotate(-90 ' + (L - 40) + ' ' + (T + Hp / 2) + ')">井深 (m)</text>';
+    s += '<text x="' + (L + Wp / 2) + '" y="' + (T - 13) + '" font-size="8" fill="var(--tx-2)" text-anchor="middle">方位角 (°)</text>';
+    s += '<text x="' + (L - 36) + '" y="' + (T + Hp / 2) + '" font-size="8" fill="var(--tx-2)" text-anchor="middle" transform="rotate(-90 ' + (L - 36) + ' ' + (T + Hp / 2) + ')">井深 (m)</text>';
     return s;
   }
 
@@ -83,37 +83,37 @@
     var boxIdx = [Math.floor(count * 0.22), Math.floor(count * 0.52), Math.floor(count * 0.8)];
     boxIdx.forEach(function (j, k) {
       if (j >= count || !list[j].detected) return;
-      var by = T + spacing * (j + 0.5) - 24;
-      s += '<rect x="' + (L + Wp * 0.34) + '" y="' + by + '" width="118" height="48" rx="3" fill="none" stroke="var(--acc)" stroke-width="1" stroke-dasharray="4 3"/>';
+      var by = T + spacing * (j + 0.5) - 14;
+      s += '<rect x="' + (L + Wp * 0.34) + '" y="' + by + '" width="68" height="28" rx="3" fill="none" stroke="var(--acc)" stroke-width="1" stroke-dasharray="4 3"/>';
       if (k === 0) {
-        s += '<text x="' + (L + Wp * 0.34 + 4) + '" y="' + (by - 4) + '" font-size="8.5" fill="var(--acc)">检测框</text>';
+        s += '<text x="' + (L + Wp * 0.34 + 3) + '" y="' + (by - 3) + '" font-size="7.5" fill="var(--acc)">检测框</text>';
       }
     });
     var missed = 0;
     list.forEach(function (f, j) {
       if (f.detected || missed >= 2 || j % 5 !== 0) return;
       missed += 1;
-      s += '<text x="' + (L + 14) + '" y="' + (T + spacing * (j + 0.5) + 3) + '" font-size="8.5" fill="var(--bad)">漏检</text>';
+      s += '<text x="' + (L + 8) + '" y="' + (T + spacing * (j + 0.5) + 2.5) + '" font-size="7.5" fill="var(--bad)">漏检</text>';
     });
     if (cov < 0.999) {
       var x0 = L + Wp * cov;
       s += '<rect x="' + x0 + '" y="' + T + '" width="' + (L + Wp - x0) + '" height="' + Hp + '" fill="#080c08" opacity=".93"/>';
       for (var h = 0; h < 14; h++) {
-        s += '<line x1="' + (x0 + h * 9) + '" y1="' + (T + Hp) + '" x2="' + (x0 + h * 9 + 24) + '" y2="' + (T + Hp - 24) + '" stroke="#39402f" stroke-width=".6" opacity=".6"/>';
+        s += '<line x1="' + (x0 + h * 5.5) + '" y1="' + (T + Hp) + '" x2="' + (x0 + h * 5.5 + 14) + '" y2="' + (T + Hp - 14) + '" stroke="#39402f" stroke-width=".6" opacity=".6"/>';
       }
-      s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2) + '" font-size="9" fill="var(--tx-3)" text-anchor="middle">无覆盖</text>';
-      s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2 + 12) + '" font-size="8.5" fill="var(--tx-3)" text-anchor="middle">' + Math.round((1 - cov) * 360) + '°</text>';
+      s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2) + '" font-size="8" fill="var(--tx-3)" text-anchor="middle">无覆盖</text>';
+      s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2 + 8) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="middle">' + Math.round((1 - cov) * 360) + '°</text>';
     }
     return s;
   }
 
   function drawImage() {
     var svg = $('img');
-    var W = 760, H = 430, L = 64, T = 44, Wp = 674, Hp = 348;
+    var W = 430, H = 243, L = 44, T = 25, Wp = 368, Hp = 197;
     var list = fractureList();
     var s = '<defs><clipPath id="plotClip"><rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '"/></clipPath></defs>';
-    s += '<text x="18" y="24" font-size="10.5" fill="var(--tx-2)">电成像展开图 · 深度拉伸显示</text>';
-    s += '<text x="742" y="24" font-size="9" fill="var(--tx-3)" text-anchor="end">方位 64 扇区 · 采样 0.0025 m</text>';
+    s += '<text x="10" y="14" font-size="8.5" fill="var(--tx-2)">电成像展开图 · 深度拉伸显示</text>';
+    s += '<text x="420" y="14" font-size="7.5" fill="var(--tx-3)" text-anchor="end">方位 64 扇区 · 采样 0.0025 m</text>';
     s += '<rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '" fill="#0e1410" stroke="var(--line-2)"/>';
     var i, x, y;
     for (i = 0; i < 150; i++) {
@@ -128,32 +128,32 @@
     s += axisMarkup(L, T, Wp, Hp);
     s += '<g clip-path="url(#plotClip)">' + fractureMarkup(L, T, Wp, Hp, list) + '</g>';
     s += '<rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '" fill="none" stroke="var(--line-2)"/>';
-    s += '<text x="' + (L + 8) + '" y="' + (T + Hp + 20) + '" font-size="9" fill="var(--tx-3)">检出 ' + list.filter(function (f) { return f.detected; }).length + ' / ' + list.length + ' 条</text>';
-    s += '<text x="' + (L + Wp) + '" y="' + (T + Hp + 20) + '" font-size="9" fill="var(--tx-3)" text-anchor="end">盲区 ' + Math.round((1 - state.cov / 100) * 360) + '°，密度按有效覆盖归一</text>';
+    s += '<text x="' + (L + 5) + '" y="' + (T + Hp + 12) + '" font-size="7.5" fill="var(--tx-3)">检出 ' + list.filter(function (f) { return f.detected; }).length + ' / ' + list.length + ' 条</text>';
+    s += '<text x="' + (L + Wp) + '" y="' + (T + Hp + 12) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="end">盲区 ' + Math.round((1 - state.cov / 100) * 360) + '°，密度按有效覆盖归一</text>';
     svg.innerHTML = s;
   }
 
   function drawCurve() {
     var svg = $('curve');
-    var W = 760, H = 200, L = 58, T = 30, R = 736, B = 158;
+    var W = 430, H = 113, L = 33, T = 17, R = 417, B = 90;
     var pw = R - L, ph = B - T;
     function xOf(d) { return L + d / 90 * pw; }
     function yOf(e) { return B - clamp(e, 0, 8) / 8 * ph; }
-    var s = '<text x="14" y="18" font-size="9.5" fill="var(--tx-3)">倾角误差 (°)</text>';
+    var s = '<text x="8" y="10" font-size="8" fill="var(--tx-3)">倾角误差 (°)</text>';
     var v, d;
     for (v = 0; v <= 8.0001; v += 2) {
       s += '<line x1="' + L + '" y1="' + yOf(v) + '" x2="' + R + '" y2="' + yOf(v) + '" stroke="var(--line)"/>';
-      s += '<text x="' + (L - 8) + '" y="' + (yOf(v) + 3.5) + '" font-size="9" fill="var(--tx-3)" text-anchor="end">' + v + '</text>';
+      s += '<text x="' + (L - 5) + '" y="' + (yOf(v) + 3) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="end">' + v + '</text>';
     }
     for (d = 0; d <= 90; d += 15) {
-      s += '<text x="' + xOf(d) + '" y="' + (B + 16) + '" font-size="9" fill="var(--tx-3)" text-anchor="middle">' + d + '</text>';
+      s += '<text x="' + xOf(d) + '" y="' + (B + 9) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="middle">' + d + '</text>';
     }
     s += '<rect x="' + L + '" y="' + T + '" width="' + (xOf(10) - L) + '" height="' + ph + '" fill="var(--bad)" opacity=".07"/>';
     s += '<rect x="' + xOf(80) + '" y="' + T + '" width="' + (R - xOf(80)) + '" height="' + ph + '" fill="var(--bad)" opacity=".07"/>';
-    s += '<text x="' + (xOf(5)) + '" y="' + (T + 12) + '" font-size="8.5" fill="var(--bad)" text-anchor="middle">低角度</text>';
-    s += '<text x="' + (xOf(85)) + '" y="' + (T + 12) + '" font-size="8.5" fill="var(--bad)" text-anchor="middle">近垂直</text>';
+    s += '<text x="' + (xOf(5)) + '" y="' + (T + 8) + '" font-size="7.5" fill="var(--bad)" text-anchor="middle">低角度</text>';
+    s += '<text x="' + (xOf(85)) + '" y="' + (T + 8) + '" font-size="7.5" fill="var(--bad)" text-anchor="middle">近垂直</text>';
     s += '<line x1="' + L + '" y1="' + yOf(4) + '" x2="' + R + '" y2="' + yOf(4) + '" stroke="var(--tx-3)" stroke-dasharray="4 3"/>';
-    s += '<text x="' + (L + 6) + '" y="' + (yOf(4) - 5) + '" font-size="8.5" fill="var(--tx-3)">可用门槛 4°</text>';
+    s += '<text x="' + (L + 4) + '" y="' + (yOf(4) - 3) + '" font-size="7.5" fill="var(--tx-3)">可用门槛 4°</text>';
 
     var path = '', dip;
     for (dip = 0; dip <= 90; dip += 1) {
@@ -162,9 +162,9 @@
     s += '<path d="' + path + '" fill="none" stroke="var(--acc)" stroke-width="2"/>';
     var e = errAt(state.dip, state.cov / 100);
     s += '<line x1="' + xOf(state.dip) + '" y1="' + T + '" x2="' + xOf(state.dip) + '" y2="' + B + '" stroke="var(--tx-3)" stroke-dasharray="3 3" opacity=".7"/>';
-    s += '<circle cx="' + xOf(state.dip) + '" cy="' + yOf(e) + '" r="4.5" fill="var(--acc)" stroke="var(--card)" stroke-width="2"/>';
-    s += '<text x="' + (xOf(state.dip) + 8) + '" y="' + (yOf(e) - 7) + '" font-size="9" fill="var(--acc)" font-family="var(--mono)">±' + e.toFixed(1) + '°</text>';
-    s += '<text x="' + ((L + R) / 2) + '" y="' + (H - 4) + '" font-size="9.5" fill="var(--tx-3)" text-anchor="middle">真实倾角 (°)</text>';
+    s += '<circle cx="' + xOf(state.dip) + '" cy="' + yOf(e) + '" r="3.5" fill="var(--acc)" stroke="var(--card)" stroke-width="2"/>';
+    s += '<text x="' + (xOf(state.dip) + 5) + '" y="' + (yOf(e) - 5) + '" font-size="7.5" fill="var(--acc)" font-family="var(--mono)">±' + e.toFixed(1) + '°</text>';
+    s += '<text x="' + ((L + R) / 2) + '" y="' + (H - 4) + '" font-size="8" fill="var(--tx-3)" text-anchor="middle">真实倾角 (°)</text>';
     svg.innerHTML = s;
   }
 

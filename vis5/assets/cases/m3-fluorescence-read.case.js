@@ -1,0 +1,166 @@
+/* =========================================================
+   案例插件（静态注册版）：荧光图像智能判读
+   ---------------------------------------------------------
+   由 cases/m3-fluorescence-read/case.json 生成（tools/build-cases.js）。
+   修改案例内容请改源文件后重新生成，不要直接改本文件。
+   ========================================================= */
+(function (global) {
+  'use strict';
+
+  var DATA = {
+    "id": "m3-fluorescence-read",
+    "sceneId": "m3",
+    "methods": [
+      "cv"
+    ],
+    "title": "荧光图像智能判读",
+    "version": "1.0.0",
+    "updated": "2026-10-30",
+    "status": "ready",
+    "tabs": {
+      "background": {
+        "label": "专业背景",
+        "lede": "准噶尔盆地西北缘某稠油油田每年钻井 30 余口，单井荧光岩屑图像 260—580 张、全年 11,600 张，含油级别 1—4 级全靠操作员在 365 nm 紫外灯下目估。3 名操作员对同一批岩屑复判，有 **35%** 的样品相差一级；固定光源与曝光后做图像分级，单井判读从 3.5 h 压到 25 min，严格一致率可到 79%。",
+        "judge": [
+          {
+            "label": "任务类型",
+            "value": "图像分类 + 颜色特征",
+            "desc": "荧光区域分割后做 4 级有序分级"
+          },
+          {
+            "label": "标注成本",
+            "value": "中",
+            "desc": "按含油级别标注，单井 260—580 张"
+          },
+          {
+            "label": "可见收益",
+            "value": "中",
+            "desc": "单井判读 3.5 h → 25 min，复判分歧减半"
+          },
+          {
+            "label": "难度",
+            "value": "中",
+            "desc": "灯源、距离、曝光跨井不一致，迁移难"
+          }
+        ],
+        "sections": [
+          {
+            "no": 1,
+            "en": "PROBLEM",
+            "title": "当前做法与问题",
+            "html": "<p>荧光录井是现场最快的含油性判断手段：取 2—5 mm 岩屑，湿样置于 365 nm 紫外灯下，按发光强度与颜色定 1—4 级，再结合岩屑描述判断油质。一个样品要换角度、调距离反复看，单井 260—580 张图像，一名操作员判完一口井 3.5 h，28 口井要 4 个人干 9 天。级别本身是目估分级，边界没有客观标准，3 人复判 35% 差一级，稠油与轻质油的蓝白 / 黄褐差异又高度依赖经验。</p><p>可量化的物理基础是存在的：荧光颜色由芳香烃组分决定，稠油富含大分子芳香烃、发暗黄褐至棕黄，轻质油发蓝白；发光强度与含油饱和度、油膜厚度、岩屑表面积相关。把图像转到与设备无关的 CIELAB / HSV 空间后，主波长、饱和度、荧光面积比、亮度都能提取，且与级别存在单调关系。</p><p>硬约束：① 紫外灯管累计点亮 500 h 后强度衰减约 30%，不换灯也不做参考片校正，同一岩屑复拍会从 3 级掉到 2 级；② 油基钻井液自身在紫外下整体发蓝白，附着在岩屑表面会形成假荧光；③ 4 级样品只占 8%，稀有级样本不足，模型容易只会判中间级。</p>"
+          },
+          {
+            "no": 2,
+            "en": "INTERVENTION",
+            "title": "AI 能做什么",
+            "html": "<p>AI 替换的是「目估分级」这一步：现场固定灯源型号、照射距离 15 cm 与曝光参数，每井次先拍标准荧光片与灰卡；图像先做白平衡与色温归一，再用 HSV 阈值 + 形态学分割荧光区域，剔除泥浆反光与颗粒高光，提取荧光面积比、主波长、平均亮度与饱和度，送入 CNN + 有序回归头输出 1—4 级概率与累计概率。</p><p>训练要点：级别是有序的，1 级判成 2 级与判成 4 级的代价完全不同，所以不能当普通 4 分类做，要用有序交叉熵或二次加权 kappa 作为模型选择指标；类别按频率加权，4 级样本过采样；标签来自岩屑描述，需用薄片荧光与试油产液做 10%—15% 的独立校验集，避免模型只复刻描述员的主观。</p><p>定位是辅助：模型输出建议级别、荧光面积比与证据图（高亮荧光区域），2/3 级边界样本与油质判断由录井师复核。不全自动的原因：荧光强度还受岩屑含泥、泥浆附着、灯源批次影响，图像只能回答「发不发光、发什么颜色」，回答不了「是不是工业油流」。</p>"
+          },
+          {
+            "no": 3,
+            "en": "DATA",
+            "title": "你需要准备什么",
+            "html": "<p style=\"margin-bottom:14px\">图像数量不是瓶颈，成像标准化才是；先统一拍摄协议与参考片，再谈标注与模型。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">荧光岩屑图像</span><span class=\"cl-s\">28 口井 11,600 张，单井 260—580 张</span></span><span class=\"cl-n\">按 1—4 级分级标注，边界样本双人标注</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">标准荧光片与灰卡</span><span class=\"cl-s\">每井次 1 组，覆盖 4 个亮度档</span></span><span class=\"cl-n\">用于色彩与强度校准，无需标注</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">岩屑描述与薄片</span><span class=\"cl-s\">含油级别、油质、荧光颜色描述</span></span><span class=\"cl-n\">作为标签来源，320 片薄片做细分校验</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">试油产液性质</span><span class=\"cl-s\">12 个层段的产液与油品密度</span></span><span class=\"cl-n\">少量独立真值，用于去偏验证</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">成像元数据</span><span class=\"cl-s\">灯源型号、累计点亮时长、距离、曝光</span></span><span class=\"cl-n\">用于跨井校正，按井记录</span></div></div>"
+          },
+          {
+            "no": 4,
+            "en": "DIFFICULTY",
+            "title": "技术难度与参考方向",
+            "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">难在成像域差与有序级别的边界，模型精度上限受拍摄一致性限制。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战按影响排序：① 成像域差——灯源老化、距离差 5 cm、曝光差一档都会让同一岩屑的亮度变化 20% 以上，跨井直接迁移会整体偏移；② 有序边界——2 级与 3 级的分界本身模糊，人工也只有 65% 的严格一致率，模型不可能超过标签质量太多；③ 稀有级与假荧光——4 级只占 8%，油基泥浆荧光又遍布全片，两者都指向「先清洗再建模」。</p><p>评估建议：严格一致率 ≥75%、相邻一级一致率 ≥95%、二次加权 kappa ≥0.80；4 级召回 ≥85%；跨 6 口留出井 kappa 下降不超过 0.05。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/cv\">图像分类<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">颜色特征工程<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">成像标准化<span class=\"ar\">↗</span></a></div>"
+          }
+        ]
+      },
+      "workflow": {
+        "label": "案例流程",
+        "title": "准噶尔盆地西北缘某稠油油田 28 口井的荧光岩屑分级",
+        "lead": [
+          "油田目的层为浅层稠油，油品密度 18—22°API，荧光以暗黄褐为主。28 口井共 11,600 张岩屑荧光图像、4,600 包岩屑，含油级别分布为 1 级 31%、2 级 38%、3 级 23%、4 级 8%；3 名操作员对 1,200 包复判，35% 相差一级。",
+          "项目统一拍摄协议并训练有序分级模型。目标：严格一致率 ≥75%、相邻一级一致率 ≥95%、加权 kappa ≥0.80，单井判读 ≤30 min，跨井留出验证不掉点。"
+        ],
+        "stats": [
+          [
+            "图像样本",
+            "11,600 张"
+          ],
+          [
+            "覆盖井数",
+            "28 口"
+          ],
+          [
+            "分级类别",
+            "4 级"
+          ],
+          [
+            "复判分歧",
+            "35%（差 1 级）"
+          ],
+          [
+            "单井判读",
+            "3.5 h"
+          ],
+          [
+            "模型判读",
+            "25 min/井"
+          ]
+        ],
+        "steps": [
+          {
+            "name": "成像标准化",
+            "role": "数据",
+            "do": "固定 365 nm 灯源、照射距离 15 cm、曝光三档；每井次拍标准荧光片与灰卡，按灯管累计点亮时长满 500 h 强制换灯，图像统一转 sRGB 并记录色温。",
+            "effect": "跨井色差 ΔE 从 11.4 降到 3.2",
+            "trap": "只在后期调色、不做现场标定——灯源衰减会被模型学成「含油级别下降」，同一岩屑复拍差一级"
+          },
+          {
+            "name": "荧光区域分割",
+            "role": "算法核心",
+            "do": "HSV 阈值分割荧光区，结合饱和度、颗粒边界与纹理剔除泥浆反光；输出荧光面积比、主波长、平均亮度三个可解释特征。",
+            "effect": "荧光面积比与人工级别的相关系数 0.81",
+            "trap": "把泥浆附着的高光当荧光——高光饱和度低、面积连片无颗粒边界，必须加形状与纹理约束"
+          },
+          {
+            "name": "有序分级模型",
+            "role": "算法核心",
+            "do": "CNN 主干 + 有序回归头（3 个二分类累计概率），4 级样本过采样 3 倍，损失用有序交叉熵；留 6 口井整井验证。",
+            "effect": "严格一致率 79%，相邻一级 96%，加权 kappa 0.83",
+            "trap": "当普通 4 分类训练——模型把 1 级判成 4 级与判成 2 级罚得一样重，边界级全乱"
+          },
+          {
+            "name": "跨井留出验证",
+            "role": "质控",
+            "do": "按井划分训练 / 验证，检查稠油区带与灯源批次的分布差异，按批次报 kappa。",
+            "effect": "留出 6 口井 kappa 0.79，最大批次差 0.04",
+            "trap": "按图像随机划分——同一包岩屑的多张图同时进训练和验证，指标虚高 8 个百分点"
+          },
+          {
+            "name": "现场判读与复核",
+            "role": "工程环节",
+            "do": "边缘设备部署，单井 25 min 输出建议级别与荧光证据图；2/3 级边界样本、油质判断交录井师复核，改判结果回流。",
+            "effect": "28 口井 2 天完成，复核改判率 9.4%",
+            "trap": "只给级别不给颜色依据——录井师不信任黑箱，会把 11,600 张全部重判一遍，效率收益归零"
+          }
+        ],
+        "metrics": {
+          "title": "怎么算「判读合格」",
+          "html": "<p>反直觉的陷阱：总体准确率 89% 在有序分级里几乎没有意义——把全部样品判成 2 级也能拿到 38% 以上，全判中间级更能逼近 50%。真正该看的是<b>严格一致率与相邻一级一致率</b>：现场能接受差一级，不能接受 1 级被判成 4 级，因为那会直接误导试油选层。另一处反直觉：加权 kappa 高但 4 级召回低，说明模型在多数类上稳、在决定产能的稀有级上失灵。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工基线</th><th>本方案</th></tr></thead><tbody><tr><td>严格一致率</td><td>4 级完全相同</td><td>65%（3 人复判）</td><td>79%</td></tr><tr><td>相邻一级一致率</td><td>误差 ≤1 级</td><td>96%</td><td>98%</td></tr><tr><td>二次加权 kappa</td><td>按级差平方加权</td><td>0.71</td><td>0.83</td></tr><tr><td>4 级召回</td><td>油浸 / 油斑样品</td><td>72%</td><td>91%</td></tr><tr><td>单井判读耗时</td><td>260—580 张</td><td>3.5 h</td><td>25 min</td></tr><tr><td>跨井色差</td><td>灯源批次间 ΔE</td><td>11.4</td><td>3.2</td></tr></tbody></table>"
+        },
+        "fails": [
+          {
+            "name": "灯源衰减被当作含油性变化",
+            "why": "紫外灯累计点亮 500 h 后强度降约 30%，同一岩屑复拍从 3 级掉到 2 级，人工与模型都会跟着降。解决：每井次拍标准荧光片做强度校准，按累计点亮时长强制换灯，并把灯龄作为模型协变量。"
+          },
+          {
+            "name": "油基泥浆荧光干扰",
+            "why": "油基钻井液在紫外下整体发蓝白、面积连片，与轻质油荧光颜色接近，模型会判成高含油级别。解决：先识别泥浆荧光特征（低饱和度、无颗粒边界、覆盖全片），在分割阶段剔除，并在成果中标注「油基泥浆干扰」。"
+          },
+          {
+            "name": "标签与人工目估同源",
+            "why": "标签来自同一批描述员，模型学到的只是主观标准的复刻，遇到新操作员或新油田就失效。解决：用薄片荧光与试油产液建立 10%—15% 独立校验集，对外只报对独立真值的指标。"
+          }
+        ]
+      }
+    }
+  };
+
+  global.Cases.register(DATA);
+})(window);

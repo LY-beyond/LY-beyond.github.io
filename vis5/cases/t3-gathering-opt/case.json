@@ -1,0 +1,161 @@
+{
+  "id": "t3-gathering-opt",
+  "sceneId": "t3",
+  "methods": [
+    "opt"
+  ],
+  "title": "集输系统工况智能优化",
+  "version": "1.0.0",
+  "updated": "2026-10-30",
+  "status": "ready",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "长庆某集输站 **34 台机泵**（外输泵 12 台、掺水泵 8 台、供水泵 14 台）、装机 2,450 kW，承担 16,800 m³/d 液量与 9,200 m³/d 外输；年耗电 **1,160 万 kWh**、电费 731 万元，而峰谷电价差 0.35 元/kWh。人工调度按规程每 4 h 调一次、倾向多开一台泵保压力，泵组合与变频频率从未做过全局寻优。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "混合整数优化 + 水力仿真",
+          "desc": "泵启停组合与变频频率的全局寻优"
+        },
+        {
+          "label": "标注成本",
+          "value": "低",
+          "desc": "设备参数与运行数据现成，基本免标注"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "电单耗降 9%，年省电费 65 万元"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "管网模型必须准，优化解还要现场可执行"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>现行调度按操作规程：外输压力保持 1.2—1.6 MPa，每 4 h 抄表后人工决定开几台泵、变频给多少赫兹。为防压力不足，值班员普遍多开一台备用泵、把节流阀关到 30%—50%，节流损失占泵输出功率的 15%—25%。34 台泵装机 2,450 kW，年耗电 1,160 万 kWh、电费 731 万元，峰段（08—11 时、18—21 时）电价 0.91 元/kWh，谷段 0.35 元/kWh，但调度几乎不做移峰。</p><p>数据基础是齐的：管网拓扑 DN 150—350、管长与高程；34 台泵的 Q-H 与 Q-η 曲线、变频范围 30—50 Hz；流量、压力、功率、阀位 1 min 采样；分时电价与日外输计划；泵启停与检修记录。水力计算用达西—魏斯巴赫摩阻与泵并联工况点求解，模型可以完整描述「泵组合 + 频率 + 阀位 → 流量、压力、功率」。</p><p>硬约束：① 安全——最低进站压力 0.6 MPa、外输压力上限 1.6 MPa、泵最小流量为额定值的 30%、汽蚀余量必须满足；② 执行——泵启停 ≤6 次/日、单泵最小运行时长 30 min、变频不得长期低于 30 Hz；③ 模型——叶轮磨损 3 年后扬程下降 5%—8%，阀门内漏让实际阻力偏小，模型不校核，优化出的方案现场达不到压力。</p>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>AI 替换「规程 + 多开泵」：先建管网水力模型与泵特性模型，再用混合整数优化（MILP / MINLP）在 15 min 滚动窗口内同时决定「哪几台泵开、变频给多少、阀位开多少」，目标函数是电费 + 启停惩罚，约束是压力、流量、最小流量与最小运行时长。</p><p>为了在 15 min 内出解，用代理模型加速：一次水力仿真 40 s，压到 10 ms 级，优化器在代理上搜索、候选解再用全模型校验；分时电价进入目标函数，允许在产量与罐位允许的范围内把外输负荷向谷段移。工况变化（产量、季节、泵检修）触发重优化，而不是死守一套参数。</p><p>定位是辅助：系统给出「泵组合 + 频率设定 + 预期电费与压力裕度」，值班员确认后下发 DCS，泵切换仍走原有电气联锁。不自动的原因：泵切换涉及电气与工艺安全，模型在叶轮磨损、阀门内漏与传感器漂移时并不可信，必须保留人工判断。</p>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">数据门槛在泵曲线实测与管网摩阻标定，台账与运行数据本身都在 SCADA 里，关键是准不准。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">管网拓扑与设备参数</span><span class=\"cl-s\">DN 150—350、管长 18 km、高程、34 台泵的 Q-H / Q-η 曲线</span></span><span class=\"cl-n\">设备台账结构化，泵曲线现场实测校核</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">运行数据</span><span class=\"cl-s\">流量、压力、功率、频率、阀位，1 min 采样</span></span><span class=\"cl-n\">无需标注，剔除通信中断与检修段</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">分时电价与产量计划</span><span class=\"cl-s\">峰平谷电价、日外输与掺水计划</span></span><span class=\"cl-n\">作为优化目标与边界条件</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">安全约束</span><span class=\"cl-s\">最低进站压力、泵最小流量、汽蚀余量、压力上限</span></span><span class=\"cl-n\">专家确认的硬约束表，逐条可追溯</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">启停与检修记录</span><span class=\"cl-s\">泵启停时刻、叶轮磨损、阀门内漏</span></span><span class=\"cl-n\">事件级标注，用于模型校核</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">优化本身不难，难在管网模型准不准、优化解能不能被现场执行。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战按影响排序：① 模型失真——叶轮磨损后扬程降 5%—8%、阀门内漏让阻力偏小，模型不校核，优化出的「节能方案」现场压力不达标；② 组合爆炸——34 台泵理论组合 2³⁴，必须用母管联锁规则剪枝再交给 MILP，暴力搜索不可行；③ 可执行性——优化解若 15 min 切一次泵，电气寿命与操作风险都不允许，目标函数必须带启停惩罚与最小运行时长。</p><p>评估建议：与人工调度同期对比电单耗下降 ≥8%、压力合格率 100%、泵启停 ≤6 次/日、优化求解 ≤15 min、模型压力与实测偏差 ≤5%。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">混合整数优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">水力仿真<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">能耗建模<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "长庆某集输站 34 台机泵的日运行工况优化",
+      "lead": [
+        "站处理液量 16,800 m³/d、外输 9,200 m³/d，DN 200 / 250 / 350 管线合计 18 km，34 台泵装机 2,450 kW，年耗电 1,160 万 kWh、电费 731 万元，峰谷电价差 0.35 元/kWh。",
+        "项目建水力模型 + 代理模型 + 混合整数优化。目标：电单耗降 ≥8%、压力合格率 100%、泵启停 ≤6 次/日；15 min 滚动优化，先导 1 个月与人工调度同期对比。"
+      ],
+      "stats": [
+        [
+          "机泵",
+          "34 台"
+        ],
+        [
+          "装机容量",
+          "2,450 kW"
+        ],
+        [
+          "年耗电",
+          "1,160 万 kWh"
+        ],
+        [
+          "电价峰谷差",
+          "0.35 元/kWh"
+        ],
+        [
+          "优化周期",
+          "15 min"
+        ],
+        [
+          "目标节电",
+          "≥8%"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "泵曲线实测校核",
+          "role": "数据",
+          "do": "34 台泵逐台在现场测 5 个工况点的流量—扬程—效率，与出厂曲线偏差 >5% 的 7 台重新拟合，写入设备模型。",
+          "effect": "7 台磨损泵扬程修正 6.2%，模型与实测功率偏差降到 3.8%",
+          "trap": "直接用厂家手册曲线——叶轮磨损后扬程虚高 6%，优化解在实际管网里压力不达标"
+        },
+        {
+          "name": "水力模型标定",
+          "role": "算法核心",
+          "do": "用 3 个月运行数据反算各管段摩阻系数，按流量分档校核，压力偏差控制在 5% 以内。",
+          "effect": "18 km 管网压力偏差 4.1%，满足优化前提",
+          "trap": "忽略阀门内漏——实际阻力偏小、模型高估压降，优化会多开泵补偿一个不存在的损失"
+        },
+        {
+          "name": "代理模型训练",
+          "role": "算法核心",
+          "do": "以「泵组合 + 频率 + 阀位 + 流量」为输入，批量水力仿真生成 12 万组样本，训练代理模型，单次评估 10 ms。",
+          "effect": "代理与全模型电费偏差 1.2%，满足 15 min 求解",
+          "trap": "训练样本只覆盖常见工况——极端流量与泵检修工况外推失真，优化结果不可信"
+        },
+        {
+          "name": "混合整数优化",
+          "role": "算法核心",
+          "do": "MILP 处理泵启停 0/1 变量、连续变量处理频率与阀位，目标函数为分时电费 + 启停惩罚，约束含最小流量与最小运行时长。",
+          "effect": "典型日求解 12 min，电费较人工方案降 9.0%",
+          "trap": "不带最小运行时长——优化器每 15 min 切一次泵，DCS 联锁直接拒绝执行"
+        },
+        {
+          "name": "下发与联锁校验",
+          "role": "工程环节",
+          "do": "优化建议先做联锁仿真校验（最小流量保护、汽蚀余量、压力高高），值班员确认后下发 DCS，切换仍走原电气逻辑。",
+          "effect": "先导 1 个月零跳泵，压力合格率 100%",
+          "trap": "优化建议绕过泵最小流量保护——一台泵在 28% 额定流量下运行，2 小时后汽蚀损坏"
+        },
+        {
+          "name": "月度复盘",
+          "role": "质控",
+          "do": "按同产量口径对比电单耗、启停次数与压力合格率，泵磨损与内漏检修后重新标定模型。",
+          "effect": "月度节电 8.7 万 kWh，年化省电费 65 万元",
+          "trap": "用不同产量口径对比——产量下降让电单耗「看起来」降了，实际是负荷变化，不是优化效果"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「真的省电」",
+        "html": "<p>反直觉的陷阱：把每台泵都调到最高效区（η 78%）并不省电——系统电单耗 = 泵效率 × 管网效率，关小阀门把泵推回高效区的同时制造 20% 节流损失，总电耗反而上升；真正的优化要允许泵偏离最佳工况点，用变频与泵组合换系统效率。另一个陷阱是只按电费最低优化：峰段全停、谷段猛开看似省钱，但罐位与后续流程受不了，必须把罐位和产量计划作为状态约束。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工调度</th><th>本方案</th></tr></thead><tbody><tr><td>电单耗</td><td>kWh / m³ 液量</td><td>1.89</td><td>1.72</td></tr><tr><td>日耗电</td><td>全站合计</td><td>3.18 万 kWh</td><td>2.89 万 kWh</td></tr><tr><td>年电费</td><td>按现价</td><td>731 万元</td><td>666 万元</td></tr><tr><td>压力合格率</td><td>外输 1.2—1.6 MPa</td><td>100%</td><td>100%</td></tr><tr><td>泵启停</td><td>次/日</td><td>3.2</td><td>4.1</td></tr><tr><td>求解耗时</td><td>一次优化</td><td>人工 30 min</td><td>12 min</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "泵曲线不校核导致优化不可执行",
+          "why": "叶轮磨损让实际扬程比手册低 6%—8%，模型算出的节能方案现场压力不够，值班员只能退回多开泵。解决：每季度实测泵曲线，磨损超 5% 的泵重新拟合后再进优化。"
+        },
+        {
+          "name": "忽略最小流量与汽蚀约束",
+          "why": "纯电费最优会让一台泵长期在 30% 额定流量以下运行，汽蚀与过热损坏叶轮。解决：把最小流量、最小运行时长与汽蚀余量写成硬约束，优化后先做联锁仿真。"
+        },
+        {
+          "name": "优化解频繁切换",
+          "why": "15 min 粒度优化不带启停惩罚时，会在电价与流量边界反复切泵，电气寿命与操作风险都受不了。解决：目标函数加启停惩罚与最小运行时长，必要时牺牲 1% 电费换稳定。"
+        }
+      ]
+    }
+  }
+}

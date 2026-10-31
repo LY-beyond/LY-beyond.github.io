@@ -26,20 +26,20 @@
   const ACT_COND = [[0, 4], [0, 3, 4], [1, 2, 5], [1, 2, 5]];
   const ACT_RISK = [[2], [1, 2], [0, 2], [0, 2]];
   const RISK_POS = [
-    { x: 272, y: 58, w: 138, h: 46 },
-    { x: 272, y: 168, w: 138, h: 46 },
-    { x: 272, y: 278, w: 138, h: 46 }
+    { x: 162, y: 34, w: 82, h: 28 },
+    { x: 162, y: 100, w: 82, h: 28 },
+    { x: 162, y: 166, w: 82, h: 28 }
   ];
   const METH_POS = [
-    { x: 506, y: 26, w: 194, h: 44 },
-    { x: 506, y: 116, w: 194, h: 44 },
-    { x: 506, y: 206, w: 194, h: 44 },
-    { x: 506, y: 296, w: 194, h: 44 }
+    { x: 302, y: 15, w: 122, h: 26 },
+    { x: 302, y: 69, w: 122, h: 26 },
+    { x: 302, y: 123, w: 122, h: 26 },
+    { x: 302, y: 177, w: 122, h: 26 }
   ];
   let si = 0;
   let weight = 60;
 
-  function condPos(i) { return { x: 10, y: 30 + i * 54, w: 158, h: 40 }; }
+  function condPos(i) { return { x: 6, y: 16 + i * 33, w: 94, h: 24 }; }
 
   function calcScores() {
     const s = SCEN[si];
@@ -60,7 +60,7 @@
   }
 
   function edge(x1, y1, x2, y2, on) {
-    const c1 = x1 + 52, c2 = x2 - 52;
+    const c1 = x1 + 30, c2 = x2 - 30;
     const d = 'M' + x1 + ' ' + y1 + ' C' + c1 + ' ' + y1 + ',' + c2 + ' ' + y2 + ',' + x2 + ' ' + y2;
     return '<path d="' + d + '" fill="none" stroke="' + (on ? '#78b7a8' : '#333c2c') +
       '" stroke-width="' + (on ? 2.4 : 1) + '" opacity="' + (on ? 0.95 : 0.5) + '"/>';
@@ -79,7 +79,7 @@
       s.water === '高' ? '高 · 需控水' : s.water === '中' ? '中 · 需观察' : '低 · 影响小',
       s.res === '疏松砂岩' ? '差 · 易坍塌' : parseInt(s.depth.replace(/[^0-9]/g, ''), 10) > 3000 ? '中 · 深井' : '良好'
     ];
-    let g = '<rect x="0" y="0" width="720" height="380" fill="#0f130d" rx="6"/>';
+    let g = '<rect x="0" y="0" width="430" height="228" fill="#0f130d" rx="6"/>';
     COND_EDGES.forEach(function (e) {
       const a = condPos(e[0]), b = RISK_POS[e[1]];
       const on = ACT_COND[top].indexOf(e[0]) >= 0 && ACT_RISK[top].indexOf(e[1]) >= 0;
@@ -99,25 +99,25 @@
       const p = condPos(i);
       const on = ACT_COND[top].indexOf(i) >= 0;
       g += node(p, on, on ? '#1e2a20' : '#191f16');
-      g += '<text x="' + (p.x + 11) + '" y="' + (p.y + 14) + '" font-size="9" fill="#8b8778">' + c[0] + '</text>';
-      g += '<text x="' + (p.x + 11) + '" y="' + (p.y + 30) + '" font-size="11" font-weight="600" fill="#e8e3d5">' + c[1] + '</text>';
+      g += '<text x="' + (p.x + 7) + '" y="' + (p.y + 9) + '" font-size="7.5" fill="#8b8778">' + c[0] + '</text>';
+      g += '<text x="' + (p.x + 7) + '" y="' + (p.y + 19) + '" font-size="8.5" font-weight="600" fill="#e8e3d5">' + c[1] + '</text>';
     });
     ['出砂风险', '出水风险', '井壁稳定'].forEach(function (nm, i) {
       const p = RISK_POS[i];
       const on = ACT_RISK[top].indexOf(i) >= 0;
       g += node(p, on, on ? '#2a2417' : '#1c1d15');
-      g += '<text x="' + (p.x + 12) + '" y="' + (p.y + 16) + '" font-size="10" fill="#d0a85c" font-weight="600">' + nm + '</text>';
-      g += '<text x="' + (p.x + 12) + '" y="' + (p.y + 33) + '" font-size="10" fill="#b8b2a1">' + risks[i] + '</text>';
+      g += '<text x="' + (p.x + 8) + '" y="' + (p.y + 11) + '" font-size="8" fill="#d0a85c" font-weight="600">' + nm + '</text>';
+      g += '<text x="' + (p.x + 8) + '" y="' + (p.y + 21) + '" font-size="7.5" fill="#b8b2a1">' + risks[i] + '</text>';
     });
     METHODS.forEach(function (nm, i) {
       const p = METH_POS[i];
       const on = i === top;
       g += node(p, on, on ? '#2a2417' : '#191f16');
-      g += '<text x="' + (p.x + 13) + '" y="' + (p.y + 20) + '" font-size="11.5" font-weight="600" fill="' + (on ? '#d0a85c' : '#c9c4b4') + '">' + (on ? '★ ' : '') + nm + '</text>';
-      g += '<text x="' + (p.x + 13) + '" y="' + (p.y + 35) + '" font-size="9.5" fill="#8b8778">规则得分 ' + sc[i] + ' / 100</text>';
-      g += '<text x="' + (p.x + p.w - 12) + '" y="' + (p.y + 27) + '" text-anchor="end" font-size="14" font-family="ui-monospace,monospace" fill="' + (on ? '#d0a85c' : '#78b7a8') + '">' + sc[i] + '</text>';
+      g += '<text x="' + (p.x + 8) + '" y="' + (p.y + 11) + '" font-size="8.5" font-weight="600" fill="' + (on ? '#d0a85c' : '#c9c4b4') + '">' + (on ? '★ ' : '') + nm + '</text>';
+      g += '<text x="' + (p.x + 8) + '" y="' + (p.y + 20) + '" font-size="7.5" fill="#8b8778">规则得分 ' + sc[i] + ' / 100</text>';
+      g += '<text x="' + (p.x + p.w - 8) + '" y="' + (p.y + 17) + '" text-anchor="end" font-size="10" font-family="ui-monospace,monospace" fill="' + (on ? '#d0a85c' : '#78b7a8') + '">' + sc[i] + '</text>';
     });
-    g += '<text x="10" y="374" font-size="9.5" fill="#7b8070">亮线：首选方案证据链 · 灰线：其他规则路径 · 图谱规模 420 节点 / 1,100 条边</text>';
+    g += '<text x="6" y="222" font-size="7.5" fill="#7b8070">亮线：首选方案证据链 · 灰线：其他规则路径 · 图谱规模 420 节点 / 1,100 条边</text>';
     $('graph').innerHTML = g;
   }
 

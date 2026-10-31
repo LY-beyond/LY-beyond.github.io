@@ -24,31 +24,35 @@
   }
 
   function drawGeom(c) {
-    const W = 720, H = 300;
+    const W = 430, H = 190;
     let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f130d" rx="6"/>';
-    g += '<rect x="40" y="62" width="640" height="188" rx="8" fill="#161c13" stroke="#2c3327"/>';
-    g += '<text x="52" y="80" font-size="9.5" fill="#8b8778">储层段 · 水平段 ' + LATERAL + ' m</text>';
-    g += '<line x1="60" y1="160" x2="680" y2="160" stroke="#5b6358" stroke-width="6" stroke-linecap="round"/>';
-    g += '<line x1="60" y1="160" x2="680" y2="160" stroke="#161c13" stroke-width="2"/>';
-    g += '<text x="678" y="186" text-anchor="end" font-size="9" fill="#8b8778">水平井筒</text>';
-    const len = Math.min(100, c.xf * 0.5);
+    g += '<rect x="24" y="36" width="382" height="112" rx="6" fill="#161c13" stroke="#2c3327"/>';
+    g += '<text x="32" y="50" font-size="8" fill="#8b8778">储层段 · 水平段 ' + LATERAL + ' m</text>';
+    g += '<line x1="36" y1="96" x2="390" y2="96" stroke="#5b6358" stroke-width="4" stroke-linecap="round"/>';
+    g += '<line x1="36" y1="96" x2="390" y2="96" stroke="#161c13" stroke-width="1.5"/>';
+    g += '<text x="388" y="112" text-anchor="end" font-size="7.5" fill="#8b8778">水平井筒</text>';
+    const len = Math.min(50, c.xf * 0.25);
     for (let i = 0; i < st.seg; i++) {
-      const x = 82 + (i + 0.5) / st.seg * 596;
-      g += '<line x1="' + x.toFixed(1) + '" y1="' + (160 - len).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + (160 + len).toFixed(1) + '" stroke="#d0a85c" stroke-width="2.4" opacity=".85"/>';
-      g += '<circle cx="' + x.toFixed(1) + '" cy="' + (160 - len).toFixed(1) + '" r="2.2" fill="#d0a85c"/>';
-      g += '<circle cx="' + x.toFixed(1) + '" cy="' + (160 + len).toFixed(1) + '" r="2.2" fill="#d0a85c"/>';
+      const x = 50 + (i + 0.5) / st.seg * 330;
+      g += '<line x1="' + x.toFixed(1) + '" y1="' + (96 - len).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + (96 + len).toFixed(1) + '" stroke="#d0a85c" stroke-width="2" opacity=".85"/>';
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + (96 - len).toFixed(1) + '" r="1.6" fill="#d0a85c"/>';
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + (96 + len).toFixed(1) + '" r="1.6" fill="#d0a85c"/>';
     }
-    const x0 = 82 + 0.5 / st.seg * 596;
-    g += '<line x1="' + (x0 - 14) + '" y1="' + (160 - len) + '" x2="' + (x0 - 14) + '" y2="' + (160 + len) + '" stroke="#78b7a8" stroke-width="1" stroke-dasharray="3 3"/>';
-    g += '<text x="' + (x0 - 18) + '" y="' + (160 - len - 7) + '" font-size="9.5" fill="#78b7a8" text-anchor="end">半长 xf = ' + c.xf.toFixed(0) + ' m</text>';
-    g += '<text x="52" y="238" font-size="10" fill="#c9c4b4">段数 ' + st.seg + ' · 每段 3 簇 · 簇间距 ' + c.spacing.toFixed(1) + ' m</text>';
-    g += '<text x="52" y="254" font-size="9.5" fill="#8b8778">排量 ' + st.q.toFixed(1) + ' m³/min · 砂比 ' + st.sand + '%</text>';
-    g += '<circle cx="610" cy="84" r="3" fill="#d0a85c"/><text x="620" y="87" font-size="9" fill="#8b8778">裂缝（示意）</text>';
+    const x0 = 50 + 0.5 / st.seg * 330;
+    g += '<line x1="' + (x0 - 9) + '" y1="' + (96 - len) + '" x2="' + (x0 - 9) + '" y2="' + (96 + len) + '" stroke="#78b7a8" stroke-width="1" stroke-dasharray="3 3"/>';
+    if (x0 > 120) {
+      g += '<text x="' + (x0 - 12) + '" y="' + (96 - len - 5) + '" font-size="8" fill="#78b7a8" text-anchor="end">半长 xf = ' + c.xf.toFixed(0) + ' m</text>';
+    } else {
+      g += '<text x="' + (x0 + 12) + '" y="' + (96 - len - 5) + '" font-size="8" fill="#78b7a8">半长 xf = ' + c.xf.toFixed(0) + ' m</text>';
+    }
+    g += '<text x="32" y="160" font-size="8" fill="#c9c4b4">段数 ' + st.seg + ' · 每段 3 簇 · 簇间距 ' + c.spacing.toFixed(1) + ' m</text>';
+    g += '<text x="32" y="173" font-size="7.5" fill="#8b8778">排量 ' + st.q.toFixed(1) + ' m³/min · 砂比 ' + st.sand + '%</text>';
+    g += '<circle cx="352" cy="48" r="2.2" fill="#d0a85c"/><text x="358" y="51" font-size="7.5" fill="#8b8778">裂缝（示意）</text>';
     $('geom').innerHTML = g;
   }
 
-  function mapX(v) { return 58 + (v - 650) / 1000 * 630; }
-  function mapY(v) { return 250 - (v - 40) / 130 * 220; }
+  function mapX(v) { return 36 + (v - 650) / 1000 * 372; }
+  function mapY(v) { return 156 - (v - 40) / 130 * 130; }
 
   function candidates() {
     const list = [];
@@ -73,26 +77,26 @@
   }
 
   function drawScatter(c) {
-    const W = 720, H = 300;
+    const W = 430, H = 190;
     let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f130d" rx="6"/>';
     [700, 900, 1100, 1300, 1500].forEach(function (v) {
       const x = mapX(v);
-      g += '<line x1="' + x + '" y1="30" x2="' + x + '" y2="250" stroke="#242b20" stroke-width="1"/>';
-      g += '<text x="' + x + '" y="266" text-anchor="middle" font-size="9" fill="#7b8070">' + v + '</text>';
+      g += '<line x1="' + x + '" y1="26" x2="' + x + '" y2="156" stroke="#242b20" stroke-width="1"/>';
+      g += '<text x="' + x + '" y="166" text-anchor="middle" font-size="7.5" fill="#7b8070">' + v + '</text>';
     });
     [40, 60, 80, 100, 120, 140, 160].forEach(function (v) {
       const y = mapY(v);
-      g += '<line x1="58" y1="' + y + '" x2="688" y2="' + y + '" stroke="#242b20" stroke-width="1"/>';
-      g += '<text x="50" y="' + (y + 3) + '" text-anchor="end" font-size="9" fill="#7b8070">' + v + '</text>';
+      g += '<line x1="36" y1="' + y + '" x2="408" y2="' + y + '" stroke="#242b20" stroke-width="1"/>';
+      g += '<text x="32" y="' + (y + 2.5) + '" text-anchor="end" font-size="7.5" fill="#7b8070">' + v + '</text>';
     });
-    g += '<line x1="58" y1="250" x2="688" y2="250" stroke="#3a4433"/>';
-    g += '<line x1="58" y1="30" x2="58" y2="250" stroke="#3a4433"/>';
-    g += '<text x="688" y="286" text-anchor="end" font-size="9.5" fill="#8b8778">压裂成本 / 万元</text>';
-    g += '<text x="58" y="20" font-size="9.5" fill="#8b8778">90 天累产（相对基准 / %）</text>';
+    g += '<line x1="36" y1="156" x2="408" y2="156" stroke="#3a4433"/>';
+    g += '<line x1="36" y1="26" x2="36" y2="156" stroke="#3a4433"/>';
+    g += '<text x="408" y="182" text-anchor="end" font-size="7.5" fill="#8b8778">压裂成本 / 万元</text>';
+    g += '<text x="36" y="16" font-size="7.5" fill="#8b8778">90 天累产（相对基准 / %）</text>';
 
     const list = candidates();
     list.forEach(function (p) {
-      g += '<circle cx="' + mapX(p.cost).toFixed(1) + '" cy="' + mapY(p.prod).toFixed(1) + '" r="2" fill="#5e8f83" opacity=".38"/>';
+      g += '<circle cx="' + mapX(p.cost).toFixed(1) + '" cy="' + mapY(p.prod).toFixed(1) + '" r="1.6" fill="#5e8f83" opacity=".38"/>';
     });
     if (showPareto) {
       const fr = frontier(list);
@@ -100,13 +104,13 @@
       fr.forEach(function (p) {
         const x = mapX(p.cost).toFixed(1), y = mapY(p.prod).toFixed(1);
         pts += x + ',' + y + ' ';
-        g += '<circle cx="' + x + '" cy="' + y + '" r="3.4" fill="#78b7a8"/>';
+        g += '<circle cx="' + x + '" cy="' + y + '" r="2.6" fill="#78b7a8"/>';
       });
-      g += '<polyline points="' + pts.trim() + '" fill="none" stroke="#78b7a8" stroke-width="1.4" opacity=".75"/>';
-      g += '<text x="' + (mapX(fr[fr.length - 1].cost) - 8) + '" y="' + (mapY(fr[fr.length - 1].prod) - 10) + '" text-anchor="end" font-size="9" fill="#78b7a8">帕累托前沿</text>';
+      g += '<polyline points="' + pts.trim() + '" fill="none" stroke="#78b7a8" stroke-width="1.2" opacity=".75"/>';
+      g += '<text x="' + (mapX(fr[fr.length - 1].cost) - 6) + '" y="' + (mapY(fr[fr.length - 1].prod) - 8) + '" text-anchor="end" font-size="7.5" fill="#78b7a8">帕累托前沿</text>';
     }
-    g += '<circle cx="' + mapX(c.cost).toFixed(1) + '" cy="' + mapY(c.prod).toFixed(1) + '" r="5.5" fill="#d0a85c" stroke="#0f130d" stroke-width="1.5"/>';
-    g += '<text x="' + (mapX(c.cost) + 9) + '" y="' + (mapY(c.prod) - 8) + '" font-size="9" fill="#d0a85c">当前</text>';
+    g += '<circle cx="' + mapX(c.cost).toFixed(1) + '" cy="' + mapY(c.prod).toFixed(1) + '" r="4" fill="#d0a85c" stroke="#0f130d" stroke-width="1.2"/>';
+    g += '<text x="' + (mapX(c.cost) + 7) + '" y="' + (mapY(c.prod) - 6) + '" font-size="7.5" fill="#d0a85c">当前</text>';
     $('scatter').innerHTML = g;
   }
 

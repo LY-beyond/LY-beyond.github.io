@@ -106,10 +106,10 @@
   function drawSamples() {
     var svg = $('samples');
     var grp = groups[state.g], s = '';
-    s += '<text x="16" y="22" font-size="10" fill="var(--tx-3)">颗粒缩略图（点击选择）· 40× 显微</text>';
+    s += '<text x="16" y="16" font-size="9" fill="var(--tx-3)">颗粒缩略图（点击选择）· 40× 显微</text>';
     for (var i = 0; i < grp.parts.length; i++) {
       var p = grp.parts[i];
-      var cx = 60 + (i % 4) * 100, cy = 82 + Math.floor(i / 4) * 108;
+      var cx = 60 + (i % 4) * 100, cy = 62 + Math.floor(i / 4) * 84;
       var sel = i === state.i;
       s += '<g class="particle" data-i="' + i + '" transform="translate(' + cx + ',' + cy + ')">';
       if (sel) {
@@ -120,10 +120,10 @@
       if (p.oil === '中') {
         s += '<path d="M' + (-p.size * 0.7) + ' ' + (-p.size * 0.6) + ' Q0 ' + (-p.size * 0.95) + ' ' + (p.size * 0.6) + ' ' + (-p.size * 0.55) + '" fill="none" stroke="#8a6a3a" stroke-width="1.1" opacity=".55"/>';
       }
-      s += '<text x="0" y="' + (p.size + 20) + '" font-size="9" fill="' + (sel ? 'var(--acc)' : 'var(--tx-3)') + '" text-anchor="middle">' + grp.def.key + '-0' + (i + 1) + '</text>';
+      s += '<text x="0" y="' + (p.size + 18) + '" font-size="9" fill="' + (sel ? 'var(--acc)' : 'var(--tx-3)') + '" text-anchor="middle">' + grp.def.key + '-0' + (i + 1) + '</text>';
       s += '</g>';
     }
-    s += '<text x="16" y="286" font-size="9.5" fill="var(--tx-3)">颗粒 1—5 mm；油膜与泥饼会遮蔽表面纹理</text>';
+    s += '<text x="16" y="212" font-size="9" fill="var(--tx-3)">颗粒 1—5 mm；油膜与泥饼会遮蔽表面纹理</text>';
     svg.innerHTML = s;
     var p2 = grp.parts[state.i];
     $('sample-hint').textContent = '当前 ' + grp.def.key + '-0' + (state.i + 1) + ' · 粒径 ' + p2.mm +
@@ -135,42 +135,42 @@
     var grp = groups[state.g], p = grp.parts[state.i];
     var probs = probsFor(p, state.n);
     var top = probs.indexOf(Math.max.apply(null, probs));
-    var s = '<text x="14" y="22" font-size="10" fill="var(--tx-3)">类别概率（%）· 单颗粒</text>';
+    var s = '<text x="14" y="16" font-size="9" fill="var(--tx-3)">类别概率（%）· 单颗粒</text>';
     for (var i = 0; i < 5; i++) {
-      var y = 50 + i * 46, w = probs[i] * 270;
-      s += '<text x="96" y="' + (y + 13) + '" font-size="11" fill="' + (i === top ? 'var(--tx)' : 'var(--tx-2)') + '" text-anchor="end">' + CLASSES[i].name + '</text>';
-      s += '<rect x="104" y="' + y + '" width="270" height="17" rx="3" fill="var(--line)"/>';
-      s += '<rect x="104" y="' + y + '" width="' + w.toFixed(1) + '" height="17" rx="3" fill="' + CLASSES[i].color + '" opacity="' + (i === top ? '.95' : '.5') + '"/>';
-      s += '<text x="382" y="' + (y + 13) + '" font-size="10.5" fill="' + (i === top ? 'var(--tx)' : 'var(--tx-3)') + '" font-family="var(--mono)">' + (probs[i] * 100).toFixed(1) + '</text>';
+      var y = 36 + i * 34, w = probs[i] * 235;
+      s += '<text x="96" y="' + (y + 11) + '" font-size="10" fill="' + (i === top ? 'var(--tx)' : 'var(--tx-2)') + '" text-anchor="end">' + CLASSES[i].name + '</text>';
+      s += '<rect x="104" y="' + y + '" width="235" height="14" rx="3" fill="var(--line)"/>';
+      s += '<rect x="104" y="' + y + '" width="' + w.toFixed(1) + '" height="14" rx="3" fill="' + CLASSES[i].color + '" opacity="' + (i === top ? '.95' : '.5') + '"/>';
+      s += '<text x="347" y="' + (y + 11) + '" font-size="9.5" fill="' + (i === top ? 'var(--tx)' : 'var(--tx-3)') + '" font-family="var(--mono)">' + (probs[i] * 100).toFixed(1) + '</text>';
     }
-    s += '<line x1="104" y1="272" x2="374" y2="272" stroke="var(--line)"/>';
-    s += '<text x="14" y="290" font-size="9" fill="var(--tx-3)">预测：' + CLASSES[top].name + '　真值：' + CLASSES[p.trueCls].name;
+    s += '<line x1="104" y1="196" x2="339" y2="196" stroke="var(--line)"/>';
+    s += '<text x="14" y="208" font-size="9" fill="var(--tx-3)">预测：' + CLASSES[top].name + '　真值：' + CLASSES[p.trueCls].name;
     s += (top === p.trueCls ? '　判对' : '　判错，全部转人工') + '</text>';
     if (top !== p.trueCls) {
-      s += '<text x="386" y="290" font-size="9" fill="var(--bad)" text-anchor="end">低置信</text>';
+      s += '<text x="352" y="208" font-size="9" fill="var(--bad)" text-anchor="end">低置信</text>';
     }
     svg.innerHTML = s;
   }
 
   function drawCurve() {
     var svg = $('curve');
-    var padL = 54, padR = 18, padT = 30, padB = 40;
-    var W = 760, H = 230, pw = W - padL - padR, ph = H - padT - padB;
+    var padL = 36, padR = 14, padT = 22, padB = 30;
+    var W = 430, H = 180, pw = W - padL - padR, ph = H - padT - padB;
     var lo = Math.log(50), hi = Math.log(5000);
     function xOf(n) { return padL + (Math.log(n) - lo) / (hi - lo) * pw; }
     function yOf(v) { return padT + ph - v * ph; }
-    var s = '<text x="14" y="16" font-size="10" fill="var(--tx-3)">准确率 (%)</text>';
+    var s = '<text x="14" y="14" font-size="9" fill="var(--tx-3)">准确率 (%)</text>';
     for (var v = 0; v <= 1.0001; v += 0.2) {
       s += '<line x1="' + padL + '" y1="' + yOf(v) + '" x2="' + (padL + pw) + '" y2="' + yOf(v) + '" stroke="var(--line)"/>';
-      s += '<text x="' + (padL - 8) + '" y="' + (yOf(v) + 4) + '" font-size="9" fill="var(--tx-3)" text-anchor="end">' + Math.round(v * 100) + '</text>';
+      s += '<text x="' + (padL - 8) + '" y="' + (yOf(v) + 3) + '" font-size="8" fill="var(--tx-3)" text-anchor="end">' + Math.round(v * 100) + '</text>';
     }
     var ticks = [50, 100, 200, 500, 1000, 2000, 5000];
     ticks.forEach(function (t) {
-      s += '<text x="' + xOf(t) + '" y="' + (padT + ph + 16) + '" font-size="9" fill="var(--tx-3)" text-anchor="middle">' + t + '</text>';
+      s += '<text x="' + xOf(t) + '" y="' + (padT + ph + 14) + '" font-size="8" fill="var(--tx-3)" text-anchor="middle">' + t + '</text>';
     });
-    s += '<text x="' + (padL + pw / 2) + '" y="' + (H - 6) + '" font-size="9.5" fill="var(--tx-3)" text-anchor="middle">训练样本数（对数刻度）</text>';
+    s += '<text x="' + (padL + pw / 2) + '" y="' + (H - 3) + '" font-size="8.5" fill="var(--tx-3)" text-anchor="middle">训练样本数（对数刻度）</text>';
     s += '<line x1="' + padL + '" y1="' + yOf(0.65) + '" x2="' + (padL + pw) + '" y2="' + yOf(0.65) + '" stroke="var(--tx-3)" stroke-width="1" stroke-dasharray="4 3"/>';
-    s += '<text x="' + (padL + 4) + '" y="' + (yOf(0.65) - 5) + '" font-size="9" fill="var(--tx-3)">少数类可用线 65%</text>';
+    s += '<text x="' + (padL + 4) + '" y="' + (yOf(0.65) - 4) + '" font-size="8" fill="var(--tx-3)">少数类可用线 65%</text>';
 
     var accPath = '', minPath = '', n, m, x, y1, y2;
     for (n = 50; n <= 5000; n += 50) {
@@ -186,8 +186,8 @@
     s += '<line x1="' + xc + '" y1="' + padT + '" x2="' + xc + '" y2="' + (padT + ph) + '" stroke="var(--tx-3)" stroke-dasharray="3 3" opacity=".7"/>';
     s += '<circle cx="' + xc + '" cy="' + yOf(cur.acc) + '" r="4" fill="var(--acc)" stroke="var(--card)" stroke-width="2"/>';
     s += '<circle cx="' + xc + '" cy="' + yOf(cur.minor) + '" r="4" fill="var(--gold)" stroke="var(--card)" stroke-width="2"/>';
-    s += '<text x="' + (padL + 8) + '" y="' + (padT + 12) + '" font-size="9" fill="var(--acc)">■ 总准确率</text>';
-    s += '<text x="' + (padL + 86) + '" y="' + (padT + 12) + '" font-size="9" fill="var(--gold)">■ 少数类召回</text>';
+    s += '<text x="' + (padL + 8) + '" y="' + (padT + 10) + '" font-size="8" fill="var(--acc)">■ 总准确率</text>';
+    s += '<text x="' + (padL + 78) + '" y="' + (padT + 10) + '" font-size="8" fill="var(--gold)">■ 少数类召回</text>';
     svg.innerHTML = s;
   }
 
@@ -202,7 +202,7 @@
     $('r-min').textContent = (m.minor * 100).toFixed(1) + '%';
     $('r-min').className = m.minor >= 0.65 ? '' : 'bad';
     $('r-conf').textContent = CLASSES[pair[0]].name + ' ↔ ' + CLASSES[pair[1]].name + ' · 差 ' + gap + ' 个百分点';
-    $('r-conf').style.fontSize = '14px';
+    $('r-conf').style.fontSize = '12px';
     $('n-tag').textContent = 'N = ' + state.n + ' 张';
 
     var v = $('verdict');

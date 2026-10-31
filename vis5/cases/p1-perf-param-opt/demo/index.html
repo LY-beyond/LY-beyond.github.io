@@ -11,61 +11,67 @@
   <h1>射孔参数智能优化 · 孔密 / 相位 / 穿深</h1>
   <p class="lead">拖动孔径参数，看孔道几何如何改变渗流面积、压实带损伤与成本。点击自动寻优，让代理模型在约束内给出推荐组合。</p>
 
-  <div class="section">
-    <h2>① 射孔孔道剖面与井段分布</h2>
-    <p class="hint">左侧为井眼横截面：灰色是套管，暗色环是水泥环，金色辐射线是射孔孔道，长度随穿深变化，方向数由相位角决定。右侧表示 1 m 井段内的孔数。</p>
-    <div class="split">
-      <div class="chart-wrap"><svg id="perf" viewBox="0 0 720 390" role="img" aria-label="射孔孔道剖面"></svg></div>
-      <div>
-        <div class="readouts one">
-          <div class="ro"><span>相对产能指数（无量纲）</span><b id="r-pi">—</b></div>
-          <div class="ro"><span>压实带表皮系数</span><b id="r-skin">—</b></div>
-          <div class="ro"><span>射孔成本（万元 / 10 m）</span><b id="r-cost">—</b></div>
+  <div class="layout">
+    <div class="viz">
+      <div class="section">
+        <h2>① 射孔孔道剖面与井段分布</h2>
+        <p class="hint">左侧为井眼横截面：灰色是套管，暗色环是水泥环，金色辐射线是射孔孔道，长度随穿深变化，方向数由相位角决定。右侧表示 1 m 井段内的孔数。</p>
+        <div class="split">
+          <div class="chart-wrap"><svg id="perf" viewBox="0 0 430 256" role="img" aria-label="射孔孔道剖面"></svg></div>
+          <div>
+            <div class="readouts one">
+              <div class="ro"><span>相对产能指数（无量纲）</span><b id="r-pi">—</b></div>
+              <div class="ro"><span>压实带表皮系数</span><b id="r-skin">—</b></div>
+              <div class="ro"><span>射孔成本（万元 / 10 m）</span><b id="r-cost">—</b></div>
+            </div>
+            <div class="status" id="status" style="margin-top:8px"></div>
+          </div>
         </div>
-        <div class="status" id="status" style="margin-top:12px"></div>
       </div>
     </div>
-  </div>
 
-  <div class="section">
-    <h2>② 调整射孔参数</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>孔密 <output id="o-d">16</output></label>
-        <input type="range" id="s-d" min="8" max="24" step="1" value="16">
-        <span class="tip">单位：孔 / m。孔密越高渗流面积越大，但压实带叠加、成本上升。</span>
+    <div class="side">
+      <div class="section">
+        <h2>② 调整射孔参数</h2>
+        <div class="controls">
+          <div class="ctl">
+            <label>孔密 <output id="o-d">16</output></label>
+            <input type="range" id="s-d" min="8" max="24" step="1" value="16">
+            <span class="tip">单位：孔 / m。孔密越高渗流面积越大，但压实带叠加、成本上升。</span>
+          </div>
+          <div class="ctl">
+            <label>相位角 <output id="o-ph">90°</output></label>
+            <select id="s-ph">
+              <option value="60">60°（6 相位）</option>
+              <option value="90" selected>90°（4 相位）</option>
+              <option value="120">120°（3 相位）</option>
+              <option value="180">180°（2 相位）</option>
+            </select>
+            <span class="tip">相位越密，井周覆盖越均匀；180° 定向射孔用于避水避气。</span>
+          </div>
+          <div class="ctl">
+            <label>射孔弹穿深 <output id="o-dp">450 mm</output></label>
+            <input type="range" id="s-dp" min="200" max="800" step="25" value="450">
+            <span class="tip">必须穿透近井污染带，否则产能指数提升有限。</span>
+          </div>
+          <div class="ctl">
+            <label>地层渗透率 <output id="o-k">18 mD</output></label>
+            <input type="range" id="s-k" min="1" max="100" step="1" value="18">
+            <span class="tip">低渗储层更依赖深穿透；高渗储层孔密收益更明显。</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="btn-opt">自动寻优</button>
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">寻优范围：孔密 8—24 孔/m · 相位 60/90/120/180° · 穿深 200—800 mm</span>
+        </div>
       </div>
-      <div class="ctl">
-        <label>相位角 <output id="o-ph">90°</output></label>
-        <select id="s-ph">
-          <option value="60">60°（6 相位）</option>
-          <option value="90" selected>90°（4 相位）</option>
-          <option value="120">120°（3 相位）</option>
-          <option value="180">180°（2 相位）</option>
-        </select>
-        <span class="tip">相位越密，井周覆盖越均匀；180° 定向射孔用于避水避气。</span>
-      </div>
-      <div class="ctl">
-        <label>射孔弹穿深 <output id="o-dp">450 mm</output></label>
-        <input type="range" id="s-dp" min="200" max="800" step="25" value="450">
-        <span class="tip">必须穿透近井污染带，否则产能指数提升有限。</span>
-      </div>
-      <div class="ctl">
-        <label>地层渗透率 <output id="o-k">18 mD</output></label>
-        <input type="range" id="s-k" min="1" max="100" step="1" value="18">
-        <span class="tip">低渗储层更依赖深穿透；高渗储层孔密收益更明显。</span>
-      </div>
-    </div>
-    <div class="btnrow">
-      <button class="primary" id="btn-opt">自动寻优</button>
-      <button id="btn-reset">恢复默认</button>
-      <span class="btn-note">寻优范围：孔密 8—24 孔/m · 相位 60/90/120/180° · 穿深 200—800 mm</span>
-    </div>
-  </div>
 
-  <div class="section">
-    <h2>③ 参数解释</h2>
-    <p class="hint">产能指数采用代理模型近似：孔密与穿深决定渗流面积，相位决定井周覆盖均匀程度，压实带表皮抵消一部分收益。真实工程中应由数值模拟生成样本、再用代理模型加速寻优。</p>
+      <div class="section">
+        <h2>③ 参数解释</h2>
+        <p class="hint">产能指数采用代理模型近似：孔密与穿深决定渗流面积，相位决定井周覆盖均匀程度，压实带表皮抵消一部分收益。真实工程中应由数值模拟生成样本、再用代理模型加速寻优。</p>
+      </div>
+    </div>
   </div>
 </div>
 <script src="demo.js"></script>

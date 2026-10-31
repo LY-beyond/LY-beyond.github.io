@@ -14,39 +14,45 @@
     <p class="lead">三条曲线是立压、扭矩、出口流量的归一化幅值（按各自基线 ±4σ 映射到 0—100）。第 128 分钟起扭矩抬升、流量下降，第 150 分钟发展为卡钻。拖动阈值与提前量，看预警时间和误报怎么权衡。</p>
   </header>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">01</span>多通道时序与报警时刻</h2>
-      <span class="tag" id="tag">1 Hz 采样 · 按 1 min 聚合</span>
+  <div class="layout">
+    <div class="viz">
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">01</span>多通道时序与报警时刻</h2>
+          <span class="tag" id="tag">1 Hz 采样 · 按 1 min 聚合</span>
+        </div>
+        <p class="hint">红色竖线是卡钻发生时刻，金色虚线是前兆起点。蓝色竖线是模型首次报警；两条竖线之间的距离就是提前分钟数。</p>
+        <svg id="chart" viewBox="0 0 430 216" role="img" aria-label="立压、扭矩、出口流量时序与报警"></svg>
+      </section>
     </div>
-    <p class="hint">红色竖线是卡钻发生时刻，金色虚线是前兆起点。蓝色竖线是模型首次报警；两条竖线之间的距离就是提前分钟数。</p>
-    <svg id="chart" viewBox="0 0 760 360" role="img" aria-label="立压、扭矩、出口流量时序与报警"></svg>
-  </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">02</span>报警阈值与提前量目标</h2>
-      <span class="tag" id="mode-tag">阈值 3.2σ</span>
+    <div class="side">
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">02</span>报警阈值与提前量目标</h2>
+          <span class="tag" id="mode-tag">阈值 3.2σ</span>
+        </div>
+        <div class="ctl2">
+          <div class="ctl">
+            <label>报警阈值 <output id="o-thr">3.2</output></label>
+            <input type="range" id="s-thr" min="1.5" max="6" step="0.1" value="3.2">
+            <span class="tip">多变量异常分数（各通道 z 值的均方根）超过该值并持续 2 min 才报警</span>
+          </div>
+          <div class="ctl">
+            <label>提前量目标 <output id="o-lead">12 min</output></label>
+            <input type="range" id="s-lead" min="5" max="40" step="1" value="12">
+            <span class="tip">现场要求的预警提前时间；达到该目标才算有效预警</span>
+          </div>
+        </div>
+        <div class="readrow">
+          <div class="read"><span>首次报警时刻</span><b id="r-first">—</b></div>
+          <div class="read"><span>提前分钟数</span><b id="r-lead">—</b></div>
+          <div class="read"><span>误报次数</span><b id="r-fa">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">—</div>
+      </section>
     </div>
-    <div class="ctl2">
-      <div class="ctl">
-        <label>报警阈值 <output id="o-thr">3.2</output></label>
-        <input type="range" id="s-thr" min="1.5" max="6" step="0.1" value="3.2">
-        <span class="tip">多变量异常分数（各通道 z 值的均方根）超过该值并持续 2 min 才报警</span>
-      </div>
-      <div class="ctl">
-        <label>提前量目标 <output id="o-lead">12 min</output></label>
-        <input type="range" id="s-lead" min="5" max="40" step="1" value="12">
-        <span class="tip">现场要求的预警提前时间；达到该目标才算有效预警</span>
-      </div>
-    </div>
-    <div class="readrow">
-      <div class="read"><span>首次报警时刻</span><b id="r-first">—</b></div>
-      <div class="read"><span>提前分钟数</span><b id="r-lead">—</b></div>
-      <div class="read"><span>误报次数</span><b id="r-fa">—</b></div>
-    </div>
-    <div class="verdict" id="verdict">—</div>
-  </section>
+  </div>
 
   <p class="foot">示意数据：正常段 0—127 min，前兆 128—149 min，卡钻 150 min 起；各通道叠加确定性噪声。异常分数取三通道 z 值的均方根，120 min 前的越限计为误报。数值用于说明阈值与提前量的取舍，不代表现场实测。</p>
 </div>

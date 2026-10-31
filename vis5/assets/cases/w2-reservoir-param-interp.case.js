@@ -1,0 +1,171 @@
+/* =========================================================
+   案例插件（静态注册版）：储层参数智能解释
+   ---------------------------------------------------------
+   由 cases/w2-reservoir-param-interp/case.json 生成（tools/build-cases.js）。
+   修改案例内容请改源文件后重新生成，不要直接改本文件。
+   ========================================================= */
+(function (global) {
+  'use strict';
+
+  var DATA = {
+    "id": "w2-reservoir-param-interp",
+    "sceneId": "w2",
+    "methods": [
+      "ts",
+      "opt"
+    ],
+    "title": "储层参数智能解释",
+    "version": "1.0.0",
+    "updated": "2026-10-30",
+    "status": "ready",
+    "tabs": {
+      "background": {
+        "label": "专业背景",
+        "lede": "松辽盆地北部某油田 96 口开发井，测井采样 0.125 m、单井 1,600—2,400 点，但取心井只有 12 口、岩心分析样 1,860 个。经验孔渗回归在全油田的孔隙度 RMSE 约 **1.9 pu**，渗透率常差 3 倍以上；多曲线深度网络加物理约束后，孔隙度 RMSE 可到 1.1 pu、渗透率误差压到 1.8 倍以内。",
+        "judge": [
+          {
+            "label": "任务类型",
+            "value": "深度回归 + 多任务学习",
+            "desc": "多曲线到孔隙度、渗透率、饱和度的非线性映射"
+          },
+          {
+            "label": "标注成本",
+            "value": "中",
+            "desc": "岩心分析样点，单井 50—200 个"
+          },
+          {
+            "label": "可见收益",
+            "value": "高",
+            "desc": "96 口井解释周期 3 周 → 2 天"
+          },
+          {
+            "label": "难度",
+            "value": "中",
+            "desc": "深度归位误差与跨区迁移是主要障碍"
+          }
+        ],
+        "sections": [
+          {
+            "no": 1,
+            "en": "PROBLEM",
+            "title": "当前做法与问题",
+            "html": "<p>孔隙度、渗透率、含水饱和度是储层评价的三个核心参数。常规做法是岩心标定：取心井做孔渗回归、饱和度为岩心分析或阿尔奇公式计算，再把回归关系套到未取心井。问题在于取心井只占 12.5%（12/96），岩心样 1,860 个且集中在物性较好的层段，致密段与薄层几乎无样；解释员逐层调参数，单井 2—3 h，全油田解释 3 周。</p><p>数据基础其实够用：常规曲线 GR、DEN、CNL、RT 加核磁 T2 谱，采样 0.125 m；DEN 与 CNL 对孔隙度敏感，核磁 T2 分布可分离束缚水与可动流体，RT 与饱和度相关。岩心分析给出孔隙度 8%—26%、渗透率 0.5—850 mD、饱和度 35%—75% 的标定样点。曲线与参数之间存在明确的非线性映射，只是经验公式表达不了。</p><p>硬约束：① 岩心与测井深度存在 0.2—1.0 m 归位误差，0.5 m 错位就能把不同岩性样点配到同一深度，标签直接被污染；② 低阻油层的高阻水层与低阻油层在 RT 上重叠，单靠阿尔奇会误判；③ 跨区孔隙结构不同，邻区模型直接套用误差可翻倍。</p>"
+          },
+          {
+            "no": 2,
+            "en": "INTERVENTION",
+            "title": "AI 能做什么",
+            "html": "<p>AI 替换的是「经验回归 + 逐层调参」：以 0.125 m 逐点为样本，输入 GR、DEN、CNL、RT、声波、核磁孔隙度分量等 10 条曲线、21 点深度窗口，用 1D U-Net 多任务输出孔隙度、log10 渗透率与含水饱和度，同时给出 90% 预测区间。</p><p>训练的两个要点：一是物理约束损失——孔隙度要与 DEN / CNL 响应一致、渗透率随孔隙度单调、饱和度落在阿尔奇上下界内，违反约束要罚；二是标签划分必须按井或按层段分组，相邻 0.125 m 点相关性 0.95 以上，按点随机划分等于把答案抄进验证集。迁移学习用 12 口取心井预训练、新区 3—8 个岩心样微调。</p><p>定位是辅助解释：模型给出逐点参数、分层平均值与不确定度，解释员复核低阻层、油水界面与异常段。不全自动的原因：岩心样少且偏物性好的层段，模型在致密段与薄层的外推能力有限，且储量计算对饱和度误差极其敏感。</p>"
+          },
+          {
+            "no": 3,
+            "en": "DATA",
+            "title": "你需要准备什么",
+            "html": "<p style=\"margin-bottom:14px\">曲线齐全，真正的门槛是岩心深度归位与样本代表性，先做归位再谈建模。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">常规与特殊测井</span><span class=\"cl-s\">GR、DEN、CNL、RT、声波、核磁，0.125 m，96 口井</span></span><span class=\"cl-n\">无需逐点标注</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">岩心分析</span><span class=\"cl-s\">12 口取心井、1,860 个样点</span></span><span class=\"cl-n\">孔隙度、渗透率、饱和度，逐样入库</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">深度归位表</span><span class=\"cl-s\">岩心扫描与测井 GR 互相关，逐样偏移 0.2—1.0 m</span></span><span class=\"cl-n\">人工校正并双人复核</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">试油与生产数据</span><span class=\"cl-s\">24 个层段的产能与含水</span></span><span class=\"cl-n\">作为独立验证</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">区域孔渗先验</span><span class=\"cl-s\">邻区岩心关系与压汞曲线</span></span><span class=\"cl-n\">用于迁移与约束</span></div></div>"
+          },
+          {
+            "no": 4,
+            "en": "DIFFICULTY",
+            "title": "技术难度与参考方向",
+            "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">模型结构不复杂，难在标签的深度准确性、样本代表性与跨区可迁移性。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战按影响排序：① 深度归位——0.2—1.0 m 的系统偏移会让孔隙度 RMSE 虚高 0.6 pu 以上，且误差看起来像模型问题；② 样本偏置——1,860 个样点集中在物性好的层段，致密段与薄层没有标签，模型在差储层上系统性高估；③ 跨区迁移——孔隙结构、黏土类型变化后，同一套曲线响应关系不再成立，微调样本少于 3 个时不可用。</p><p>评估建议：盲井孔隙度 RMSE ≤1.2 pu、log10 渗透率 RMSE ≤0.30（约 2 倍）、饱和度绝对误差 ≤8%；低阻层符合率 ≥80%；90% 区间覆盖率 ≥85%。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/ts\">深度回归<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">迁移学习<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">物理约束损失<span class=\"ar\">↗</span></a></div>"
+          }
+        ]
+      },
+      "workflow": {
+        "label": "案例流程",
+        "title": "松辽盆地北部某油田 96 口开发井的储层参数解释",
+        "lead": [
+          "油田发育 4 个砂层组，孔隙度 8%—26%、渗透率 0.5—850 mD、含水饱和度 35%—75%，其中低阻油层 3 个层段。96 口开发井中 12 口取心、岩心样 1,860 个，24 个层段有试油或生产数据。",
+          "项目以 9 口取心井训练、3 口整井盲测，做多任务深度回归与物理约束。目标：孔隙度 RMSE ≤1.2 pu、渗透率误差 ≤2 倍、饱和度误差 ≤8%，96 口井解释周期从 3 周压到 2 天。"
+        ],
+        "stats": [
+          [
+            "解释井数",
+            "96 口"
+          ],
+          [
+            "取心井",
+            "12 口"
+          ],
+          [
+            "岩心样点",
+            "1,860 个"
+          ],
+          [
+            "采样间隔",
+            "0.125 m"
+          ],
+          [
+            "人工解释周期",
+            "3 周"
+          ],
+          [
+            "模型解释耗时",
+            "2 h"
+          ]
+        ],
+        "steps": [
+          {
+            "name": "岩心深度归位",
+            "role": "数据",
+            "do": "用岩心扫描图像与测井 GR 分段互相关，逐样校正 0.2—1.0 m 深度偏移，剔除破碎与无代表样 7%。",
+            "effect": "归位后孔隙度—密度相关 r 从 0.62 升到 0.81",
+            "trap": "整段平移一个常数——不同层段偏移方向不同，必须分段互相关，否则上部修好、下部更错"
+          },
+          {
+            "name": "样本划分与基线",
+            "role": "算法核心",
+            "do": "按井划分训练 / 验证，3 口取心井整井留出盲测；同时跑孔渗回归 + 阿尔奇公式作基线。",
+            "effect": "基线孔隙度 RMSE 1.9 pu，渗透率误差 3.2 倍",
+            "trap": "按深度点随机划分——相邻 0.125 m 点几乎相同，盲测误差被低估一半以上"
+          },
+          {
+            "name": "多任务深度模型",
+            "role": "算法核心",
+            "do": "1D U-Net，10 条曲线、21 点窗口，输出孔隙度 / log10 渗透率 / 饱和度；损失加三项物理约束：密度—孔隙度一致、渗透率随孔隙度单调、饱和度在阿尔奇界内。",
+            "effect": "盲井孔隙度 RMSE 1.1 pu，log K RMSE 0.26（约 1.8 倍），饱和度 7.2%",
+            "trap": "渗透率在算术域训练——850 mD 的少数样点主导损失，低渗段全错，必须在对数域建模与评估"
+          },
+          {
+            "name": "盲井验证与区间",
+            "role": "质控",
+            "do": "3 口整井盲测，按层段与物性分级报误差，输出 90% 预测区间并检查覆盖率。",
+            "effect": "盲井孔隙度 RMSE 1.3 pu，区间覆盖率 88%",
+            "trap": "只报全井平均误差——低阻层与薄层误差被好层稀释，储量计算恰恰卡在这些层"
+          },
+          {
+            "name": "成果交付与复核",
+            "role": "工程环节",
+            "do": "输出逐点参数、分层平均值与不确定度，解释员重点复核 3 个低阻层段与油水界面，异常点回写训练集。",
+            "effect": "96 口井 2 天完成，复核 11 口井、改判 6 个层段",
+            "trap": "把逐点值直接当分层值——边界段与薄互层的逐点噪声必须剔除后再平均"
+          }
+        ],
+        "metrics": {
+          "title": "怎么算「参数可信」",
+          "html": "<p>反直觉的陷阱：孔隙度 RMSE 1.1 pu 看起来很好，但渗透率是指数关系——孔隙度差 1 pu，在低渗端可让渗透率差 2 倍，所以渗透率必须在对数域建模并报「倍数误差」。另一个陷阱是按点随机划分：0.125 m 相邻点相关 0.95 以上，验证集等于训练集的复制，指标虚高 40% 以上，换到新井立刻崩。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>经验回归</th><th>本方案</th></tr></thead><tbody><tr><td>孔隙度 RMSE</td><td>盲井逐点</td><td>1.9 pu</td><td>1.1 pu</td></tr><tr><td>log10 渗透率 RMSE</td><td>盲井逐点</td><td>0.50（3.2 倍）</td><td>0.26（1.8 倍）</td></tr><tr><td>饱和度绝对误差</td><td>盲井逐点</td><td>11.4%</td><td>7.2%</td></tr><tr><td>低阻层符合率</td><td>与试油结论一致</td><td>62%</td><td>84%</td></tr><tr><td>解释周期</td><td>96 口井</td><td>3 周</td><td>2 天</td></tr><tr><td>90% 区间覆盖率</td><td>盲井逐点</td><td>—</td><td>88%</td></tr></tbody></table>"
+        },
+        "fails": [
+          {
+            "name": "岩心深度未归位",
+            "why": "0.2—1.0 m 偏移把不同岩性样点错配到曲线，孔隙度 RMSE 虚高 0.6 pu 以上，且会被误判为模型能力不足。解决：逐样互相关归位、分层段校正，归位前后各跑一次基线对比。"
+          },
+          {
+            "name": "按点随机划分造成泄漏",
+            "why": "相邻采样点高度相关，盲测指标好看但新井上崩，模型实际没学会映射。解决：按井或按层段分组划分，取心井整井留出，报告「盲井」而非「盲点」误差。"
+          },
+          {
+            "name": "渗透率算术域建模",
+            "why": "高值样点主导损失，低渗段误差可达 5—10 倍，而低渗段恰恰是开发调整的重点。解决：log 域训练与评估，按渗透率分级报误差，并对低渗段单独加权。"
+          },
+          {
+            "name": "跨区直接套用模型",
+            "why": "孔隙结构与黏土类型变化后响应关系失效，邻区模型直接迁移误差翻倍。解决：相似井筛选 + 少量本地岩心样微调，输出适用域判定，域外降级为经验公式。"
+          }
+        ]
+      }
+    }
+  };
+
+  global.Cases.register(DATA);
+})(window);

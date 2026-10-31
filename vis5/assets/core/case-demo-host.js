@@ -202,7 +202,7 @@
 
     var frame = document.createElement('iframe');
     frame.className = 'cd-iframe';
-    frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads');
+    frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-same-origin');
     frame.setAttribute('referrerpolicy', 'no-referrer');
     frame.setAttribute('title', (pkg.meta && pkg.meta.title ? pkg.meta.title : '案例示范') + '（沙箱）');
     frame.style.height = minH + 'px';

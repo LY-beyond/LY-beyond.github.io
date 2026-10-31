@@ -88,39 +88,38 @@
   }
 
   function yOf(v) {
-    return 28 + (100 - v) / 100 * 272;
+    return 20 + (100 - v) / 100 * 152;
   }
   function xOf(t) {
-    return 44 + t / 240 * 686;
+    return 30 + t / 240 * 394;
   }
 
   function drawChart(m) {
-    var s = '<rect x="0" y="0" width="760" height="360" fill="#0e130d" rx="6"/>';
-    s += '<text x="14" y="18" font-size="10" fill="#a9b0a0">三通道归一化幅值（基线 ±4σ → 0—100）· 时间 min</text>';
+    var s = '<rect x="0" y="0" width="430" height="216" fill="#0e130d" rx="6"/>';
+    s += '<text x="10" y="13" font-size="8.5" fill="#a9b0a0">三通道归一化幅值（基线 ±4σ → 0—100）· 时间 min</text>';
 
     var i, v, y;
     for (i = 0; i <= 5; i++) {
       v = i * 20;
       y = yOf(v);
-      s += '<line x1="44" y1="' + y.toFixed(1) + '" x2="730" y2="' + y.toFixed(1) + '" stroke="#20261b"/>';
-      s += '<text x="38" y="' + (y + 3).toFixed(1) + '" font-size="9" fill="#7c8474" text-anchor="end">' + v + '</text>';
+      s += '<line x1="30" y1="' + y.toFixed(1) + '" x2="424" y2="' + y.toFixed(1) + '" stroke="#20261b"/>';
+      s += '<text x="26" y="' + (y + 2.5).toFixed(1) + '" font-size="7.5" fill="#7c8474" text-anchor="end">' + v + '</text>';
     }
-    s += '<rect x="44" y="' + yOf(75).toFixed(1) + '" width="686" height="' + (yOf(25) - yOf(75)).toFixed(1)
+    s += '<rect x="30" y="' + yOf(75).toFixed(1) + '" width="394" height="' + (yOf(25) - yOf(75)).toFixed(1)
       + '" fill="#20261b" opacity="0.55"/>';
-    s += '<line x1="44" y1="' + yOf(75).toFixed(1) + '" x2="730" y2="' + yOf(75).toFixed(1)
+    s += '<line x1="30" y1="' + yOf(75).toFixed(1) + '" x2="424" y2="' + yOf(75).toFixed(1)
       + '" stroke="#7c8474" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.6"/>';
-    s += '<text x="50" y="' + (yOf(75) - 4).toFixed(1) + '" font-size="8.5" fill="#7c8474">基线 ±2σ</text>';
+    s += '<text x="34" y="' + (yOf(75) - 3).toFixed(1) + '" font-size="7.5" fill="#7c8474">基线 ±2σ</text>';
 
-    for (i = 0; i <= 8; i++) {
-      s += '<text x="' + xOf(i * 30).toFixed(1) + '" y="' + (300 + 16) + '" font-size="9" fill="#7c8474" text-anchor="middle">'
-        + (i * 30) + '</text>';
+    for (i = 0; i <= 4; i++) {
+      s += '<text x="' + xOf(i * 60).toFixed(1) + '" y="184" font-size="7.5" fill="#7c8474" text-anchor="middle">'
+        + (i * 60) + '</text>';
     }
-    s += '<text x="730" y="' + (300 + 30) + '" font-size="9" fill="#7c8474" text-anchor="end">时间 (min)</text>';
 
     if (m.lead !== null && m.lead > 0) {
       var xa = xOf(EVENT - state.lead), xb = xOf(EVENT);
-      s += '<rect x="' + xa.toFixed(1) + '" y="28" width="' + (xb - xa).toFixed(1) + '" height="272" fill="#d0a85c" opacity="0.07"/>';
-      s += '<text x="' + ((xa + xb) / 2).toFixed(1) + '" y="42" font-size="8.5" fill="#d0a85c" text-anchor="middle">目标预警窗口</text>';
+      s += '<rect x="' + xa.toFixed(1) + '" y="20" width="' + (xb - xa).toFixed(1) + '" height="152" fill="#d0a85c" opacity="0.07"/>';
+      s += '<text x="' + ((xa + xb) / 2).toFixed(1) + '" y="31" font-size="7.5" fill="#d0a85c" text-anchor="middle">目标预警窗口</text>';
     }
 
     CH.forEach(function (c) {
@@ -129,31 +128,31 @@
         var val = clamp(50 + (raw[t][c.key] - base[c.key].mean) / base[c.key].std * 12.5, 3, 97);
         pts.push(xOf(t).toFixed(1) + ',' + yOf(val).toFixed(1));
       }
-      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + c.color + '" stroke-width="1.5" opacity="0.9"/>';
+      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + c.color + '" stroke-width="1.2" opacity="0.9"/>';
     });
 
-    s += '<line x1="' + xOf(PRE).toFixed(1) + '" y1="28" x2="' + xOf(PRE).toFixed(1) + '" y2="300" stroke="#d0a85c" stroke-width="1.2" stroke-dasharray="4 3"/>';
-    s += '<text x="' + (xOf(PRE) + 4).toFixed(1) + '" y="' + (28 + 30) + '" font-size="9" fill="#d0a85c">前兆 128</text>';
-    s += '<line x1="' + xOf(EVENT).toFixed(1) + '" y1="28" x2="' + xOf(EVENT).toFixed(1) + '" y2="300" stroke="#cf7466" stroke-width="1.8"/>';
-    s += '<text x="' + (xOf(EVENT) + 5).toFixed(1) + '" y="' + (28 + 46) + '" font-size="9" fill="#cf7466">卡钻 150</text>';
+    s += '<line x1="' + xOf(PRE).toFixed(1) + '" y1="20" x2="' + xOf(PRE).toFixed(1) + '" y2="172" stroke="#d0a85c" stroke-width="1.2" stroke-dasharray="4 3"/>';
+    s += '<text x="' + (xOf(PRE) - 4).toFixed(1) + '" y="34" font-size="7.5" fill="#d0a85c" text-anchor="end">前兆 128</text>';
+    s += '<line x1="' + xOf(EVENT).toFixed(1) + '" y1="20" x2="' + xOf(EVENT).toFixed(1) + '" y2="172" stroke="#cf7466" stroke-width="1.5"/>';
+    s += '<text x="' + (xOf(EVENT) + 4).toFixed(1) + '" y="46" font-size="7.5" fill="#cf7466">卡钻 150</text>';
 
     if (m.first !== null) {
-      s += '<line x1="' + xOf(m.first).toFixed(1) + '" y1="28" x2="' + xOf(m.first).toFixed(1) + '" y2="300" stroke="#e8e3d5" stroke-width="1.5" opacity="0.9"/>';
-      s += '<circle cx="' + xOf(m.first).toFixed(1) + '" cy="28" r="3.5" fill="#e8e3d5"/>';
-      s += '<text x="' + (xOf(m.first) + 5).toFixed(1) + '" y="' + (28 + 62) + '" font-size="9" fill="#e8e3d5">'
+      s += '<line x1="' + xOf(m.first).toFixed(1) + '" y1="20" x2="' + xOf(m.first).toFixed(1) + '" y2="172" stroke="#e8e3d5" stroke-width="1.2" opacity="0.9"/>';
+      s += '<circle cx="' + xOf(m.first).toFixed(1) + '" cy="20" r="2.5" fill="#e8e3d5"/>';
+      s += '<text x="' + (xOf(m.first) + 4).toFixed(1) + '" y="58" font-size="7.5" fill="#e8e3d5">'
         + (m.first <= EVENT ? '首次报警 ' + m.first : '报警 ' + m.first) + '</text>';
     }
 
-    var lx = 50, ly = 300 + 32;
+    var lx = 34, ly = 196;
     CH.forEach(function (c, k) {
-      s += '<line x1="' + (lx + k * 128) + '" y1="' + ly + '" x2="' + (lx + 20 + k * 128) + '" y2="' + ly
+      s += '<line x1="' + (lx + k * 86) + '" y1="' + ly + '" x2="' + (lx + 16 + k * 86) + '" y2="' + ly
         + '" stroke="' + c.color + '" stroke-width="2"/>';
-      s += '<text x="' + (lx + 25 + k * 128) + '" y="' + (ly + 4) + '" font-size="9.5" fill="#a9b0a0">' + c.name + '</text>';
+      s += '<text x="' + (lx + 21 + k * 86) + '" y="' + (ly + 3) + '" font-size="8" fill="#a9b0a0">' + c.name + '</text>';
     });
-    s += '<line x1="50" y1="' + (ly + 18) + '" x2="70" y2="' + (ly + 18) + '" stroke="#cf7466" stroke-width="1.8"/>';
-    s += '<text x="75" y="' + (ly + 22) + '" font-size="9.5" fill="#a9b0a0">事故时刻</text>';
-    s += '<line x1="150" y1="' + (ly + 18) + '" x2="170" y2="' + (ly + 18) + '" stroke="#e8e3d5" stroke-width="1.5"/>';
-    s += '<text x="175" y="' + (ly + 22) + '" font-size="9.5" fill="#a9b0a0">首次报警</text>';
+    s += '<line x1="34" y1="' + (ly + 12) + '" x2="50" y2="' + (ly + 12) + '" stroke="#cf7466" stroke-width="1.5"/>';
+    s += '<text x="54" y="' + (ly + 15) + '" font-size="8" fill="#a9b0a0">事故时刻</text>';
+    s += '<line x1="120" y1="' + (ly + 12) + '" x2="136" y2="' + (ly + 12) + '" stroke="#e8e3d5" stroke-width="1.2"/>';
+    s += '<text x="140" y="' + (ly + 15) + '" font-size="8" fill="#a9b0a0">首次报警</text>';
 
     $('chart').innerHTML = s;
   }

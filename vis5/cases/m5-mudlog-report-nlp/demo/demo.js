@@ -138,25 +138,25 @@
 
   function drawGate() {
     var svg = $('gate');
-    var W = 760, H = 170, L = 52, R = 744, T = 30, B = 122;
+    var W = 430, H = 145, L = 34, R = 420, T = 22, B = 108;
     var pw = R - L, ph = B - T;
     function yOf(v) { return B - (v - 0.5) / 0.5 * ph; }
-    var s = '<text x="14" y="18" font-size="9.5" fill="var(--tx-3)">字段置信度与采纳阈值（0.50—1.00）</text>';
+    var s = '<text x="12" y="14" font-size="9" fill="var(--tx-3)">字段置信度与采纳阈值（0.50—1.00）</text>';
     var v;
     for (v = 0.5; v <= 1.0001; v += 0.1) {
       s += '<line x1="' + L + '" y1="' + yOf(v) + '" x2="' + R + '" y2="' + yOf(v) + '" stroke="var(--line)" stroke-width=".7"/>';
-      s += '<text x="' + (L - 8) + '" y="' + (yOf(v) + 3.5) + '" font-size="9" fill="var(--tx-3)" text-anchor="end">' + v.toFixed(1) + '</text>';
+      s += '<text x="' + (L - 6) + '" y="' + (yOf(v) + 3) + '" font-size="8" fill="var(--tx-3)" text-anchor="end">' + v.toFixed(1) + '</text>';
     }
     var yt = yOf(state.threshold);
     s += '<line x1="' + L + '" y1="' + yt + '" x2="' + R + '" y2="' + yt + '" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="5 3"/>';
-    s += '<text x="' + (R - 4) + '" y="' + (yt - 6) + '" font-size="9" fill="var(--gold)" text-anchor="end">阈值 ' + state.threshold.toFixed(2) + '</text>';
+    s += '<text x="' + (R - 4) + '" y="' + (yt - 5) + '" font-size="8.5" fill="var(--gold)" text-anchor="end">阈值 ' + state.threshold.toFixed(2) + '</text>';
     FIELDS.forEach(function (f, i) {
       var x = L + (i + 0.5) * pw / FIELDS.length;
       var low = f.conf < state.threshold;
       var y = yOf(f.conf);
-      s += '<rect x="' + (x - 19) + '" y="' + y + '" width="38" height="' + Math.max(1, B - y) + '" rx="2" fill="' + (low ? 'var(--bad)' : 'var(--acc)') + '" opacity=".82"/>';
-      s += '<text x="' + x + '" y="' + (y - 5) + '" font-size="9.5" fill="' + (low ? 'var(--bad)' : 'var(--acc)') + '" text-anchor="middle" font-family="var(--mono)">' + f.conf.toFixed(2) + '</text>';
-      s += '<text x="' + x + '" y="' + (B + 17) + '" font-size="10" fill="' + (low ? 'var(--bad)' : 'var(--tx-2)') + '" text-anchor="middle">' + f.short + '</text>';
+      s += '<rect x="' + (x - 15) + '" y="' + y + '" width="30" height="' + Math.max(1, B - y) + '" rx="2" fill="' + (low ? 'var(--bad)' : 'var(--acc)') + '" opacity=".82"/>';
+      s += '<text x="' + x + '" y="' + (y - 4) + '" font-size="8.5" fill="' + (low ? 'var(--bad)' : 'var(--acc)') + '" text-anchor="middle" font-family="var(--mono)">' + f.conf.toFixed(2) + '</text>';
+      s += '<text x="' + x + '" y="' + (B + 15) + '" font-size="9" fill="' + (low ? 'var(--bad)' : 'var(--tx-2)') + '" text-anchor="middle">' + f.short + '</text>';
     });
     svg.innerHTML = s;
   }

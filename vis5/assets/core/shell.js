@@ -1318,7 +1318,7 @@
     view.innerHTML = header() + html + footer();
 
     // 页面级交互
-    if (!p.length) { bindMine(); bindMatrixHover(); }
+    if (!p.length) { bindMine(); bindMatrixHover(); if (window.StageAnim) StageAnim.mount(); }
     if (p[0] === 'stage') bindFilters(view);
     if (p[0] === 'scene') {
       var sc2 = A.index.byScene[p[1]];

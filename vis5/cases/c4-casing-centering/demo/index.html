@@ -3,84 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>示范：套管居中度智能评估</title>
+<title>示范：套管居中度优化</title>
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
 <div class="panel">
-  <h1>套管居中度 · 交互式演示</h1>
-  <p class="lead">居中度 = 1 − (套管偏心距 / 最大可能偏心距)。拖动下面的滑杆，看井径、井斜、扶正器怎么改变水泥环的均匀程度。</p>
+  <h1>套管居中度优化 · 交互式演示</h1>
+  <p class="data-source">数据口径：API RP 10D-2 / ISO 10427-2 居中度最小 67%，尾管/关键层不低于 80%；居中度 SR＝1−e／((Dh−Dc)／2)，e 为偏心距；扶正器恢复力 500—5000 N；狗腿度增加法向载荷。模型为工程简化示意。</p>
+  <p class="lead">调节井径、井斜、狗腿度、扶正器数量与恢复力，观察沿井深居中度曲线是否满足 67% / 80% 阈值，以及下入阻力是否超限。</p>
 
-  <!-- 井眼横截面视图 -->
-  <div class="section">
-    <h2>① 井眼横截面：套管在里面的位置</h2>
-    <p class="hint">灰色大圆是井眼，深灰小圆是套管，外侧圆环是理想水泥环。绿色区域是"有水泥"，白色间隙是"没水泥"——这就是窜槽的源头。</p>
-    <div class="cross-wrap">
-      <svg id="cross" viewBox="0 0 400 400" role="img" aria-label="井眼横截面"></svg>
-      <div class="cross-info">
-        <div class="ci-row"><span class="ci-l">井径 D</span><b id="ci-d">216 mm</b></div>
-        <div class="ci-row"><span class="ci-l">套管外径 d</span><b id="ci-do">178 mm</b></div>
-        <div class="ci-row"><span class="ci-l">扶正器外径</span><b id="ci-f">196 mm</b></div>
-        <div class="ci-row"><span class="ci-l">井斜角 θ</span><b id="ci-theta">60°</b></div>
-        <div class="ci-row"><span class="ci-l">偏心距 e</span><b id="ci-e">24 mm</b></div>
-        <div class="ci-row big"><span class="ci-l">居中度</span><b id="ci-cl">48%</b></div>
+  <div class="layout">
+    <div class="viz">
+      <!-- 指标卡 -->
+      <div class="section risk-top">
+        <div class="kpi-grid">
+          <div class="kpi"><span class="kpi-l">全井最小居中度</span><b id="kpi-srmin">—</b><span class="kpi-sub">%</span></div>
+          <div class="kpi"><span class="kpi-l">扶正器数量</span><b id="kpi-nc">—</b><span class="kpi-sub">个</span></div>
+          <div class="kpi"><span class="kpi-l">大钩载荷</span><b id="kpi-hook">—</b><span class="kpi-sub">kN</span></div>
+          <div class="kpi"><span class="kpi-l">下入阻力</span><b id="kpi-drag">—</b><span class="kpi-sub">kN</span></div>
+          <div class="kpi"><span class="kpi-l">是否满足 67%</span><b id="kpi-pass">—</b><span class="kpi-sub" id="kpi-pass-sub">—</span></div>
+          <div class="kpi"><span class="kpi-l">下入性判定</span><b id="kpi-run">—</b><span class="kpi-sub" id="kpi-run-sub">—</span></div>
+        </div>
         <div class="verdict" id="verdict"></div>
       </div>
+
+      <!-- 面板1：井筒剖面 + 截面 -->
+      <div class="section">
+        <h2>② 井筒剖面示意（左）与最差点截面圆环（右）</h2>
+        <p class="hint">左图：竖线为井筒，橙色标记为扶正器位置，套管以偏心形式贴向下井壁。右图：最差点截面，灰色为井眼、深灰为套管，红色连线为偏心距。</p>
+        <div class="profile-wrap">
+          <svg id="panel-profile" viewBox="0 0 300 340" role="img" aria-label="井筒剖面"></svg>
+          <svg id="panel-cross" viewBox="0 0 300 300" role="img" aria-label="截面圆环"></svg>
+        </div>
+      </div>
+
+      <!-- 面板2：居中度沿深度曲线 -->
+      <div class="section">
+        <h2>③ 居中度沿深度曲线（裸管 vs 加扶正器）</h2>
+        <p class="hint">灰色虚线为裸管居中度，绿色实线为加扶正器后居中度。橙色虚线 67%、红色虚线 80% 为 API 阈值。</p>
+        <svg id="panel-sr" viewBox="0 0 430 220" role="img" aria-label="居中度曲线"></svg>
+      </div>
+
+      <!-- 面板3：下入阻力 vs 井斜角 -->
+      <div class="section two-col">
+        <div>
+          <h2>④ 下入阻力随井斜角变化</h2>
+          <p class="hint">蓝色曲线为总下入阻力，红色虚线为当前井斜角。当 μ·sinθ ＞ cosθ 时阻力大于自重力分量，可能无法下入。</p>
+          <svg id="panel-drag" viewBox="0 0 430 220" role="img" aria-label="下入阻力曲线"></svg>
+        </div>
+        <div>
+          <h2>⑤ 最小居中度热力图（井斜角 × 扶正器数）</h2>
+          <p class="hint">颜色越绿居中度越高，红色表示不满足 67%。当前工况以红圈标出。</p>
+          <canvas id="panel-heat" width="430" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- 面板4：扶正器布置表 -->
+      <div class="section">
+        <h2>⑥ 扶正器布置表</h2>
+        <p class="hint">等间距布置，列出各扶正器位置、间距与该处居中度。</p>
+        <div class="table-wrap">
+          <table id="tbl-cen">
+            <thead><tr><th>序号</th><th>位置 (m)</th><th>间距 (m)</th><th>该处居中度 (%)</th><th>状态</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 方案对比：帕累托前沿 -->
+      <div class="section" id="pareto-sec">
+        <h2>⑦ 方案对比 · 帕累托前沿</h2>
+        <p class="hint">在居中度与下入阻力之间权衡。散点大小表示扶正器数量，绿色表示满足 67% 居中度，红色表示不满足；描边加粗为帕累托前沿点。点击散点可将参数写回当前工况。</p>
+        <div class="pareto-wrap">
+          <svg id="pareto" viewBox="0 0 430 250" role="img" aria-label="帕累托前沿散点图"></svg>
+        </div>
+        <div class="btn-row">
+          <button id="btn-pareto-gen">生成 30 个候选</button>
+          <button id="btn-pareto-front">仅显示前沿</button>
+          <button id="btn-pareto-reset">重置为当前</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 参数控制 -->
+      <div class="section">
+        <h2>① 可调参数（共 10 项）</h2>
+        <div class="sync-note"><span id="sync-note-text">邻接参数联动：已同步 0 个共享参数（井径/套管外径/井斜/钻井液密度）</span><button id="btn-clear-shared">清空共享参数</button></div>
+        <div class="controls">
+          <div class="ctl">
+            <label>井径 Dh<output id="o-dh">311</output></label>
+            <input type="range" id="s-dh" min="200" max="450" step="1" value="311">
+            <span class="tip">单位 mm</span>
+          </div>
+          <div class="ctl">
+            <label>套管外径 Dc<output id="o-dc">244</output></label>
+            <input type="range" id="s-dc" min="140" max="340" step="1" value="244">
+            <span class="tip">单位 mm</span>
+          </div>
+          <div class="ctl">
+            <label>井斜角 θ<output id="o-theta">60</output></label>
+            <input type="range" id="s-theta" min="0" max="90" step="1" value="60">
+            <span class="tip">单位 °</span>
+          </div>
+          <div class="ctl">
+            <label>狗腿度<output id="o-dog">3.0</output></label>
+            <input type="range" id="s-dog" min="0" max="10" step="0.1" value="3.0">
+            <span class="tip">单位 °/30m</span>
+          </div>
+          <div class="ctl">
+            <label>扶正器数量<output id="o-nc">12</output></label>
+            <input type="range" id="s-nc" min="0" max="60" step="1" value="12">
+            <span class="tip">沿井深等间距布置</span>
+          </div>
+          <div class="ctl">
+            <label>扶正器恢复力 Fr<output id="o-fr">2500</output></label>
+            <input type="range" id="s-fr" min="500" max="5000" step="50" value="2500">
+            <span class="tip">单位 N</span>
+          </div>
+          <div class="ctl">
+            <label>摩阻系数 μ<output id="o-mu">0.30</output></label>
+            <input type="range" id="s-mu" min="0.1" max="0.6" step="0.01" value="0.30">
+            <span class="tip">无量纲</span>
+          </div>
+          <div class="ctl">
+            <label>套管线重<output id="o-w">80</output></label>
+            <input type="range" id="s-w" min="30" max="150" step="1" value="80">
+            <span class="tip">单位 kg/m</span>
+          </div>
+          <div class="ctl">
+            <label>钻井液密度<output id="o-rhom">1.40</output></label>
+            <input type="range" id="s-rhom" min="1.0" max="2.0" step="0.01" value="1.40">
+            <span class="tip">单位 g/cm³</span>
+          </div>
+          <div class="ctl">
+            <label>套管壁厚<output id="o-t">11</output></label>
+            <input type="range" id="s-t" min="7" max="15" step="0.5" value="11">
+            <span class="tip">单位 mm</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 控制面板 -->
-  <div class="section">
-    <h2>② 改变条件，看居中度怎么变</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>井径 D (mm)<output id="o-d">216</output></label>
-        <input type="range" id="s-d" min="180" max="300" step="2" value="216">
-        <span class="tip">井径越大，套管越容易偏</span>
-      </div>
-      <div class="ctl">
-        <label>井斜角 θ (°)<output id="o-theta">60</output></label>
-        <input type="range" id="s-theta" min="0" max="90" step="1" value="60">
-        <span class="tip">90° = 水平段，0° = 垂直段</span>
-      </div>
-      <div class="ctl">
-        <label>套管线重 (N/m)<output id="o-wt">260</output></label>
-        <input type="range" id="s-wt" min="100" max="500" step="10" value="260">
-        <span class="tip">越重越容易贴壁，但也能靠扶正器撑住</span>
-      </div>
-      <div class="ctl">
-        <label>扶正器外径 (mm)<output id="o-f">196</output></label>
-        <input type="range" id="s-f" min="180" max="216" step="2" value="196">
-        <span class="tip">等于井径时居中度 = 100%（但放不进去）</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 沿井段曲线视图 -->
-  <div class="section">
-    <h2>③ 沿井段的居中度曲线</h2>
-    <p class="hint">这是一口"模拟井"：左边是垂直段（井斜 0°），中间是增斜段，右边是水平段（井斜 90°）。<b>红色区域</b>是居中度不足 67% 的段——就是需要加扶正器的地方。</p>
-    <svg id="well" viewBox="0 0 760 280" role="img" aria-label="沿井段居中度曲线"></svg>
-    <div class="well-ctl">
-      <button id="btn-add">＋ 在最差点加扶正器</button>
-      <button id="btn-auto" class="primary">⚡ 一键优化（贪心 + 局部搜索）</button>
-      <button id="btn-reset">↻ 重置</button>
-      <span class="well-stat">已放扶正器：<b id="fcount">0</b> 个 · 最低居中度：<b id="fmin">—</b></span>
-    </div>
-  </div>
-
-  <!-- 公式说明 -->
-  <div class="section">
-    <h2>④ 计算公式</h2>
-    <div class="formula">
-      <p><b>无扶正器时</b>：套管在重力分量作用下贴向下井壁，偏心距 e = (套管线重 × sinθ) / (单位扶正力近似)。简化为：</p>
-      <p class="eqn">e = k × sinθ &nbsp;,&nbsp; k 由套管线重与井径决定</p>
-      <p><b>居中度</b>：套管从井眼中心偏移了 e，占了最大可能偏移 (D/2 − d/2) 的比例：</p>
-      <p class="eqn">CL = 100 × (1 − <span class="frac"><span>e</span><span>(D − d) / 2</span></span>)</p>
-      <p><b>有扶正器时</b>：偏心距被限制到 (井径 − 扶正器外径) / 2：</p>
-      <p class="eqn">CL = 100 × <span class="frac"><span>2 × (扶正器外径 − d)</span><span>D − d</span></span> &nbsp;,&nbsp; 仅在扶正器覆盖的井段生效</p>
-    </div>
-  </div>
 </div>
 <script src="demo.js"></script>
 </body>

@@ -276,13 +276,13 @@ table.matrix tfoot th{text-align:left;padding-left:16px;font-size:9.5px;letter-s
 
 /* 四段式 */
 .lede-block{padding:18px 0 2px}
-.lede-block p{margin-top:8px;font-size:13.2px;line-height:1.82;color:var(--ink-2);max-width:88ch}
+.lede-block p{margin-top:8px;font-size:13.2px;line-height:1.82;color:var(--ink-2)}
 .sec4{display:grid;grid-template-columns:64px 1fr;gap:18px;padding:22px 0;border-top:1px solid var(--line)}
 .sec4:first-of-type{border-top:0}
 .sec4 .sn{font-family:var(--mono);font-size:10.5px;color:var(--jade);letter-spacing:.08em;padding-top:2px}
 .sec4 .sn span{display:block;color:var(--ink-4);margin-top:6px;font-size:8.5px;letter-spacing:.07em}
 .sec4 h3{font-size:16px;margin-bottom:8px}
-.sec4 p{font-size:13px;color:var(--ink-2);line-height:1.82;max-width:86ch}
+.sec4 p{font-size:13px;color:var(--ink-2);line-height:1.82}
 .sec4 p + p{margin-top:8px}
 .sec4-body{min-width:0}
 

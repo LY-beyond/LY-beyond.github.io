@@ -1,0 +1,161 @@
+{
+  "id": "s2-seismic-facies",
+  "sceneId": "s2",
+  "methods": [
+    "cv"
+  ],
+  "title": "地震相智能分类与相带概率体",
+  "version": "1.0.0",
+  "updated": "2026-10-30",
+  "status": "ready",
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "白云凹陷某深水扇区 **486 km²**，主频 28 Hz、主波长约 110 m，一个 128×128 的切片小块对应地下 3.2 km×3.2 km；全区只有 **14 口井**，能用来标定相带的井点 186 个，不到总道数的万分之三。三名解释员各划一版相带，相带数分别是 5、7、9。井点弱监督加自训练把标定外推成全区概率体，解释周期从 6 周压到 **3 天**。",
+      "judge": [
+        {
+          "label": "任务类型",
+          "value": "图像分类 + 弱监督学习",
+          "desc": "井点标定驱动的小块分类，输出 5 类相带概率体"
+        },
+        {
+          "label": "标注成本",
+          "value": "中",
+          "desc": "井点标签 186 个，相带边界需解释员修编"
+        },
+        {
+          "label": "可见收益",
+          "value": "高",
+          "desc": "解释 6 周 → 3 天，相带数主观分歧收敛到 5 类"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "标签稀疏且相带类别定义本身带主观性"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>相带划分决定储层预测与井位优选，传统做法是解释员沿剖面看反射结构、连续性、振幅与频率特征，凭经验归类。一个 486 km² 的深水扇区，3 名解释员各做一版要 6 周；结果互不一致——相带数从 5 到 9 不等，同一剖面两人边界重合度（Jaccard）只有 0.38。相带数多一个，后续储层模型与储量估算就换一套。</p><p>数据条件其实不差：三维叠后数据面元 25×25 m、采样 2 ms、记录 8 s，主频 28 Hz，目标层可划 12 个层段；地震属性可提取振幅、瞬时相位、相干、频率、曲率五类。问题是标签——全区只有 14 口井（3 口取心），能提供相带标定的井点 186 个，且 11 口井集中在构造高部位，空间分布严重偏置。</p><p>硬约束：① 井点标签稀疏且偏置，模型在无井区的结论本质是统计推断；② 相带边界是渐变过渡，硬分类会在地震分辨率（约 1/4 波长，25—30 m）以下造出锯齿；③ 相带类别定义不统一，不定「相带字典」就直接训练，模型学的是三个人的平均习惯。</p>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么",
+          "html": "<p>AI 替换的是「逐剖面人工勾画」：沿 12 个层段提取 2,400 个 128×128 小块（5 类属性共 8 通道），用 3D 卷积网络做 5 类相带分类，输出每个体素属于各类相带的概率，再合成相带概率体与熵图。井点标签作为弱监督信号，配合高置信伪标签自训练把覆盖扩展到无井区。</p><p>训练的核心不是网络结构而是验证方式：必须按井留一（leave-one-well-out），绝不允许按切片随机划分——相邻切片有 80% 重叠，随机划分等于把训练样本复制进验证集。损失用类别加权交叉熵加边界平滑正则，权重按相带面积倒数设定，否则占 71% 面积的半深海泥会主导梯度。</p><p>定位是「解释加速器」：模型给出相带概率与低置信区，解释员在熵图上修编边界并给出沉积依据，最终成果仍署名解释组。不全自动的原因很现实——相带是沉积环境解释，井点之外的外推没有 ground truth，模型能做的只是把 186 个井点的一致性扩展到全区，不能替人下沉积结论。</p>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "你需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">地震数据与属性现成，真正的门槛是先把「相带字典」定下来，再谈井点标签与模型。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">三维叠后地震数据</span><span class=\"cl-s\">486 km²，面元 25×25 m，采样 2 ms，主频 28 Hz</span></span><span class=\"cl-n\">无需逐点标注</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">地震属性体</span><span class=\"cl-s\">振幅、瞬时相位、相干、频率、曲率 5 类</span></span><span class=\"cl-n\">无需标注，按层段分别归一</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井点相带标定</span><span class=\"cl-s\">14 口井、186 个井点标签</span></span><span class=\"cl-n\">测井相解释 + 岩心校正</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">相带字典</span><span class=\"cl-s\">5 类相的定义与可观测反射特征</span></span><span class=\"cl-n\">解释组会审定稿，版本受控</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">已解释骨干剖面</span><span class=\"cl-s\">6 条贯穿剖面的手工解释</span></span><span class=\"cl-n\">作为边界精度基准</span></div></div>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">标签稀疏不是最大问题，类别定义不统一和切片相关性造成的验证泄漏才是。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战排序：① 验证泄漏——切片间重叠 80%，随机划分能把 macro-F1 虚抬 0.2；② 类别不均衡——半深海泥占 71% 面积，砂岩相只占 12%，不做加权模型会退化成「全判泥」；③ 井点偏置——11 口井在构造高部位，低部位与深水区的相带没有任何标签约束。</p><p>评估建议：按井留一的 macro-F1 ≥0.70、相带边界 IoU ≥0.60、留出井符合率 ≥75%、熵 &gt;0.6 的低置信区占比 ≤25%；不要报总体准确率。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/cv\">图像分类<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">弱监督学习<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">地震属性组合<span class=\"ar\">↗</span></a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "珠江口盆地白云凹陷某深水扇区 486 km² 的地震相分类",
+      "lead": [
+        "工区面积 486 km²，目标层 12 个层段，主频 28 Hz；14 口井（3 口取心）提供 186 个井点相带标签，5 类相中半深海泥占面积 71%、水道砂与朵叶砂合计 12%。此前 3 名解释员各出一版，相带数 5/7/9，边界 Jaccard 0.38。",
+        "项目先统一相带字典，再按井留一训练 3D 分类网络，配合伪标签自训练输出概率体。目标：3 天出全区成果、留出井符合率 ≥75%、边界 IoU ≥0.60、低置信区 ≤25%。"
+      ],
+      "stats": [
+        [
+          "工区面积",
+          "486 km²"
+        ],
+        [
+          "井",
+          "14 口"
+        ],
+        [
+          "井点标签",
+          "186 个"
+        ],
+        [
+          "切片小块",
+          "28,800 个"
+        ],
+        [
+          "相带类别",
+          "5 类"
+        ],
+        [
+          "解释周期",
+          "3 天"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "相带字典统一",
+          "role": "标注",
+          "do": "3 名解释员与沉积专家开 2 轮会，把 5 类相的定义落到可观测的反射特征（连续性、振幅、外形、频率、内部结构），逐条写入字典并做版本控制。",
+          "effect": "相带数由 5/7/9 收敛为 5，边界争议点减少 60%",
+          "trap": "字典只写地质名词不写反射特征——「朵叶」与「滑塌」在剖面上都呈杂乱反射，模型无从区分，只能学到井位附近的偶然特征"
+        },
+        {
+          "name": "井点标签与属性归一",
+          "role": "数据",
+          "do": "14 口井测井相按岩心校正，形成 186 个井点标签；沿 12 个层段提取 5 类属性，按层段分别做分位数归一，构成 28,800 个小块 × 8 通道的数据集。",
+          "effect": "数据集就绪，正负样本按相带面积记录",
+          "trap": "全区统一归一——浅层高频衰减强，同一振幅阈值在深浅层含义完全不同，浅层相带全被误判"
+        },
+        {
+          "name": "按井留一的 3D 分类网络",
+          "role": "算法核心",
+          "do": "3D ResNet 输入 128×128×32 的小体，8 折按井留一；类别权重取面积倒数，损失加边界平滑正则。",
+          "effect": "留出井 macro-F1 0.71，边界 IoU 0.58",
+          "trap": "按切片随机划分——相邻切片重叠 80%，验证集几乎是训练集的复制，macro-F1 虚高到 0.93，上线后断崖下跌"
+        },
+        {
+          "name": "伪标签自训练",
+          "role": "算法核心",
+          "do": "用初始模型预测无井区，取概率 >0.85、距井点 >500 m 的样本作伪标签，迭代 3 轮、每轮增加 15%，每轮都用留出井复核。",
+          "effect": "macro-F1 0.71 → 0.76，低置信区占比 31% → 22%",
+          "trap": "阈值放到 0.7——错误标签自我强化，两轮后水道砂被系统性扩成朵叶，井点符合率反而下降 6 个百分点"
+        },
+        {
+          "name": "概率体成图与人工修编",
+          "role": "推理",
+          "do": "输出 5 类概率体与熵图，解释员只在熵 >0.6 的区域修编边界，其余区域接受模型结果并抽检。",
+          "effect": "边界 IoU 0.64，相带面积比例误差 <6%",
+          "trap": "直接取 argmax 出硬边界——地震分辨率以下的渐变带被切成锯齿，修编工作量比人工从头解释还大"
+        },
+        {
+          "name": "有利相带筛选与井位反馈",
+          "role": "工程环节",
+          "do": "按概率体筛水道砂与朵叶砂，叠加厚度与含油气显示，输出有利相带图，与已钻井产能逐口核对。",
+          "effect": "有利相带面积 118 km²，9 口获产井中 8 口落在有利相带内",
+          "trap": "只看概率最大值不看熵——高熵过渡带被当成高置信砂体，钻后多为泥质充填"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算「相带分对了」",
+        "html": "<p>反直觉的陷阱是总体准确率：半深海泥占 71% 面积，全判泥就有 71%，模型只要学会「保守」就能拿到 88% 的准确率，而它真正要预测的砂岩相只有 12%。所以必须看 macro-F1 与相带边界 IoU，前者让 5 类等权，后者衡量边界位置对不对。</p><p>第二个陷阱在划分方式：同一层段相邻切片重叠 80%，随机划分会让 macro-F1 虚高约 0.2，这个数字一进汇报就会误导决策。第三个陷阱是井点符合率——只报训练井的符合率等于自评，必须报留出井的盲测数字。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工解释</th><th>本方案</th></tr></thead><tbody><tr><td>留出井符合率</td><td>3 口盲测井</td><td>—</td><td>79%</td></tr><tr><td>macro-F1</td><td>5 类等权平均</td><td>—</td><td>0.76</td></tr><tr><td>边界 IoU</td><td>对 6 条骨干剖面</td><td>人间 Jaccard 0.38</td><td>0.64</td></tr><tr><td>低置信区占比</td><td>熵 &gt;0.6 的面积</td><td>—</td><td>22%</td></tr><tr><td>相带数一致性</td><td>解释员分歧</td><td>5 / 7 / 9</td><td>5（统一字典）</td></tr><tr><td>解释周期</td><td>全区成果</td><td>6 周（3 人）</td><td>3 天 + 1 周修编</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "切片重叠造成验证泄漏",
+          "why": "相邻切片共享 80% 体素，随机划分时验证集里的「新样本」其实是训练样本的平移副本，指标虚高 0.2。解决：按井留一加空间分块，两套验证都做，取较差的一套作为对外指标。"
+        },
+        {
+          "name": "类别不均衡导致模型退化",
+          "why": "半深海泥占 71%，梯度被背景相主导，模型倾向把所有模糊区判成泥，砂岩相召回不足 50%。解决：类别权重取面积倒数、损失按类分层统计，汇报 macro-F1 而非总体准确率。"
+        },
+        {
+          "name": "相带字典不统一就开训",
+          "why": "三人三套定义，模型学到的是折中结果，谁也说服不了谁，成果无法评审。解决：字典先行并版本控制，字典变更必须触发重训与重新验收。"
+        }
+      ]
+    }
+  }
+}

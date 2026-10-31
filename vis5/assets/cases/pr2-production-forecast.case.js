@@ -1,0 +1,166 @@
+/* =========================================================
+   案例插件（静态注册版）：单井产量智能预测
+   ---------------------------------------------------------
+   由 cases/pr2-production-forecast/case.json 生成（tools/build-cases.js）。
+   修改案例内容请改源文件后重新生成，不要直接改本文件。
+   ========================================================= */
+(function (global) {
+  'use strict';
+
+  var DATA = {
+    "id": "pr2-production-forecast",
+    "sceneId": "pr2",
+    "methods": [
+      "ts"
+    ],
+    "title": "单井产量智能预测",
+    "version": "1.0.0",
+    "updated": "2026-10-30",
+    "status": "ready",
+    "tabs": {
+      "background": {
+        "label": "专业背景",
+        "lede": "一个开发 20 年的老区块有 100 余口井、单井 **2,000—8,000 天**的日度生产历史；Arps 递减曲线在正常递减井上月度误差可做到 10% 以内，但一遇压裂、堵水、注水见效就整体失效。带协变量的时序模型把 90 天预测误差压到 **8% 左右**，并能对措施增油做定量归因。",
+        "judge": [
+          {
+            "label": "任务类型",
+            "value": "时序回归 + 事件协变量",
+            "desc": "短期产量预测 + 措施因果归因"
+          },
+          {
+            "label": "标注成本",
+            "value": "低",
+            "desc": "措施事件需整理，产量序列免标注"
+          },
+          {
+            "label": "可见收益",
+            "value": "高",
+            "desc": "配产与措施选井周期从周级到小时级"
+          },
+          {
+            "label": "难度",
+            "value": "中",
+            "desc": "措施与注水造成分布突变，纯时序捕捉不到"
+          }
+        ],
+        "sections": [
+          {
+            "no": 1,
+            "en": "PROBLEM",
+            "title": "当前做法与问题",
+            "html": "<p>配产、措施选井与开发方案调整都建立在产量预测上。传统做法是 Arps 递减曲线拟合：正常递减井月度误差 8%—12%，但它假设边界条件不变——压裂、酸化、堵水、调参、注水调整任何一项发生，递减规律就被打断，只能等 2—3 个月新趋势形成后重新拟合。</p><p>数据基础雄厚：日度油压、套压、产油、产水、动液面，单井 1,000—10,000 天；措施与作业记录（压裂规模、酸化用量、堵水层段）；注水井日注水量与注采对应关系。这些协变量携带「产量为什么变」的信息，正是递减曲线用不起来的部分。</p><p>硬约束：① 新井历史短（&lt;180 天），拟合极不稳定，需借助邻井与井型先验；② 预测要区分「正常递减」与「事件驱动」两种模式，混在一起评估会互相掩盖；③ 配产场景要求可解释——上报计划时必须说明增量来自递减规律还是措施贡献，纯黑箱输出无法过审。</p>"
+          },
+          {
+            "no": 2,
+            "en": "INTERVENTION",
+            "title": "AI 能做什么",
+            "html": "<p>AI 替换「逐井手工拟合 + 经验外推」：以井为单元，用带协变量的时序模型（TCN / Transformer + 事件通道）学习「历史产量 + 压力 + 措施事件 + 邻井注水」到未来 30—90 天产量的映射；措施事件编码为时间戳 + 类型 + 规模的脉冲特征，注水协变量按注采对应关系加权汇入。</p><p>训练要点：按时间先后切分训练 / 验证（严禁随机切分），损失对产量量级做分位数归一，避免高产井主导；措施归因用反事实对比实现——同井同参数屏蔽事件通道再预测一次，差值即措施增油估计。定位是辅助：模型输出预测区间与归因分解，采油工程师对异常突变井（含水飙升、套压异常）人工复核后才用于配产。</p><p>不全自动的原因：油藏响应有滞后与不确定性，邻井措施（压裂干扰、注水突进）在数据中不可见时，模型会把外生冲击当趋势外推 90 天，必须保留人工兜底通道。</p>"
+          },
+          {
+            "no": 3,
+            "en": "DATA",
+            "title": "你需要准备什么",
+            "html": "<p style=\"margin-bottom:14px\">数据基本现成，准备顺序：先补齐措施事件表，再建注采对应关系，最后才是模型选型。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 4 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 4</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">单井生产历史</span><span class=\"cl-s\">日度产量、油压、套压、含水、动液面，单井 1,000—10,000 天</span></span><span class=\"cl-n\">剔除关井与计量异常日</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">措施与作业记录</span><span class=\"cl-s\">压裂、酸化、堵水、调参，含日期与规模</span></span><span class=\"cl-n\">事件级标注，按井整理</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">注水与邻井数据</span><span class=\"cl-s\">日注水量、注采对应关系、井距</span></span><span class=\"cl-n\">作为协变量，无需标注</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">静态属性</span><span class=\"cl-s\">层位、有效厚度、孔隙度、完井方式</span></span><span class=\"cl-n\">作为井嵌入特征</span></div></div>"
+          },
+          {
+            "no": 4,
+            "en": "DIFFICULTY",
+            "title": "技术难度与参考方向",
+            "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">数据丰富，难在措施干预造成的分布突变与新井小样本。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"\"></i></div><p>难度 <b>中</b>。挑战按影响排序：① 事件驱动的分布突变——措施后产量阶跃 30%—200%，纯时序模型倾向于把阶跃「拉回趋势线」，突变段误差最大；② 滞后响应——注水见效滞后 1—6 个月，协变量对齐窗口选错就学不到因果；③ 新井与措施井小样本——必须跨井 pooling + 井型嵌入，单靠本井历史不可能稳定。</p><p>评估建议：按「正常递减井 / 措施后井 / 注水受效井」分层报 MAPE，门槛分别 ≤8% / ≤15% / ≤12%；同时报 90 天累计产量误差——那才是配产真正关心的量。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/ts\">时序预测<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">协变量建模<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/ts\">因果归因<span class=\"ar\">↗</span></a></div>"
+          }
+        ]
+      },
+      "workflow": {
+        "label": "案例流程",
+        "title": "松辽盆地某老区 118 口井的 90 天产量滚动预测",
+        "lead": [
+          "区块开发 22 年，118 口井单井历史 1,800—8,000 天；近 3 年措施 156 井次（压裂 41、堵水 63、酸化 52），注水井 34 口。此前配产靠 Arps 拟合，措施井预测误差常超 25%。",
+          "项目用带事件协变量的时序模型滚动预测 90 天产量。目标：正常递减井 MAPE ≤8%、措施后井 ≤15%，措施增油归因与动态分析结论符合率 ≥80%，预测每周滚动更新一次。"
+        ],
+        "stats": [
+          [
+            "生产井",
+            "118 口"
+          ],
+          [
+            "单井历史",
+            "1,800—8,000 天"
+          ],
+          [
+            "措施事件",
+            "156 井次"
+          ],
+          [
+            "注水井",
+            "34 口"
+          ],
+          [
+            "人工拟合周期",
+            "1 周/轮"
+          ],
+          [
+            "滚动预测耗时",
+            "2 h/轮"
+          ]
+        ],
+        "steps": [
+          {
+            "name": "数据治理与事件表",
+            "role": "数据",
+            "do": "118 口井日度数据剔除非生产日 1.9%，整理 156 井次措施事件（类型、日期、规模），建立 34 口注水井到油井的连通权重表。",
+            "effect": "特征表 68 万行 × 14 列",
+            "trap": "措施日期取「设计日期」而非「完工日期」，平均错位 11 天，事件特征全部错位"
+          },
+          {
+            "name": "时间切分与基线",
+            "role": "算法核心",
+            "do": "以最近 24 个月为验证段、此前为训练段；同时跑 Arps 双曲递减作基线对照。",
+            "effect": "基线全井 MAPE 13.6%",
+            "trap": "随机切分把未来泄漏进训练，验证误差虚降到 5% 以下——时序必须按时间切"
+          },
+          {
+            "name": "协变量时序模型",
+            "role": "算法核心",
+            "do": "TCN + 事件脉冲通道，输入 540 天窗口，输出未来 90 天逐日产量与分位数区间；跨井 pooling，井嵌入包含层位与完井方式。",
+            "effect": "全井 MAPE 8.2%，其中正常递减井 6.9%",
+            "trap": "不做分位数归一，10 口高产井贡献 60% 损失，低产井误差被放任"
+          },
+          {
+            "name": "措施归因分析",
+            "role": "推理",
+            "do": "对 41 井次压裂做反事实对比：屏蔽事件通道重新预测，差值累计 180 天得措施增油估计。",
+            "effect": "归因增油与动态分析结论符合率 83%",
+            "trap": "把邻井同期注水见效也算到本井措施头上——归因时必须屏蔽邻井协变量做对照"
+          },
+          {
+            "name": "滚动发布与复核",
+            "role": "质控",
+            "do": "每周一自动滚动预测，对突变井（含水周变化 >5%、套压异常）生成人工复核清单。",
+            "effect": "配产编制周期 1 周 → 半天，复核清单平均 9 口井/周",
+            "trap": "只发布点估计不发区间——计划部门把下限当承诺，遇到递减加速就被动"
+          }
+        ],
+        "metrics": {
+          "title": "怎么算「预测能用于配产」",
+          "html": "<p>反直觉的陷阱：全井平均 MAPE 6% 可能掩盖措施井 30% 的误差——正常递减井占七成，又稳又准，把平均数拉得很漂亮，但配产调整真正依赖的恰恰是措施井与受效井，评估必须<b>分层报</b>。另一个易错点是用逐日误差替代累计误差：逐日 MAPE 8% 的模型若误差同向累积，90 天累计产量可以偏差 12%，而配产看的是后者。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>Arps 基线</th><th>本方案</th></tr></thead><tbody><tr><td>正常递减井 MAPE</td><td>90 天逐日</td><td>9.8%</td><td>6.9%</td></tr><tr><td>措施后井 MAPE</td><td>90 天逐日</td><td>27.4%</td><td>14.1%</td></tr><tr><td>注水受效井 MAPE</td><td>90 天逐日</td><td>18.2%</td><td>11.3%</td></tr><tr><td>90 天累计产量误差</td><td>区块合计</td><td>11.5%</td><td>6.4%</td></tr><tr><td>归因符合率</td><td>与动态分析一致</td><td>—</td><td>83%</td></tr><tr><td>编制周期</td><td>一轮配产</td><td>1 周</td><td>2 h + 半天复核</td></tr></tbody></table>"
+        },
+        "fails": [
+          {
+            "name": "事件日期错位导致协变量学反",
+            "why": "设计日期与完工日期错位 10 天左右，模型学到「措施后先降后升」的伪模式。解决：事件表强制取完工 / 开井日期，并与产量阶跃自动对齐校验。"
+          },
+          {
+            "name": "邻井外生冲击被当趋势外推",
+            "why": "邻井压裂干扰、注水突进不在本井特征里，产量突变被当成新常态外推 90 天。解决：井组粒度建模，把邻井事件纳入协变量；突变点触发自动回退到短窗口预测。"
+          },
+          {
+            "name": "新井直接套用老井模型",
+            "why": "新井前 180 天处于不稳定流阶段，递减规律与老井完全不同，直接预测误差超 40%。解决：新井走专用通道——图版拟合 + 同类井先验，满 180 天后才切回主模型。"
+          }
+        ]
+      }
+    }
+  };
+
+  global.Cases.register(DATA);
+})(window);

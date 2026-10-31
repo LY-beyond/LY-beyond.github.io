@@ -491,3 +491,175 @@ html[data-theme="dark"] .zz-nodes a.zz-node:hover circle{fill:var(--jade-d);stro
   .hp-mine-go{margin-left:0}
   .cover-ring{width:58px;height:58px}
 }
+
+/* =========================================================
+   十、环节动画平台 — 重绘版（科技感 + 专业可视化风格）
+   ========================================================= */
+.ap-section{margin:60px 0 40px}
+.ap-section .hp-h2{display:flex;align-items:center;gap:12px}
+.ap-section .hp-lead{font-size:13px;font-weight:normal;color:var(--ink-3);margin-left:8px}
+.ap-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:6px;margin:20px 0 24px}
+
+/* ---- 环节按钮 — 发光科技感 ---- */
+.ap-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:11px 4px 10px;border:1px solid var(--ink-3);border-radius:10px;
+  background:var(--card);cursor:pointer;transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  color:var(--ink-2);font-size:11px;line-height:1.2;
+  position:relative;overflow:hidden;
+}
+.ap-btn::after{content:"";position:absolute;inset:0;border-radius:10px;opacity:0;
+  background:radial-gradient(circle at 50% 0%,var(--jade) 0%,transparent 70%);
+  transition:opacity .25s}
+.ap-btn:hover{border-color:var(--jade);transform:translateY(-3px);box-shadow:0 6px 20px -6px rgba(47,125,107,.35)}
+.ap-btn:hover::after{opacity:.12}
+.ap-btn.active{
+  border-color:var(--jade);background:var(--jade);color:#fff;
+  box-shadow:0 0 0 1px var(--jade),0 8px 24px -6px rgba(47,125,107,.55);
+  transform:translateY(-3px);
+}
+.ap-btn.active::after{opacity:0}
+.ap-btn .ap-idx{font-family:"SF Mono","Menlo","Consolas",monospace;font-weight:700;font-size:13px;color:var(--jade);letter-spacing:.5px}
+.ap-btn.active .ap-idx{color:#fff;text-shadow:0 0 6px rgba(255,255,255,.5)}
+.ap-btn .ap-nm{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
+.ap-btn.active .ap-nm{color:#fff}
+
+/* ---- Stage 容器 — 玻璃面板 + 顶部渐变光带 ---- */
+.ap-stage{
+  background:linear-gradient(160deg,var(--card) 0%,color-mix(in srgb,var(--card) 92%,var(--jade) 8%) 100%);
+  border:1px solid var(--ink-3);border-radius:16px;
+  padding:18px;min-height:480px;overflow:hidden;position:relative;
+  box-shadow:0 4px 32px -16px rgba(0,0,0,.15);
+  transition:opacity .2s cubic-bezier(.4,0,.2,1),transform .2s cubic-bezier(.4,0,.2,1);
+}
+/* 切换环节时的柔和淡出，避免内容硬闪 */
+.ap-stage.switching{opacity:.32;transform:scale(.986)}
+.ap-stage::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;
+  background:linear-gradient(90deg,transparent 0%,var(--jade) 20%,color-mix(in srgb,var(--jade) 60%,#fff 40%) 50%,var(--jade) 80%,transparent 100%);
+  opacity:.7}
+.ap-stage .stg-head{margin-bottom:12px;position:relative}
+.ap-stage .stg-title{font-size:17px;font-weight:bold;color:var(--jade);letter-spacing:.3px}
+.ap-stage .stg-sub{font-size:12px;color:var(--ink-3);margin-top:5px;letter-spacing:.2px}
+
+/* ---- SVG 舞台 ---- */
+.ap-stage .stg-stage{
+  position:relative;width:100%;aspect-ratio:800/420;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--paper) 96%,var(--jade) 4%) 0%,color-mix(in srgb,var(--paper) 98%,var(--ink-2) 2%) 100%);
+  border-radius:10px;overflow:hidden;border:1px solid color-mix(in srgb,var(--ink-3) 30%,transparent);
+  animation:stgIn .4s cubic-bezier(.22,1,.36,1) both;
+}
+.ap-stage .stg-svg{width:100%;height:100%;display:block}
+/* 环境层：缓慢扫描光带 + 淡网格（纯 transform 动画，几乎零开销） */
+.ap-stage .stg-scan{
+  position:absolute;inset:-10% -40%;pointer-events:none;z-index:2;
+  background:linear-gradient(100deg,transparent 42%,color-mix(in srgb,var(--jade) 10%,transparent) 50%,color-mix(in srgb,#fff 6%,transparent) 53%,transparent 62%);
+  transform:translateX(-100%);animation:stgScan 7s linear infinite;
+}
+.ap-stage .stg-grid{
+  position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.16;
+  background-image:linear-gradient(color-mix(in srgb,var(--jade) 30%,transparent) 1px,transparent 1px),
+                    linear-gradient(90deg,color-mix(in srgb,var(--jade) 30%,transparent) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 35%,transparent 82%);
+  mask-image:radial-gradient(circle at 50% 45%,#000 35%,transparent 82%);
+}
+.ap-stage .stg-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;height:400px;
+  color:var(--ink-3);font-size:13px;gap:10px;
+}
+.ap-stage .stg-empty::before{content:"◆";font-size:28px;color:var(--jade);opacity:.5;
+  animation:stg-pulse 2s ease-in-out infinite}
+
+/* ---- 控制栏 ---- */
+.ap-stage .stg-ctrl{
+  display:flex;align-items:center;gap:12px;margin-top:14px;
+  padding:10px 14px;background:rgba(10,16,19,.04);border-radius:8px;
+  border:1px solid color-mix(in srgb,var(--ink-3) 20%,transparent);
+  backdrop-filter:blur(6px);
+}
+.ap-stage .stg-btn{
+  width:36px;height:36px;border-radius:50%;border:1px solid var(--jade);
+  background:var(--card);color:var(--jade);cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;transition:background .2s ease,color .2s ease,transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease;
+  box-shadow:0 2px 8px -4px rgba(47,125,107,.4);
+  letter-spacing:1px;line-height:1;
+}
+.ap-stage .stg-btn:hover{background:var(--jade);color:#fff;transform:scale(1.08);box-shadow:0 4px 16px -4px rgba(47,125,107,.6)}
+.ap-stage .stg-btn:active{transform:scale(.94)}
+.ap-stage .stg-btn.is-playing{background:var(--jade);color:#fff;border-color:var(--jade)}
+
+/* 进度条：scaleX 驱动（不触发布局），支持点击/拖拽定位 */
+.ap-stage .stg-bar{
+  flex:1;height:5px;background:color-mix(in srgb,var(--ink-3) 22%,transparent);
+  border-radius:3px;position:relative;cursor:pointer;touch-action:none;--p:0;
+}
+.ap-stage .stg-bar::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px}
+.ap-stage .stg-bar-fill{
+  height:100%;width:100%;border-radius:3px;transform:scaleX(var(--p,0));transform-origin:left center;
+  background:linear-gradient(90deg,var(--jade) 0%,color-mix(in srgb,var(--jade) 55%,#fff 45%) 100%);
+  will-change:transform;position:relative;
+}
+.ap-stage .stg-bar-knob{
+  position:absolute;top:50%;left:calc(var(--p,0) * 100%);
+  width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid var(--jade);
+  box-shadow:0 0 10px rgba(47,125,107,.55);pointer-events:none;
+  transform:translate(-50%,-50%) scale(.6);opacity:0;
+  transition:opacity .18s ease,transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.ap-stage .stg-bar:hover .stg-bar-knob,
+.ap-stage .stg-bar.dragging .stg-bar-knob{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.ap-stage .stg-time{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+
+/* ---- 全局 SVG 动画缓动 ----
+   只给"状态型"元素（带 class）加轻过渡；逐帧驱动的元素由 JS 自动挂 .stg-live 关闭过渡，
+   避免每帧重启 transition 造成迟钝与掉帧。 */
+.stg-svg [class]{
+  transition:fill .24s cubic-bezier(.4,0,.2,1),
+             fill-opacity .24s cubic-bezier(.4,0,.2,1),
+             stroke .24s cubic-bezier(.4,0,.2,1),
+             stroke-opacity .24s cubic-bezier(.4,0,.2,1),
+             opacity .24s cubic-bezier(.4,0,.2,1);
+}
+.stg-svg [class].stg-live{transition:none}
+.stg-svg text{font-family:"SF Mono","Menlo","Consolas",monospace;font-variant-numeric:tabular-nums}
+
+/* 关键帧 */
+@keyframes stg-pulse{0%,100%{opacity:.3;transform:scale(.95)}50%{opacity:.7;transform:scale(1.05)}}
+@keyframes stg-flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}
+@keyframes stg-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes stg-glow{0%,100%{filter:url(#none)}50%{filter:url(#stgGlow)}}
+@keyframes stgIn{from{opacity:0;transform:translateY(6px) scale(.996)}to{opacity:1;transform:none}}
+@keyframes stgScan{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+@media (prefers-reduced-motion:reduce){
+  .ap-stage .stg-scan,.ap-stage .stg-grid{display:none}
+  .ap-stage .stg-stage{animation:none}
+  .ap-btn,.ap-btn:hover,.ap-btn.active{transform:none}
+}
+
+/* 深色模式 */
+html[data-theme="dark"] .ap-stage{
+  background:linear-gradient(160deg,rgb(17,27,32) 0%,rgb(12,22,26) 100%);
+  border-color:rgba(122,220,192,.18);
+}
+html[data-theme="dark"] .ap-stage::before{opacity:.8}
+html[data-theme="dark"] .ap-stage .stg-stage{background:linear-gradient(180deg,rgb(10,16,19) 0%,rgb(7,13,16) 100%);border-color:rgba(122,220,192,.1)}
+html[data-theme="dark"] .ap-stage .stg-ctrl{background:rgba(122,220,192,.06);border-color:rgba(122,220,192,.12)}
+html[data-theme="dark"] .ap-btn{background:rgb(17,27,32);border-color:rgba(122,220,192,.15)}
+html[data-theme="dark"] .ap-btn .ap-idx{color:var(--jade-d)}
+html[data-theme="dark"] .ap-btn:hover{box-shadow:0 6px 20px -6px rgba(122,220,192,.35)}
+html[data-theme="dark"] .ap-btn.active{background:var(--jade-d);color:#fff;border-color:var(--jade-d);
+  box-shadow:0 0 0 1px var(--jade-d),0 8px 24px -6px rgba(122,220,192,.5)}
+html[data-theme="dark"] .ap-btn.active .ap-idx{color:#fff;text-shadow:0 0 8px rgba(255,255,255,.5)}
+html[data-theme="dark"] .ap-btn.active .ap-nm{color:#fff}
+html[data-theme="dark"] .ap-stage .stg-bar-fill{background:linear-gradient(90deg,var(--jade-d),#fff)}
+html[data-theme="dark"] .ap-stage .stg-btn{background:rgb(17,27,32);color:var(--jade-d);border-color:var(--jade-d)}
+html[data-theme="dark"] .ap-stage .stg-btn:hover{background:var(--jade-d);color:rgb(7,13,16)}
+
+/* 响应式 */
+@media (max-width:960px){.ap-grid{grid-template-columns:repeat(7,1fr)}}
+@media (max-width:600px){
+  .ap-grid{grid-template-columns:repeat(4,1fr)}
+  .ap-section .hp-h2{flex-direction:column;align-items:flex-start;gap:4px}
+  .ap-section .hp-lead{margin-left:0}
+}

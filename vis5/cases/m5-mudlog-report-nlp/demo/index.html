@@ -14,46 +14,53 @@
     <p class="lead">左边是一份 12 h 班报的原始记录，来自录井仪、岩屑描述、钻井液班报和工程日报。点击「生成报告」，看 6 个核心字段怎么被逐条抽出来、每个字段来自第几行、置信度够不够发布。</p>
   </header>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">01</span>原始记录与字段抽取</h2>
-      <span class="tag">XX-12 · 2026-10-24 08:00—20:00</span>
-    </div>
-    <div class="split">
-      <div class="pane">
-        <div class="pane-head"><span>原始记录（多源合并）</span><span class="mono" id="src-count">10 行</span></div>
-        <div class="src" id="src"></div>
-      </div>
-      <div class="pane">
-        <div class="pane-head"><span>抽取结果 · 6 个核心字段</span><span class="mono" id="field-count">6 / 6</span></div>
-        <div class="fields" id="cards"></div>
-      </div>
-    </div>
-    <div class="actions">
-      <button id="btn" class="primary">生成报告</button>
-      <button id="btn-reset" class="ghost">重置</button>
-      <span class="hint" id="gen-hint">已生成 6 / 6 字段 · 模板：开发井 12 h 班报</span>
-    </div>
-  </section>
+  <div class="layout">
+    <div class="viz">
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">01</span>原始记录与字段抽取</h2>
+          <span class="tag">XX-12 · 2026-10-24 08:00—20:00</span>
+        </div>
+        <div class="split">
+          <div class="pane">
+            <div class="pane-head"><span>原始记录（多源合并）</span><span class="mono" id="src-count">10 行</span></div>
+            <div class="src" id="src"></div>
+          </div>
+          <div class="pane">
+            <div class="pane-head"><span>抽取结果 · 6 个核心字段</span><span class="mono" id="field-count">6 / 6</span></div>
+            <div class="fields" id="cards"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="btn" class="primary">生成报告</button>
+          <button id="btn-reset" class="ghost">重置</button>
+          <span class="hint" id="gen-hint">已生成 6 / 6 字段 · 模板：开发井 12 h 班报</span>
+        </div>
+      </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">02</span>抽取置信度阈值</h2>
-      <span class="tag" id="th-tag">阈值 0.75</span>
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">02</span>抽取置信度阈值</h2>
+          <span class="tag" id="th-tag">阈值 0.75</span>
+        </div>
+        <svg id="gate" viewBox="0 0 430 145" role="img" aria-label="字段置信度与采纳阈值"></svg>
+        <div class="readrow">
+          <div class="read"><span>字段召回率</span><b id="r-rec">—</b></div>
+          <div class="read"><span>需人工确认字段</span><b id="r-man">—</b></div>
+          <div class="read"><span>数值 / 单位校验</span><b id="r-chk">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">—</div>
+      </section>
     </div>
-    <div class="ctl">
-      <label>采纳阈值 <output id="o-th">0.75</output></label>
-      <input type="range" id="s-th" min="0.50" max="0.99" step="0.01" value="0.75">
-      <span class="tip">低于阈值的字段标红、计入人工确认；阈值越高越安全，但审核量越大</span>
+
+    <div class="side">
+      <div class="ctl">
+        <label>采纳阈值 <output id="o-th">0.75</output></label>
+        <input type="range" id="s-th" min="0.50" max="0.99" step="0.01" value="0.75">
+        <span class="tip">低于阈值的字段标红、计入人工确认；阈值越高越安全，但审核量越大</span>
+      </div>
     </div>
-    <svg id="gate" viewBox="0 0 760 170" role="img" aria-label="字段置信度与采纳阈值"></svg>
-    <div class="readrow">
-      <div class="read"><span>字段召回率</span><b id="r-rec">—</b></div>
-      <div class="read"><span>需人工确认字段</span><b id="r-man">—</b></div>
-      <div class="read"><span>数值 / 单位校验</span><b id="r-chk">—</b></div>
-    </div>
-    <div class="verdict" id="verdict">—</div>
-  </section>
+  </div>
 
   <p class="foot">记录文本为示意样本；字段抽取、置信度门控与审核计数均在前端实时重算。真实系统还需接入 WITS 流、OCR 与井史库。</p>
 </div>

@@ -14,40 +14,46 @@
     <p class="lead">左侧是 10 m 分辨率的假彩色影像块（R:G:B = 7:5:3），右侧是同一网格的语义分割掩膜。拖动置信度阈值，看哪些像元被保留、哪些转为未分类；图例计数与精度指标同步重算。</p>
   </header>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">01</span>影像块与分割掩膜</h2>
-      <span class="tag" id="meta-tag">36 × 20 像元 · 10 m</span>
+  <div class="layout">
+    <div class="viz">
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">01</span>影像块与分割掩膜</h2>
+          <span class="tag" id="meta-tag">36 × 20 像元 · 10 m</span>
+        </div>
+        <p class="hint">影像中的暗色条带是地形阴影，绿色斑块是植被。模型对这两类像元的置信度会明显下降；掩膜中的斜线格表示低于阈值、需要人工复核的像元。</p>
+        <div class="grid2">
+          <div>
+            <svg id="img" viewBox="0 0 380 244" role="img" aria-label="多光谱遥感影像块"></svg>
+          </div>
+          <div>
+            <svg id="mask" viewBox="0 0 380 244" role="img" aria-label="岩性语义分割掩膜"></svg>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </section>
     </div>
-    <p class="hint">影像中的暗色条带是地形阴影，绿色斑块是植被。模型对这两类像元的置信度会明显下降；掩膜中的斜线格表示低于阈值、需要人工复核的像元。</p>
-    <div class="grid2">
-      <div>
-        <svg id="img" viewBox="0 0 380 244" role="img" aria-label="多光谱遥感影像块"></svg>
-      </div>
-      <div>
-        <svg id="mask" viewBox="0 0 380 244" role="img" aria-label="岩性语义分割掩膜"></svg>
-      </div>
-    </div>
-    <div class="legend" id="legend"></div>
-  </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h2><span class="num">02</span>置信度阈值与解译质量</h2>
-      <label class="switch"><input type="checkbox" id="c-edge" checked> 叠加岩性边界</label>
+    <div class="side">
+      <section class="card">
+        <div class="card-head">
+          <h2><span class="num">02</span>置信度阈值与解译质量</h2>
+          <label class="switch"><input type="checkbox" id="c-edge" checked> 叠加岩性边界</label>
+        </div>
+        <div class="ctl">
+          <label>置信度阈值 <output id="o-thr">0.55</output></label>
+          <input type="range" id="s-thr" min="0.3" max="0.9" step="0.01" value="0.55">
+          <span class="tip">阈值越高，保留像元越少；漏判比例上升，像素准确率在中等阈值处最高</span>
+        </div>
+        <div class="readrow">
+          <div class="read"><span>像素准确率（全图，未分类计错）</span><b id="r-acc">—</b></div>
+          <div class="read"><span>漏判率（未分类占比）</span><b id="r-miss">—</b></div>
+          <div class="read"><span>预测类别数</span><b id="r-cls">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">—</div>
+      </section>
     </div>
-    <div class="ctl">
-      <label>置信度阈值 <output id="o-thr">0.55</output></label>
-      <input type="range" id="s-thr" min="0.3" max="0.9" step="0.01" value="0.55">
-      <span class="tip">阈值越高，保留像元越少；漏判比例上升，像素准确率在中等阈值处最高</span>
-    </div>
-    <div class="readrow">
-      <div class="read"><span>像素准确率（全图，未分类计错）</span><b id="r-acc">—</b></div>
-      <div class="read"><span>漏判率（未分类占比）</span><b id="r-miss">—</b></div>
-      <div class="read"><span>预测类别数</span><b id="r-cls">—</b></div>
-    </div>
-    <div class="verdict" id="verdict">—</div>
-  </section>
+  </div>
 
   <p class="foot">示意数据按 6 类岩性、36 × 20 像元模拟：阴影与植被区置信度下降 0.27—0.32，类别边界处下降约 0.11。指标用于说明阈值取舍，不代表任何单一模型的实测精度。</p>
 </div>

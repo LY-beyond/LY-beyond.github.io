@@ -3,76 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>示范：水泥候凝强度预测</title>
+<title>示范：水泥石抗压强度预测</title>
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
 <div class="panel">
-  <h1>水泥候凝强度预测 · 交互式演示</h1>
-  <p class="lead">调节井底温度、水灰比、缓凝剂/促凝剂掺量，看水泥抗压强度随时间的发展曲线，以及达到试压强度的时间点。</p>
-
-  <div class="section">
-    <h2>① 强度发展曲线</h2>
-    <p class="hint">实线是预测强度，虚线是 95% 置信区间。<b style="color:#a97a1c">黄色虚线</b>是试压强度阈值（14 MPa），<b style="color:#3f8560">绿色虚线</b>是钻塞强度阈值（21 MPa）。</p>
-    <div class="chart-wrap">
-      <svg id="chart" viewBox="0 0 800 360" role="img" aria-label="水泥强度发展曲线"></svg>
+  <div class="head">
+    <div>
+      <h1>水泥石抗压强度预测 · 交互式演示</h1>
+      <p class="lead">调节井底温度、水灰比、硅粉与缓凝剂掺量，看水泥抗压强度随时间的发展曲线，以及达到钻开/试压强度的时间点。</p>
     </div>
-    <div class="legend">
-      <span><i style="background:#2f7d6b"></i>预测强度</span>
-      <span><i style="background:#2f7d6b;opacity:0.4"></i>95% 置信区间</span>
-      <span><i style="background:#a97a1c"></i>试压阈值 14 MPa</span>
-      <span><i style="background:#3f8560"></i>钻塞阈值 21 MPa</span>
-      <span><i style="background:#b26a39"></i>经验候凝 24h</span>
+    <span class="badge">API RP 10B-2 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>API RP 10B-2 抗压强度；钻开水泥塞前须 ≥ 500 psi (3.45 MPa)；井口试压 ≥ 1500–2000 psi；典型 24h UCS 14–21 MPa，7d 35 MPa；高温 > 110℃ 须加硅粉 30–40% 防强度倒缩；强度发展 UCS(t) = UCS_ult·(1−e^(−(t/τ)^p))。</p>
+
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：强度-时间曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 强度-时间曲线（当前温度）</h2>
+          <span class="hint">实线为预测强度，标 500/1500 psi 阈值线与 WOC 达标点</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="chart" viewBox="0 0 430 220" role="img" aria-label="水泥强度发展曲线"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>预测强度</span>
+          <span><i style="background:#c9a15a"></i>500 psi 钻塞阈值 (3.45 MPa)</span>
+          <span><i style="background:#b05a51"></i>1500 psi 试压阈值 (10.34 MPa)</span>
+          <span><i style="background:#8a9298"></i>目标强度 / 时间游标</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：热力图 + 多温对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 强度-温度-时间热力图 &amp; 多温对比</h2>
+          <span class="hint">左：横轴温度、纵轴时间、颜色为强度；右：30/90/150℃ 三条曲线</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>强度-温度-时间热力图</h3>
+            <canvas id="heat" width="430" height="244" role="img" aria-label="强度温度时间热力图"></canvas>
+          </div>
+          <div class="chart">
+            <h3>多温强度发展对比</h3>
+            <svg id="multi" viewBox="0 0 430 240" role="img" aria-label="多温强度对比曲线"></svg>
+            <div class="legend">
+              <span><i style="background:#8a9298"></i>30 ℃</span>
+              <span><i style="background:#2f7d6b"></i>90 ℃</span>
+              <span><i style="background:#b05a51"></i>150 ℃</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 3：指标卡 + 因素贡献条形图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 关键指标与因素贡献</h2>
+          <span class="hint">8h/24h/7d 强度、WOC 时间、倒缩警告</span>
+        </div>
+        <div class="metrics" style="margin-bottom: 8px;">
+          <div class="mcard"><span>8h UCS</span><b id="m-8h">—</b></div>
+          <div class="mcard"><span>24h UCS</span><b id="m-24h">—</b></div>
+          <div class="mcard"><span>7d UCS</span><b id="m-7d">—</b></div>
+          <div class="mcard"><span>WOC 达标时间</span><b id="m-woc">—</b></div>
+          <div class="mcard"><span>高温倒缩风险</span><b id="m-retro">—</b></div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="factors" viewBox="0 0 430 150" role="img" aria-label="因素贡献条形图"></svg>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 方案对比 · 帕累托前沿 -->
+      <div class="section" id="pareto-sec">
+        <div class="sec-head">
+          <h2>⑤ 方案对比 · 帕累托前沿</h2>
+          <span class="hint">在 24h 强度与高温倒缩风险之间权衡</span>
+        </div>
+        <p class="hint">40 个候选 = 8 档井底温度 × 5 档硅粉掺量（其余参数沿用当前配比）。横轴 24h 抗压强度（越高越好），纵轴高温倒缩风险 R（越低越好）：R 随温度升高而增大，硅粉最多削减约 80%，超高温即使加满 40% 仍有残余风险（R ≥ 0.5 判为高风险）。点击散点可载入该候选方案参数。</p>
+        <div class="pareto-wrap">
+          <svg id="pareto" viewBox="0 0 430 250" role="img" aria-label="帕累托前沿散点图"></svg>
+        </div>
+        <div class="btn-row">
+          <button id="btn-gen-cands" type="button">生成 40 个候选方案</button>
+          <button id="btn-front-only" type="button">仅显示帕累托前沿</button>
+          <button id="btn-reset-cur" type="button">重置为当前</button>
+        </div>
+        <div class="legend" style="margin-top:6px">
+          <span><i style="background:#3f8560"></i>低风险候选</span>
+          <span><i style="background:#b05a51"></i>高风险候选</span>
+          <span><i style="background:#c9a15a"></i>帕累托前沿点</span>
+          <span style="color:#79828a;font-size:10px">点大小 = 成本（水灰比+缓凝剂+硅粉折算）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 工况与配方参数（10 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="sync-note" id="sync-note">邻接参数联动：已同步 0 个共享参数（密度/水灰比/硅粉/缓凝剂/温度…） <button id="btn-clear-shared" type="button">清空共享参数</button></div>
+        <div class="controls">
+          <div class="ctl">
+            <label>井底静止温度 BHST <output id="o-temp">90 ℃</output></label>
+            <input type="range" id="s-temp" min="30" max="200" step="1" value="90">
+            <span class="tip">温度升高加快水化，过高须加硅粉</span>
+          </div>
+          <div class="ctl">
+            <label>水灰比 w/c <output id="o-wc">0.44</output></label>
+            <input type="range" id="s-wc" min="0.35" max="0.70" step="0.01" value="0.44">
+            <span class="tip">水越多后期强度越低</span>
+          </div>
+          <div class="ctl">
+            <label>水泥浆密度 <output id="o-rho">1.90 g/cm³</output></label>
+            <input type="range" id="s-rho" min="1.2" max="2.2" step="0.01" value="1.90">
+            <span class="tip">密度越高固相含量越大</span>
+          </div>
+          <div class="ctl">
+            <label>硅粉掺量 <output id="o-si">0 %BWOC</output></label>
+            <input type="range" id="s-si" min="0" max="40" step="1" value="0">
+            <span class="tip">高温井 >110℃ 须加 30-40%</span>
+          </div>
+          <div class="ctl">
+            <label>缓凝剂 <output id="o-ret">0.30 %BWOC</output></label>
+            <input type="range" id="s-ret" min="0" max="1.5" step="0.05" value="0.30">
+            <span class="tip">推迟水化，延长稠化时间</span>
+          </div>
+          <div class="ctl">
+            <label>养护压力 <output id="o-pres">0 MPa</output></label>
+            <input type="range" id="s-pres" min="0" max="50" step="1" value="0">
+            <span class="tip">压力增益因子 1+0.004·P</span>
+          </div>
+          <div class="ctl">
+            <label>钻井液污染率 <output id="o-cont">0 %</output></label>
+            <input type="range" id="s-cont" min="0" max="20" step="1" value="0">
+            <span class="tip">污染降低极限强度</span>
+          </div>
+          <div class="ctl">
+            <label>目标强度阈值 <output id="o-target">500 psi</output></label>
+            <input type="range" id="s-target" min="500" max="3000" step="50" value="500">
+            <span class="tip">500 psi = 3.45 MPa（钻塞标准）</span>
+          </div>
+          <div class="ctl">
+            <label>时间轴最大 <output id="o-tmax">72 h</output></label>
+            <input type="range" id="s-tmax" min="24" max="168" step="6" value="72">
+            <span class="tip">曲线显示范围</span>
+          </div>
+          <div class="ctl">
+            <label>时间游标 <output id="o-cursor">24 h</output></label>
+            <input type="range" id="s-cursor" min="2" max="168" step="1" value="24">
+            <span class="tip">读取该时刻强度</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">单位换算：1 psi = 0.006895 MPa · 1 MPa = 145.04 psi</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <h2>② 调节条件</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>井底温度 (℃)<output id="o-temp">85</output></label>
-        <input type="range" id="s-temp" min="20" max="120" step="1" value="85">
-        <span class="tip">温度每升 10℃ 水化速率约翻倍</span>
-      </div>
-      <div class="ctl">
-        <label>水灰比 w/c<output id="o-wc">0.44</output></label>
-        <input type="range" id="s-wc" min="0.35" max="0.6" step="0.01" value="0.44">
-        <span class="tip">水越多后期强度越低</span>
-      </div>
-      <div class="ctl">
-        <label>缓凝剂掺量 (%)<output id="o-ret">0.3</output></label>
-        <input type="range" id="s-ret" min="0" max="1.5" step="0.05" value="0.3">
-        <span class="tip">推迟水化，高温井常用</span>
-      </div>
-      <div class="ctl">
-        <label>促凝剂掺量 (%)<output id="o-acc">0</output></label>
-        <input type="range" id="s-acc" min="0" max="4" step="0.1" value="0">
-        <span class="tip">加速水化，低温井常用</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>③ 预测结果</h2>
-    <div class="info-grid">
-      <div class="info-card">
-        <div class="k">达到试压强度 (14 MPa)</div>
-        <div class="v" id="t-test">—</div>
-        <div class="sub">可进行套管试压</div>
-      </div>
-      <div class="info-card">
-        <div class="k">达到钻塞强度 (21 MPa)</div>
-        <div class="v" id="t-drill">—</div>
-        <div class="sub">可钻水泥塞</div>
-      </div>
-      <div class="info-card">
-        <div class="k">推荐候凝时间</div>
-        <div class="v" id="t-rec">—</div>
-        <div class="sub">取置信区间上限</div>
-      </div>
-    </div>
-    <div class="verdict" id="verdict"></div>
-  </div>
+  <p class="foot">模型公式：UCS_ult = 38·(0.44/wc)^1.2·(ρ/1.9)^0.8·(1−0.003·缓凝剂%)·(1−0.025·污染%)·(1+0.004·硅粉%)·(1−0.4·R)；τ = 36·e^(−0.015·(T−30))·(1+1.5·缓凝剂%) h；UCS(t) = UCS_ult·(1−e^(−(t/τ)^0.7))·(1+0.004·P)；高温倒缩风险 R = ((T−90)/90)·(0.2+0.8·(30−硅粉%)/30)（0–1，硅粉最多削减 80%，R ≥ 0.5 判为高风险）。</p>
 </div>
 <script src="demo.js"></script>
 </body>

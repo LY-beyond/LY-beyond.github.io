@@ -11,78 +11,84 @@
   <h1>示功图工况诊断 · 深度学习分类演示</h1>
   <p class="lead">示功图 = 光杆载荷（纵轴） × 位移（横轴） 的闭合曲线。不同工况在图上有不同"签名形状"。下面是程序合成的典型示功图——调整生产参数，看曲线怎么变形，AI 怎么分类。</p>
 
-  <!-- 工况选择 -->
-  <div class="section">
-    <h2>① 选择工况类型</h2>
-    <div class="case-grid">
-      <button class="case-btn active" data-c="normal">
-        <b>正常</b><span>饱满四边形，上下冲程载荷对称</span>
-      </button>
-      <button class="case-btn" data-c="underfill">
-        <b>供液不足</b><span>瘦梨形，下冲程空段</span>
-      </button>
-      <button class="case-btn" data-c="gaslock">
-        <b>气锁</b><span>顶部平段，气体没被排出</span>
-      </button>
-      <button class="case-btn" data-c="pumploss">
-        <b>泵漏</b><span>回程载荷下不去</span>
-      </button>
-      <button class="case-btn" data-c="rodbreak">
-        <b>断脱</b><span>高冲次段载荷掉为 0</span>
-      </button>
-      <button class="case-btn" data-c="ballleak">
-        <b>游动阀漏</b><span>上冲程载荷缓慢上升</span>
-      </button>
-    </div>
-  </div>
+  <div class="layout">
+    <div class="viz">
+      <!-- 示功图 + AI 结果 -->
+      <div class="section main">
+        <div class="well-diag">
+          <svg id="dyn" viewBox="0 0 360 216" role="img" aria-label="示功图"></svg>
+        </div>
+        <div class="ai-panel">
+          <h3>AI 分类概率</h3>
+          <div class="probs" id="probs"></div>
+          <div class="verdict-wrap">
+            <div class="ai-verdict" id="ai-verdict">—</div>
+            <div class="ai-confidence" id="ai-confidence"></div>
+          </div>
+          <div class="ai-desc" id="ai-desc"></div>
 
-  <!-- 示功图 + AI 结果 -->
-  <div class="section main">
-    <div class="well-diag">
-      <svg id="dyn" viewBox="0 0 380 320" role="img" aria-label="示功图"></svg>
-    </div>
-    <div class="ai-panel">
-      <h3>AI 分类概率</h3>
-      <div class="probs" id="probs"></div>
-      <div class="verdict-wrap">
-        <div class="ai-verdict" id="ai-verdict">—</div>
-        <div class="ai-confidence" id="ai-confidence"></div>
+          <h3 style="margin-top:10px">关键形态特征</h3>
+          <div class="features" id="features"></div>
+        </div>
       </div>
-      <div class="ai-desc" id="ai-desc"></div>
 
-      <h3 style="margin-top:18px">关键形态特征</h3>
-      <div class="features" id="features"></div>
-    </div>
-  </div>
-
-  <!-- 参数控制 -->
-  <div class="section">
-    <h2>② 生产参数控制</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>冲程 S (m)<output id="o-S">3.0</output></label>
-        <input type="range" id="s-S" min="1.5" max="6.0" step="0.1" value="3.0">
-      </div>
-      <div class="ctl">
-        <label>冲次 N (次/分)<output id="o-N">6</output></label>
-        <input type="range" id="s-N" min="2" max="12" step="1" value="6">
-      </div>
-      <div class="ctl">
-        <label>泵径 d (mm)<output id="o-d">56</output></label>
-        <input type="range" id="s-d" min="28" max="95" step="1" value="56">
-      </div>
-      <div class="ctl">
-        <label>噪声<output id="o-noise">低</output></label>
-        <input type="range" id="s-noise" min="1" max="4" step="1" value="1">
+      <!-- 所有工况对比 -->
+      <div class="section">
+        <h2>③ 典型示功图一览</h2>
+        <p class="hint">6 类常见工况的标准形态对比——这是分类模型"认识"的"模板"。</p>
+        <svg id="gallery" viewBox="0 0 430 230" role="img" aria-label="工况对比"></svg>
       </div>
     </div>
-  </div>
 
-  <!-- 所有工况对比 -->
-  <div class="section">
-    <h2>③ 典型示功图一览</h2>
-    <p class="hint">6 类常见工况的标准形态对比——这是分类模型"认识"的"模板"。</p>
-    <svg id="gallery" viewBox="0 0 720 380" role="img" aria-label="工况对比"></svg>
+    <div class="side">
+      <!-- 工况选择 -->
+      <div class="section">
+        <h2>① 选择工况类型</h2>
+        <div class="case-grid">
+          <button class="case-btn active" data-c="normal">
+            <b>正常</b><span>饱满四边形，上下冲程载荷对称</span>
+          </button>
+          <button class="case-btn" data-c="underfill">
+            <b>供液不足</b><span>瘦梨形，下冲程空段</span>
+          </button>
+          <button class="case-btn" data-c="gaslock">
+            <b>气锁</b><span>顶部平段，气体没被排出</span>
+          </button>
+          <button class="case-btn" data-c="pumploss">
+            <b>泵漏</b><span>回程载荷下不去</span>
+          </button>
+          <button class="case-btn" data-c="rodbreak">
+            <b>断脱</b><span>高冲次段载荷掉为 0</span>
+          </button>
+          <button class="case-btn" data-c="ballleak">
+            <b>游动阀漏</b><span>上冲程载荷缓慢上升</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 参数控制 -->
+      <div class="section">
+        <h2>② 生产参数控制</h2>
+        <div class="controls">
+          <div class="ctl">
+            <label>冲程 S (m)<output id="o-S">3.0</output></label>
+            <input type="range" id="s-S" min="1.5" max="6.0" step="0.1" value="3.0">
+          </div>
+          <div class="ctl">
+            <label>冲次 N (次/分)<output id="o-N">6</output></label>
+            <input type="range" id="s-N" min="2" max="12" step="1" value="6">
+          </div>
+          <div class="ctl">
+            <label>泵径 d (mm)<output id="o-d">56</output></label>
+            <input type="range" id="s-d" min="28" max="95" step="1" value="56">
+          </div>
+          <div class="ctl">
+            <label>噪声<output id="o-noise">低</output></label>
+            <input type="range" id="s-noise" min="1" max="4" step="1" value="1">
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <script src="demo.js"></script>

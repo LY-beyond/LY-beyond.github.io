@@ -1,0 +1,173 @@
+/* =========================================================
+   案例插件（静态注册版）：储罐液位与泄漏智能监控
+   ---------------------------------------------------------
+   由 cases/t5-tank-monitor/case.json 生成（tools/build-cases.js）。
+   修改案例内容请改源文件后重新生成，不要直接改本文件。
+   ========================================================= */
+(function (global) {
+  'use strict';
+
+  var DATA = {
+    "id": "t5-tank-monitor",
+    "sceneId": "t5",
+    "methods": [
+      "cv"
+    ],
+    "title": "储罐液位与泄漏智能监控",
+    "version": "1.0.0",
+    "updated": "2026-10-30",
+    "status": "ready",
+    "tabs": {
+      "background": {
+        "label": "专业背景",
+        "lede": "浙江某炼化企业原油库 **6 座 5 万 m³** 外浮顶罐，单罐直径 60 m、罐高 19.5 m，配 6 台雷达液位计（精度 ±3 mm）与 18 路视频（每罐 3 路、25 fps）；年周转 12 次、单罐日均收付 1,600 m³。液位计故障与罐顶异常长期靠 2 人/班巡检，夜间与台风季几乎失守。",
+        "judge": [
+          {
+            "label": "任务类型",
+            "value": "目标检测 + 读数识别 + 交叉校验",
+            "desc": "视频识别浮顶与罐顶状态，与雷达、质量平衡三方校验"
+          },
+          {
+            "label": "标注成本",
+            "value": "中",
+            "desc": "浮顶 / 附件 / 油迹需标注 4,000 帧级样本"
+          },
+          {
+            "label": "可见收益",
+            "value": "中",
+            "desc": "巡检 2 人/班 → 0.5 人，泄漏提前 2.6 h"
+          },
+          {
+            "label": "难度",
+            "value": "低",
+            "desc": "视觉任务明确，夜间与雾天成像是主要限制"
+          }
+        ],
+        "sections": [
+          {
+            "no": 1,
+            "en": "PROBLEM",
+            "title": "当前做法与问题",
+            "html": "<p>原油库的液位与安全监控是「一表 + 一视频」两条互不相通的线：雷达液位计连续测量、超限报警；视频 18 路只在值班室轮巡，2 人/班、每 2 h 走一圈。雷达故障时输出会「冻结」在最后一个值，界面上与真实稳定液位长得一模一样；浮顶倾斜、密封圈破损、罐顶积水这些异常，视频里看得见但没人一直盯着。夜间红外补光距离有限，雾天与蒸汽环境下画面基本失效。</p><p>数据其实是齐的：18 路 25 fps 视频（可见光 + 红外，保存 90 天）；雷达液位、罐内温度、密度 1 min 采样；进出油量、切罐、搅拌、脱水作业记录；罐容表与雷达安装高度；液位高高 / 低低、泄漏、火警的报警与处置记录。液位变化、收付油量与温度三者满足质量平衡，这给视觉与雷达提供了第三方约束。</p><p>硬约束：① 视觉读数受透视与抖动限制——浮顶随波浪起伏 ±8 mm，单帧读数不可信，必须多帧时均并做像素—毫米标定；② 夜间、雾天、蒸汽遮挡下纯视觉会漏，必须与雷达交叉；③ 雷达与视频可能共模失效——泡沫或蒸汽同时遮挡两路，两路一致不代表正确，还要看质量平衡。</p>"
+          },
+          {
+            "no": 2,
+            "en": "INTERVENTION",
+            "title": "AI 能做什么",
+            "html": "<p>AI 替换「人工轮巡 + 单表报警」：视频侧用目标检测识别浮顶、密封圈、导向柱、排水口与人员入侵，用关键点与罐壁刻度做液位读数，多帧融合给液位估计与置信度；雷达侧做冻结值、跳变与噪声检测；两路做交叉校验，偏差超阈值时降级并推送人工复核。</p><p>泄漏识别走双通道：视觉检测罐区油迹、蒸气、围堰积水与罐顶异常；质量平衡用「进出油量 + 罐位变化 + 温度体积修正」做残差累积和（CUSUM），两条通道同时异常才升为「泄漏疑似」，单通道异常只做提示。定位是辅助：系统给「哪罐、哪个测点、置信度、建议动作（复核 / 切罐 / 查围堰）」，处置由值班长确认。</p><p>不全自动的原因：视频在恶劣天气退化、误报会导致频繁切罐（一次切罐影响 1,600 m³ 周转），而泄漏判断涉及安全与环保，必须人工确认。模型的价值是把「2 小时一圈」变成「秒级推送 + 人工只处理异常」。</p>"
+          },
+          {
+            "no": 3,
+            "en": "DATA",
+            "title": "你需要准备什么",
+            "html": "<p style=\"margin-bottom:14px\">数据门槛在视频样本的标注质量与相机标定，雷达与作业记录本身就在罐区系统里。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">罐区视频</span><span class=\"cl-s\">6 罐 × 3 路，25 fps，可见光 + 红外，保存 90 天</span></span><span class=\"cl-n\">浮顶 / 附件框标 3,000 帧，油迹 / 烟雾 1,000 帧</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">雷达与辅助仪表</span><span class=\"cl-s\">液位 ±3 mm、罐内温度、密度，1 min 采样</span></span><span class=\"cl-n\">无需标注，但需标注故障与冻结段</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">收付油与作业记录</span><span class=\"cl-s\">进出油量、切罐、搅拌、脱水</span></span><span class=\"cl-n\">事件级标注，用于质量平衡与误报抑制</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">罐体与标定</span><span class=\"cl-s\">罐容表、浮顶参数、雷达安装高度与相机内外参</span></span><span class=\"cl-n\">标定后作为视觉换算基准</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">报警与处置记录</span><span class=\"cl-s\">液位高高 / 低低、泄漏、火警及处置结果</span></span><span class=\"cl-n\">作为标签与验证集</span></div></div>"
+          },
+          {
+            "no": 4,
+            "en": "DIFFICULTY",
+            "title": "技术难度与参考方向",
+            "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px\"><span class=\"dtag\" data-d=\"低\">难度 低</span><span class=\"small muted\">视觉任务本身不难，难在夜间、雾天、蒸汽遮挡下的可靠性，以及「两路都对」的共模失效。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"\"></i><i class=\"\"></i></div><p>难度 <b>低</b>。挑战按影响排序：① 成像条件——夜间红外细节丢失、雾天对比度下降，浮顶边缘识别误差可从 ±5 mm 恶化到 ±30 mm；② 共模失效——泡沫与蒸汽同时遮挡视频与雷达，两路读数一致却一起错，必须引入质量平衡作第三方；③ 误报成本——一次误报切罐影响 1,600 m³ 周转，频繁误报会让值班员直接关掉推送。</p><p>评估建议：液位交叉校验偏差 ≤±10 mm、异常事件召回 ≥90%、误报 ≤2 次/罐/月、泄漏疑似提前 ≥2 h、夜间可用率 ≥85%。</p><p style=\"margin-top:14px\"><span style=\"color:var(--ink-4);font-family:var(--mono);font-size:10px;letter-spacing:.15em\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/cv\">目标检测<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">读数识别<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/cv\">多源交叉校验<span class=\"ar\">↗</span></a></div>"
+          }
+        ]
+      },
+      "workflow": {
+        "label": "案例流程",
+        "title": "浙江某炼化企业原油库 6 座 5 万 m³ 浮顶罐的液位与泄漏监控",
+        "lead": [
+          "6 座 5 万 m³ 外浮顶罐，直径 60 m、罐高 19.5 m，雷达液位 ±3 mm，18 路视频 25 fps（可见光 + 红外），年周转 12 次、单罐日均收付 1,600 m³。现为 2 人/班巡检、每 2 h 一圈。",
+          "项目做视频读数识别、雷达质量检测与三源交叉校验。目标：液位偏差 ≤±10 mm、异常召回 ≥90%、误报 ≤2 次/罐/月、泄漏提前 ≥2 h；先在 2 座罐运行 6 个月。"
+        ],
+        "stats": [
+          [
+            "储罐",
+            "6 座 × 5 万 m³"
+          ],
+          [
+            "视频路数",
+            "18 路"
+          ],
+          [
+            "帧率",
+            "25 fps"
+          ],
+          [
+            "雷达精度",
+            "±3 mm"
+          ],
+          [
+            "年周转",
+            "12 次"
+          ],
+          [
+            "误报控制",
+            "≤2 次/罐/月"
+          ]
+        ],
+        "steps": [
+          {
+            "name": "相机标定与样本标注",
+            "role": "标注",
+            "do": "18 路相机做内外参标定，用罐容表与安装高度建立像素—毫米换算；标浮顶、密封圈、排水口 3,000 帧，油迹、蒸气、烟雾 1,000 帧。",
+            "effect": "标定后浮顶位置换算误差 ≤7 mm",
+            "trap": "不做透视校正——罐壁刻度在画面边缘被拉伸，读数系统性偏 15 mm"
+          },
+          {
+            "name": "浮顶与附件检测",
+            "role": "算法核心",
+            "do": "目标检测 + 关键点定位浮顶边缘与倾斜角，多帧时均抑制波浪抖动，输出液位估计与置信度。",
+            "effect": "白天液位与雷达偏差中位 6 mm，置信度≥0.9 占 88%",
+            "trap": "用单帧读数——浮顶随波浪起伏 ±8 mm，单帧抖动被当成真实液位变化"
+          },
+          {
+            "name": "雷达质量检测",
+            "role": "算法核心",
+            "do": "对雷达序列做方差、跳变与冻结检测，结合收付油事件判断读数是否可信，冻结段自动降权。",
+            "effect": "识别雷达冻结 / 跳变 14 段，全部与检修记录吻合",
+            "trap": "冻结值与稳定液位长得一样——不看方差与作业事件，故障雷达会被当成正常表"
+          },
+          {
+            "name": "三源融合与冲突处理",
+            "role": "推理",
+            "do": "卡尔曼融合视频、雷达与质量平衡，三源两两一致才给高置信；冲突时降级为「人工复核」，并明确哪一源可疑。",
+            "effect": "融合后液位偏差 ≤9 mm，人工复核量降至 3.1 次/日",
+            "trap": "两路一致就放过——泡沫或蒸汽共模失效时，视频与雷达一起错，必须让质量平衡做裁判"
+          },
+          {
+            "name": "泄漏残差检测",
+            "role": "算法核心",
+            "do": "质量平衡按温度体积修正后做 CUSUM，液位下降速率持续超 2 mm/h 且视觉检出油迹 / 蒸气时升级为泄漏疑似。",
+            "effect": "回放 2 年记录，泄漏疑似平均提前 2.6 h",
+            "trap": "不做温度修正——10 ℃ 温差对应约 0.7% 体积变化，被当成泄漏，误报暴增"
+          },
+          {
+            "name": "值班复核与演练",
+            "role": "质控",
+            "do": "推送附「罐号、测点、置信度、建议动作」，值班长复核后处置；每季度做一次切罐与围堰检查演练并记录漏报。",
+            "effect": "试点 6 个月召回 91%，误报 1.4 次/罐/月",
+            "trap": "只报「异常」不给处置建议——值班员不知道先切罐还是先查围堰，响应被拖慢"
+          }
+        ],
+        "metrics": {
+          "title": "怎么算「液位可信、泄漏能提前」",
+          "html": "<p>反直觉的陷阱：视频与雷达读数完全一致，不代表液位正确——泡沫或蒸汽同时遮住雷达回波与镜头，两路会一起错；真正可靠的是三源：视频、雷达、质量平衡（进出油量 + 罐位变化 + 温度修正），三源两两一致才算可信。另一个陷阱是液位静止时 3 mm 的波动没有意义，波浪与浮顶呼吸造成 ±8 mm 噪声，报警阈值必须看时间窗内的持续变化率，而不是瞬时值。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>人工巡检</th><th>本方案</th></tr></thead><tbody><tr><td>液位交叉偏差</td><td>视频 vs 雷达</td><td>±3 mm（单表）</td><td>±9 mm（融合可信）</td></tr><tr><td>异常事件召回</td><td>浮顶 / 密封 / 泄漏</td><td>约 62%</td><td>91%</td></tr><tr><td>误报</td><td>次/罐/月</td><td>—</td><td>1.4</td></tr><tr><td>泄漏提前量</td><td>到液位报警</td><td>0（事后发现）</td><td>2.6 h</td></tr><tr><td>夜间可用率</td><td>22:00—06:00</td><td>依赖人工</td><td>87%</td></tr><tr><td>巡检人力</td><td>人/班</td><td>2</td><td>0.5（只处理推送）</td></tr></tbody></table>"
+        },
+        "fails": [
+          {
+            "name": "单帧读数当液位",
+            "why": "浮顶随波浪起伏 ±8 mm，单帧关键点抖动直接变成液位跳变，误报集中在收付油时段。解决：多帧时均 + 置信度门限，低置信帧不参与融合。"
+          },
+          {
+            "name": "两路一致就认为正确",
+            "why": "泡沫、蒸汽、浓雾会造成视觉与雷达共模失效，两路一起错时系统反而给出高置信。解决：引入质量平衡作为第三方裁判，三源两两一致才升置信。"
+          },
+          {
+            "name": "忽略温度体积修正",
+            "why": "10 ℃ 温差带来约 0.7% 体积变化，被当成泄漏或液位异常，误报率成倍上升。解决：质量平衡统一按罐内温度与密度修正，修正参数随罐容表标定。"
+          }
+        ]
+      }
+    }
+  };
+
+  global.Cases.register(DATA);
+})(window);

@@ -11,36 +11,42 @@
   <h1>完井方式智能优选 · 知识图谱 + 规则优化</h1>
   <p class="lead">选择一组井况，看知识图谱沿「条件 → 风险 → 方式」路径给出推荐。拖动出砂风险权重，观察筛管与砾石充填的排序变化。</p>
 
-  <div class="section">
-    <h2>① 井况条件</h2>
-    <div class="chips" id="chips"></div>
-    <div class="ctl" style="max-width:540px">
-      <label>出砂风险权重 <output id="o-w">60</output></label>
-      <input type="range" id="s-w" min="0" max="100" step="1" value="60">
-      <span class="tip">权重越高，防砂类完井方式的规则得分与优先级越高；低出砂倾向时权重影响会被削弱。</span>
-    </div>
-  </div>
+  <div class="layout">
+    <div class="viz">
+      <div class="section">
+        <h2>② 知识图谱：条件—风险—方式</h2>
+        <p class="hint">亮色路径为当前首选方案的证据链，灰线为图谱中的其他规则。节点上方是属性，下方是当前井况取值。</p>
+        <div class="split">
+          <div class="chart-wrap"><svg id="graph" viewBox="0 0 430 228" role="img" aria-label="完井方式知识图谱"></svg></div>
+          <div>
+            <div class="rank" id="rank"></div>
+            <div class="readouts one" style="margin-top:8px">
+              <div class="ro"><span>首选方案</span><b id="r-first">—</b></div>
+              <div class="ro"><span>次选方案</span><b id="r-second">—</b></div>
+              <div class="ro"><span>风险评分</span><b id="r-risk">—</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  <div class="section">
-    <h2>② 知识图谱：条件—风险—方式</h2>
-    <p class="hint">亮色路径为当前首选方案的证据链，灰线为图谱中的其他规则。节点上方是属性，下方是当前井况取值。</p>
-    <div class="split">
-      <div class="chart-wrap"><svg id="graph" viewBox="0 0 720 380" role="img" aria-label="完井方式知识图谱"></svg></div>
-      <div>
-        <div class="rank" id="rank"></div>
-        <div class="readouts one" style="margin-top:12px">
-          <div class="ro"><span>首选方案</span><b id="r-first">—</b></div>
-          <div class="ro"><span>次选方案</span><b id="r-second">—</b></div>
-          <div class="ro"><span>风险评分</span><b id="r-risk">—</b></div>
+      <div class="section">
+        <h2>③ 决策结论</h2>
+        <div class="status" id="status"></div>
+        <p class="hint" style="margin-top:8px">置信度由「规则边权 × 相似井例支持度」合成；首选与次选得分差小于 5 分时判为存在冲突，交由工程师复核。图中数值为教学用简化模型，现场需按区块标定。</p>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="section">
+        <h2>① 井况条件</h2>
+        <div class="chips" id="chips"></div>
+        <div class="ctl">
+          <label>出砂风险权重 <output id="o-w">60</output></label>
+          <input type="range" id="s-w" min="0" max="100" step="1" value="60">
+          <span class="tip">权重越高，防砂类完井方式的规则得分与优先级越高；低出砂倾向时权重影响会被削弱。</span>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="section">
-    <h2>③ 决策结论</h2>
-    <div class="status" id="status"></div>
-    <p class="hint" style="margin-top:10px">置信度由「规则边权 × 相似井例支持度」合成；首选与次选得分差小于 5 分时判为存在冲突，交由工程师复核。图中数值为教学用简化模型，现场需按区块标定。</p>
   </div>
 </div>
 <script src="demo.js"></script>

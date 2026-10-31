@@ -1,41 +1,113 @@
-/* ========= 水泥候凝强度预测示范样式 ========= */
+/* ========= 水泥石强度预测示范样式 ========= */
 * { box-sizing: border-box; }
+html, body { margin: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background: #fbfaf6;
   color: #242b2e;
-  padding: 32px 28px;
-  line-height: 1.65;
+  font-size: 12px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-.panel { max-width: 920px; margin: 0 auto; }
-h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-h2 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #235f51; }
-.lead { color: #4d565b; margin-bottom: 16px; }
-.hint { font-size: 12.5px; color: #79828a; margin-bottom: 12px; }
-.section { background: #fff; border: 1px solid #e9e4d8; border-radius: 9px; padding: 20px 22px; margin-bottom: 18px; }
+.panel { max-width: none; margin: 0; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 232px; gap: 10px; align-items: start; }
+.side { position: sticky; top: 6px; }
 
-.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.ctl { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: #f5f2ea; border-radius: 7px; }
-.ctl label { font-size: 13px; display: flex; justify-content: space-between; font-weight: 500; }
-.ctl output { font-family: 'JetBrains Mono', Consolas, monospace; color: #235f51; font-weight: 600; }
-.ctl input[type="range"] { accent-color: #2f7d6b; }
-.ctl .tip { font-size: 11.5px; color: #9ba3a9; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+h1 { font-size: 15px; font-weight: 600; margin: 0 0 3px; }
+.lead { font-size: 11.5px; color: #5d666d; margin: 0; }
+.badge {
+  flex-shrink: 0; font-size: 10px; color: #235f51; background: #e9f1ec;
+  border: 1px solid #d3e2d8; border-radius: 20px; padding: 2px 8px; white-space: nowrap;
+}
 
-.chart-wrap { background: #fdfcf9; border-radius: 8px; padding: 8px; }
-.chart-wrap svg { width: 100%; }
+.data-src { font-size: 10.5px; color: #9ba3a9; margin: 0 0 8px; padding: 0 2px; line-height: 1.5; }
+.data-src b { color: #6d767d; font-weight: 600; }
 
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
-.info-card { background: #f5f2ea; border-radius: 7px; padding: 12px 14px; }
-.info-card .k { font-size: 11px; color: #79828a; letter-spacing: .1em; text-transform: uppercase; }
-.info-card .v { font-size: 22px; font-weight: 700; color: #235f51; font-family: 'JetBrains Mono', Consolas, monospace; margin-top: 2px; }
-.info-card .v.warn { color: #a97a1c; }
-.info-card .v.bad { color: #b05a51; }
-.info-card .sub { font-size: 11.5px; color: #9ba3a9; margin-top: 2px; }
+.section { background: #fff; border: 1px solid #e9e4d8; border-radius: 9px; padding: 8px 10px; margin-bottom: 8px; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+h2 { font-size: 12.5px; font-weight: 600; color: #235f51; margin: 0; }
+h3 {
+  font-size: 10px; color: #8a9298; letter-spacing: .08em; margin: 0 0 4px;
+  text-transform: uppercase; font-weight: 600;
+}
+.hint { font-size: 10.5px; color: #8a9298; margin: 0; }
 
-.verdict { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; }
-.verdict.ok { background: #e7f3ea; color: #3f8560; }
-.verdict.warn { background: #f9efd7; color: #a97a1c; }
-.verdict.bad { background: #f9e9e5; color: #b05a51; }
+/* ---------- 控制 ---------- */
+.controls { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.ctl {
+  background: #f5f2ea; border-radius: 7px; padding: 6px 8px;
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.ctl label { font-size: 11px; font-weight: 500; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; white-space: nowrap; }
+.ctl output { font-family: 'Consolas', 'Courier New', monospace; color: #235f51; font-weight: 600; font-size: 11px; flex-shrink: 0; }
+.ctl input[type="range"] { width: 100%; height: 16px; margin: 0; accent-color: #2f7d6b; }
+.ctl .tip { font-size: 10px; color: #9ba3a9; line-height: 1.3; }
 
-.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; font-size: 11.5px; color: #5d666d; }
-.legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 1px; }
+.btnrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+button {
+  font-family: inherit; font-size: 10.5px; color: #235f51; background: #f2f6f3;
+  border: 1px solid #cfdfd6; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
+button:hover { background: #e6f0ea; }
+.btn-note { font-size: 10px; color: #9ba3a9; }
+
+/* ---------- 图表 ---------- */
+.chart-wrap { background: #fdfcf9; border-radius: 8px; padding: 4px; }
+.chart-wrap svg { display: block; max-width: 100%; width: 100%; height: auto; }
+.chart-wrap canvas { display: block; max-width: 100%; width: 100%; height: auto; border-radius: 6px; }
+/* 图表显示尺寸收敛：避免在宽 viz 列里被放大得过高 */
+.chart-wrap > svg, .chart-wrap > canvas { max-width: 480px; margin-left: auto; margin-right: auto; }
+
+.grid-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chart { min-width: 0; }
+.chart svg, .chart canvas { display: block; max-width: 100%; width: 100%; height: auto; background: #fdfcf9; border-radius: 8px; }
+.legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; font-size: 10px; color: #5d666d; }
+.legend i { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 3px; border-radius: 1px; }
+
+/* ---------- 指标卡 ---------- */
+.metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.mcard { background: #f5f2ea; border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.mcard span { display: block; font-size: 10px; color: #79828a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcard b { font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; color: #235f51; font-weight: 600; line-height: 1.25; }
+.mcard b small { font-size: 10px; color: #8a9298; font-weight: 400; }
+.mcard.warn b { color: #c9a15a; }
+.mcard.bad b { color: #b05a51; }
+
+.verdict { margin-top: 6px; padding: 6px 10px; border-radius: 6px; font-size: 11px; line-height: 1.5; }
+.verdict.ok { background: #e9f3ec; color: #35765a; }
+.verdict.warn { background: #faf3e2; color: #9a7a1c; }
+.verdict.bad { background: #faeae6; color: #a85147; }
+.verdict b { font-family: 'Consolas', 'Courier New', monospace; }
+
+.foot { font-size: 10px; color: #9ba3a9; line-height: 1.5; padding: 0 4px 2px; margin: 4px 0 0; }
+
+/* ---------- 邻接参数联动提示 ---------- */
+.sync-note {
+  font-size: 10.5px; color: #79828a; background: #f5f2ea;
+  padding: 5px 8px; border-radius: 6px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;
+}
+.sync-note button {
+  font-family: inherit; font-size: 10px; color: #b05a51; background: #fff;
+  border: 1px solid #e0cdc9; border-radius: 5px; padding: 2px 8px; cursor: pointer;
+}
+.sync-note button:hover { background: #faeae6; }
+
+/* ---------- 帕累托面板 ---------- */
+.pareto-wrap svg { background: #fdfcf9; border-radius: 6px; max-width: 460px; width: 100%; height: auto; display: block; margin-left: auto; margin-right: auto; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.btn-row button {
+  font-family: inherit; font-size: 10.5px; color: #235f51; background: #f2f6f3;
+  border: 1px solid #cfdfd6; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
+.btn-row button:hover { background: #e6f0ea; }
+
+@media (max-width: 720px) {
+  .grid-charts { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}

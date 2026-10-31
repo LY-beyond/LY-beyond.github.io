@@ -3,81 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>示范：固井漏失风险预测</title>
+<title>示范：固井井漏风险预测</title>
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
 <div class="panel">
-  <h1>固井漏失风险 · 交互式预测演示</h1>
-  <p class="lead">调节下面的五个关键因素，看漏失概率怎么变化。右侧条形图显示 <b>LightGBM 模型当前预测中各因素的贡献度</b>——红色越高，说明这个因素在本次预测里"越危险"。</p>
+  <h1>固井井漏风险 · 交互式预测演示</h1>
+  <p class="data-source">数据口径：ECD(ppg)＝钻井液当量密度＋环空摩阻／(0.052×TVD_ft)；安全窗口需满足 孔隙压力梯度 ＜ ECD ＜ 破裂压力梯度；幂律流体层流环空摩阻 dP/dL＝4K/de·(8V/de)^n，de＝井径−套管外径（m）。模型为工程简化示意，非商业软件计算结果。</p>
+  <p class="lead">调节井深、水泥浆密度、排量、流性参数等，实时观察 ECD 是否突破破裂压力窗口、漏失概率与漏失量的变化。</p>
 
-  <!-- 风险仪表盘 -->
-  <div class="section risk-top">
-    <div class="gauge-wrap">
-      <svg id="gauge" viewBox="0 0 260 160" role="img" aria-label="漏失概率仪表盘"></svg>
-    </div>
-    <div class="risk-result">
-      <div class="rr-row"><span class="rr-l">漏失概率</span><b id="rr-p">—</b></div>
-      <div class="rr-row"><span class="rr-l">风险等级</span><b id="rr-level">—</b></div>
-      <div class="rr-row"><span class="rr-l">建议</span><b id="rr-advice">—</b></div>
-      <div class="rr-detail" id="rr-detail"></div>
-    </div>
-  </div>
+  <div class="layout">
+    <div class="viz">
 
-  <!-- 因素控制 -->
-  <div class="section">
-    <h2>① 五个关键因素（调节看效果）</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>密度窗口裕度 Δ (g/cm³)<output id="o-margin">0.08</output></label>
-        <input type="range" id="s-margin" min="0.01" max="0.20" step="0.01" value="0.08">
-        <span class="tip">最小 ECD 到破裂压力的距离，<b>越小越危险</b></span>
+      <!-- 风险指标卡 -->
+      <div class="section risk-top">
+        <div class="kpi-grid">
+          <div class="kpi"><span class="kpi-l">漏失概率</span><b id="kpi-prob">—</b><span class="kpi-sub" id="kpi-prob-sub">—</span></div>
+          <div class="kpi"><span class="kpi-l">风险等级</span><b id="kpi-level">—</b><span class="kpi-sub" id="kpi-level-sub">—</span></div>
+          <div class="kpi"><span class="kpi-l">当前 ECD</span><b id="kpi-ecd">—</b><span class="kpi-sub">ppg</span></div>
+          <div class="kpi"><span class="kpi-l">最大允许排量</span><b id="kpi-qmax">—</b><span class="kpi-sub">m³/min</span></div>
+          <div class="kpi"><span class="kpi-l">建议水泥浆密度</span><b id="kpi-rho">—</b><span class="kpi-sub">g/cm³</span></div>
+          <div class="kpi"><span class="kpi-l">30min 累计漏失量</span><b id="kpi-loss">—</b><span class="kpi-sub">m³</span></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
       </div>
-      <div class="ctl">
-        <label>天然裂缝密度 (条/m)<output id="o-frac">0.3</output></label>
-        <input type="range" id="s-frac" min="0" max="3.0" step="0.1" value="0.3">
-        <span class="tip">成像测井解释，≥1 条/m 为高风险</span>
+
+      <!-- 面板1：压力窗口剖面 -->
+      <div class="section">
+        <h2>② 压力窗口剖面图（纵轴：井深 → 横轴：压力梯度 ppg）</h2>
+        <p class="hint">绿色线为孔隙压力梯度下限，橙色线为破裂压力梯度上限，蓝色线为沿井深 ECD。红色段表示 ECD 越界破裂线的漏失层位置。</p>
+        <svg id="panel-window" viewBox="0 0 430 210" role="img" aria-label="压力窗口剖面图"></svg>
       </div>
-      <div class="ctl">
-        <label>ECD 安全系数<output id="o-safety">0.95</output></label>
-        <input type="range" id="s-safety" min="0.85" max="1.05" step="0.01" value="0.95">
-        <span class="tip">ECD / 破裂压力，>1.0 = 必然漏失</span>
+
+      <!-- 面板2：ECD vs 排量 -->
+      <div class="section">
+        <h2>③ ECD 随排量变化曲线</h2>
+        <p class="hint">绿色色带为安全窗口（孔隙~破裂）。蓝点为当前工况；红色虚线为破裂压力梯度；最大允许排量为 ECD 刚好不越界的排量上限。</p>
+        <svg id="panel-ecd" viewBox="0 0 430 200" role="img" aria-label="ECD排量曲线"></svg>
       </div>
-      <div class="ctl">
-        <label>环空返速 (m/s)<output id="o-v">1.2</output></label>
-        <input type="range" id="s-v" min="0.5" max="2.5" step="0.1" value="1.2">
-        <span class="tip">返速高 → 摩阻大 → ECD 升高</span>
+
+      <!-- 面板2b：漏失概率热力图 -->
+      <div class="section">
+        <h2>④ 漏失概率热力图（排量 × 水泥浆密度）</h2>
+        <p class="hint">颜色越绿越安全，红色表示高漏失概率。当前工况以红圈标出，可直观判断安全操作包络。</p>
+        <canvas id="panel-heat" width="430" height="170"></canvas>
       </div>
-      <div class="ctl">
-        <label>储层渗透率 (mD)<output id="o-k">250</output></label>
-        <input type="range" id="s-k" min="10" max="5000" step="10" value="250">
-        <span class="tip">高渗透储层漏失通道容易打开</span>
-      </div>
-      <div class="ctl preset">
-        <label>快捷场景</label>
-        <div class="preset-btns">
-          <button data-p="safe">✅ 安全井</button>
-          <button data-p="warn">⚠️ 临界</button>
-          <button data-p="risk">❌ 高风险</button>
-          <button data-p="frac">🪨 裂缝发育</button>
+
+      <!-- 面板3：漏失量随时间 + 特征贡献 -->
+      <div class="section two-col">
+        <div>
+          <h2>⑤ 漏失量随时间曲线（30 min）</h2>
+          <p class="hint">当 ECD 超过破裂压力梯度时开始漏失，漏失速率 q∝开度^1.5·(ECD−破裂)^1.5。</p>
+          <svg id="panel-loss" viewBox="0 0 430 170" role="img" aria-label="漏失量曲线"></svg>
+        </div>
+        <div>
+          <h2>⑥ 特征贡献条形图</h2>
+          <p class="hint">四项因素对当前漏失风险的相对贡献（红色＝朝危险方向，绿色＝安全方向）。</p>
+          <svg id="panel-bars" viewBox="0 0 430 170" role="img" aria-label="特征贡献图"></svg>
         </div>
       </div>
+
+      <!-- 方案对比面板 -->
+      <div class="section" id="compare-sec">
+        <h2>⑦ 方案对比：当前 vs 推荐</h2>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h3>当前方案</h3>
+            <div class="metric"><span>漏失概率</span><b id="c-cur-prob">—</b></div>
+            <div class="metric"><span>当前 ECD</span><b id="c-cur-ecd">—</b></div>
+            <div class="metric"><span>最大允许排量</span><b id="c-cur-qmax">—</b></div>
+          </div>
+          <div class="compare-col rec">
+            <h3>推荐方案</h3>
+            <div class="metric"><span>漏失概率</span><b id="c-rec-prob">—</b></div>
+            <div class="metric"><span>当前 ECD</span><b id="c-rec-ecd">—</b></div>
+            <div class="metric"><span>最大允许排量</span><b id="c-rec-qmax">—</b></div>
+          </div>
+        </div>
+        <div class="compare-actions">
+          <button id="btn-apply-rec">应用推荐参数</button>
+          <button id="btn-cur" class="secondary">对比当前参数</button>
+        </div>
+        <p class="hint">推荐方案：密度 1.4 g/cm³、排量 1.2 m³/min、破裂裕度大，可显著降低漏失概率。</p>
+      </div>
+
+    </div>
+    <div class="side">
+
+      <!-- 参数控制 -->
+      <div class="section">
+        <h2>① 可调参数（共 12 项）</h2>
+        <div class="sync-note" id="sync-note">邻接参数联动：已同步 0 个共享参数（密度/井径/排量/套管/流性/压力窗口/回压…）</div>
+        <div class="controls">
+          <div class="ctl">
+            <label>TVD 井深<output id="o-tvd">3000</output></label>
+            <input type="range" id="s-tvd" min="1000" max="5000" step="50" value="3000">
+            <span class="tip">单位 m，垂深</span>
+          </div>
+          <div class="ctl">
+            <label>水泥浆密度<output id="o-rho">1.80</output></label>
+            <input type="range" id="s-rho" min="1.0" max="2.2" step="0.01" value="1.80">
+            <span class="tip">单位 g/cm³</span>
+          </div>
+          <div class="ctl">
+            <label>排量 Q<output id="o-q">2.0</output></label>
+            <input type="range" id="s-q" min="0.5" max="4.0" step="0.1" value="2.0">
+            <span class="tip">单位 m³/min</span>
+          </div>
+          <div class="ctl">
+            <label>井径 Dh<output id="o-dh">311</output></label>
+            <input type="range" id="s-dh" min="200" max="450" step="1" value="311">
+            <span class="tip">单位 mm</span>
+          </div>
+          <div class="ctl">
+            <label>套管外径 Dc<output id="o-dc">244</output></label>
+            <input type="range" id="s-dc" min="140" max="340" step="1" value="244">
+            <span class="tip">单位 mm</span>
+          </div>
+          <div class="ctl">
+            <label>流性指数 n<output id="o-n">0.60</output></label>
+            <input type="range" id="s-n" min="0.3" max="0.9" step="0.01" value="0.60">
+            <span class="tip">无量纲，幂律指数</span>
+          </div>
+          <div class="ctl">
+            <label>稠度系数 K<output id="o-k">0.80</output></label>
+            <input type="range" id="s-k" min="0.1" max="2.0" step="0.01" value="0.80">
+            <span class="tip">单位 Pa·s^n</span>
+          </div>
+          <div class="ctl">
+            <label>孔隙压力梯度<output id="o-pore">11.0</output></label>
+            <input type="range" id="s-pore" min="9.5" max="14.0" step="0.1" value="11.0">
+            <span class="tip">单位 ppg</span>
+          </div>
+          <div class="ctl">
+            <label>破裂压力梯度<output id="o-frac">16.0</output></label>
+            <input type="range" id="s-frac" min="14.0" max="18.0" step="0.1" value="16.0">
+            <span class="tip">单位 ppg，须大于孔隙</span>
+          </div>
+          <div class="ctl">
+            <label>漏失层深度占比<output id="o-zloss">70</output></label>
+            <input type="range" id="s-zloss" min="10" max="95" step="1" value="70">
+            <span class="tip">占 TVD 的百分比 %</span>
+          </div>
+          <div class="ctl">
+            <label>漏失层裂缝开度<output id="o-open">1.0</output></label>
+            <input type="range" id="s-open" min="0.1" max="5.0" step="0.1" value="1.0">
+            <span class="tip">单位 mm</span>
+          </div>
+          <div class="ctl">
+            <label>井口回压<output id="o-bp">2.0</output></label>
+            <input type="range" id="s-bp" min="0" max="8" step="0.1" value="2.0">
+            <span class="tip">单位 MPa</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- 因素贡献图 -->
-  <div class="section">
-    <h2>② 当前预测的因素贡献度</h2>
-    <p class="hint">条形长度 = 该因素在 <b>LightGBM 分裂节点</b>中本次预测贡献的信息增益。红色表示该因素当前值"朝危险方向"。</p>
-    <svg id="bars" viewBox="0 0 600 220" role="img" aria-label="因素重要性"></svg>
-  </div>
-
-  <!-- 沿井深风险曲线 -->
-  <div class="section">
-    <h2>③ 沿井深的漏失风险热图</h2>
-    <p class="hint">假设井斜、裂缝密度沿井深变化，不同井段的漏失风险也不同。<b>红色段</b>是需要特别关注的区域——固井时这些位置最可能出问题。</p>
-    <svg id="depth-risk" viewBox="0 0 720 200" role="img" aria-label="沿井深风险曲线"></svg>
-  </div>
 </div>
 <script src="demo.js"></script>
 </body>

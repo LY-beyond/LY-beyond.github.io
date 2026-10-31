@@ -3,76 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>示范：注水泥参数智能优化</title>
+<title>水泥浆配方智能优化</title>
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
 <div class="panel">
-  <h1>注水泥参数 · 交互式优化演示</h1>
-  <p class="lead">拖动水泥浆<b>密度 ρ</b> 和 <b>排量 Q</b>，看当量密度 ECD 怎么在压力窗口里滑动、顶替效率怎么变化。右下的散点图里绿色点都是可行方案，<b>帕累托前沿上的点</b>是"最划算"的候选。</p>
 
-  <!-- 井深压力剖面 -->
-  <div class="section">
-    <h2>① 压力剖面：密度窗口在哪里</h2>
-    <p class="hint">蓝色区域是安全窗口——水泥浆当量密度（ECD）必须落在孔隙压力和破裂压力之间，否则就会气窜或漏失。拖下方的密度滑杆看 ECD 线怎么移动。</p>
-    <svg id="profile" viewBox="0 0 720 340" role="img" aria-label="压力剖面"></svg>
-  </div>
+  <p class="data-note">数据口径：API Class G 水泥净浆基准水灰比 0.38、密度 1.89 g/cm³、24h UCS 14–21 MPa；稠化时间以 70 Bc 为终点；API 失水 ≤ 50 mL/30min；静切力 100→500 lbf/100ft² 过渡 &lt; 45 min；自由水 ≤ 1.4%；沉降密度差 ≤ 0.01 g/cm³；ECD 须落在孔隙–破裂压力窗口内。参考 API RP 10B / API 10B-2。</p>
 
-  <!-- 环空顶替可视化 -->
-  <div class="section">
-    <h2>② 环空顶替：谁把谁挤走了</h2>
-    <p class="hint">左侧是套管（内管），中间是环空（水泥浆↑ 顶钻井液↓）。排量太低或密度差太小，会出现<b>窜槽</b>——钻井液没被顶干净，留下通道。</p>
-    <div class="annulus-wrap">
-      <svg id="annulus" viewBox="0 0 320 220" role="img" aria-label="环空顶替"></svg>
-      <div class="ann-info">
-        <div class="ai-row"><span class="ai-l">顶替效率 η</span><b id="ai-eta">—</b></div>
-        <div class="ai-row"><span class="ai-l">当量密度 ECD</span><b id="ai-ecd">—</b></div>
-        <div class="ai-row"><span class="ai-l">密度差 Δρ</span><b id="ai-drho">—</b></div>
-        <div class="ai-row"><span class="ai-l">环空返速</span><b id="ai-v">—</b></div>
-        <div class="ai-row"><span class="ai-l">压力窗口裕度</span><b id="ai-margin">—</b></div>
-        <div class="verdict" id="verdict"></div>
+  <h1>水泥浆配方智能优化</h1>
+  <p class="lead">调节密度、水灰比、外加剂与温度，实时查看稠化时间、流变性、失水、强度与 ECD 压力窗口，下方体检卡对每项指标给出 PASS/FAIL。</p>
+
+  <div class="layout">
+    <div class="viz">
+
+      <div class="section">
+        <h2>① 稠化时间曲线</h2>
+        <svg id="thick" viewBox="0 0 430 190" role="img" aria-label="稠化时间曲线"></svg>
+        <p class="hint">横轴为时间(min)，纵轴为稠度(Bc)。曲线在 70 Bc 处的时间即为稠化时间 t₇₀；竖线为设计施工时间，二者之差为施工余量。</p>
       </div>
+
+      <div class="section">
+        <h2>② 流变曲线</h2>
+        <svg id="rheo" viewBox="0 0 430 190" role="img" aria-label="流变曲线"></svg>
+        <p class="hint">幂律模型 τ = τy + K·γⁿ。横轴剪切率 γ (s⁻¹)，纵轴剪切应力 τ (Pa)。n 越小越剪切稀释，K 越大黏度越高。</p>
+      </div>
+
+      <div class="section">
+        <h2>③ ECD 沿深度剖面</h2>
+        <svg id="ecd" viewBox="0 0 430 200" role="img" aria-label="ECD 沿深度剖面"></svg>
+        <p class="hint">横轴为当量密度(ppg)，纵轴为井深(m)。两条横线分别为孔隙压力梯度与破裂压力梯度；ECD 斜线须落在二者之间，红色段为越界。</p>
+      </div>
+
+      <div class="section">
+        <h2>④ 配方体检卡</h2>
+        <div class="check-grid" id="check-grid"></div>
+      </div>
+
+      <!-- 方案对比 · 帕累托前沿 -->
+      <div class="section" id="pareto-sec">
+        <h2>⑥ 方案对比 · 帕累托前沿</h2>
+        <p class="hint">在 ECD 安全裕度（fracPPG − ECD）与 24h 抗压强度之间权衡：裕度越大越不易漏失，强度越高越早可钻塞。点击散点可载入该候选方案参数。</p>
+        <div class="pareto-wrap">
+          <svg id="pareto" viewBox="0 0 430 240" role="img" aria-label="帕累托前沿散点图"></svg>
+        </div>
+        <div class="btn-row">
+          <button id="btn-gen-cands" type="button">生成 40 个候选方案</button>
+          <button id="btn-front-only" type="button">仅显示帕累托前沿</button>
+          <button id="btn-reset-cur" type="button">重置为当前</button>
+        </div>
+        <div class="legend" style="margin-top:6px">
+          <span><i style="background:#3f8560"></i>全项 PASS</span>
+          <span><i style="background:#b05a51"></i>存在 FAIL</span>
+          <span><i style="background:#c9a15a"></i>帕累托前沿点</span>
+          <span style="color:#79828a;font-size:10px">点大小 = 成本（密度+添加剂折算）</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="side">
+
+      <div class="section">
+        <h2>⑤ 参数控制</h2>
+        <div class="sync-note" id="sync-note">邻接参数联动：已同步 0 个共享参数（密度/水灰比/硅粉/缓凝剂/温度…） <button id="btn-clear-shared" type="button">清空共享参数</button></div>
+        <div class="controls" id="controls"></div>
+      </div>
+
     </div>
   </div>
 
-  <!-- 控制参数 -->
-  <div class="section">
-    <h2>③ 参数控制</h2>
-    <div class="controls">
-      <div class="ctl">
-        <label>水泥浆密度 ρ (g/cm³)<output id="o-rho">1.60</output></label>
-        <input type="range" id="s-rho" min="1.40" max="1.85" step="0.01" value="1.60">
-        <span class="tip">通常 1.50—1.85，比钻井液大 0.05—0.15</span>
-      </div>
-      <div class="ctl">
-        <label>顶替排量 Q (L/s)<output id="o-Q">12</output></label>
-        <input type="range" id="s-Q" min="4" max="28" step="0.5" value="12">
-        <span class="tip">受泵车额定排量限制，一般 ≤ 25 L/s</span>
-      </div>
-      <div class="ctl">
-        <label>钻井液密度 (g/cm³)<output id="o-mw">1.48</output></label>
-        <input type="range" id="s-mw" min="1.20" max="1.70" step="0.01" value="1.48">
-        <span class="tip">钻井液密度影响密度差 Δρ</span>
-      </div>
-      <div class="ctl">
-        <label>井眼扩大系数<output id="o-hl">1.15</output></label>
-        <input type="range" id="s-hl" min="1.00" max="1.30" step="0.01" value="1.15">
-        <span class="tip">实际井径 / 设计井径，影响环空截面积</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 参数空间可视化 -->
-  <div class="section">
-    <h2>④ 所有可行方案一览 + 帕累托前沿</h2>
-    <p class="hint">x 轴：顶替效率（越高越好）。y 轴：密度安全裕度（越高越安全）。<b>右上角的点</b>在两个维度上都最优——就是帕累托前沿。</p>
-    <svg id="pareto" viewBox="0 0 560 320" role="img" aria-label="帕累托前沿"></svg>
-    <div class="btn-group">
-      <button id="btn-simulate">🔄 重新生成样本</button>
-      <button id="btn-optimize" class="primary">⚡ 快速优化（50 次迭代）</button>
-      <span class="pareto-stat">当前方案：<b id="pnow">—</b> · 前沿点数：<b id="pcount">—</b></span>
-    </div>
-  </div>
 </div>
 <script src="demo.js"></script>
 </body>
