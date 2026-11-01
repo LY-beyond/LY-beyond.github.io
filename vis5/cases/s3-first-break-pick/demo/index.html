@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：初至波智能拾取与静校正闭环</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>初至波智能拾取与静校正闭环 · 交互式演示</h1>
+      <p class="lead">程序生成共炮点道集（折射初至 + 直达波 + 面波 + 随机噪声），演示「STA/LTA 粗拾 → AIC 精修 → 折射时距约束后处理」的完整自动拾取链路；调节信噪比、时窗与阈值，观察拾取精度如何变化。</p>
+    </div>
+    <span class="badge">STA/LTA · AIC · 时距约束</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>折射时距 t = t₀ + x/v（t₀ = 150 ms，v = 2200 m/s，处于案例给定的 800–2600 m/s 范围）；近地表设定对标鄂尔多斯黄土塬（低降速带厚 30–80 m、速度 300–800 m/s）；24 道、偏移距 300–3060 m、1 ms 采样、显示窗 2.2 s（教学窗长，现场为 6 s 记录、256 ms 拾取窗）；面波/多次波列与初至近平行、落后约 95 ms，能量强且连续（案例失败模式①的设定）；SNR 为初至峰值/噪声 RMS 的模拟口径，远偏移距道中位数 0.42 取自案例；验收口径 ±2 ms 合格率与跳点率（案例目标：±4 ms ≥ 95%、跳点率 ≤ 1%）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：共炮点道集 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 共炮点道集与自动拾取</h2>
+          <span class="hint">悬停读数 · 点击选道联动下方单道视图</span>
+        </div>
+        <div class="chart-box">
+          <canvas id="cv-gather" width="520" height="312" role="img" aria-label="共炮点道集与自动拾取点"></canvas>
+          <div class="chart-tip" id="tip-gather"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#3d464b"></i>合成记录（道内归一）</span>
+          <span><i style="background:#2f7d6b"></i>理论折射时距 t₀+x/v</span>
+          <span><i style="background:#b05a51"></i>自动拾取（AIC 精修后）</span>
+          <span><i style="background:#c9a15a"></i>跳点原拾取（时距约束判废）</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：单道放大 + 特征曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 单道放大与特征曲线 <span class="sel-info" id="sel-info">—</span></h2>
+          <span class="hint">手动 vs 自动拾取对比 · 悬停读数</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>单道波形 · 拾取对比</h3>
+            <div class="chart-box">
+              <canvas id="cv-trace" width="436" height="240" role="img" aria-label="单道波形与拾取对比"></canvas>
+              <div class="chart-tip" id="tip-trace"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#2f7d6b"></i>真初至</span>
+              <span><i style="background:#41699b"></i>人工拾取（对照）</span>
+              <span><i style="background:#c9a15a"></i>STA/LTA 粗拾</span>
+              <span><i style="background:#b05a51"></i>AIC 精修</span>
+              <span><i style="background:#8a9298"></i>面波列到时</span>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>STA/LTA 特征曲线与 AIC 精修</h3>
+            <div class="chart-box">
+              <canvas id="cv-ratio" width="436" height="240" role="img" aria-label="STA/LTA特征曲线与AIC精修"></canvas>
+              <div class="chart-tip" id="tip-ratio"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#2f7d6b"></i>STA/LTA 比值</span>
+              <span><i style="background:#c9a15a"></i>触发阈值</span>
+              <span><i style="background:#41699b"></i>AIC 曲线（反向归一）</span>
+              <span><i style="background:#e8d9b0"></i>搜索窗（理论时距 ±）</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 3：指标 + 直方图 + SNR 曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 拾取精度统计（全排列 24 道）</h2>
+          <span class="hint">随滑块实时重算 · 悬停读数</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>±2 ms 合格率</span><b id="m-p2">—</b></div>
+          <div class="mcard"><span>±4 ms 合格率</span><b id="m-p4">—</b></div>
+          <div class="mcard"><span>平均绝对误差</span><b id="m-mae">—</b></div>
+          <div class="mcard"><span>跳点率</span><b id="m-out">—</b></div>
+          <div class="mcard"><span>复核队列占比</span><b id="m-rev">—</b></div>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>拾取误差直方图（自动 − 真值）</h3>
+            <div class="chart-box">
+              <canvas id="cv-hist" width="436" height="208" role="img" aria-label="拾取误差直方图"></canvas>
+              <div class="chart-tip" id="tip-hist"></div>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>SNR − ±2 ms 合格率扫描</h3>
+            <div class="chart-box">
+              <canvas id="cv-snr" width="436" height="208" role="img" aria-label="SNR与拾取合格率关系曲线"></canvas>
+              <div class="chart-tip" id="tip-snr"></div>
+            </div>
+          </div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>参数控制（6 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>信噪比 SNR <output id="o-snr">1.00</output></label>
+            <input type="range" id="s-snr" min="0.2" max="3" step="0.05" value="1.0">
+            <span class="tip">案例远偏移距道 SNR 中位数 0.42</span>
+          </div>
+          <div class="ctl">
+            <label>STA 短时窗 <output id="o-sta">20 ms</output></label>
+            <input type="range" id="s-sta" min="5" max="60" step="1" value="20">
+            <span class="tip">太短易被噪声误触发</span>
+          </div>
+          <div class="ctl">
+            <label>LTA 长时窗 <output id="o-lta">160 ms</output></label>
+            <input type="range" id="s-lta" min="60" max="400" step="5" value="160">
+            <span class="tip">须显著大于 STA，否则比值失真</span>
+          </div>
+          <div class="ctl">
+            <label>触发阈值 <output id="o-thr">2.0</output></label>
+            <input type="range" id="s-thr" min="1.2" max="4" step="0.1" value="2.0">
+            <span class="tip">过低误拾噪声，过高漏拾弱初至</span>
+          </div>
+          <div class="ctl">
+            <label>面波强度 <output id="o-surf">1.0×</output></label>
+            <input type="range" id="s-surf" min="0" max="2" step="0.1" value="1.0">
+            <span class="tip">面波能量比初至高 10–20 dB（案例口径）</span>
+          </div>
+          <div class="ctl">
+            <label>噪声种子 <output id="o-seed">7</output></label>
+            <input type="range" id="s-seed" min="1" max="30" step="1" value="7">
+            <span class="tip">换一批随机噪声与静态扰动</span>
+          </div>
+          <div class="ctl chk">
+            <label><input type="checkbox" id="chk-post" checked> 折射时距约束后处理</label>
+            <span class="tip">按 t = a + x/v 鲁棒拟合，残差超限时判跳点并重拾（案例第 4 步）</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">24 道 · 1 ms 采样 · 窗 1.8 s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型：折射初至 t = 150 ms + x/2200 m·s⁻¹（含 ±6 ms 道间连续静态扰动），因果子波（指数衰减正弦）主频 32 Hz；直达波 v = 850 m/s；面波/多次波列与初至平行、落后约 95 ms，主频 12/9 Hz；噪声 σ = 0.25/SNR（相对初至峰值）。算法：CF = x² 的 STA/LTA 比值在理论时距 −140/+170 ms 搜索窗内连续 3 采样超阈值即粗拾（作 Ws/2 窗延迟补偿）；在粗拾 −55/+25 ms 窗内取 AIC(k) = k·lnσ₁² + (N−k)·lnσ₂² 最小值精修（固定 −2 ms 补偿）；后处理对拾取—偏移距做迭代最小二乘拟合，残差 &gt; max(3σ, 8 ms) 判跳点并以拟合值重拾。复核队列 = 置信（比值峰值/阈值）&lt; 1.3 或被判跳点的道。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+    <div class="section">
+      <div class="sec-head"><h2>真实文献与方法来源（8 条）</h2><span class="hint">本 demo 全部数据为程序生成，物理口径与算法流程取自下列公开文献</span></div>
+      <div class="src-bar">
+        <span class="tag real">方法蓝本</span>
+        <span><b>Geophysics 89(1): WA279（2024）硬岩初至检测深度学习基准</b>：其自动基线即「STA/LTA 触发 → AR-AIC 精修 → 10 ms 窗内波谷微调」三级流水线，并以 ±ms 误差统计合格率——本 demo 的算法链路与误差直方图/合格率口径直接复现该基线。</span>
+        <a href="https://pubs.geoscienceworld.org/seg/geophysics/article/89/1/WA279/630673/" target="_blank" rel="noopener">链接↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">工程背景</span>
+        <span><b>《约束层析静校正技术在鄂尔多斯盆地 N51 井区的应用》地球物理学进展 36(6)（2021）</b>：黄土塬沟壑区低降速带厚、速度变化剧烈，须以微测井约束的初至层析求取长波长静校正——本 demo 的近地表参数（t₀、折射速度范围）与「拾取 → 时距约束 → 静校正闭环」的业务背景取自该类工区。</span>
+        <a href="http://en.dzkx.org/dzdqs-data/pg/2021/6/PDF/dqwlxjz202106027.pdf" target="_blank" rel="noopener">链接↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>文献 / 出处</th><th>关键方法与数据</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Stevenson (1976), <i>BSSA</i> 66(1): 61–80 <a href="https://doi.org/10.1785/BSSA0660010061" target="_blank" rel="noopener">↗</a></td>
+            <td>微地震自动处理中提出短/长时窗均值比（STA/LTA）触发思想</td>
+            <td>STA/LTA 特征曲线的原型；STA、LTA 时窗滑块的物理依据</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Allen (1978), <i>BSSA</i> 68(5): 1521–1532 <a href="https://doi.org/10.1785/BSSA0680051521" target="_blank" rel="noopener">↗</a></td>
+            <td>单道自动识别与定时经典算法，能量比触发、特征函数思想</td>
+            <td>demo 的 CF = x² 特征函数与「比值首超阈值即拾取」口径</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Akaike (1974), <i>IEEE Trans. Autom. Control</i> 19(6): 716–723 <a href="https://doi.org/10.1109/TAC.1974.1100705" target="_blank" rel="noopener">↗</a></td>
+            <td>赤池信息准则（AIC）：模型拟合优度的客观度量</td>
+            <td>AIC 精修的数学基础：噪声段/信号段最优分割点即初至</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Sleeman &amp; van Eck (1999), <i>Phys. Earth Planet. Inter.</i> 113: 265–275 <a href="https://doi.org/10.1016/S0031-9201(99)00007-2" target="_blank" rel="noopener">↗</a></td>
+            <td>AR-AIC 单分量 P 相自动拾取并在线实现</td>
+            <td>「STA/LTA 粗拾 → 粗拾 −55/+25 ms 窗内 AIC 最小值精修」的两级策略蓝本</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><i>Geophysics</i> 89(1): WA279（2024）硬岩初至检测 DL 基准 <a href="https://pubs.geoscienceworld.org/seg/geophysics/article/89/1/WA279/630673/" target="_blank" rel="noopener">↗</a></td>
+            <td>自动基线：STA/LTA → AR-AIC → 10 ms 窗波谷微调；U-Net 对照</td>
+            <td>算法管线与 ±ms 合格率统计口径的直接复现对象</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>Mardan et al. (2024), <i>Near Surface Geophysics</i> 22(3) <a href="https://doi.org/10.1002/nsg.12316" target="_blank" rel="noopener">↗</a></td>
+            <td>U-Net + 残差块初至拾取，&lt;10% 人工标签微调即奏效</td>
+            <td>案例「6% 道作标签」的现实参照；概率峰值拾取 ↔ demo 的比值峰值置信</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Meneses et al. (2026), <i>Geophysical Prospecting</i> <a href="https://doi.org/10.1111/1365-2478.70233" target="_blank" rel="noopener">↗</a></td>
+            <td>自训练 U-Net，1% 标签 + 11 样本窗口标注 + 漏拾 100× 加权损失</td>
+            <td>置信分级与复核队列设计参考（指标卡「复核队列占比」）</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>《STA/LTA 方法拾取天然地震波初至及其改进分析》地球物理学进展（2023）<a href="https://t4.sciengine.com/Pgeop/doi/10.6038/pg2023GG0523" target="_blank" rel="noopener">↗</a></td>
+            <td>系统综述 STA/LTA 及其改进方法在低信噪比下的表现</td>
+            <td>SNR—合格率联动曲线形态与时窗长度影响趋势的文献依据</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="hint" style="margin-top:8px">说明：本页文献提供方法口径与参数范围；demo 页中的所有波形、噪声与拾取统计均由浏览器端程序实时生成，不加载任何外部数据。</p>
+    </div>
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

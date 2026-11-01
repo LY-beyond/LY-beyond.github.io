@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：结蜡 / 结垢智能预测 · 清蜡排产</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>结蜡 / 结垢智能预测 · 清蜡排产交互演示</h1>
+      <p class="lead">切换井位、调节含蜡量 / 析蜡点 / 距上次清蜡天数 / 井口温度，查看单井结蜡风险曲线、井口温度与析蜡点关系，以及 6 口井未来 30 天的建议清蜡窗口排产。</p>
+    </div>
+    <span class="badge">生存分析 · 30 天滚动窗口</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>区块业务数值（96 口井、含蜡量 18–26%、析蜡点 42–48 ℃、年热洗约 1800 井次、蜡卡躺井 11 起）为案例设定；演示模型为 Weibull 生存模型教学近似（F(t)=1−e^(−(t/η)^k)，η 随物性与工况变化）；「真实数据来源」页签内全部数值来自公开标准 / 文献 / 官方报道，可点击链接溯源。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">清蜡排产模拟</button>
+    <button class="tab" data-tab="data" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 清蜡排产模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：单井结蜡风险曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 单井结蜡风险曲线（生存分析口径）</h2>
+          <span class="hint">金色带 = 未来 30 天 · 绿色带 = 建议窗口 · 竖线 = 今天 · 悬停读数</span>
+        </div>
+        <div class="chart-box" id="box-risk">
+          <svg id="c-risk" viewBox="0 0 470 252" role="img" aria-label="单井结蜡风险曲线"></svg>
+          <div class="chart-tip" id="t-risk"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>结蜡风险 F(t)</span>
+          <span><i style="background:#c9a15a"></i>30% 关注阈值</span>
+          <span><i style="background:#b05a51;height:0;border-top:2px dashed #b05a51"></i>55% 高危阈值</span>
+          <span><i style="background:#41699b"></i>今天（距上次清蜡）</span>
+          <span><i style="background:#2f7d6b"></i>上次热洗事件</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：井口温度/产液量时序 × 析蜡点 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 井口温度 / 产液量时序 × 析蜡点（近 12 个月）</h2>
+          <span class="hint">红色段 = 低于本井析蜡点 · 悬停读数</span>
+        </div>
+        <div class="chart-box" id="box-ts">
+          <svg id="c-ts" viewBox="0 0 470 240" role="img" aria-label="井口温度与析蜡点关系时序图"></svg>
+          <div class="chart-tip" id="t-ts"></div>
+        </div>
+        <h3 class="strip-cap">季节结蜡风险日历（井口温度驱动，canvas）</h3>
+        <div class="chart-wrap strip-wrap">
+          <canvas id="c-strip" width="470" height="40" role="img" aria-label="季节结蜡风险日历"></canvas>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>井口温度</span>
+          <span><i style="background:#b05a51"></i>低于析蜡点风险段</span>
+          <span><i style="background:#c9a15a"></i>产液量（右轴）</span>
+          <span><i style="background:#e8d9b0"></i>析蜡点阈值带 42–48 ℃</span>
+          <span><i style="background:#2f7d6b;height:0;border-top:2px dashed #2f7d6b"></i>上次热洗</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：清蜡排产甘特 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 未来 30 天清蜡排产（6 口井）</h2>
+          <span class="hint">横条 = 建议清蜡窗口 · 颜色 = 当前风险等级 · 悬停看详情</span>
+        </div>
+        <div class="chart-box" id="box-gantt">
+          <svg id="c-gantt" viewBox="0 0 470 212" role="img" aria-label="清蜡排产甘特图"></svg>
+          <div class="chart-tip" id="t-gantt"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>低风险窗口</span>
+          <span><i style="background:#c9a15a"></i>中风险窗口</span>
+          <span><i style="background:#b05a51"></i>高风险 / 已过窗</span>
+          <span><i style="background:#fff;border:1.5px solid #79828a;width:7px;height:7px;border-radius:1px"></i>固定周期对照点</span>
+          <span style="color:#79828a">高亮行 = 当前选中井（参数实时联动）</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 建议 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 关键指标与排产建议</h2>
+          <span class="hint">随参数即时重算</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>当前结蜡风险</span><b id="m-risk">—</b></div>
+          <div class="mcard"><span>特征结蜡周期 η</span><b id="m-eta">—</b></div>
+          <div class="mcard"><span>建议清蜡窗口</span><b id="m-win">—</b></div>
+          <div class="mcard"><span>风险等级</span><b id="m-level">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="section">
+        <div class="sec-head">
+          <h2>井位与工况参数</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="well-grid" id="well-btns"></div>
+        <div class="controls">
+          <div class="ctl">
+            <label>原油含蜡量 <output id="o-wax">22.0 %</output></label>
+            <input type="range" id="s-wax" min="12" max="30" step="0.5" value="22">
+            <span class="tip">含蜡量越高，结蜡越快，周期越短</span>
+          </div>
+          <div class="ctl">
+            <label>析蜡点 WAT <output id="o-wat">45.0 ℃</output></label>
+            <input type="range" id="s-wat" min="38" max="52" step="0.5" value="45">
+            <span class="tip">井筒低于此温度开始析蜡</span>
+          </div>
+          <div class="ctl">
+            <label>距上次清蜡 <output id="o-days">20 天</output></label>
+            <input type="range" id="s-days" min="0" max="90" step="1" value="20">
+            <span class="tip">生存分析的时间原点之后</span>
+          </div>
+          <div class="ctl">
+            <label>当前井口温度 <output id="o-twh">33.0 ℃</output></label>
+            <input type="range" id="s-twh" min="15" max="45" step="0.5" value="33">
+            <span class="tip">低于析蜡点越多，风险累积越快</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复该井默认</button>
+          <span class="btn-note">切换井位载入该井物性</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">演示模型：特征结蜡周期 η = 80·e^(−0.075·(含蜡量−20))·e^(−0.09·(析蜡点−43))·e^(−0.055·max(0, 析蜡点−井口温度)) 天；累积风险 F(t) = 1−e^(−(t/η)^2.2)（Weibull 生存模型，形状参数 k=2.2，风险率随时间递增）；建议窗口取 F(t) ∈ [30%, 55%] 对应的清蜡时机区间，截入未来 30 天滚动排产。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-data">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 公开标准 / 文献 / 官方报道汇总</h2><span class="hint">全部可点击溯源 · Web 检索整理</span></div>
+      <div class="src-bar">
+        <span class="tag real">真实可查</span>
+        <span>以下来源覆盖四个层面：<b>析蜡点测定标准</b>（SY/T 0545-2012）、<b>结蜡机理与预测模型</b>（Burger 1981、Fan 2026）、<b>生存分析原始文献</b>（Kaplan-Meier 1958、Cox 1972、DeepSurv 2018）、<b>热洗清蜡现场实践</b>（大港、玉门、庆城油田报道）。</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>关键数据 / 结论</th><th>链接</th></tr></thead>
+        <tbody id="src-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 含蜡量对结蜡速率的影响（室内实验报道值）</h2><span class="hint">悬停柱条读数 · 金色带为本案例区块含蜡量范围</span></div>
+      <div class="src-bar">
+        <span class="tag real">实验报道</span>
+        <span><b>《抽油机热洗周期影响因素分析及确定方法》（期刊网收录）</b>：室内实验表明，原油含蜡量从 12% 升高到 22% 时，相同条件下结蜡速率提升约 <b>2.7 倍</b>；同系列报道：含蜡量每升高 5%，蜡晶析出量增加 30% 以上，热洗周期需缩短 15–20 天。</span>
+        <a href="https://www.chinaqikan.com/thesis/view/9702564" target="_blank" rel="noopener">来源↗</a>
+      </div>
+      <div class="chart-box" id="box-wax">
+        <svg id="c-wax" viewBox="0 0 470 230" role="img" aria-label="含蜡量与结蜡速率关系图"></svg>
+        <div class="chart-tip" id="t-wax"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 清蜡周期优化效果（油田官方报道值）</h2><span class="hint">悬停条形读数</span></div>
+      <div class="src-bar">
+        <span class="tag real">官方报道</span>
+        <span><b>中国石油网</b>：大港采油三厂三区（石蜡基高含蜡原油）热洗周期由 20 余天延长至 3 个月；玉门酒东采油厂两年平均热洗周期有效延长 40 天、减少热洗 23 井次，油井免修期由 247 天延长至 425 天——与本案例「按需排产」目标同向。</span>
+        <a href="https://www.cnpc.com.cn/cnpc/syzbzzdt/201806/2aa5fd08922440d78ecb2f606ed7976d.shtml" target="_blank" rel="noopener">来源↗</a>
+      </div>
+      <div class="chart-box" id="box-imp">
+        <svg id="c-imp" viewBox="0 0 470 180" role="img" aria-label="清蜡周期优化效果对比图"></svg>
+        <div class="chart-tip" id="t-imp"></div>
+      </div>
+    </div>
+
+    <p class="foot">说明：本页签数值均来自公开标准、同行评议文献与油田官方报道，链接可溯源；模拟页签中的区块业务数值（96 口井、1800 井次/年等）为案例设定，演示模型为教学近似，不用于生产决策。</p>
+  </div><!-- /pane-data -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

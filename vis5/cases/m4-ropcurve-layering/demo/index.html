@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：钻时曲线地层智能划分</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>钻时曲线地层智能划分 · 交互式演示</h1>
+      <p class="lead">模拟鄂尔多斯盆地某致密油区块定向井 2100–2600 m 井段：钻时 0.5 m 一点，含钻头磨损趋势与弱界面。调节目标层数、最小层厚与置信度阈值，看变点检测如何自动卡出层界面、给出置信度，并与随钻伽马交叉验证。</p>
+    </div>
+    <span class="badge">SY/T 5788 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>钻时单位 min/m（SY/T 5788-2024《油气井地质录井规范》）；dc 指数按 Jorden &amp; Shirley (1966) 修正公式，正常压实趋势线（NCT）按 Rehm &amp; McClendon (1971, SPE-3603)；钻时归一化思想源于 Teale (1965) 机械比能 MSE；界面按 ±1 m 容差匹配，弱界面（泥岩→泥灰岩可钻性差 &lt;10%）须伽马交叉验证。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：钻时曲线 + 自动分层 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 钻时曲线与自动分层界面</h2>
+          <span class="hint">悬停读数 · 虚线为检测界面（颜色=置信度）</span>
+        </div>
+        <div class="chart-box" id="box-rop">
+          <canvas id="cv-rop" width="460" height="232" role="img" aria-label="钻时随井深曲线与分层界面"></canvas>
+          <div class="chart-tip" id="tip-rop"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>钻时（min/m）</span>
+          <span><i style="background:#8a9298"></i>井段均值（分层结果）</span>
+          <span><i style="background:#2f7d6b;border-top-style:dashed"></i>界面 置信度≥0.75</span>
+          <span><i style="background:#c9a15a"></i>界面 0.5–0.75</span>
+          <span><i style="background:#b05a51"></i>界面 &lt;0.5（待复核）</span>
+          <span><i style="background:#41699b"></i>深度游标</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：dc 指数与 NCT -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② dc 指数与正常压实趋势线（NCT）</h2>
+          <span class="hint">dc 偏低=欠压实/易钻；偏离 NCT 指示岩性变化</span>
+        </div>
+        <div class="chart-box" id="box-dc">
+          <canvas id="cv-dc" width="460" height="196" role="img" aria-label="dc指数曲线与正常压实趋势线"></canvas>
+          <div class="chart-tip" id="tip-dc"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>dc 指数（泥岩段加点）</span>
+          <span><i style="background:#b05a51"></i>NCT 正常压实趋势线（泥岩点回归）</span>
+          <span><i style="background:#8a9298"></i>检测界面</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：岩性柱 + 伽马对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 判别岩性柱与随钻伽马对比</h2>
+          <span class="hint">上条=判别岩性，下条=真实岩性；弱界面处伽马先于钻时变化</span>
+        </div>
+        <div class="chart-box" id="box-gr">
+          <canvas id="cv-gr" width="460" height="196" role="img" aria-label="岩性柱与随钻伽马曲线"></canvas>
+          <div class="chart-tip" id="tip-gr"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>随钻伽马（API）</span>
+          <span><i class="sw" style="background:#c9a15a"></i>砂岩</span>
+          <span><i class="sw" style="background:#79828a"></i>泥岩</span>
+          <span><i class="sw" style="background:#41699b"></i>灰岩</span>
+          <span><i class="sw" style="background:#b05a51"></i>泥灰岩</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标 + 界面置信度 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 分层质量指标与界面置信度</h2>
+          <span class="hint">界面按 ±1 m 容差与真实层位匹配</span>
+        </div>
+        <div class="metrics" style="margin-bottom: 8px;">
+          <div class="mcard"><span>检测界面数</span><b id="m-nb">—</b></div>
+          <div class="mcard"><span>界面查全率</span><b id="m-rec">—</b></div>
+          <div class="mcard"><span>界面查准率</span><b id="m-pre">—</b></div>
+          <div class="mcard"><span>边界平均误差</span><b id="m-err">—</b></div>
+          <div class="mcard"><span>平均置信度</span><b id="m-conf">—</b></div>
+        </div>
+        <div class="chart-box" id="box-bnd">
+          <canvas id="cv-bnd" width="460" height="150" role="img" aria-label="界面置信度条形图"></canvas>
+          <div class="chart-tip" id="tip-bnd"></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>分层参数（5 项）</h2>
+          <span class="hint">拖动即时重分层</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>目标分层数 <output id="o-k">8 层</output></label>
+            <input type="range" id="s-k" min="4" max="14" step="1" value="8">
+            <span class="tip">该井段真实为 8 层 / 7 个界面；过多会过分割</span>
+          </div>
+          <div class="ctl">
+            <label>最小层厚 <output id="o-minlen">12 m</output></label>
+            <input type="range" id="s-minlen" min="3" max="40" step="1" value="12">
+            <span class="tip">抑制噪声假界面；过小产生薄互层碎片</span>
+          </div>
+          <div class="ctl">
+            <label>置信度阈值 <output id="o-conf">0.55</output></label>
+            <input type="range" id="s-conf" min="0.30" max="0.95" step="0.05" value="0.55">
+            <span class="tip">低于阈值的界面降级为「待复核」不计入成果</span>
+          </div>
+          <div class="ctl">
+            <label>信号归一化 <output id="o-norm">已启用</output></label>
+            <input type="range" id="s-norm" min="0" max="1" step="1" value="1">
+            <span class="tip">0=原始钻时（含钻头磨损趋势）1=去趋势后分层</span>
+          </div>
+          <div class="ctl">
+            <label>深度游标 <output id="o-cursor">2240 m</output></label>
+            <input type="range" id="s-cursor" min="2100" max="2600" step="0.5" value="2240">
+            <span class="tip">联动读取该深度钻时 / dc / 伽马</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">采样 0.5 m/点 · 井段 500 m</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">方法：钻时去趋势（磨损趋势 ÷(1+0.22·(h−2100)/500)）→ 1 m 重采样 → 动态规划最优 K 段划分（段内方差最小，最小层厚约束）→ 界面置信度 = 1−exp(−(z/3)^1.2)，z 为相邻层均值差的标准化统计量；dc = lg(R/60N)/lg(12W/10⁶D)·(ρn/ρe)；NCT 由泥岩段 dc 线性回归；查全/查准按 ±1 m 容差与真实界面对比。模型为演示简化，案例实际为 1D U-Net / 贝叶斯在线变点检测。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 行业标准：钻时录井口径</h2><span class="hint">钻时单位、采样间距与多曲线记录结构的依据</span></div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 5788-2024《油气井地质录井规范》</b>（国家能源局 2024-09-24 发布、2025-03-24 实施，全部代替 SY/T 5788.3-2014）：规定地质录井资料采集与整理要求，钻时以 <b>min/m</b> 记录。→ 本 demo 钻时曲线纵轴单位、0.5 m 采样间距与「标志层卡取」业务口径均按此标准设定。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=2F904633F9723B02E06397BE0A0AB40F" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 5788.1-1993《石油天然气钻井地质 综合录井规程》</b>：规定综合录井 31 条记录曲线，第 1 条为钻时 min/m（钻速 m/h），并含甲烷（C₁）等气测曲线。→ demo 中「钻时 + dc 指数 + 随钻伽马/气测」多曲线联动对比的数据结构来源。</span>
+        <a href="https://img.antpedia.com/standard/files/pdfs_ora/CN-SY/8c6/SY_T%205788.1-1993.pdf" target="_blank" rel="noopener">标准文本↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② dc 指数与正常压实趋势线（图② 公式来源）</h2><span class="hint">可钻性归一化与欠压实识别的经典方法</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Bingham, G. (1964). <i>A New Approach to Interpreting Rock Drillability</i></b>：首次提出 d 指数经验式 R/N = a·(W/D)^d，把钻速对钻压、转速、钻头直径归一。→ demo 图② dc 曲线与图①「信号归一化」开关的理论起点。</span>
+        <a href="https://geodatadrilling.com/blog/2021/01/06/pore-pressure-and-wellbore-stability-prediction-for-prevention-of-drilling-incident/" target="_blank" rel="noopener">公式释义↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Jorden, J.R. &amp; Shirley, O.J. (1966). “Application of Drilling Performance Data to Overpressure Detection”, <i>JPT</i> 18(11): 1387–1394</b>：在 Bingham d 指数上乘钻井液密度修正 ρn/ρe 得 dc 指数。→ demo dc 计算公式 dc = d·(ρn/ρe)，ρe = 1.18 g/cm³。</span>
+        <a href="https://geodatadrilling.com/blog/2021/01/06/pore-pressure-and-wellbore-stability-prediction-for-prevention-of-drilling-incident/" target="_blank" rel="noopener">公式释义↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">SPE 论文</span>
+        <span><b>Rehm, W. &amp; McClendon, R. (1971). “Measurement of Formation Pressure from Drilling Data”, SPE-3603</b>：提出用泥岩段 dc 建立正常压实趋势线（NCT），偏离 NCT 指示异常压力/岩性变化。→ demo 图② 红色虚线 NCT 由合成井泥岩段 dc 回归得到。</span>
+        <a href="https://www.scirp.org/journal/paperinformation?paperid=63109" target="_blank" rel="noopener">方法综述↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Teale, R. (1965). “The Concept of Specific Energy in Rock Drilling”, <i>Int. J. Rock Mech. Min. Sci.</i> 2(1): 57–73</b>：定义破碎单位体积岩石所需机械功（MSE），MSE≈岩石强度。→ demo「钻时归一化=剔除工况影响、保留岩性信号」的物理依据。</span>
+        <a href="https://onepetro.org/SJ/article-pdf/doi/10.2118/223707-PA/5240084/spe-223707-pa.pdf" target="_blank" rel="noopener">SPE 综述↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 变点检测与岩性界面自动识别（分层算法参照）</h2><span class="hint">界面置信度与边界误差口径的近年研究</span></div>
+      <div class="src-bar">
+        <span class="tag real">研究论文</span>
+        <span><b>Lysyy, A. et al. (2019). “Real-time data-driven detection of the rock type alteration during a directional drilling”, arXiv:1903.11436</b>：随钻测量 + 梯度提升树识别岩性变化，93% 变化在 20 m 窗内检出，平均延迟 2.59 m、单井约 7 次误报。→ demo 界面置信度分级（≥0.75 / 0.5–0.75 / &lt;0.5 待复核）与误报控制目标参照此文。</span>
+        <a href="https://arxiv.org/html/1903.11436v2" target="_blank" rel="noopener">论文↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">研究论文</span>
+        <span><b>“Automated Stratum Interface Detection Using the Optimized Drilling Specific Energy through Self-Adaptive Logistic Function” (2023, PMC10611152)</b>：以钻进比能 + CUSUM 变点检测自动定位地层界面。→ demo 分层采用「段内方差最小的最优划分（变点检测思想）」+ 界面显著性统计量 z 映射置信度，与该方法同一技术路线。</span>
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10611152/" target="_blank" rel="noopener">论文↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">研究论文</span>
+        <span><b>“Fast Automatic Detection of Geological Boundaries from Multivariate Log Data Using Recurrence” (2019, arXiv:1910.01581)</b>：无监督多变量测井曲线地层边界检测，多曲线联合优于单曲线。→ demo 图③ 伽马—钻时交叉验证（弱界面泥岩→泥灰岩须伽马佐证）的设计依据。</span>
+        <a href="https://www.arxiv-vanity.com/papers/1910.01581/" target="_blank" rel="noopener">论文↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 关键口径速查</h2><span class="hint">本 demo 用到的公式与评价口径</span></div>
+      <table class="lit-table">
+        <thead><tr><th>项目</th><th>口径 / 公式</th><th>来源</th></tr></thead>
+        <tbody>
+          <tr><td>钻时单位</td><td class="num">min/m（0.5–1 m 一点）</td><td>SY/T 5788-2024 / 5788.1-1993</td></tr>
+          <tr><td>d 指数</td><td class="num">d = lg(R/60N) / lg(12W/10⁶D)</td><td>Bingham (1964)</td></tr>
+          <tr><td>dc 指数</td><td class="num">dc = d · (ρn/ρe)，ρn=1.0、ρe=1.18 g/cm³</td><td>Jorden &amp; Shirley (1966)</td></tr>
+          <tr><td>NCT</td><td class="num">泥岩段 dc—深度回归线</td><td>Rehm &amp; McClendon (1971), SPE-3603</td></tr>
+          <tr><td>机械比能 MSE</td><td class="num">破碎单位体积岩石的机械功 ≈ UCS</td><td>Teale (1965)</td></tr>
+          <tr><td>界面匹配容差</td><td class="num">±1 m；目标 查全/查准 ≥85%、边界误差 ≤0.8 m</td><td>案例业务设定（鄂尔多斯 52 口井）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

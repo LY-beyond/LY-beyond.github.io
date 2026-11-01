@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：分层注水智能调配</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>分层注水智能调配 · 交互式演示</h1>
+      <p class="lead">拖动 4 个开发层系的配注量滑块：压减高渗水窜的东二段、增补低渗剩余油富集的东三段，看未来 2 个季度产油与含水曲线如何变化——这就是注采响应代理模型 + 约束优化「稳油控水」的核心逻辑。</p>
+    </div>
+    <span class="badge">代理模型 × 约束优化 · 96 维</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>渤海湾盆地某注水区块：4 个开发层系（东营组 Ed1–Ed4）、24 口注水井、58 口油井；综合含水 81.3%、含水上升率 2.8%/年、注采比 1.05；决策变量 96 维（24 井 × 4 层段）。本页为<b>简化集总代理模型</b>（层系效率 η 加权，非全流程数值模拟器），用于演示调配趋势；案例验收口径：方案编制 3–4 周 → 2 天，含水上升率 2.8% → 1.9%/年，存水率 41% → 44.4%，季度增油 +4.2%。工程约束：单井日注 ≤120 m³、层段步长 ±10 m³、总水量 ±5%、相邻方案变动 ≤20%。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">智能调配模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 智能调配模拟页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 分层配注编辑器（4 个开发层系，按渗透率着色）</h2>
+        <span class="hint">拖动滑块改配注，全图联动重算 · 金色为优化建议值</span>
+      </div>
+      <div class="alloc-grid">
+        <div class="ctl">
+          <label><span><i class="dot" style="background:#c9a15a"></i>东一段 Ed1 · 中渗 180 mD</span><output id="o-ed1">650 m³/d</output></label>
+          <input type="range" id="s-ed1" min="300" max="900" step="10" value="650">
+          <span class="tip">建议 700 m³/d · 吸水正常，效率 η=0.62</span>
+        </div>
+        <div class="ctl">
+          <label><span><i class="dot" style="background:#b05a51"></i>东二段 Ed2 · 高渗 680 mD</span><output id="o-ed2">1100 m³/d</output></label>
+          <input type="range" id="s-ed2" min="500" max="1400" step="10" value="1100">
+          <span class="tip">建议 820 m³/d · <b style="color:#b05a51">水窜优势通道</b>，效率 η=0.30</span>
+        </div>
+        <div class="ctl">
+          <label><span><i class="dot" style="background:#41699b"></i>东三段 Ed3 · 低渗 45 mD</span><output id="o-ed3">380 m³/d</output></label>
+          <input type="range" id="s-ed3" min="150" max="750" step="10" value="380">
+          <span class="tip">建议 560 m³/d · 吸水差、剩余油富集，η=0.95；配注 &gt;640 部分实注打 75 折</span>
+        </div>
+        <div class="ctl">
+          <label><span><i class="dot" style="background:#2f7d6b"></i>东四段 Ed4 · 中低渗 120 mD</span><output id="o-ed4">470 m³/d</output></label>
+          <input type="range" id="s-ed4" min="200" max="700" step="10" value="470">
+          <span class="tip">建议 520 m³/d · 吸水正常，效率 η=0.70</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-opt" type="button">一键优化（恢复建议值）</button>
+        <button id="btn-cur" type="button">恢复现状配注</button>
+        <span class="btn-note" id="preset-note">当前：<b>现状配注</b>——高渗东二段超注、低渗东三段欠注</span>
+      </div>
+      <h3>当前配注 vs 优化建议（m³/d）</h3>
+      <div class="chart-wrap">
+        <svg id="alloc-bars" viewBox="0 0 900 190" role="img" aria-label="分层配注当前值与建议值对比条形图"></svg>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② 井组连通与响应示意（24 注 / 58 采 · 层系剖面）</h2>
+        <span class="hint">水窜通道线宽随东二段配注变化 · 剩余油圈随东三段实注变化</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="map-canvas" width="900" height="300" role="img" aria-label="井组连通与层系响应示意图"></canvas>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f7d6b;height:6px;border-radius:3px"></i>注水井（24 口）</span>
+        <span><i style="background:#41699b;height:6px;border-radius:3px"></i>油井（58 口）</span>
+        <span><i style="background:#b05a51"></i>水窜优势通道（东二段）</span>
+        <span><i style="background:#41699b" class="dash"></i>剩余油富集区（东三段）</span>
+        <span><i style="background:#c9a15a"></i>剖面箭头宽度 ∝ 当前配注</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>③ 优化效果对比：未来 2 个季度产油量 / 含水率时序</h2>
+        <span class="hint">悬停读取同一时刻两方案数值 · 灰=维持现状外推，彩=当前编辑方案</span>
+      </div>
+      <div class="chart-box">
+        <svg id="ts-chart" viewBox="0 0 900 330" role="img" aria-label="产油量与含水率时序对比曲线"></svg>
+        <div class="chart-tip" id="ts-tip"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#9aa2a8"></i>含水率 · 维持现状</span>
+        <span><i style="background:#b05a51"></i>含水率 · 当前方案</span>
+        <span><i style="background:#9aa2a8" class="dash"></i>日产油 · 维持现状</span>
+        <span><i style="background:#2f7d6b"></i>日产油 · 当前方案</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>④ 关键指标（未来 2 个季度，对比维持现状外推）</h2>
+        <span class="hint">验收窗口 ≥2 个季度：产油增量、含水上升率、存水率须同看</span>
+      </div>
+      <div class="metrics">
+        <div class="mcard"><span>产油增量 · 第 6 月</span><b id="m-oil">—</b></div>
+        <div class="mcard"><span>含水上升率</span><b id="m-fwrate">—</b></div>
+        <div class="mcard"><span>存水率</span><b id="m-es">—</b></div>
+        <div class="mcard"><span>第 6 月综合含水</span><b id="m-fw6">—</b></div>
+        <div class="mcard"><span>总配注（约束 ±5%）</span><b id="m-qtot">—</b></div>
+      </div>
+      <div class="verdict" id="verdict">正在计算…</div>
+    </div>
+
+    <p class="foot">集总代理模型：层系有效增量 ΔE = Σ(实注ᵢ − 现状ᵢ)·ηᵢ（η：Ed1 0.62 / Ed2 0.30 / Ed3 0.95 / Ed4 0.70，高渗层注水效率低、低渗剩余油层高）；产油增量 = 0.0275%·ΔE，爬坡 1−e^(−t/1.8)；含水上升率 = 2.8 − 0.0025·(现状Ed2−实注Ed2) − 0.0011·(实注Ed3−现状Ed3)；存水率 = 41 + 0.0095·(现状Ed2−实注Ed2) + 0.004·(实注Ed3−现状Ed3) + 0.0004·Δ实注；基线产油 465 t/d、月自然递减 0.8%。模型仅演示趋势，数值以案例验收口径（季度增油 +4.2%、含水上升率 1.9%/年、存水率 44.4%）为准。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 公开文献 / 报道中的注采调配收益（可查证数据点）</h2>
+        <span class="hint">悬停柱条查看完整出处</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">公开数据</span>
+        <span><b>注水调配优化的公开量化结果</b>：从流线监测调配（JPT 报道：全油田日产 +1%–10%）、井间连通性建模优化（MDPI Processes 2023：年产油 +1.3%），到国内智能分注矿场实践（新疆 L9 油藏：2 年累产油 +4.6%、累注水 −3.3%；红18井区：日产油 +28%、含水上升率降超 30%）。绿条为产油提升（向右），蓝条为注水 / 含水上升率下降（向左）。</span>
+        <a href="https://jpt.spe.org/mature-flood-surveillance-using-streamlines" target="_blank" rel="noopener">JPT↗</a>
+      </div>
+      <div class="chart-box">
+        <svg id="lit-chart" viewBox="0 0 900 300" role="img" aria-label="公开文献注水调配收益对比图"></svg>
+        <div class="chart-tip" id="lit-tip"></div>
+      </div>
+      <div class="note-bar"><b>口径提示</b>：各数据点的基线与统计窗口不同（日产 / 年产 / 2 年累计、预测 / 实测），只用于说明「调配优化有正收益」的量级共识，不可横向直接比大小；本案例数值为验收口径（对比无调整外推，2 个季度窗口）。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② 水驱特征曲线标准方法（含水与产量预测的经典工具）</h2>
+        <span class="hint">国内油田开发评价与可采储量标定的主要方法</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>型别</th><th>关系式</th><th>提出者 / 年份</th><th>主要用途</th></tr></thead>
+        <tbody>
+          <tr><td>甲型（马克西莫夫-童宪章）</td><td class="num">lg Wp = a₁ + b₁·Np</td><td>马克西莫夫 1959；童宪章在国内系统推广应用（「童氏图版」）</td><td>中高含水期可采储量标定与含水预测，国内水驱油田开发评价主力方法</td></tr>
+          <tr><td>乙型（沙卓洛夫）</td><td class="num">lg Lp = a₂ + b₂·Np</td><td>沙卓洛夫（前苏联）</td><td>产液量与可采储量预测</td></tr>
+          <tr><td>丙型（西帕切夫 / 谢巴切夫）</td><td class="num">Lp/Np = a₃ + b₃·Lp</td><td>西帕切夫（前苏联）1981</td><td>中低含水期含水—采出程度关系，fw = 1 − (1−b₃·Np)²/a₃ 型换算</td></tr>
+          <tr><td>丁型（纳扎洛夫）</td><td class="num">Lp/Np = a₄ + b₄·Wp</td><td>纳扎洛夫（前苏联）1972</td><td>直线斜率倒数为可动油储量（Nor = 1/b₄），水驱动用程度评价</td></tr>
+        </tbody>
+      </table>
+      <div class="note-bar" style="margin-top:8px"><b>来源</b>：《常用水驱特征曲线理论研究》（石油学报）将平均含水饱和度与出口端含水饱和度的函数关系同 Welge 方程结合，统一导出甲 / 乙 / 丙 / 丁四类曲线（<a href="https://www.syxb-cps.com.cn/CN/article/downloadArticleFile.do?attachType=PDF&amp;id=415" target="_blank" rel="noopener">期刊 PDF↗</a>）；《对水驱特征曲线的正确理解与使用》（石油勘探与开发 2019, 46(4):755）辨析了丙型（1981 西帕切夫）与丁型（1972 纳扎洛夫）的适用条件（<a href="https://www.cpedm.com/article/2019/1000-0747-46-4-755.html" target="_blank" rel="noopener">期刊页↗</a>）。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>③ 指标定义：存水率 / 含水上升率 / 注采比（行业标准口径）</h2>
+        <span class="hint">本案例验收指标的计算依据</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 6366-2005《油田开发主要生产技术指标及计算方法》</b>（2005-07-26 发布、2005-11-01 实施，全部代替 SY/T 6287-1997 与 SY/T 6366-1998）：规定水驱油田开发主要生产技术指标的取值规定、计算方法、参数符号及计量单位，常规注水油田适用，其他类型油田可参照执行。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F1762FBB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>指标</th><th>定义 / 公式</th><th>本案例数值</th></tr></thead>
+        <tbody>
+          <tr><td>存水率 E<sub>S</sub></td><td class="num">E<sub>S</sub> = (W<sub>i</sub> − W<sub>p</sub>) / W<sub>i</sub> = 1 − W<sub>p</sub>/W<sub>i</sub>（地下存水量 ÷ 累积注水量），表征注水利用率</td><td>人工调配 41% → 本方案 44.4%（+3.4 个百分点）</td></tr>
+          <tr><td>水驱指数</td><td class="num">注入水地下存水量 ÷ 累积产油量地下体积</td><td>随存水率同步改善（降低无效水循环）</td></tr>
+          <tr><td>含水上升率</td><td class="num">每采出 1% 地质储量含水率的上升值（df<sub>w</sub>/dR）；工程上也按年化含水升幅考核</td><td>2.8%/年 → 1.9%/年（目标 ≤2.0%/年）</td></tr>
+          <tr><td>注采比</td><td class="num">注入地下体积 ÷ 采出地下体积（注采井数比 = 注水井总数 ÷ 采油井总数）</td><td>1.05（24 注 / 58 采 ≈ 0.41 井数比）</td></tr>
+        </tbody>
+      </table>
+      <div class="note-bar" style="margin-top:8px"><b>存水率公式出处</b>：《萨北开发区阶段存水率和水驱指数变化特征研究》（石油地质与工程）给出同口径定义——存水率 =（累计注水量 − 累计产水量）÷ 注水量，水驱指数 = 地下存水量 ÷ 产油量，二者为高含水期注水效果评价的核心指标（<a href="https://sydzygc.hnyt.sinopec.com/cn/article/pdf/preview/68814f23-3fef-4616-b02d-5fdac157d995.pdf" target="_blank" rel="noopener">期刊 PDF↗</a>）。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>④ 数据来源汇总（作者 / 年份 / 编号均可查证）</h2>
+        <span class="hint">点击来源列链接可跳转原文页面</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>方法 / 对象</th><th>关键数据点</th><th>链接</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

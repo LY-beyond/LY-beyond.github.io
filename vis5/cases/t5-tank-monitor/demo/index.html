@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：储罐液位与泄漏智能监控</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>储罐液位与泄漏智能监控 · 交互式演示</h1>
+      <p class="lead">以 5 万 m³ 外浮顶原油罐（D=60 m，H=19.5 m）为对象：调节液位、温度、呼吸压力、作业工况、腐蚀与沉降等参数，看「视频 + 雷达 + 质量平衡」三源时序、罐底声发射状态、沉降包络与自动预警如何联动。</p>
+    </div>
+    <span class="badge">API 653 / 2350 · GB 50341 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>液位高高 17.5 m / 高 16.8 m、低低 2.2 m（API 2350 溢流防护分级）；呼吸阀设定 +2.0 / −0.3 kPa；雷达精度 ±3 mm、视频读数 ±15–30 mm（夜间退化）；质量平衡按温度体积修正 β=0.7%/10℃ 后做 CUSUM；罐底声发射活动度按 JB/T 10764 / ISO 24489 分级；沉降许用包络按 API 653 Annex B（差异沉降 ≤13 mm/10 m）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 三源交叉校验</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 储罐剖面示意 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 外浮顶罐剖面示意（液位 / 温度分层 / 罐底板）</h2>
+          <span class="hint">液位、温度、沉降与罐底腐蚀随参数实时联动</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="tank" viewBox="0 0 460 268" role="img" aria-label="外浮顶储罐剖面示意图"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>油品（温度分层着色）</span>
+          <span><i style="background:#8a9298"></i>浮顶 / 密封</span>
+          <span><i style="background:#b05a51"></i>罐底腐蚀热点</span>
+          <span><i style="background:#c9a15a"></i>高 / 低报警线</span>
+        </div>
+      </div>
+
+      <!-- ② 三源时序 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 液位 · 温度 · 压力 · 质量平衡残差 24h 时序</h2>
+          <span class="hint">悬停查看任一时刻三源读数 · 收发油 / 搅拌 / 雷达故障段自动标注</span>
+        </div>
+        <div class="chart-box" id="ts-box">
+          <div class="chart-wrap">
+            <canvas id="ts" width="480" height="326" role="img" aria-label="三源液位温度压力时序曲线"></canvas>
+          </div>
+          <div class="chart-tip" id="ts-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>融合液位</span>
+          <span><i style="background:#41699b"></i>雷达读数</span>
+          <span><i style="background:#c9a15a"></i>视频读数</span>
+          <span><i style="background:#b05a51"></i>罐内温度 / 残差 CUSUM</span>
+          <span><i style="background:#8a9298"></i>呼吸压力 / 作业事件</span>
+        </div>
+      </div>
+
+      <!-- ③ 罐底声发射 + 沉降 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 罐底板声发射状态 &amp; 罐周沉降监测</h2>
+          <span class="hint">左：罐底板顶视 AE 活动度热力图（悬停读格）；右：12 测点沉降 vs API 653 许用包络</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart chart-box" id="ae-box">
+            <h3>罐底板 AE 活动度（顶视 D=60 m）</h3>
+            <canvas id="ae" width="440" height="252" role="img" aria-label="罐底板声发射活动度热力图"></canvas>
+            <div class="chart-tip" id="ae-tip"></div>
+          </div>
+          <div class="chart">
+            <h3>罐周沉降雷达图（12 测点）</h3>
+            <svg id="settle" viewBox="0 0 440 252" role="img" aria-label="罐周沉降监测雷达图"></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 指标卡 + 判定 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 剩余安全裕度</h2>
+          <span class="hint">距最近报警 / 失效边界的裕度，超限自动变红</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>液位安全裕度</span><b id="m-level">—</b></div>
+          <div class="mcard"><span>呼吸压力裕度</span><b id="m-pres">—</b></div>
+          <div class="mcard"><span>沉降差异裕度</span><b id="m-settle">—</b></div>
+          <div class="mcard"><span>罐底 AE 腐蚀等级</span><b id="m-corr">—</b></div>
+          <div class="mcard"><span>泄漏疑似置信度</span><b id="m-leak">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在评估…</div>
+      </div>
+
+      <!-- ⑤ 预警时间线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 异常工况自动预警时间线</h2>
+          <span class="hint">按当前工况自动生成，含作业事件、故障识别与处置建议</span>
+        </div>
+        <ul class="tl" id="timeline"></ul>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑥ 工况与监测参数（9 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>罐内液位 <output id="o-level">12.5 m</output></label>
+            <input type="range" id="s-level" min="2" max="18" step="0.1" value="12.5">
+            <span class="tip">高高 17.5 m 联锁 / 低低 2.2 m 浮顶落地保护</span>
+          </div>
+          <div class="ctl">
+            <label>罐内油温 <output id="o-temp">25 ℃</output></label>
+            <input type="range" id="s-temp" min="0" max="45" step="1" value="25">
+            <span class="tip">10 ℃ 温差 ≈ 0.7% 体积，质量平衡须修正</span>
+          </div>
+          <div class="ctl">
+            <label>呼吸压力 <output id="o-pres">0.60 kPa</output></label>
+            <input type="range" id="s-pres" min="-0.5" max="2.5" step="0.05" value="0.6">
+            <span class="tip">呼吸阀设定 +2.0 / −0.3 kPa，负压损伤密封</span>
+          </div>
+          <div class="ctl">
+            <label>作业工况</label>
+            <select id="s-opmode">
+              <option value="idle" selected>静止（无收发油）</option>
+              <option value="in">收油 800 m³/h（03–09h）</option>
+              <option value="out">付油 800 m³/h（10–16h）</option>
+              <option value="stir">罐内搅拌（12–15h）</option>
+            </select>
+            <span class="tip">单罐日均收付 1,600 m³，年周转 12 次</span>
+          </div>
+          <div class="ctl">
+            <label>雷达状态</label>
+            <select id="s-radar">
+              <option value="ok" selected>正常</option>
+              <option value="frozen">冻结（13–15.5h 输出不变）</option>
+              <option value="spike">跳变（偶发 ±0.25 m）</option>
+            </select>
+            <span class="tip">冻结段方差≈0，自动降权并切换主源</span>
+          </div>
+          <div class="ctl">
+            <label>罐底腐蚀程度 <output id="o-corr">35 %</output></label>
+            <input type="range" id="s-corr" min="0" max="100" step="1" value="35">
+            <span class="tip">驱动声发射活动度与腐蚀等级（I–V）</span>
+          </div>
+          <div class="ctl">
+            <label>不均匀沉降幅值 <output id="o-settle">18 mm</output></label>
+            <input type="range" id="s-settle" min="0" max="60" step="1" value="18">
+            <span class="tip">API 653 Annex B：差异沉降 ≤13 mm/10 m</span>
+          </div>
+          <div class="ctl">
+            <label>渗漏征兆强度 <output id="o-leak">15 %</output></label>
+            <input type="range" id="s-leak" min="0" max="100" step="5" value="15">
+            <span class="tip">14h 起罐底渗漏，残差 CUSUM 累积超阈报警</span>
+          </div>
+          <div class="ctl">
+            <label>时间游标 <output id="o-cursor">10.0 h</output></label>
+            <input type="range" id="s-cursor" min="0" max="24" step="0.5" value="10">
+            <span class="tip">时序锚点：当前读数对齐游标时刻</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">罐容 5 万 m³ · 1 m 液位 ≈ 2,827 m³</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型口径：液位(t) = 当前液位 + 收发油积分差 + 波浪 ±8 mm；雷达读数 = 液位 + ±3 mm（冻结段保持初值，跳变段 ±0.25 m）；视频读数 = 液位 + ±15 mm（夜间 22–06h ±30 mm）；质量平衡残差按 β=7×10⁻⁴/℃ 温度修正后 CUSUM 累积，超 4 mm 判泄漏疑似（双通道：视觉油迹同时确认）；沉降 s(θ) = 幅值·(0.5+0.5cos(θ−θ₀)) + 噪声 ±3 mm，许用包络 15+30·(0.5+0.5cos) mm；AE 活动度 = 基础随机场 × 腐蚀程度 + 热点簇增强，按 JB/T 10764 分 I–V 级。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+
+    <div class="section">
+      <div class="sec-head"><h2>标准规范依据（5 项）</h2><span class="hint">本 demo 的报警阈值、许用包络与分级口径来源</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>标准 / 编号</th><th>关键内容</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td>
+            <td><b>API Std 653</b>，第 5 版（2014，Add.1 2018 / Add.3 2023）<br><span class="muted">Tank Inspection, Repair, Alteration, and Reconstruction</span></td>
+            <td>储罐在役检验、维修与改造；Annex B 给出罐底/罐周沉降测量与余弦包络评估方法，水压试验差异沉降 &gt;13 mm/10 m 须报告</td>
+            <td>「沉降雷达图」的 12 测点布置、许用包络曲线与差异沉降判据；沉降超限预警的处置建议</td>
+          </tr>
+          <tr>
+            <td class="num">2</td>
+            <td><b>API Std 2350</b>，第 5 版（2020）<br><span class="muted">Overfill Prevention for Storage Tanks in Petroleum Facilities</span></td>
+            <td>石油设施储罐溢流防护流程（OPP）：液位高 / 高高分级报警、独立联锁与收油切断管理</td>
+            <td>液位高 16.8 m 预警、高高 17.5 m 联锁的阈值与「先预警后联锁」的预警时间线分级</td>
+          </tr>
+          <tr>
+            <td class="num">3</td>
+            <td><b>API RP 651</b>，第 4 版（2014）<br><span class="muted">Cathodic Protection of Aboveground Petroleum Storage Tanks</span></td>
+            <td>地上储罐罐底板土壤侧阴极保护设计与电位准则，保护不足区是罐底外壁腐蚀主因</td>
+            <td>「罐底腐蚀程度」参数的土壤侧腐蚀背景设定，及 AE 热点多分布于罐底边缘的建模依据</td>
+          </tr>
+          <tr>
+            <td class="num">4</td>
+            <td><b>ISO 24489:2024</b><br><span class="muted">NDT — Acoustic emission testing — Detection of corrosion at metallic storage tank floors</span></td>
+            <td>常压 / 低压金属储罐罐底板腐蚀声发射检测方法与结果分级体系</td>
+            <td>罐底 AE 热力图的环带 × 方位网格划分与活动度分级口径</td>
+          </tr>
+          <tr>
+            <td class="num">5</td>
+            <td><b>GB 50341-2014</b><br><span class="muted">立式圆筒形钢制焊接油罐设计规范（第 8 章 浮顶）</span></td>
+            <td>外浮顶结构、密封装置、排水与紧急排水装置设计要求；大型浮顶罐罐型参数基准</td>
+            <td>剖面示意图的浮顶、一/二次密封、排水口结构，及 D=60 m × H=19.5 m 罐型设定</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>检测方法与研究文献（3 项）</h2><span class="hint">声发射检测评价与腐蚀定位的实测依据</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>文献 / 编号</th><th>关键内容</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="num">6</td>
+            <td><b>ASTM E1930/E1930M-17</b><br><span class="muted">Standard Practice for Examination of Liquid-Filled Atmospheric and Low-Pressure Metal Storage Tanks Using Acoustic Emission</span></td>
+            <td>充液常压储罐声发射检验标准做法：传感器罐壁布置、灵敏度校验与 hits/能量统计评价</td>
+            <td>AE 热力图活动度量化方式（hits 统计→0–100% 归一）与传感器环带布置参考</td>
+          </tr>
+          <tr>
+            <td class="num">7</td>
+            <td><b>JB/T 10764-2023</b><br><span class="muted">无损检测 常压金属储罐声发射检测及评价方法（代替 JB/T 10764-2007）</span></td>
+            <td>国内常压储罐 AE 检测评价标准：按声源活动度 / 强度分级并给出开罐检验优先级建议</td>
+            <td>「罐底 AE 腐蚀等级」I–V 分级与「优先安排开罐检验」预警文案的判据来源</td>
+          </tr>
+          <tr>
+            <td class="num">8</td>
+            <td><b>Hua W., Chen Y., Zhao X. et al. (2024)</b><br><span class="muted">Sensors 24(10):3053，DOI 10.3390/s24103053</span></td>
+            <td>基于时差定位的油罐罐底声发射腐蚀检测：AE 源定位评估罐底腐蚀状态，与开罐验证结果一致</td>
+            <td>AE 热力图热点簇（2 环带 75°–120°）定位展示与「定位辅助复核」交互的文献依据</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>口径说明</h2></div>
+      <p class="hint" style="line-height:1.7">
+        本 demo 的罐型（5 万 m³ 外浮顶罐、D=60 m、H=19.5 m）、雷达精度 ±3 mm、波浪起伏 ±8 mm、泄漏提前 2.6 h 等业务参数取自案例背景（浙江某炼化企业原油库）；
+        报警阈值（液位高高/高/低/低低、呼吸阀设定）取自 API 2350 与通用浮顶罐设计惯例；沉降与罐底检测判据取自上述标准与文献。
+        所有时序数据为按公开口径生成的教学用模拟数据，非真实罐区记录。
+      </p>
+    </div>
+
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

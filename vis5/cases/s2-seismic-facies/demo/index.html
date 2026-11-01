@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：地震相智能分类与相带概率体</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>地震相智能分类 · 交互式演示</h1>
+      <p class="lead">程序合成一条深水扇地震剖面（Ricker 子波 + 层状模型），逐道提取波形特征并聚类成相带。调节分类数、噪声、主频与道数，观察相带划分如何变化。</p>
+    </div>
+    <span class="badge">白云凹陷深水扇 486 km² 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>叠后三维，面元 25×25 m，采样 2 ms，主频 28 Hz；5 类相中半深海泥约占 71% 面积；井点标签 186 个。本 demo 全部数据由程序实时合成，不含任何外部数据文件。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 合成剖面分类</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源 · 文献依据</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：合成地震剖面 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 合成地震剖面（Ricker 子波 × 深水扇层状模型）</h2>
+          <span class="hint">悬停读道号 / 时间 / 振幅 / 真值相带</span>
+        </div>
+        <div class="chart-box" id="box-seis">
+          <canvas id="cv-seis" width="880" height="240" role="img" aria-label="合成地震剖面"></canvas>
+          <div class="chart-tip" id="tip-seis"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>真值：水道砂（高振幅、中等连续）</span>
+          <span><i style="background:#c9a15a"></i>朵叶砂（高振幅、连续席状）</span>
+          <span><i style="background:#2f7d6b"></i>半深海泥（平行连续）</span>
+          <span><i style="background:#41699b"></i>滑塌带（杂乱、弱振幅）</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：特征散点 + 占比对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 波形特征空间与相带占比</h2>
+          <span class="hint">左：RMS 振幅 × 主频散点（悬停读数）；右：分类占比 vs 真值占比</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>波形特征散点（每道一个点）</h3>
+            <div class="chart-box" id="box-scat">
+              <canvas id="cv-scat" width="430" height="228" role="img" aria-label="波形特征散点图"></canvas>
+              <div class="chart-tip" id="tip-scat"></div>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>相带面积占比：聚类 vs 真值</h3>
+            <svg id="sv-prop" viewBox="0 0 430 228" role="img" aria-label="相带占比对比条形图"></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 3：分类相带剖面 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 聚类相带剖面（逐道着色平铺）</h2>
+          <span class="hint">每道按所属类着色，叠印波形；悬停读类别与置信度</span>
+        </div>
+        <div class="chart-box" id="box-fac">
+          <canvas id="cv-fac" width="880" height="210" role="img" aria-label="地震相分类剖面"></canvas>
+          <div class="chart-tip" id="tip-fac"></div>
+        </div>
+        <div class="legend" id="fac-legend"></div>
+      </div>
+
+      <!-- 面板 4：典型道波形对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 各类典型道波形对比（质心最近道）</h2>
+          <span class="hint">振幅高低与波形胖瘦是分类的主要依据</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="sv-wave" viewBox="0 0 880 150" role="img" aria-label="典型道波形对比"></svg>
+        </div>
+      </div>
+
+      <!-- 面板 5：指标卡 + 相带-沉积相对应 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 分类质量指标与地震相-沉积相对应</h2>
+          <span class="hint">符合率 = 聚类按多数票映射到真值后的逐道命中率</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>有效道数</span><b id="m-ntr">—</b></div>
+          <div class="mcard"><span>类间分离度</span><b id="m-sep">—</b></div>
+          <div class="mcard"><span>高置信道占比</span><b id="m-conf">—</b></div>
+          <div class="mcard"><span>真值符合率</span><b id="m-acc">—</b></div>
+          <div class="mcard"><span>优势类占比</span><b id="m-dom">—</b></div>
+        </div>
+        <table class="map-table" id="map-table">
+          <thead><tr><th>地震相（类）</th><th>可观测反射特征</th><th>沉积解释</th><th>储层意义</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>参数调节</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>相带分类数 K <output id="o-k">4</output></label>
+            <input type="range" id="s-k" min="2" max="5" step="1" value="4">
+            <span class="tip">对应相带字典的类别数（案例为 5 类）</span>
+          </div>
+          <div class="ctl">
+            <label>噪声水平 <output id="o-noise">15 %</output></label>
+            <input type="range" id="s-noise" min="0" max="60" step="1" value="15">
+            <span class="tip">随机噪声 / 信号 RMS，考验分类稳健性</span>
+          </div>
+          <div class="ctl">
+            <label>子波主频 <output id="o-freq">28 Hz</output></label>
+            <input type="range" id="s-freq" min="20" max="40" step="1" value="28">
+            <span class="tip">案例工区主频 28 Hz，影响垂向分辨率</span>
+          </div>
+          <div class="ctl">
+            <label>剖面道数 <output id="o-ntr">128 道</output></label>
+            <input type="range" id="s-ntr" min="96" max="192" step="16" value="128">
+            <span class="tip">对应 3.2–6.4 km 剖面长度</span>
+          </div>
+          <div class="ctl">
+            <label>特征平滑窗 <output id="o-win">3 道</output></label>
+            <input type="range" id="s-win" min="1" max="9" step="2" value="3">
+            <span class="tip">横向平滑抑制道间抖动，过大会抹平窄水道</span>
+          </div>
+          <div class="ctl">
+            <label>剖面显示方式</label>
+            <select id="s-disp">
+              <option value="va" selected>波形 + 变面积</option>
+              <option value="vd">变密度</option>
+            </select>
+            <span class="tip">仅影响面板 ① 的显示，不影响分类</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">采样 2 ms · 时窗约 1 s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">方法：层状反射系数模型（深水扇：水道 / 朵叶 / 滑塌透镜体 + 半深海泥背景）× Ricker 子波褶积 → 逐道提取 RMS 振幅、主频（过零率）、横向连续性 3 个归一化特征 → k-means 聚类（思想同 SOM 波形分类）→ 类按平均振幅排序命名。全部计算在本页内完成，无网络请求。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>真实文献依据（8 条）</h2><span class="hint">每条注明在本 demo 中的用途</span></div>
+
+      <div class="src-bar">
+        <span class="tag real">经典理论</span>
+        <span><b>Mitchum, Vail &amp; Thompson (1977), AAPG Memoir 26: 53–62</b>（Seismic Stratigraphy，Part 2）：定义地震相单元的外部形态与内部反射结构（连续性、振幅、频率、外形），是「相带字典」的术语源头。</span>
+        <span class="use">→ 本 demo 相带字典与特征口径（连续性/振幅/频率三特征）的依据</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">经典理论</span>
+        <span><b>Vail et al. (1977), AAPG Memoir 26: 49–212</b>（Seismic Stratigraphy，Part 3）：地震反射近似等时面、反射结构指示沉积环境，确立了「从剖面反射特征推沉积相」的基本逻辑。</span>
+        <span class="use">→ 面板 ⑤ 地震相-沉积相对应表的解释框架</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">子波模型</span>
+        <span><b>Ricker, N. (1953), Geophysics 18(1): 10–40</b>：提出 Ricker 子波解析式 w(t)=(1−2π²f²t²)·e^(−π²f²t²)，是合成地震道的标准零相位子波。</span>
+        <span class="use">→ 面板 ① 合成剖面的褶积子波（主频滑块即其 f）</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">算法源头</span>
+        <span><b>Kohonen, T. (1982), Biological Cybernetics 43: 59–69</b>：自组织特征映射（SOM）原始论文，无监督把高维波形向量保序映射到二维网格。</span>
+        <span class="use">→ 本 demo 聚类思想来源；页内用 k-means 做轻量实现</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">方法综述</span>
+        <span><b>Coléou, Poupon &amp; Azbel (2003), The Leading Edge 22(10): 942–953</b>：无监督地震相分类综述，给出「属性提取 → 波形分类 → 相带图」的标准流程与类数选择讨论。</span>
+        <span class="use">→ 面板 ②→③ 的流程与分类数 K 滑块的设计依据</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">地质模型</span>
+        <span><b>Posamentier &amp; Kolla (2003), J. Sedimentary Research 73(3): 367–388</b>：深水沉积元素（水道、朵叶、滑塌）的地震地貌形态与叠置样式。</span>
+        <span class="use">→ 合成模型中水道透镜体、朵叶席状体、滑塌杂乱带的几何参数来源</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">机器学习</span>
+        <span><b>Wrona, Pan, Gawthorpe &amp; Fossen (2018), Geophysics 83(5): O83–O95</b>：用波形属性 + 随机森林做地震相分析，强调按类评估（macro-F1）而非总体准确率。</span>
+        <span class="use">→ 面板 ⑤ 指标口径（符合率 + 分离度，不报单一准确率）</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">深度学习</span>
+        <span><b>Zhao, T. (2018), SEG Expanded Abstracts: 2046–2050；Liu et al. (2020), Geophysics 85(4): O47–O58</b>：深度 CNN / 半监督 GAN 地震相分类，处理标签稀疏问题。</span>
+        <span class="use">→ 对应案例中 3D 分类网络 + 伪标签自训练的工程路线</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>文献 → demo 参数对照</h2><span class="hint">案例工区参数与文献口径的对应关系</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>demo 元素</th><th>取值 / 做法</th><th>依据</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Ricker 子波主频</td><td class="num">28 Hz（滑块 20–40）</td><td>案例工区主频 28 Hz；Ricker (1953)</td></tr>
+          <tr><td class="num">2</td><td>采样率 / 时窗</td><td class="num">2 ms / 约 1 s</td><td>案例叠后数据采样 2 ms</td></tr>
+          <tr><td class="num">3</td><td>波形特征</td><td>RMS 振幅、主频、横向连续性</td><td>Mitchum et al. (1977) 地震相描述三要素；Wrona et al. (2018) 属性集</td></tr>
+          <tr><td class="num">4</td><td>无监督聚类</td><td>k-means（SOM 的轻量近似）</td><td>Kohonen (1982)；Coléou et al. (2003)</td></tr>
+          <tr><td class="num">5</td><td>深水扇几何体</td><td>水道透镜 / 朵叶席状 / 滑塌杂乱带</td><td>Posamentier &amp; Kolla (2003)</td></tr>
+          <tr><td class="num">6</td><td>相带占比基准</td><td class="num">半深海泥约 71%</td><td>案例：半深海泥占面积 71%、砂岩相合计 12%</td></tr>
+          <tr><td class="num">7</td><td>质量指标</td><td>符合率、分离度、高置信占比</td><td>Wrona et al. (2018) 按类评估；案例留出井符合率 ≥75%</td></tr>
+          <tr><td class="num">8</td><td>分类数 K</td><td class="num">2–5（默认 4）</td><td>解释员分歧 5/7/9 → 字典统一为 5 类的简化演示</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>说明</h2></div>
+      <p class="hint" style="line-height:1.7">本 demo 为教学化简化：真实案例用 128×128×32 三维小块 × 8 属性通道训练 3D ResNet，并按井留一验证、伪标签自训练外推；此处以单条二维剖面 + 3 个手工特征 + 无监督聚类复现「波形特征 → 相带图」的核心思想。噪声滑块演示信噪比下降时无监督分类的退化（对应案例中「高熵低置信区」的成因）；平滑窗滑块演示横向连续性约束与窄水道分辨率的权衡（对应边界平滑正则与地震分辨率极限）。</p>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

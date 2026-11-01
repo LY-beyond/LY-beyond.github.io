@@ -39,12 +39,12 @@
   }
 
   function drawSeis(m) {
-    var s = '<rect x="0" y="0" width="430" height="210" fill="#0e130d" rx="6"/>';
+    var s = '<rect x="0" y="0" width="430" height="210" fill="#edf2ec" rx="6"/>';
     s += '<defs><clipPath id="plotclip"><rect x="' + X0 + '" y="' + Y0 + '" width="' + (X1 - X0)
       + '" height="' + (Y1 - Y0) + '"/></clipPath>'
       + '<pattern id="traces" width="9" height="9" patternUnits="userSpaceOnUse">'
-      + '<line x1="4" y1="0" x2="4" y2="9" stroke="#1c2318" stroke-width="2"/></pattern></defs>';
-    s += '<text x="8" y="11" font-size="8.5" fill="#a9b0a0">振幅剖面 · Inline 方向 · 红蓝条带为同相轴</text>';
+      + '<line x1="4" y1="0" x2="4" y2="9" stroke="#e0e7dc" stroke-width="2"/></pattern></defs>';
+    s += '<text x="8" y="11" font-size="8.5" fill="#585f4f">振幅剖面 · Inline 方向 · 红蓝条带为同相轴</text>';
     s += '<rect x="' + X0 + '" y="' + Y0 + '" width="' + (X1 - X0) + '" height="' + (Y1 - Y0)
       + '" fill="url(#traces)" clip-path="url(#plotclip)"/>';
 
@@ -52,22 +52,22 @@
     for (i = 0; i < 4; i++) {
       t = Y0 + i / 3 * (Y1 - Y0);
       s += '<line x1="' + X0 + '" y1="' + t.toFixed(1) + '" x2="' + X1 + '" y2="' + t.toFixed(1)
-        + '" stroke="#20261b" stroke-width="1"/>';
+        + '" stroke="#dee4d9" stroke-width="1"/>';
       s += '<text x="' + (X0 - 4) + '" y="' + (t + 2.5).toFixed(1)
-        + '" font-size="8" fill="#7c8474" text-anchor="end">' + (i * 1000) + '</text>';
+        + '" font-size="8" fill="#838b7b" text-anchor="end">' + (i * 1000) + '</text>';
     }
-    s += '<text x="7" y="' + (Y0 + 22) + '" font-size="8" fill="#7c8474" transform="rotate(-90 7 ' + (Y0 + 22) + ')">TWT (ms)</text>';
+    s += '<text x="7" y="' + (Y0 + 22) + '" font-size="8" fill="#838b7b" transform="rotate(-90 7 ' + (Y0 + 22) + ')">TWT (ms)</text>';
 
     for (i = 0; i <= 3; i++) {
       t = X0 + i / 3 * (X1 - X0) - (i === 3 ? 8 : 0);
-      s += '<text x="' + t.toFixed(1) + '" y="' + (Y1 + 11) + '" font-size="8" fill="#7c8474" text-anchor="middle">'
+      s += '<text x="' + t.toFixed(1) + '" y="' + (Y1 + 11) + '" font-size="8" fill="#838b7b" text-anchor="middle">'
         + (i * 2) + ' km</text>';
     }
 
     FAULTS.forEach(function (f) {
       var w = 6 + f.score * 7;
       s += '<rect x="' + (f.x - w / 2) + '" y="' + Y0 + '" width="' + w + '" height="' + (Y1 - Y0)
-        + '" fill="#d0a85c" opacity="' + (0.03 + f.score * 0.05).toFixed(3) + '" clip-path="url(#plotclip)"/>';
+        + '" fill="#a37b2f" opacity="' + (0.03 + f.score * 0.05).toFixed(3) + '" clip-path="url(#plotclip)"/>';
     });
 
     s += '<g clip-path="url(#plotclip)">';
@@ -82,7 +82,7 @@
         pts.push(x.toFixed(1) + ',' + y.toFixed(1));
       }
       var op = i % 4 === 0 ? 0.50 : 0.30;
-      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#c3cdb9" stroke-width="'
+      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#3c4632" stroke-width="'
         + (i % 4 === 0 ? 1.2 : 0.8) + '" opacity="' + op + '"/>';
     }
     s += '</g>';
@@ -90,13 +90,13 @@
     FAULTS.forEach(function (f) {
       if (!f.manual) return;
       s += '<line x1="' + f.x + '" y1="' + Y0 + '" x2="' + f.x + '" y2="' + Y1
-        + '" stroke="#7fa7cf" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.85"/>';
-      s += '<text x="' + (f.x + 3) + '" y="' + (Y0 + 8) + '" font-size="8" fill="#7fa7cf">' + f.th + ' m</text>';
+        + '" stroke="#305880" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.85"/>';
+      s += '<text x="' + (f.x + 3) + '" y="' + (Y0 + 8) + '" font-size="8" fill="#305880">' + f.th + ' m</text>';
     });
 
     m.det.forEach(function (d) {
       var x = d.f.x + d.dx;
-      var col = d.manual ? '#d0a85c' : '#cf7466';
+      var col = d.manual ? '#a37b2f' : '#993e30';
       s += '<line x1="' + x.toFixed(1) + '" y1="' + Y0 + '" x2="' + x.toFixed(1) + '" y2="' + Y1
         + '" stroke="' + col + '" stroke-width="2"/>';
       s += '<path d="M' + (x - 3).toFixed(1) + ' ' + (Y0 + 2.5) + ' L' + x.toFixed(1) + ' ' + Y0
@@ -106,19 +106,19 @@
 
     if (!m.det.length) {
       s += '<text x="' + ((X0 + X1) / 2) + '" y="' + ((Y0 + Y1) / 2)
-        + '" font-size="9.5" fill="#cf7466" text-anchor="middle">无断层线通过当前阈值与最小断距</text>';
+        + '" font-size="9.5" fill="#993e30" text-anchor="middle">无断层线通过当前阈值与最小断距</text>';
     }
 
     s += '<line x1="' + X0 + '" y1="' + (Y1 + 19) + '" x2="' + (X0 + 15) + '" y2="' + (Y1 + 19)
-      + '" stroke="#7fa7cf" stroke-width="1.4" stroke-dasharray="4 3"/>';
-    s += '<text x="' + (X0 + 20) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#a9b0a0">人工解释</text>';
+      + '" stroke="#305880" stroke-width="1.4" stroke-dasharray="4 3"/>';
+    s += '<text x="' + (X0 + 20) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#585f4f">人工解释</text>';
     s += '<line x1="' + (X0 + 63) + '" y1="' + (Y1 + 19) + '" x2="' + (X0 + 77) + '" y2="' + (Y1 + 19)
-      + '" stroke="#d0a85c" stroke-width="2"/>';
-    s += '<text x="' + (X0 + 82) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#a9b0a0">模型检出</text>';
+      + '" stroke="#a37b2f" stroke-width="2"/>';
+    s += '<text x="' + (X0 + 82) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#585f4f">模型检出</text>';
     s += '<line x1="' + (X0 + 126) + '" y1="' + (Y1 + 19) + '" x2="' + (X0 + 140) + '" y2="' + (Y1 + 19)
-      + '" stroke="#c3cdb9" stroke-width="1.4" opacity="0.6"/>';
-    s += '<text x="' + (X0 + 145) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#a9b0a0">同相轴</text>';
-    s += '<text x="' + X1 + '" y="' + (Y1 + 23) + '" font-size="8" fill="#7c8474" text-anchor="end">'
+      + '" stroke="#3c4632" stroke-width="1.4" opacity="0.6"/>';
+    s += '<text x="' + (X0 + 145) + '" y="' + (Y1 + 23) + '" font-size="8" fill="#585f4f">同相轴</text>';
+    s += '<text x="' + X1 + '" y="' + (Y1 + 23) + '" font-size="8" fill="#838b7b" text-anchor="end">'
       + '阈值 ' + state.thr.toFixed(2) + ' · 最小断距 ' + state.minThrow + ' m</text>';
 
     $('seis').innerHTML = s;

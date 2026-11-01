@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：井眼轨迹智能导向控制</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>井眼轨迹智能导向控制 · 交互式演示</h1>
+      <p class="lead">胜利油田老区丛式井平台 6 口定向井：系统辨识 + MPC 每柱（12 m）给出工具面角与滑动长度建议，在半径 8 m 靶窗与 4.5 m 防碰红线内滚动纠偏。切换井号、拖动测点游标查看联动读数。</p>
+    </div>
+    <span class="badge">系统辨识 + MPC · 建议层</span>
+  </div>
+
+  <p class="data-src"><b>工况口径：</b>造斜点 1200 m、完钻井深 2800 m、设计水平位移 1100 m、靶区窗口半径 8 m；周边 120 口老井最近井底距离 5.8 m；测点间隔 12 m；历史人工纠偏 14 次/井、滑动进尺占比 38%、狗腿度 3.2°/30 m。本页 3 口井为 MPC 建议层模拟轨迹，指标由轨迹数据实时统计。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">导向控制模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 导向控制模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+
+    <div class="section">
+      <div class="sec-head"><h2>井选择与测点游标</h2><span class="hint">指标卡由当前井轨迹实时统计</span></div>
+      <div class="ctrlbar">
+        <div class="well-btns" id="well-btns">
+          <button class="well-btn active" data-well="0" type="button">P-1 井</button>
+          <button class="well-btn" data-well="1" type="button">P-2 井</button>
+          <button class="well-btn" data-well="2" type="button">P-3 井</button>
+        </div>
+        <div class="cursor-ctl">
+          <label>测点游标 <output id="o-cursor">2460 m</output></label>
+          <input type="range" id="s-cursor" min="1200" max="2800" step="12" value="2460">
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="mcard"><span>靶心偏差（窗口 8 m）</span><b id="m-miss">—</b></div>
+        <div class="mcard"><span>最大狗腿度</span><b id="m-dls">—</b></div>
+        <div class="mcard"><span>最小防碰距离</span><b id="m-anti">—</b></div>
+        <div class="mcard"><span>滑动进尺占比</span><b id="m-slide">—</b></div>
+        <div class="mcard"><span>纠偏次数</span><b id="m-corr">—</b></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>① 轨迹垂直剖面：设计轨道 vs 实钻轨迹</h2><span class="hint">悬停读取井深 / 井斜 / 方位 · 金色点为测点游标</span></div>
+      <div class="chart-box" id="box-profile">
+        <svg id="sec-profile" viewBox="0 0 920 420" role="img" aria-label="轨迹垂直剖面图"></svg>
+        <div class="chart-tip" id="tip-profile"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#8a9298"></i>设计轨道（造斜点 1200 m，造斜率 2°/30 m）</span>
+        <span><i style="background:#2f7d6b"></i>实钻轨迹（MPC 建议层）</span>
+        <span><i style="background:#b05a51"></i>纠偏点（工具面调整）</span>
+        <span><i style="background:#c9a15a"></i>靶区窗口（半径 8 m 圆柱靶）</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 井斜角 / 方位角沿井深</h2><span class="hint">悬停读取测点 · 虚线为设计值</span></div>
+      <div class="chart-box" id="box-angles">
+        <svg id="sec-angles" viewBox="0 0 920 260" role="img" aria-label="井斜角与方位角沿井深曲线"></svg>
+        <div class="chart-tip" id="tip-angles"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f7d6b"></i>井斜角（左轴，°）</span>
+        <span><i style="background:#41699b"></i>方位角（右轴，°）</span>
+        <span><i style="background:#8a9298"></i>设计井斜 / 设计方位 65°</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 防碰扫描：与最近老井距离沿井深</h2><span class="hint">4.5 m 防碰红线 · 误差椭圆放大 1.5 倍口径</span></div>
+      <div class="chart-box" id="box-anti">
+        <canvas id="sec-anti" width="920" height="260" role="img" aria-label="防碰扫描图"></canvas>
+        <div class="chart-tip" id="tip-anti"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f7d6b"></i>与最近老井井眼距离</span>
+        <span><i style="background:#b05a51"></i>防碰红线 4.5 m</span>
+        <span><i style="background:#c9a15a"></i>最近点标注</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 工具面建议面板（当前测段）</h2><span class="hint">随测点游标联动 · 防碰余量 &lt; 6 m 时只报警不给建议</span></div>
+      <div class="metrics adv">
+        <div class="mcard"><span>当前测深 / 井斜 / 方位</span><b id="a-sta">—</b></div>
+        <div class="mcard"><span>与设计偏差（水平/横向）</span><b id="a-dev">—</b></div>
+        <div class="mcard"><span>建议工具面角</span><b id="a-tf">—</b></div>
+        <div class="mcard"><span>建议滑动长度</span><b id="a-slide">—</b></div>
+        <div class="mcard"><span>预期造斜率</span><b id="a-build">—</b></div>
+      </div>
+      <div class="verdict" id="a-verdict">—</div>
+      <ul class="reasons" id="a-reasons"></ul>
+    </div>
+
+    <p class="foot">模拟口径：设计轨道为「直—增—稳」三段式（造斜点 1200 m、造斜率 2°/30 m、设计方位 65°）；实钻轨迹由误差随机游走 + MPC 纠偏回拉生成，纠偏点处工具面回拉、滑动段记录参与滑动占比统计；防碰距离曲线按 120 口邻井扫描合成，全程含 1.5 倍误差椭圆放大。地层倾角：2400 m 以上 6°、以下 11°（响应增益分段先验）。</p>
+  </div>
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 公开文献与行业标准（真实可查）</h2><span class="hint">点击 DOI 跳转出版方页面</span></div>
+      <div class="src-bar">
+        <span class="tag real">真实来源</span>
+        <span>测斜计算、MWD 精度、防碰扫描与旋转导向控制的公开文献 / 行业标准。本页图表数据均由文献公开公式推导，不引入虚构数值。</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>关键口径</th><th>本 demo 采用处</th><th>链接</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Taylor &amp; Mason (1972), SPE 3362-PA, <i>SPEJ</i></td><td>测斜计算</td><td>最小曲率半径法（最小曲率法）系统推导，替代切线法 / 平均角法成为行业测斜标准</td><td>轨迹积分方法依据</td><td><a href="https://doi.org/10.2118/3362-PA" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">2</td><td>Sawaryn &amp; Thorogood (2005), SPE 84246-PA, <i>SPE D&amp;C</i> 20(1)</td><td>测斜计算</td><td>最小曲率法公式汇编：比例因子 RF = (2/θ)·tan(θ/2)，含方位曲率与挠度修正</td><td>下图 ② RF 曲线</td><td><a href="https://doi.org/10.2118/84246-PA" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">3</td><td>Williamson (2000), SPE 67616-PA, <i>SPE D&amp;C</i> 15(4)</td><td>MWD 精度</td><td>ISCWSA 误差模型：MWD 井斜 / 方位 1σ 误差源量化，位置不确定度随测深累积</td><td>下图 ③ 横向不确定度</td><td><a href="https://doi.org/10.2118/67616-PA" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">4</td><td>Stockhausen &amp; Lesso (2003), SPE/IADC 79917-MS</td><td>MWD 精度</td><td>连续井斜 / 方位测量显著改善井眼定位（尤其垂深），成为现代 MWD 标配</td><td>防碰误差椭圆口径</td><td><a href="https://doi.org/10.2118/79917-MS" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">5</td><td>Poedjono et al. (2007), SPE/IADC 108279-MS</td><td>防碰扫描</td><td>陆上与海上钻井碰撞风险最小化：分离系数 SF = 中心距 ÷ 两井误差椭圆半径之和，行进圆柱扫描</td><td>防碰图与 4.5 m 红线口径</td><td><a href="https://doi.org/10.2118/108279-MS" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">6</td><td>Christoforou &amp; Yigit (2003), SPE 74401-PA, <i>SPE D&amp;C</i></td><td>旋转导向</td><td>旋转导向（RSS）钻具动力学建模：工具面 / 推靠力到造斜响应的传递关系</td><td>响应模型机理项参考</td><td><a href="https://doi.org/10.2118/74401-PA" target="_blank" rel="noopener">DOI↗</a></td></tr>
+          <tr><td class="num">7</td><td>Lubinski &amp; Woods (1953), API Drill. Prod. Practice</td><td>造斜机理</td><td>地层各向异性指数决定自然造斜 / 降斜趋势——地层倾角突变引起造斜率漂移的经典解释</td><td>地层倾角 6°→11° 先验</td><td><a href="https://onepetro.org" target="_blank" rel="noopener">OnePetro↗</a></td></tr>
+          <tr><td class="num">8</td><td>ISCWSA（井眼测斜精度行业指导委员会）</td><td>行业标准</td><td>MWD 误差模型维护与碰撞避免计算规范；常用门槛：SF &lt; 1.5 关注、SF &lt; 1.0 误差椭圆相交须停钻评估</td><td>防碰扫描口径</td><td><a href="https://www.iscwsa.net" target="_blank" rel="noopener">官网↗</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 最小曲率半径法：比例因子 RF 随全角变化率</h2><span class="hint">来源：Sawaryn &amp; Thorogood (2005) SPE 84246-PA · RF = (2/θ)·tan(θ/2)</span></div>
+      <div class="src-bar">
+        <span class="tag real">公开公式</span>
+        <span><b>RF 是测段实际弧长与最小曲率直线投影之间的比例因子</b>。本案例狗腿度上限 2.4°/30 m 处 RF = 0.99996，即最小曲率法与真值偏差约万分之四；对比之下旧式切线法在 2.4°/30 m 狗腿下每 30 m 测段累积约 6.6 mm 垂深系统误差——这正是行业在 1972 年后全面转向最小曲率法的原因（Taylor &amp; Mason 1972）。</span>
+        <a href="https://doi.org/10.2118/84246-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="box-rf">
+        <svg id="lit-rf" viewBox="0 0 900 250" role="img" aria-label="最小曲率半径法比例因子曲线"></svg>
+        <div class="chart-tip" id="tip-rf"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ MWD 方位误差 → 横向位置不确定度随测深累积</h2><span class="hint">口径：横向不确定度 ≈ 测深 × tan(方位误差)</span></div>
+      <div class="src-bar">
+        <span class="tag real">公开公式</span>
+        <span><b>标准 MWD 方位 1σ 误差量级约 0.2–0.5°</b>（Williamson 2000 误差模型；连续测量进一步降低垂深不确定，Stockhausen &amp; Lesso 2003）。几何换算：2,800 m 测深处 0.3° 方位误差对应横向不确定度 ≈ 14.7 m。防碰扫描须把本井与邻井的误差椭圆叠加（Poedjono et al. 2007），这就是「点距离 5.8 m 仍要按 1.5 倍误差椭圆放大再判 4.5 m 红线」的原因。</span>
+        <a href="https://doi.org/10.2118/67616-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="box-unc">
+        <svg id="lit-unc" viewBox="0 0 900 260" role="img" aria-label="方位误差横向不确定度曲线"></svg>
+        <div class="chart-tip" id="tip-unc"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#8a9298"></i>方位 1σ = 0.2°</span>
+        <span><i style="background:#2f7d6b"></i>方位 1σ = 0.3°（本案例口径）</span>
+        <span><i style="background:#b05a51"></i>方位 1σ = 0.5°</span>
+      </div>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

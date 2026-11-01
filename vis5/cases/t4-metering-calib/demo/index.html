@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：油气计量智能校正 · 流量计漂移诊断</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>油气计量智能校正 · 流量计漂移诊断</h1>
+      <p class="lead">调节漂移模式、漂移速率、孔板结垢量与温压偏差，观察计量误差随时间的漂移曲线、标准表比对散点与三类漂移模式的自动识别结果，评估校正与检定周期优化对交接纠纷风险的影响。</p>
+    </div>
+    <span class="badge">ISO 5167 / JJG 1030 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>孔板按 ISO 5167 / GB/T 2624.2 平方根关系由差压推算流量，结垢孔径缩小 0.2—0.5 mm 可致示值偏高 2%—4%；超声流量计按 JJG 1030 检定，0.5 级限带 ±0.5%、1.0 级限带 ±1.0%；漂移识别基准只取标准装置标定与管网质量平衡（Crowe 数据协调），不取配产理论产量。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：误差-时间漂移曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 计量误差随时间漂移曲线（24 个月）</h2>
+          <span class="hint">悬停读数 · 虚线为定期检定复位点 · 菱形为 AI 检出点</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="cv-drift" width="860" height="252" role="img" aria-label="计量误差随时间漂移曲线"></canvas>
+          <div class="chart-tip" id="tip-drift"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>原始误差（未校正）</span>
+          <span><i style="background:#2f7d6b"></i>AI 校正后误差</span>
+          <span><i style="background:#41699b"></i>±0.5% 检定限带（0.5 级）</span>
+          <span><i class="dash"></i>±1.0% 超差线</span>
+          <span><i style="background:#c9a15a"></i>AI 检出点 / 检定复位</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：比对散点 + 温压补偿 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 标准表比对 与 温压补偿效果</h2>
+          <span class="hint">左：被检表 vs 标准装置（y=x 参考线与 ±0.5% 偏差带）；右：10 个流量点补偿前后误差</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>标准表比对散点（20 个检定点）</h3>
+            <canvas id="cv-scatter" width="420" height="240" role="img" aria-label="标准表比对散点图"></canvas>
+            <div class="chart-tip" id="tip-scatter"></div>
+          </div>
+          <div class="chart">
+            <h3>温压补偿前后误差对比</h3>
+            <canvas id="cv-comp" width="420" height="240" role="img" aria-label="温压补偿前后误差对比"></canvas>
+            <div class="chart-tip" id="tip-comp"></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>带内检定点 / 补偿后</span>
+          <span><i style="background:#b05a51"></i>超差点 / 补偿前</span>
+          <span><i style="background:#41699b"></i>±0.5% 偏差带</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：漂移自动诊断 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 漂移模式自动诊断</h2>
+          <span class="hint">月度残差序列 + 三类模式特征得分：偏置 / 趋势 / 脉动</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>月度残差与滚动均值（数据协调后）</h3>
+            <canvas id="cv-resid" width="420" height="196" role="img" aria-label="月度残差序列"></canvas>
+            <div class="chart-tip" id="tip-resid"></div>
+          </div>
+          <div class="chart">
+            <h3>模式识别置信度</h3>
+            <div class="scores">
+              <div class="score-row" id="sr-zero"><span class="sl">零点漂移（偏置）</span><span class="score-bar"><i id="sb-zero"></i></span><span class="sv" id="sv-zero">—</span></div>
+              <div class="score-row" id="sr-linear"><span class="sl">线性漂移（结垢）</span><span class="score-bar"><i id="sb-linear"></i></span><span class="sv" id="sv-linear">—</span></div>
+              <div class="score-row" id="sr-pulse"><span class="sl">脉动异常（流态）</span><span class="score-bar"><i id="sb-pulse"></i></span><span class="sv" id="sv-pulse">—</span></div>
+            </div>
+            <div class="verdict ok" id="diag-verdict">正在计算…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 风险评估 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 超差预测 · 检定周期优化 · 纠纷风险</h2>
+          <span class="hint">随参数实时重算</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard" id="mc-cur"><span>24 月累积偏差</span><b id="m-cur">—</b></div>
+          <div class="mcard" id="mc-detect"><span>AI 检出时间</span><b id="m-detect">—</b></div>
+          <div class="mcard" id="mc-over"><span>预测超差(1%)时间</span><b id="m-over">—</b></div>
+          <div class="mcard" id="mc-cycle"><span>建议检定周期</span><b id="m-cycle">—</b></div>
+          <div class="mcard" id="mc-corr"><span>校正后中位误差</span><b id="m-corr">—</b></div>
+          <div class="mcard" id="mc-risk"><span>年纠纷风险(校正后)</span><b id="m-risk">—</b></div>
+        </div>
+        <div class="verdict ok" id="verdict">正在计算…</div>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 工况与漂移参数</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>漂移模式</label>
+            <div class="seg">
+              <label id="lb-zero"><input type="radio" name="mode" value="zero">零点</label>
+              <label id="lb-linear" class="on"><input type="radio" name="mode" value="linear" checked>线性</label>
+              <label id="lb-pulse"><input type="radio" name="mode" value="pulse">脉动</label>
+            </div>
+            <span class="tip">零点=阶跃偏置 · 线性=结垢累积 · 脉动=流态异常</span>
+          </div>
+          <div class="ctl">
+            <label>漂移速率 <output id="o-rate">0.40 %/月</output></label>
+            <input type="range" id="s-rate" min="0" max="1.2" step="0.05" value="0.4">
+            <span class="tip">每月示值偏差累积速度</span>
+          </div>
+          <div class="ctl">
+            <label>孔板结垢量 <output id="o-scale">0.30 mm</output></label>
+            <input type="range" id="s-scale" min="0" max="0.5" step="0.05" value="0.3">
+            <span class="tip">孔径 50 mm，结垢使示值按平方根关系偏高</span>
+          </div>
+          <div class="ctl">
+            <label>温度偏差 <output id="o-tdev">+8 ℃</output></label>
+            <input type="range" id="s-tdev" min="-15" max="15" step="1" value="8">
+            <span class="tip">未补偿时影响气体密度计量</span>
+          </div>
+          <div class="ctl">
+            <label>压力偏差 <output id="o-pdev">+4.0 %</output></label>
+            <input type="range" id="s-pdev" min="-8" max="8" step="0.5" value="4">
+            <span class="tip">相对工况压力 4 MPa 的偏移</span>
+          </div>
+          <div class="ctl">
+            <label>AI 检测阈值 <output id="o-thr">0.50 %</output></label>
+            <input type="range" id="s-thr" min="0.3" max="1.5" step="0.05" value="0.5">
+            <span class="tip">滚动残差均值超过即判漂移</span>
+          </div>
+          <div class="ctl">
+            <label>定期检定周期 <output id="o-cycle">12 月</output></label>
+            <input type="range" id="s-cycle" min="6" max="18" step="1" value="12">
+            <span class="tip">JJG 1030 口径 6—18 个月</span>
+          </div>
+          <div class="chk-row">
+            <label class="chk"><input type="checkbox" id="c-comp" checked><span>温压补偿</span></label>
+            <label class="chk"><input type="checkbox" id="c-recon" checked><span>管网数据协调</span></label>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">交接计量合格限 ±2% · 0.5 级标准装置</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型设定：孔板按 ISO 5167 平方根关系 q ∝ d²·√(Δp/ρ)，孔径 50 mm 结垢 Δd 使示值偏高 (d/(d−Δd))²−1；温压偏差对气体体积计量的影响 ≈ ½·(Δp/p − ΔT/T)，补偿消除 95%；AI 检出后对残差做持续偏移检验并施加校正系数（数据协调残差 0.12%，否则 0.25%）；纠纷风险按案例口径标定（偏差 3.1% ↔ 410 万元/年，校正后降至约 37%）。全部数据为演示合成，非真实计量记录。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 标准与文献来源（6 项）</h2><span class="hint">每项说明其数据在本演示中的用途</span></div>
+
+      <div class="src-bar">
+        <span class="tag real">国际标准</span>
+        <span><b>ISO 5167-2:2022《用差压装置测量满管流体流量 第 2 部分：孔板》</b>（GB/T 2624.2-2006 等效采用其 2003 版）：规定孔板几何、取压方式与 Reader-Harris/Gallagher 流出系数。<b>用途：</b>本 demo 的机理基线——差压—流量平方根关系，以及「结垢孔径缩小 0.2—0.5 mm → 示值偏高 2%—4%」的线性漂移误差模型。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">检定规程</span>
+        <span><b>JJG 1030-2007《超声流量计检定规程》</b>：规定超声流量计准确度等级（0.5 级 / 1.0 级）、检定周期与检定方法。<b>用途：</b>漂移曲线中的 ±0.5% 检定限带、±1.0% 超差线与「检定周期 6—18 个月」滑块范围；指标卡的超差预测即以 1.0% 为限。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">行业报告</span>
+        <span><b>AGA Report No. 9（2022，第四版）《Measurement of Gas by Multipath Ultrasonic Meters》</b>：多声道超声气体流量计的性能规范与自诊断参数（声道增益、信噪比、流态剖面系数）。<b>用途：</b>「脉动异常」模式的特征设定——声道间不对称与剖面扰动引起的计量噪声增大，对应残差方差得分。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB/T 18604-2023《用气体超声流量计测量天然气流量》</b>：规定天然气超声计量的测量性能、安装维护与现场验证测试要求。<b>用途：</b>「标准表比对散点」的合格判据与现场验证流程——比对点落在 ±0.5% 偏差带内判为合格，红色超差点即触发送检。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Crowe C.M. (1983)「Reconciliation of Process Flow Rates by Matrix Projection」, AIChE Journal</b>：以加权最小二乘把管网流量测量值协调到满足守恒律，并构造投影矩阵分解残差。<b>用途：</b>「管网数据协调」开关的算法原型——按各表不确定度加权分配质量平衡残差，识别同向偏移的表组（单表合格但总量对不上的陷阱）。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">工业实践</span>
+        <span><b>Drysdale &amp; Accord (NFOGM, 2011)「Gross Meter Error Detection and Elimination by Data Reconciliation」</b>：挪威石油计量协会技术报告，在天然气管输与处理装置上用数据协调做仪表毛差检测与剔除。<b>用途：</b>漂移表识别流程（检测 → 定位 → 校正系数）与误校正风险控制的工程依据，对应指标卡「校正后中位误差 / 年纠纷风险」的标定。</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 来源与演示模块对照</h2><span class="hint">数据如何流入各图表</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>关键数据 / 条款</th><th>用于本 demo 的模块</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>ISO 5167-2:2022 / GB/T 2624.2</td><td>q ∝ d²·√(Δp/ρ)；结垢 0.2—0.5 mm → 偏差 2%—4%</td><td>① 漂移曲线（线性模式）· ⑤ 结垢量滑块</td></tr>
+          <tr><td class="num">2</td><td>JJG 1030-2007</td><td>0.5 级 ±0.5% 限带；检定周期 6—18 月</td><td>① 限带与复位点 · ④ 超差预测 · ⑤ 周期滑块</td></tr>
+          <tr><td class="num">3</td><td>AGA Report No. 9 (2022)</td><td>声道诊断、流态剖面异常判据</td><td>③ 脉动异常得分 · ① 脉动模式曲线</td></tr>
+          <tr><td class="num">4</td><td>GB/T 18604-2023</td><td>现场验证测试与比对合格判据</td><td>② 标准表比对散点（±0.5% 带）</td></tr>
+          <tr><td class="num">5</td><td>Crowe (1983) AIChE J.</td><td>加权最小二乘数据协调、投影矩阵</td><td>③ 残差序列 · ⑤ 数据协调开关</td></tr>
+          <tr><td class="num">6</td><td>Drysdale &amp; Accord (2011) NFOGM</td><td>毛差检测—定位—剔除流程</td><td>④ 校正系数与纠纷风险指标卡</td></tr>
+          <tr><td class="num">7</td><td>温压补偿（理想气体密度修正）</td><td>体积计量误差 ≈ ½·(Δp/p − ΔT/T)</td><td>② 补偿前后对比 · ⑤ 温压偏差滑块</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="foot">说明：本页列出真实标准与文献编号供追溯；演示页图表中的数值为按上述口径合成的教学数据，不代表任何真实装置或仪表的计量记录。</p>
+
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

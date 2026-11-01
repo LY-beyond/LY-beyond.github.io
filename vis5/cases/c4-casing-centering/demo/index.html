@@ -12,6 +12,59 @@
   <p class="data-source">数据口径：API RP 10D-2 / ISO 10427-2 居中度最小 67%，尾管/关键层不低于 80%；居中度 SR＝1−e／((Dh−Dc)／2)，e 为偏心距；扶正器恢复力 500—5000 N；狗腿度增加法向载荷。模型为工程简化示意。</p>
   <p class="lead">调节井径、井斜、狗腿度、扶正器数量与恢复力，观察沿井深居中度曲线是否满足 67% / 80% 阈值，以及下入阻力是否超限。</p>
 
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">文献数据 · 居中度与顶替效率</button>
+    <button class="tab" data-tab="sim" role="tab">居中度模拟 · 参数联动</button>
+  </div>
+
+  <!-- ================= 文献数据页 ================= -->
+  <div class="tabpane active" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 居中度 → 顶替效率（元坝 11 井 FLUENT 数值模拟）</h2><span class="hint">滚轮缩放 · 拖拽平移 · 双击复位 · 点击数据点锁定</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献数字化</span>
+        <span><b>《石油钻探技术》2010, 38(4)</b>，元坝 11 井固井顶替效率数值模拟（FLUENT）：Φ244.5 mm 套管 / Φ311.1 mm 井眼，居中度 80% / 60% / 40% 三档，排量 0.8 与 1.4 m³/min 两种工况。居中度从 80% 降到 40%，顶替效率下降 7–8 个百分点。</span>
+        <a href="https://doi.org/10.3969/j.issn.1001-0890.2010.04.011" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-chartA" viewBox="0 0 900 300" role="img" aria-label="居中度与顶替效率关系散点图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放居中度轴 · 按住拖拽平移 · 双击复位</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 无扶正器时居中度随井斜角衰减（PVI CentraDesign 2015）</h2><span class="hint">悬停读数 · 点击数据点联动</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献数字化</span>
+        <span><b>PVI（Pegasus Vertex）CentraDesign 2015 行业研究</b>：无扶正器时套管自重使贴边加剧，井斜 0° 居中度约 100%、30° 约 70%、90°（水平井）仅约 20%；API RP 10D-2 / ISO 10427-2 要求居中度 ≥67%（关键封固段 ≥80%）。</span>
+      </div>
+      <div class="chart-box" id="lit-boxB">
+        <svg id="lit-chartB" viewBox="0 0 900 240" role="img" aria-label="居中度随井斜角衰减曲线"></svg>
+        <div class="chart-tip" id="lit-tipB"></div>
+      </div>
+      <div class="r-detail" id="lit-detail">悬停读取数据点；点击散点锁定该条文献数据；点击下表行同样联动。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 文献数据汇总</h2><span class="hint">居中度 %、顶替效率 %；扶正器间距案例来自 Adesanya 2018 设计计算</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>工况</th><th>居中度 (%)</th><th>顶替效率 / 结果</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ================= 模拟页 ================= -->
+  <div class="tabpane" id="pane-sim">
   <div class="layout">
     <div class="viz">
       <!-- 指标卡 -->
@@ -145,6 +198,7 @@
       </div>
     </div>
   </div>
+  </div><!-- /pane-sim -->
 
 </div>
 <script src="demo.js"></script>

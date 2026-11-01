@@ -894,6 +894,12 @@ html.mdl-open{overflow:hidden}
   display:block;width:100%;border:0;background:#fff;
   min-height:320px;
 }
+/* 暗色模式：demo 在 sandbox iframe 内硬编码浅色且不感知主题，
+   用反相滤镜整体转暗（这批 demo 均为程序绘图，无真实照片受影响） */
+html[data-theme="dark"] .cd-iframe{
+  background:#10160f;
+  filter:invert(0.92) hue-rotate(180deg);
+}
 
 @media (max-width:900px){
   .imp-choose{flex-direction:column}

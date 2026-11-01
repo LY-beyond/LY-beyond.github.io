@@ -287,7 +287,9 @@
       var tags = (c.methods || []).map(function (m) {
         return caseChip(m);
       }).join('');
-      return '<a class="case-card" href="#/scene/' + esc(c.sceneId) + '">' +
+      /* 按所属环节分配色调（5 色循环），让同环节卡片成组、相邻环节有区分 */
+      var tone = st ? ((st.idx - 1) % 5) + 1 : 1;
+      return '<a class="case-card" data-tone="' + tone + '" href="#/scene/' + esc(c.sceneId) + '">' +
         '<div class="cc-top">' +
         '<span class="cc-stage">' + esc(stageLabel) + '</span>' +
         (hasDemo ? '<span class="cc-demo">可运行</span>' : '') +

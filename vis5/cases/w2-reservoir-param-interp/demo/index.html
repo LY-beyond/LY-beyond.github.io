@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：储层参数智能解释</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>储层参数智能解释 · 孔隙度 / 渗透率 / 含油饱和度</h1>
+      <p class="lead">拖动 Archie 参数（a / m / n / Rw）、切换饱和度模型与储层划分截止值，看 2360—2440 m 井段的泥质含量、孔隙度、饱和度、渗透率与油水干层划分如何联动；交会图叠加 Timur 公式参考线。</p>
+    </div>
+    <span class="badge">Archie · Wyllie · Timur 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>合成井段 2360—2440 m（0.125 m 采样、641 点，砂泥岩剖面含低阻油层段）；Vsh 用 Larionov（1969）公式；密度孔隙度 φD=(ρma−ρb)/(ρma−ρf)，ρma=2.65、ρf=1.0 g/cm³；声波孔隙度用 Wyllie（1956）时间平均（Δtma=182、Δtf=620 µs/m）；Sw 用 Archie（1942）或 Simandoux（1963）；K 用 Timur（1968）K=(93·φ^2.2/Swirr)²。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 参数联动</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：综合测井解释成果图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 综合测井解释成果图（2360—2440 m）</h2>
+          <span class="hint">悬停逐点读数 · 红色横线为深度游标</span>
+        </div>
+        <div class="chart-box">
+          <canvas id="cv-log" width="500" height="400" role="img" aria-label="综合测井解释成果图"></canvas>
+          <div class="chart-tip" id="tip-log"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#c9a15a"></i>GR</span>
+          <span><i style="background:#41699b"></i>AC / Sw（当前模型）</span>
+          <span><i style="background:#b05a51"></i>DEN / K</span>
+          <span><i style="background:#2f7d6b"></i>CNL / Φe</span>
+          <span><i style="background:#3d464b"></i>RT</span>
+          <span><i style="background:#9ba3a9"></i>对比模型 Sw（虚线）/ 总孔隙度 Φ（虚线）</span>
+        </div>
+        <div class="legend">
+          <span><i class="sw" style="background:#2f7d6b"></i>油层（Φe≥截止 且 Sw≤截止）</span>
+          <span><i class="sw" style="background:#41699b"></i>水层</span>
+          <span><i class="sw" style="background:#c9a15a"></i>干层 / 非储层（Φe&lt;截止）</span>
+          <span style="color:#79828a">红色虚线为 Sw 油水划分截止</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：孔渗交会图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 孔隙度—渗透率交会图（Timur 公式叠加）</h2>
+          <span class="hint">散点按解释结论着色 · 悬停读数</span>
+        </div>
+        <div class="chart-box">
+          <canvas id="cv-xp" width="440" height="260" role="img" aria-label="孔隙度渗透率交会图"></canvas>
+          <div class="chart-tip" id="tip-xp"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>油层点</span>
+          <span><i style="background:#41699b"></i>水层点</span>
+          <span><i style="background:#c9a15a"></i>干层点</span>
+          <span><i style="background:#b05a51"></i>当前 Swirr 的 Timur 线</span>
+          <span><i style="background:#9ba3a9"></i>Swirr=10/40% 参考线</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：指标卡 + 结论 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 解释结论与关键指标</h2>
+          <span class="hint">随参数实时重算</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>油层厚度</span><b id="m-oil">—</b></div>
+          <div class="mcard"><span>水层厚度</span><b id="m-water">—</b></div>
+          <div class="mcard"><span>净层平均孔隙度</span><b id="m-phi">—</b></div>
+          <div class="mcard"><span>净层几何平均渗透率</span><b id="m-k">—</b></div>
+          <div class="mcard"><span>油层平均含油饱和度</span><b id="m-so">—</b></div>
+        </div>
+        <div class="verdict ok" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 解释参数（10 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>饱和度模型</label>
+            <select id="sel-model">
+              <option value="archie" selected>Archie（1942）纯净砂岩</option>
+              <option value="sim">Simandoux（1963）泥质砂岩</option>
+            </select>
+            <span class="tip">泥质重时 Archie 系统性高估 Sw</span>
+          </div>
+          <div class="ctl">
+            <label>岩性系数 a <output id="o-a">1.00</output></label>
+            <input type="range" id="s-a" min="0.6" max="1.4" step="0.01" value="1.00">
+            <span class="tip">Humble 公式取 a=0.62</span>
+          </div>
+          <div class="ctl">
+            <label>胶结指数 m <output id="o-m">2.00</output></label>
+            <input type="range" id="s-m" min="1.6" max="2.4" step="0.01" value="2.00">
+            <span class="tip">Humble 公式取 m=2.15</span>
+          </div>
+          <div class="ctl">
+            <label>饱和度指数 n <output id="o-n">2.00</output></label>
+            <input type="range" id="s-n" min="1.6" max="2.4" step="0.01" value="2.00">
+            <span class="tip">岩电实验标定，常取 2</span>
+          </div>
+          <div class="ctl">
+            <label>地层水电阻率 Rw <output id="o-rw">0.060 Ω·m</output></label>
+            <input type="range" id="s-rw" min="0.02" max="0.20" step="0.005" value="0.060">
+            <span class="tip">水矿化度越高 Rw 越小</span>
+          </div>
+          <div class="ctl">
+            <label>泥岩电阻率 Rsh <output id="o-rsh">4.0 Ω·m</output></label>
+            <input type="range" id="s-rsh" min="2" max="10" step="0.5" value="4.0">
+            <span class="tip">仅 Simandoux 模型使用</span>
+          </div>
+          <div class="ctl">
+            <label>束缚水饱和度 Swirr <output id="o-swirr">25 %</output></label>
+            <input type="range" id="s-swirr" min="10" max="40" step="1" value="25">
+            <span class="tip">Timur 渗透率公式参数</span>
+          </div>
+          <div class="ctl">
+            <label>孔隙度截止 <output id="o-phicut">10 %</output></label>
+            <input type="range" id="s-phicut" min="6" max="14" step="0.5" value="10">
+            <span class="tip">低于此值判干层 / 非储层</span>
+          </div>
+          <div class="ctl">
+            <label>Sw 油水截止 <output id="o-swcut">65 %</output></label>
+            <input type="range" id="s-swcut" min="50" max="90" step="1" value="65">
+            <span class="tip">高于此值判水层</span>
+          </div>
+          <div class="ctl">
+            <label>深度游标 <output id="o-cursor">2388.0 m</output></label>
+            <input type="range" id="s-cursor" min="2360" max="2440" step="0.125" value="2388">
+            <span class="tip">联动成果图与交会图读数</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">Archie：Sw=(a·Rw/(φ^m·Rt))^(1/n)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">处理链：GR→Vsh（Larionov：Vsh=0.083·(2^(3.7·IGR)−1)，GRclean=45、GRsh=112 API）；DEN→φD、AC→φS（Wyllie），Φ=(φD+φS)/2，Φe=Φ·(1−Vsh)；Sw：Archie 或 Simandoux（1/Rt=φ^m·Sw^n/(a·Rw·(1−Vsh))+Vsh·Sw/Rsh，对 Sw 数值求解）；K：Timur K=(93·Φe^2.2/Swirr)²。储层划分：Φe&lt;孔隙度截止 → 干层；否则 Sw≤Sw 截止 → 油层，反之水层。井段为教学合成数据，参数取值范围对标松辽盆地砂泥岩剖面。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+    <div class="section">
+      <div class="sec-head"><h2>真实数据来源 · 公式与标准出处（8 条）</h2><span class="hint">模拟页每条计算道均对应下表文献 / 标准</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献依据</span>
+        <span>本 demo 计算链全部取自公开发表的经典公式与行业标准：<b>Larionov（1969）GR→Vsh、Wyllie（1956）AC→Φ、密度孔隙度（SY/T 5360 口径）、Archie（1942）/ Simandoux（1963）/ Indonesia（1971）Sw、Timur（1968）K</b>。下表逐条给出出处并说明在本 demo 中的用法。</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>公式 / 关键参数</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Archie, G.E. (1942). The Electrical Resistivity Log as an Aid in Determining Some Reservoir Characteristics. <i>Trans. AIME</i>, 146: 54–62.</td><td>Sw = (a·Rw / (φ^m·Rt))^(1/n)；纯净砂岩经典值 a≈1、m≈2、n≈2</td><td>Sw 计算道的默认模型；a / m / n / Rw 四个滑块直接对应公式参数，默认值即 Archie 经典取值。</td></tr>
+          <tr><td>2</td><td>Wyllie, M.R.J., Gregory, A.R., Gardner, G.H.F. (1956). Elastic Wave Velocities in Heterogeneous and Porous Media. <i>Geophysics</i>, 21(1): 41–70.</td><td>时间平均公式 1/V = φ/Vf + (1−φ)/Vma</td><td>声波时差→孔隙度：φS=(Δt−Δtma)/(Δtf−Δtma)，取砂岩骨架 Δtma=182 µs/m、孔隙流体 Δtf=620 µs/m，与密度孔隙度平均得 Φ。</td></tr>
+          <tr><td>3</td><td>Timur, A. (1968). An Investigation of Permeability, Porosity, and Residual Water Saturation Relationships for Sandstone Reservoirs. <i>The Log Analyst</i>, 9(4).</td><td>K = (93·φ^2.2 / Swirr)²（基于 155 块砂岩岩心回归）</td><td>渗透率计算道；交会图叠加 Swirr=10/25/40% 三条 Timur 参考线，Swirr 滑块驱动高亮参考线并整体缩放 K。</td></tr>
+          <tr><td>4</td><td>Simandoux, P. (1963). Mesures diélectriques en milieu poreux, application à la mesure des saturations en eau. <i>Revue de l'Institut Français du Pétrole</i>, 18(S1).</td><td>1/Rt = φ^m·Sw^n / (a·Rw·(1−Vsh)) + Vsh·Sw / Rsh</td><td>「饱和度模型」切至 Simandoux 后泥质导电被扣除：2394–2402 m 低阻油层段 Sw 由约 80% 降至约 62%，水层误判恢复为油层。</td></tr>
+          <tr><td>5</td><td>Poupon, A. &amp; Leveaux, J. (1971). Evaluation of Water Saturation in Shaly Formations. <i>SPWLA 12th Annual Logging Symposium</i>.</td><td>Indonesia 公式：1/√Rt = Sw·(√(Vsh^(2−Vsh)/Rsh) + √(φ^m/(a·Rw)))</td><td>泥质砂岩饱和度另一经典口径（低矿化度地层水更适用），作为 Simandoux 的对比讨论列入，供解释员在低阻段复核时选用。</td></tr>
+          <tr><td>6</td><td>Larionov, V.V. (1969). <i>Borehole Radiometry</i>. Moscow: Nedra.</td><td>Vsh = 0.083·(2^(3.7·IGR) − 1)（第三系 / 新地层）</td><td>GR→泥质含量道：IGR 按 GRclean=45、GRsh=112 API 线性归一；Vsh 同时进入有效孔隙度 Φe 与 Simandoux 校正项。</td></tr>
+          <tr><td>7</td><td>Humble 公式（转引自 Schlumberger 测井解释图版；Millar, <i>Petrophysics 101</i>, London Petrophysical Society）。</td><td>F = 0.62 / φ^2.15，即 a=0.62、m=2.15</td><td>把 a 滑块拖到 0.62、m 拖到 2.15 即切换 Humble 参数组，可直观对比 Sw 整体下移的幅度。</td></tr>
+          <tr><td>8</td><td>SY/T 5360—2020《裸眼井单井测井数据处理流程》（国家能源局行业标准）。</td><td>规定孔隙度、束缚水饱和度、地层水电阻率等术语与单井测井处理流程；密度孔隙度 φD=(ρma−ρb)/(ρma−ρf)</td><td>demo 的处理链（岩性识别→孔隙度→饱和度→储层划分）与结论指标卡的术语口径对齐该标准；真实解释须按此流程用岩心刻度。</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" style="margin-top:8px">说明：demo 井段曲线为按松辽盆地砂泥岩剖面特征合成的教学数据（0.125 m 采样、641 点，含泥岩盖层、两个油层砂体、低阻油层段、水层、致密夹层与底界泥岩），骨架与流体参数取上表文献常用范围；任何真实储层解释必须以岩心分析刻度为准。</p>
+    </div>
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

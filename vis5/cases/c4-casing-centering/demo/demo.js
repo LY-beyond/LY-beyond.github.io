@@ -2,6 +2,18 @@
 (function () {
   'use strict';
 
+  // HiDPI 适配：canvas backing store 按 dpr × CSS 拉伸系数放大，绘制仍用逻辑坐标
+  function setupCanvas(cv, lw, lh) {
+    const dpr = window.devicePixelRatio || 1;
+    const ratio = dpr * ((cv.clientWidth || lw) / lw);
+    const bw = Math.max(1, Math.round(lw * ratio));
+    const bh = Math.max(1, Math.round(lh * ratio));
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return ctx;
+  }
+
   // ---------- 常量 ----------
   const G = 9.81;
   const RHO_STEEL = 7.85;    // 钢密度 g/cm³
@@ -330,8 +342,8 @@
   // ---------- 面板4：居中度热力图 (Canvas) ----------
   function drawHeat() {
     const canvas = $('panel-heat');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const W = 430, H = 220;
+    const ctx = setupCanvas(canvas, W, H);
     const padL = 36, padR = 12, padT = 12, padB = 26;
     const pw = W - padL - padR, ph = H - padT - padB;
 
@@ -629,4 +641,295 @@
   bindPareto();
   genPareto();
   paint();
+
+  // 尺寸变化时重建 canvas backing store，保持清晰
+  let rsTimer = null;
+  window.addEventListener('resize', () => {
+    if (rsTimer) clearTimeout(rsTimer);
+    rsTimer = setTimeout(() => drawHeat(), 120);
+  });
+})();
+
+/* ======= 文献数据页：居中度与顶替效率（真实/文献数据） ======= */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  // 元坝 11 井 FLUENT 数值模拟（《石油钻探技术》2010, 38(4), DOI 10.3969/j.issn.1001-0890.2010.04.011）
+  var YB = [
+    { sr: 80, q: 0.8, eff: 91.30 }, { sr: 60, q: 0.8, eff: 85.04 }, { sr: 40, q: 0.8, eff: 83.57 },
+    { sr: 80, q: 1.4, eff: 92.75 }, { sr: 60, q: 1.4, eff: 86.26 }, { sr: 40, q: 1.4, eff: 84.88 }
+  ];
+  // PVI CentraDesign 2015（无扶正器，居中度随井斜衰减，文献数字化）
+  var PVI = [ { ang: 0, sr: 100 }, { ang: 30, sr: 70 }, { ang: 90, sr: 20 } ];
+  // Adesanya 2018 扶正器间距设计计算（仅入表）
+  var ADE = [
+    { src: 'Adesanya 2018', cond: '扶正器间距 40 ft (≈12.2 m)', sr: 52, res: '52%（低于 67%，不合格）' },
+    { src: 'Adesanya 2018', cond: '扶正器间距 20 ft (≈6.1 m)', sr: 70, res: '70%（满足 67%）' },
+    { src: 'Adesanya 2018', cond: '冲蚀扩径井段', sr: 30, res: '30%（严重偏心，易窜槽）' }
+  ];
+  var X0 = 30, X1 = 90, MINSPAN = 10;
+  var Z = { x0: X0, x1: X1, sel: -1 };   // sel 为 YB 索引
+  var selB = -1, selT = -1;              // chartB / 表格行（Adesanya）
+  var PL = 52, PR = 16;
+
+  function el(tag, attrs, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+  function txt(x, y, s, attrs, parent) { var t = el('text', attrs || {}, parent); t.setAttribute('x', x); t.setAttribute('y', y); t.textContent = s; return t; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function xOf(sr, plotW) { return PL + (sr - Z.x0) / (Z.x1 - Z.x0) * plotW; }
+
+  function drawA() {
+    var svg = document.getElementById('lit-chartA'); if (!svg) return;
+    var W = 900, H = 300, PT = 24, PB = 38, plotW = W - PL - PR, plotH = H - PT - PB;
+    var E0 = 80, E1 = 96;
+    function yOf(e) { return PT + (E1 - e) / (E1 - E0) * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var e = E0; e <= E1; e += 2) {
+      var y = yOf(e);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: e % 4 ? '#f1ebdd' : '#eae2d0', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, e + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    var span = Z.x1 - Z.x0, step = span <= 20 ? 5 : span <= 40 ? 10 : 20;
+    for (var s = Math.ceil(Z.x0 / step) * step; s <= Z.x1; s += step) {
+      var x = xOf(s, plotW);
+      el('line', { x1: x, y1: PT, x2: x, y2: PT + plotH, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(x, PT + plotH + 14, s + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '居中度 (%)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '顶替效率 (%)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // API 67% 居中度参考竖线
+    if (Z.x0 <= 67 && 67 <= Z.x1) {
+      var xa = xOf(67, plotW);
+      el('line', { x1: xa, y1: PT, x2: xa, y2: PT + plotH, stroke: '#c9a15a', 'stroke-width': 1.2, 'stroke-dasharray': '5 3' }, svg);
+      txt(xa + 4, PT + 12, 'API RP 10D-2 ≥67%', { 'font-size': 9, fill: '#9a7a1c' }, svg);
+    }
+    // 两条排量系列
+    [{ q: 0.8, c: '#2f7d6b', lb: '0.8 m³/min' }, { q: 1.4, c: '#b05a51', lb: '1.4 m³/min' }].forEach(function (se) {
+      var pts = YB.map(function (p, i) { return { p: p, i: i }; }).filter(function (o) { return o.p.q === se.q && o.p.sr >= Z.x0 && o.p.sr <= Z.x1; });
+      pts.sort(function (a, b) { return a.p.sr - b.p.sr; });
+      var d = pts.map(function (o, k) { return (k ? 'L' : 'M') + xOf(o.p.sr, plotW) + ' ' + yOf(o.p.eff); }).join(' ');
+      if (pts.length > 1) el('path', { d: d, fill: 'none', stroke: se.c, 'stroke-width': 1.8, opacity: 0.55 }, svg);
+      pts.forEach(function (o) {
+        var sel = Z.sel === o.i;
+        el('circle', { cx: xOf(o.p.sr, plotW), cy: yOf(o.p.eff), r: sel ? 8 : 5.5, fill: se.c, opacity: sel ? 1 : 0.8, stroke: sel ? '#242b2e' : '#fdfcf8', 'stroke-width': sel ? 2 : 1.2 }, svg);
+        txt(xOf(o.p.sr, plotW), yOf(o.p.eff) - 9, o.p.eff.toFixed(2), { 'font-size': 9, fill: se.c, 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+      });
+      // 图例
+      var lx = W - PR - 150, ly = se.q === 0.8 ? PT + 8 : PT + 22;
+      el('line', { x1: lx, y1: ly - 3, x2: lx + 16, y2: ly - 3, stroke: se.c, 'stroke-width': 2 }, svg);
+      txt(lx + 20, ly, '排量 ' + se.lb, { 'font-size': 9, fill: se.c }, svg);
+    });
+    txt(PL + 4, PT + 12, '视窗 ' + Z.x0.toFixed(0) + '–' + Z.x1.toFixed(0) + ' %', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawB() {
+    var svg = document.getElementById('lit-chartB'); if (!svg) return;
+    var W = 900, H = 240, PT = 22, PB = 34, plotW = W - PL - PR, plotH = H - PT - PB;
+    function xA(a) { return PL + a / 90 * plotW; }
+    function yS(s) { return PT + (110 - s) / 110 * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var s = 0; s <= 110; s += 20) {
+      var y = yS(s);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, s + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    for (var a = 0; a <= 90; a += 15) {
+      var x = xA(a);
+      el('line', { x1: x, y1: PT, x2: x, y2: PT + plotH, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(x, PT + plotH + 14, a + '°', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '井斜角 (°)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '居中度 (%)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // API 阈值
+    var y67 = yS(67), y80 = yS(80);
+    el('line', { x1: PL, y1: y67, x2: W - PR, y2: y67, stroke: '#c9a15a', 'stroke-width': 1.4, 'stroke-dasharray': '6 3' }, svg);
+    txt(W - PR - 4, y67 - 5, 'API ≥67%', { 'font-size': 9, fill: '#9a7a1c', 'text-anchor': 'end' }, svg);
+    el('line', { x1: PL, y1: y80, x2: W - PR, y2: y80, stroke: '#b05a51', 'stroke-width': 1.2, 'stroke-dasharray': '4 3' }, svg);
+    txt(W - PR - 4, y80 - 5, '关键段 ≥80%', { 'font-size': 9, fill: '#b05a51', 'text-anchor': 'end' }, svg);
+    // 拟合曲线（过三点，二次插值形态：用平滑 path）
+    var d = 'M' + xA(0) + ' ' + yS(100) + ' Q ' + xA(22.5) + ' ' + yS(82) + ' ' + xA(30) + ' ' + yS(70) + ' T ' + xA(90) + ' ' + yS(20);
+    el('path', { d: d, fill: 'none', stroke: '#3a6ea5', 'stroke-width': 2.2, opacity: 0.7 }, svg);
+    PVI.forEach(function (p, i) {
+      var sel = selB === i;
+      el('circle', { cx: xA(p.ang), cy: yS(p.sr), r: sel ? 8 : 6, fill: '#3a6ea5', opacity: sel ? 1 : 0.85, stroke: sel ? '#242b2e' : '#fdfcf8', 'stroke-width': sel ? 2 : 1.2 }, svg);
+      txt(xA(p.ang), yS(p.sr) - 10, p.sr + '%', { 'font-size': 9.5, fill: '#2c567f', 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+    });
+  }
+
+  function drawAll() { drawA(); drawB(); updateLabel(); }
+  function updateLabel() { var l = document.getElementById('z-label'); if (l) l.textContent = '视窗 ' + Z.x0.toFixed(0) + '–' + Z.x1.toFixed(0) + ' %'; }
+
+  function setView(a, b) {
+    var span = b - a;
+    if (span < MINSPAN) { var c = (a + b) / 2; a = c - MINSPAN / 2; b = a + MINSPAN; }
+    if (a < X0) { b -= (a - X0); a = X0; }
+    if (b > X1) { a -= (b - X1); b = X1; }
+    a = clamp(a, X0, X1); b = clamp(b, a, X1);
+    if (b - a < MINSPAN) { b = X1; a = X1 - MINSPAN; }
+    Z.x0 = a; Z.x1 = b; drawAll();
+  }
+
+  function renderDetail() {
+    var d = document.getElementById('lit-detail'); if (!d) return;
+    if (Z.sel >= 0) {
+      var p = YB[Z.sel];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>元坝 11 井 FLUENT 模拟</b>：居中度 <b>' + p.sr + '%</b>、排量 <b>' + p.q + ' m³/min</b> 时顶替效率 <b>' + p.eff.toFixed(2) + '%</b>。' +
+        (p.sr < 67 ? '居中度低于 API RP 10D-2 的 67% 下限，顶替效率明显受损。' : '满足 API RP 10D-2 的 67% 居中度要求。') +
+        ' 对比可见：居中度 80%→40%，顶替效率下降 7–8 个百分点；提高排量可部分补偿低居中度损失。';
+    } else if (selB >= 0) {
+      var q = PVI[selB];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>PVI CentraDesign 2015</b>：井斜 <b>' + q.ang + '°</b> 时无扶正器居中度约 <b>' + q.sr + '%</b>。' +
+        (q.sr < 67 ? '低于 67% 阈值——必须加装扶正器，否则窄边泥浆无法替净，形成窜槽通道。' : '高于 67% 阈值，直井段居中度天然较好。');
+    } else if (selT >= 0) {
+      var a = ADE[selT];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>' + a.src + '</b>：' + a.cond + '，居中度 <b>' + a.sr + '%</b> → ' + a.res + '。扶正器间距减半可把居中度从 52% 提到 70%；冲蚀扩径段是最薄弱环节。';
+    } else {
+      d.className = 'r-detail';
+      d.innerHTML = '悬停读取数据点；点击散点锁定该条文献数据；点击下表行同样联动。要点：<b>居中度每降 10%，顶替效率约降 2–4 个百分点</b>；水平井无扶正器时居中度仅约 20%。';
+    }
+  }
+
+  function syncTable() {
+    var rows = document.querySelectorAll('#lit-body tr');
+    rows.forEach(function (r) { r.classList.remove('sel'); });
+    if (Z.sel >= 0 && rows[Z.sel]) rows[Z.sel].classList.add('sel');
+    else if (selB >= 0 && rows[YB.length + selB]) rows[YB.length + selB].classList.add('sel');
+    else if (selT >= 0 && rows[YB.length + PVI.length + selT]) rows[YB.length + PVI.length + selT].classList.add('sel');
+  }
+
+  function selectA(i, pan) {
+    Z.sel = i; selB = -1; selT = -1;
+    if (pan && i >= 0) {
+      var p = YB[i];
+      if (p.sr < Z.x0 || p.sr > Z.x1) { var s = Z.x1 - Z.x0; setView(p.sr - s / 2, p.sr + s / 2); }
+    }
+    drawAll(); renderDetail(); syncTable();
+  }
+  function selectB(i) { selB = i; Z.sel = -1; selT = -1; drawAll(); renderDetail(); syncTable(); }
+  function selectT(i) { selT = i; Z.sel = -1; selB = -1; drawAll(); renderDetail(); syncTable(); }
+
+  function bindChartA() {
+    var svg = document.getElementById('lit-chartA'), tip = document.getElementById('lit-tipA'), box = document.getElementById('lit-boxA');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function srAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      return Z.x0 + clamp((vx - PL) / (W - PL - PR), 0, 1) * (Z.x1 - Z.x0);
+    }
+    function nearest(sr) {
+      var bi = -1, bd = 1e9;
+      YB.forEach(function (p, i) { var d = Math.abs(p.sr - sr); if (d < bd) { bd = d; bi = i; } });
+      return { i: bi, d: bd };
+    }
+    var drag = null, moved = 0;
+    svg.addEventListener('wheel', function (evt) {
+      evt.preventDefault();
+      var s = srAt(evt), f = evt.deltaY > 0 ? 1.25 : 0.8;
+      setView(s - (s - Z.x0) * f, s + (Z.x1 - s) * f);
+    }, { passive: false });
+    svg.addEventListener('mousedown', function (evt) { drag = { x: evt.clientX, a: Z.x0, b: Z.x1 }; moved = 0; evt.preventDefault(); });
+    window.addEventListener('mousemove', function (evt) {
+      if (drag) {
+        var r = svg.getBoundingClientRect();
+        var dx = (evt.clientX - drag.x) * (W / r.width);
+        moved = Math.max(moved, Math.abs(dx));
+        if (moved > 3) { var dz = dx / (W - PL - PR) * (drag.b - drag.a); setView(drag.a - dz, drag.b - dz); }
+        return;
+      }
+      var s = srAt(evt), n = nearest(s);
+      if (n.i >= 0 && n.d <= 8) {
+        var p = YB[n.i], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>居中度 ' + p.sr + '%</b><br>排量 ' + p.q + ' m³/min<br>顶替效率 <b>' + p.eff.toFixed(2) + '%</b><br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 180) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    window.addEventListener('mouseup', function () { drag = null; });
+    svg.addEventListener('dblclick', function () { setView(X0, X1); });
+    svg.addEventListener('click', function (evt) {
+      if (moved > 3) return;
+      var n = nearest(srAt(evt));
+      selectA(n.i >= 0 && n.d <= 8 ? n.i : -1, false);
+    });
+  }
+
+  function bindChartB() {
+    var svg = document.getElementById('lit-chartB'), tip = document.getElementById('lit-tipB'), box = document.getElementById('lit-boxB');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function angAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      return clamp((vx - PL) / (W - PL - PR), 0, 1) * 90;
+    }
+    function nearest(a) {
+      var bi = -1, bd = 1e9;
+      PVI.forEach(function (p, i) { var d = Math.abs(p.ang - a); if (d < bd) { bd = d; bi = i; } });
+      return { i: bi, d: bd };
+    }
+    svg.addEventListener('mousemove', function (evt) {
+      var a = angAt(evt), n = nearest(a);
+      if (n.i >= 0 && n.d <= 10) {
+        var p = PVI[n.i], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>井斜 ' + p.ang + '°</b><br>无扶正器居中度约 <b>' + p.sr + '%</b><br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 180) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    svg.addEventListener('click', function (evt) {
+      var n = nearest(angAt(evt));
+      selectB(n.i >= 0 && n.d <= 10 ? n.i : -1);
+    });
+  }
+
+  function bindTable() {
+    var body = document.getElementById('lit-body'); if (!body) return;
+    var rows = [];
+    YB.forEach(function (p, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>元坝11井 2010</td><td>排量 ' + p.q + ' m³/min</td><td class="num">' + p.sr + '</td><td class="num">η = ' + p.eff.toFixed(2) + '%</td>', click: function () { selectA(i, true); } });
+    });
+    PVI.forEach(function (p, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>PVI 2015</td><td>井斜 ' + p.ang + '°，无扶正器</td><td class="num">' + p.sr + '</td><td>' + (p.sr >= 67 ? '满足 67%' : '低于 67%，需加扶正器') + '</td>', click: function () { selectB(i); } });
+    });
+    ADE.forEach(function (a, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>' + a.src + '</td><td>' + a.cond + '</td><td class="num">' + a.sr + '</td><td>' + a.res + '</td>', click: function () { selectT(i); } });
+    });
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = r.html;
+      tr.addEventListener('click', r.click);
+      body.appendChild(tr);
+    });
+  }
+
+  function bindZoomBtns() {
+    var zi = document.getElementById('z-in'), zo = document.getElementById('z-out'), zr = document.getElementById('z-reset');
+    if (zi) zi.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 0.7; setView(c - s / 2, c + s / 2); });
+    if (zo) zo.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 1.4; setView(c - s / 2, c + s / 2); });
+    if (zr) zr.addEventListener('click', function () { setView(X0, X1); });
+  }
+
+  function bindTabs() {
+    var tabs = document.querySelectorAll('.tab'), panes = document.querySelectorAll('.tabpane');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var id = this.getAttribute('data-tab');
+        tabs.forEach(function (o) { o.classList.remove('active'); });
+        this.classList.add('active');
+        panes.forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + id); });
+      });
+    });
+  }
+
+  bindTabs(); bindChartA(); bindChartB(); bindTable(); bindZoomBtns();
+  drawAll(); renderDetail();
 })();

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>柴油质量指标在线软测量</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+
+  <p class="data-note">数据口径：柴油闪点硬线 ≥55 ℃、内控窄带 55—62 ℃；倾点 ≤0 ℃；硫含量 &lt;10 ppm。化验每班 1 次，采样→化验→报出合计 3—5 h；过程变量 1 s 采集、聚合为 1 min。参考 GB 19147、NB/SH/T 0606。</p>
+
+  <h1>柴油质量指标在线软测量</h1>
+  <p class="lead">调节反应温度、氢分压、分馏切割点与装置负荷，观察闪点真值、软测量 P50 与 P10—P90 区间。打开「工况切换」可看到模型在 1—2 h 内误差放大、保形区间自动放宽；关闭软测量则退回「每班一次化验」的滞后状态。</p>
+
+  <div class="layout">
+    <div class="viz">
+
+      <div class="section">
+        <h2>① 过程变量趋势（24 h）</h2>
+        <svg id="trend" viewBox="0 0 430 170" role="img" aria-label="反应温度与分馏切割点趋势"></svg>
+        <p class="hint">实线为反应温度（左轴），虚线为分馏塔切割点（右轴）；灰色带为原料切换后的过渡窗口，这一段过程变量尚未稳定。</p>
+      </div>
+
+      <div class="section">
+        <h2>② 闪点跟踪：真值 · 软测量 · 化验</h2>
+        <svg id="quality" viewBox="0 0 430 210" role="img" aria-label="闪点跟踪曲线"></svg>
+        <div class="legend">
+          <span><i style="background:#242b2e"></i>真值</span>
+          <span><i style="background:#2f7d6b"></i>软测量 P50</span>
+          <span><i style="background:rgba(47,125,107,0.22)"></i>P10—P90</span>
+          <span><i style="background:#c9a15a"></i>化验样本</span>
+        </div>
+        <p class="hint">浅绿带为 55—62 ℃ 内控窗口；空心点为采样时刻，实心点为化验报出时刻（滞后 <b id="lag-txt">4</b> h），虚线连接两点即「信息迟到」的时长。</p>
+      </div>
+
+      <div class="section">
+        <h2>③ 变量归因（对闪点预测的贡献）</h2>
+        <svg id="attrib" viewBox="0 0 430 160" role="img" aria-label="变量归因条形图"></svg>
+        <p class="hint">向右为正贡献（抬高清点）、向左为负贡献；软测量必须能追到具体变量，操作员才知道该动哪一个。</p>
+      </div>
+
+      <div class="section">
+        <h2>④ 评价指标</h2>
+        <div class="metric-row">
+          <div class="metric" id="m-mae-wrap"><span>闪点 MAE</span><b id="m-mae">—</b></div>
+          <div class="metric" id="m-cov-wrap"><span>80% 区间覆盖率</span><b id="m-cov">—</b></div>
+          <div class="metric" id="m-delay-wrap"><span>超标发现延迟</span><b id="m-delay">—</b></div>
+          <div class="metric" id="m-pass-wrap"><span>内控合格率</span><b id="m-pass">—</b></div>
+        </div>
+        <p class="hint">覆盖率标称 80%，低于 75% 说明区间偏窄、卡边操作会踩线；依靠化验时延迟等于整个分析周期。</p>
+      </div>
+
+      <div class="section">
+        <h2>⑤ 化验对账</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>采样时刻</th><th>化验闪点 (℃)</th><th>报出时刻</th><th>软测量 P50</th><th>误差 (℃)</th><th>区间覆盖</th></tr></thead>
+            <tbody id="lab-body"></tbody>
+          </table>
+        </div>
+        <p class="hint">化验值本身带有 ±0.7 ℃ 分析误差，故与 P50 不一定相等；覆盖列表示该化验值是否落在当时的 P10—P90 区间内。</p>
+      </div>
+
+      <div class="section">
+        <h2>⑦ 方案对比：当前 vs 推荐</h2>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h3 id="c-cur-head">当前（化验 + 5 ℃ 余量）</h3>
+            <div class="metric"><span>发现延迟</span><b id="c-cur-delay">—</b></div>
+            <div class="metric"><span>区间覆盖率</span><b id="c-cur-cov">—</b></div>
+            <div class="metric"><span>卡边收率增益</span><b id="c-cur-yield">—</b></div>
+            <div class="metric"><span>回炼次数 / 月</span><b id="c-cur-re">—</b></div>
+          </div>
+          <div class="compare-col rec">
+            <h3>推荐（软测量 + 保形校准 + 2 ℃ 余量）</h3>
+            <div class="metric"><span>发现延迟</span><b id="c-rec-delay">—</b></div>
+            <div class="metric"><span>区间覆盖率</span><b id="c-rec-cov">—</b></div>
+            <div class="metric"><span>卡边收率增益</span><b id="c-rec-yield">—</b></div>
+            <div class="metric"><span>回炼次数 / 月</span><b id="c-rec-re">—</b></div>
+          </div>
+        </div>
+        <div class="compare-actions">
+          <button id="btn-apply-rec">应用推荐方案</button>
+          <button id="btn-cur" class="secondary">刷新当前对比</button>
+        </div>
+        <p class="hint">从 5 ℃ 安全余量收到 2 ℃ 卡边，靠的是区间可信而不是胆子大；区间覆盖率掉到 75% 以下时不允许收窄余量。</p>
+      </div>
+
+    </div>
+    <div class="side">
+
+      <div class="section">
+        <h2>⑥ 参数控制</h2>
+        <div class="controls" id="controls"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

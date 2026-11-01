@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：露头裂缝智能统计与产状反算</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>露头裂缝智能统计与产状反算 · 交互式演示</h1>
+      <p class="lead">在程序合成的露头顶面影像上完成裂缝分割、骨架化与产状统计：调节分割阈值与最小缝长，看 P10 / P21 密度、走向玫瑰花图与开度分布如何联动。</p>
+    </div>
+    <span class="badge">P10 / P21 口径 · Dershowitz &amp; Herda 1992</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>库车坳陷某河岸露头 9 个测量面 / 0.32 km²；人工实测 168 条、单面 4 h → AI 单面 18 min、覆盖率 55%→92%、识别 1,246 条、走向误差 ±6.8°、玫瑰花图 KS 0.12；P10 = 单位扫描线交切条数、P21 = 单位面积总迹长；开度分级按 SY/T 6286—1997（宽缝 &gt;1 mm、中缝 0.1–1 mm）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 合成露头影像 → 二值分割 → 骨架化分组</h2>
+        <span class="hint">悬停任一子图查看单条裂缝产状</span>
+      </div>
+      <p class="hint">程序合成的 30 m × 20 m 露头顶面（平面）影像：两组共轭构造缝（NW330° 组与 NE 组，夹角可调）＋随机方位成岩缝＋层理 / 碎斑噪声，裂缝为暗色低对比线网。分割阈值决定哪些暗线进入掩膜；骨架化后按走向分组、按最小缝长过滤——层理长线常通过长度过滤成为误判（红）。</p>
+      <div class="chart-box chart-wide" id="pipe-box">
+        <canvas id="pipe" width="920" height="234" role="img" aria-label="露头裂缝提取流水线：原始影像、二值分割、骨架分组"></canvas>
+        <div class="chart-tip" id="pipe-tip"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#41699b"></i>构造缝 NW 组</span>
+        <span><i style="background:#2f7d6b"></i>构造缝 NE 组</span>
+        <span><i style="background:#c9a15a"></i>成岩缝</span>
+        <span><i style="background:#b05a51"></i>层理误判（检出且够长）</span>
+        <span><i style="background:#8a9298"></i>过短被滤除</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="viz">
+        <!-- 面板 2：玫瑰花图 + 开度直方图 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>② 产状与开度统计</h2>
+            <span class="hint">左：全圆走向玫瑰花图（10° 间隔、双端对称）；右：开度分布直方图</span>
+          </div>
+          <div class="grid-charts">
+            <div class="chart">
+              <h3>走向玫瑰花图</h3>
+              <div class="chart-box" id="rose-box">
+                <canvas id="rose" width="320" height="300" role="img" aria-label="裂缝走向玫瑰花图"></canvas>
+                <div class="chart-tip" id="rose-tip"></div>
+              </div>
+            </div>
+            <div class="chart">
+              <h3>开度分布直方图</h3>
+              <div class="chart-box" id="hist-box">
+                <canvas id="hist" width="440" height="300" role="img" aria-label="裂缝开度分布直方图"></canvas>
+                <div class="chart-tip" id="hist-tip"></div>
+              </div>
+            </div>
+          </div>
+          <div class="legend">
+            <span><i style="background:#2f7d6b"></i>入统裂缝走向频数</span>
+            <span><i style="background:#41699b"></i>真值走向 NW330°（虚线）</span>
+            <span><i style="background:#c9a15a"></i>真值走向 NE 组 / 宽缝区 &gt;1 mm</span>
+          </div>
+        </div>
+
+        <!-- 面板 3：指标卡 + 诊断 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>③ 密度指标与诊断结论</h2>
+            <span class="hint">P10 线密度 · P21 面密度 · 走向峰值 · 层理误判</span>
+          </div>
+          <div class="metrics">
+            <div class="mcard"><span>入统裂缝</span><b id="m-n">—</b></div>
+            <div class="mcard"><span>P10 线密度</span><b id="m-p10">—</b></div>
+            <div class="mcard"><span>P21 面密度</span><b id="m-p21">—</b></div>
+            <div class="mcard"><span>走向峰值（两组）</span><b id="m-peak">—</b></div>
+            <div class="mcard"><span>层理误判</span><b id="m-fp">—</b></div>
+          </div>
+          <div class="verdict" id="verdict">正在计算…</div>
+        </div>
+      </div>
+
+      <div class="side">
+        <!-- 控制面板 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>参数（6 项）</h2>
+            <span class="hint">拖动即时重算</span>
+          </div>
+          <div class="controls">
+            <div class="ctl">
+              <label>裂缝密度规模 <output id="o-dens">240 条</output></label>
+              <input type="range" id="s-dens" min="60" max="420" step="10" value="240">
+              <span class="tip">露头面上生成的真实裂缝总数</span>
+            </div>
+            <div class="ctl">
+              <label>两组缝夹角 <output id="o-angle">75°</output></label>
+              <input type="range" id="s-angle" min="30" max="90" step="1" value="75">
+              <span class="tip">NW330° 组与 NE 组共轭剪缝夹角（实测 330°/45° ≈ 75°）</span>
+            </div>
+            <div class="ctl">
+              <label>成岩缝占比 <output id="o-dshare">15 %</output></label>
+              <input type="range" id="s-dshare" min="0" max="0.4" step="0.01" value="0.15">
+              <span class="tip">方位随机、短而弯的非构造缝比例</span>
+            </div>
+            <div class="ctl">
+              <label>层理 / 噪声强度 <output id="o-noise">40 %</output></label>
+              <input type="range" id="s-noise" min="0" max="1" step="0.05" value="0.40">
+              <span class="tip">层理长线与碎斑数量及其对比度，主要误判来源</span>
+            </div>
+            <div class="ctl">
+              <label>分割阈值 <output id="o-thr">0.45</output></label>
+              <input type="range" id="s-thr" min="0.20" max="0.80" step="0.01" value="0.45">
+              <span class="tip">对比度 ≥ 阈值才进入掩膜；过高漏细缝，过低混层理</span>
+            </div>
+            <div class="ctl">
+              <label>最小缝长 <output id="o-minlen">1.0 m</output></label>
+              <input type="range" id="s-minlen" min="0.3" max="6" step="0.1" value="1.0">
+              <span class="tip">短于该长度的骨架段不计入统计</span>
+            </div>
+          </div>
+          <div class="btnrow">
+            <button id="btn-resample">重新采样露头</button>
+            <button id="btn-reset">恢复默认</button>
+            <span class="btn-note">同一参数组合下采样结果可复现</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot">口径与公式：测量面 30 m × 20 m；检出规则 = 对比度 ≥ 分割阈值；入统规则 = 检出且迹长 ≥ 最小缝长；P10 = 入统条数 / 水平扫描线长 30 m；P21 = Σ 迹长 / 面积 600 m²；走向玫瑰按 10° 间隔全圆双端对称绘制；开度分级 SY/T 6286—1997（宽缝 &gt;1 mm、中缝 0.1–1 mm）；验收参照案例：走向误差 ≤±8°、线密度相对误差 ≤15%、与实测玫瑰花图 KS ≤0.15。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>真实文献与标准（8 条）</h2><span class="hint">每条注明对应本 demo 的模块</span></div>
+
+      <div class="src-bar">
+        <span class="tag real">裂缝强度度量</span>
+        <span><b>Dershowitz &amp; Herda (1992), “Interpretation of Fracture Spacing and Intensity”, Proc. 33rd U.S. Symposium on Rock Mechanics, ARMA-92-0757</b>：定义 P10（单位长度交切条数）、P21（单位面积迹长）、P32（单位体积裂缝面积）的裂缝强度度量体系。<b>对应模块：③ 指标卡的 P10 线密度 / P21 面密度。</b></span>
+        <a href="https://www.onepetro.org/conference-paper/ARMA-92-0757" target="_blank" rel="noopener">全文↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">节理几何统计</span>
+        <span><b>Dershowitz &amp; Einstein (1988), “Characterizing Rock Joint Geometry with Joint System Models”, Rock Mechanics and Rock Engineering 21(1):21–51</b>：节理系走向分组、产状分布与几何统计表征的经典框架。<b>对应模块：② 走向玫瑰花图与构造缝 / 成岩缝分组。</b></span>
+        <a href="https://doi.org/10.1007/BF01019674" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">国际建议方法</span>
+        <span><b>ISRM (1978), “Suggested Methods for the Quantitative Description of Discontinuities in Rock Masses”, Int. J. Rock Mech. Min. Sci. Geomech. Abstr. 15(6):319–368</b>：不连续面产状、间距、迹长、开度等 10 项参数的定量描述建议方法。<b>对应模块：② 产状统计与开度分布直方图。</b></span>
+        <a href="https://doi.org/10.1016/0148-9062(78)91472-9" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 6286—1997《碳酸盐岩储层精细描述方法》</b>：裂缝宽度分级——宽缝 &gt;1 mm、中缝 0.1–&lt;1 mm、窄缝 0.01–&lt;0.1 mm（现由 SY/T 5579.3—2008《油藏描述方法 第 3 部分：碳酸盐岩潜山油藏》代替）。<b>对应模块：② 开度直方图的宽缝 / 中缝分区标注。</b></span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F270A5BB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">分割网络</span>
+        <span><b>Ronneberger, Fischer &amp; Brox (2015), “U-Net: Convolutional Networks for Biomedical Image Segmentation”, MICCAI 2015, LNCS 9351:234–241</b>：编码器-解码器加跳跃连接的 U-Net，小样本即可做像素级分割，是露头裂缝实例分割的主流骨干。<b>对应模块：① 二值分割子图。</b></span>
+        <a href="https://doi.org/10.1007/978-3-319-24574-4_28" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">露头裂缝基准</span>
+        <span><b>“Towards Robust Fracture Mapping: Benchmarking Automatic Fracture Mapping in 2D Outcrop Imagery”, Solid Earth 17:1087 (2026), Copernicus</b>：FraXet 数据集（8,953 个 256×256 RGB+DEM patch）系统对比 Canny / Sobel / Gabor / Sato 等传统滤波与 U-Net、SegFormer 的逐像素裂缝提取。<b>对应模块：① 分割阈值滑块与骨架化效果评估。</b></span>
+        <a href="https://se.copernicus.org/articles/17/1087/2026/" target="_blank" rel="noopener">全文↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">数字露头案例</span>
+        <span><b>《基于数字露头的多尺度裂缝模型建立及其对地下裂缝预测指导》，地质科技通报，doi:10.19509/j.cnki.dzkq.tb20220599</b>：库车克斯勒塔格地区无人机倾斜摄影数字露头，模型分辨率达 1–3 mm，多尺度裂缝表征并指导地下裂缝预测。<b>对应模块：① 合成露头影像的数据口径与分辨率设定。</b></span>
+        <a href="https://dzkjtb.cug.edu.cn/cn/article/doi/10.19509/j.cnki.dzkq.tb20220599" target="_blank" rel="noopener">全文↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">摄影测量</span>
+        <span><b>Westoby et al. (2012), “‘Structure-from-Motion’ Photogrammetry: A Low-Cost, Effective Tool for Geoscience Applications”, Geomorphology 179:300–314</b>：SfM 同时解算相机位姿与场景几何，低成本获取高分辨率三维数据。<b>对应模块：多角度照片反投影与产状反算（走向误差口径）。</b></span>
+        <a href="https://doi.org/10.1016/j.geomorph.2012.08.021" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>裂缝强度度量定义（Dershowitz &amp; Herda 1992）</h2><span class="hint">P<sub>ij</sub>：i = 量测维度，j = 裂缝维度</span></div>
+      <table class="lit-table">
+        <thead><tr><th>度量</th><th>单位</th><th>定义</th><th>本 demo 中的计算</th></tr></thead>
+        <tbody>
+          <tr><td class="num">P10</td><td>条/m</td><td>单位长度扫描线上交切的裂缝条数</td><td>入统条数 / 30 m 水平扫描线</td></tr>
+          <tr><td class="num">P21</td><td>m/m²</td><td>单位面积上裂缝迹长总和</td><td>Σ 入统迹长 / 600 m²</td></tr>
+          <tr><td class="num">P32</td><td>m²/m³</td><td>单位体积上裂缝面积总和</td><td>需三维外推，超出本 2D demo 范围</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>裂缝宽度分级（SY/T 6286—1997）</h2><span class="hint">开度直方图的金色区对应「宽缝」</span></div>
+      <table class="lit-table">
+        <thead><tr><th>裂缝级别</th><th>裂缝宽度</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>宽缝（宏观缝）</td><td class="num">&gt;1 mm</td><td>毛细管力作用较弱，为优势渗流通道</td></tr>
+          <tr><td>中缝</td><td class="num">0.1 – &lt;1 mm</td><td>本 demo 开度分布的主体区间</td></tr>
+          <tr><td>窄缝</td><td class="num">0.01 – &lt;0.1 mm</td><td>低于影像可分辨极限（1 mm ≈ 1.5 像素）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

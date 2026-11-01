@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：LIMS 化验数据智能审核</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>LIMS 化验数据智能审核 · 交互式演示</h1>
+      <p class="lead">模拟一批车用柴油（0#）化验单的自动审核：规则引擎拦录入错误、物理一致性校验找矛盾、控制图抓仪器漂移、平行样查重复性，最后生成「通过 / 复测 / 重采」结论与待确认清单。</p>
+    </div>
+    <span class="badge">GB/T · ASTM D6299 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>精密度限按标准方法折算——密度 GB/T 1884（r≈0.6 kg/m³）、馏程 GB/T 6536（50% 点 r≈3.5 ℃）、硫含量 GB/T 17040（r 按浓度公式折算）、闪点 GB/T 261（r≈2.5 ℃）、凝点 GB/T 510（r≈2 ℃）、辛烷值 GB/T 5487（r=0.2）；控制图与统计受控判定按 ASTM D6299 / ISO 4259-4（±2σ 警告、±3σ 行动）；实验室质量管理与结果报告按 ISO/IEC 17025:2017。模拟数据为演示用伪随机数，规则与限值口径真实。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：审核流水线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 审核流水线（折算到全厂 2,400 条/日）</h2>
+          <span class="hint">四级过滤：规则引擎 → 一致性校验 → 统计检测 → 待确认清单</span>
+        </div>
+        <div class="chart-wrap"><svg id="pipe" viewBox="0 0 480 148" role="img" aria-label="化验数据审核流水线"></svg></div>
+      </div>
+
+      <!-- 面板 2：Z 控制图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 质控样 Z-score 控制图（柴油 QC 密度 · 连续批次）</h2>
+          <span class="hint">悬停读数 · 红=超审核阈值复测 · 金=超 2σ 警告</span>
+        </div>
+        <div class="chart-box" id="qc-box">
+          <canvas id="qc-chart" role="img" aria-label="质控样Z分数控制图"></canvas>
+          <div class="chart-tip" id="qc-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>受控批次</span>
+          <span><i style="background:#c9a15a"></i>|Z|&gt;2 警告</span>
+          <span><i style="background:#b05a51"></i>|Z|&gt;阈值 复测</span>
+          <span><i style="background:#2f7d6b"></i>中心线 CL</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：平行样偏差分布 + 指标卡 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 平行样偏差分布（|Δ|/r 归一化）</h2>
+          <span class="hint">|Δ|/r &gt; 1 即超重复性限，判复测</span>
+        </div>
+        <div class="chart-box" id="dup-box">
+          <canvas id="dup-chart" role="img" aria-label="平行样偏差分布直方图"></canvas>
+          <div class="chart-tip" id="dup-tip"></div>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>本批化验记录</span><b id="m-total">—</b></div>
+          <div class="mcard"><span>规则引擎拦截</span><b id="m-rule">—</b></div>
+          <div class="mcard warn"><span>逻辑矛盾（金）</span><b id="m-logic">—</b></div>
+          <div class="mcard bad"><span>统计超限（红）</span><b id="m-stat">—</b></div>
+          <div class="mcard"><span>预估误报率</span><b id="m-fp">—</b></div>
+        </div>
+      </div>
+
+      <!-- 面板 4：化验单明细与审核结论 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 本批化验单明细与审核结论（12 单 · 车用柴油 0#）</h2>
+          <span class="hint">红底=超 r/R 复测 · 金底=物理一致性矛盾 · 灰底=建议重采</span>
+        </div>
+        <table class="lab-table">
+          <thead>
+            <tr><th>样品编号</th><th>密度 kg/m³</th><th>馏程50% ℃</th><th>硫 mg/kg</th><th>凝点 ℃</th><th>闪点 ℃</th><th>平行样 |Δ|</th><th>命中规则</th><th>结论</th></tr>
+          </thead>
+          <tbody id="lab-body"></tbody>
+        </table>
+        <div class="verdict" id="verdict">正在审核…</div>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 数据质量与审核参数（5 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>平行样偏差幅度 <output id="o-dup">1.0 ×r</output></label>
+            <input type="range" id="s-dup" min="0" max="3" step="0.1" value="1.0">
+            <span class="tip">采样/制样引入的成对偏差，以方法重复性限 r 为单位</span>
+          </div>
+          <div class="ctl">
+            <label>仪器系统漂移 <output id="o-drift">1.2 σ</output></label>
+            <input type="range" id="s-drift" min="0" max="4" step="0.1" value="1.2">
+            <span class="tip">气相色谱类仪器标定过期，30 批内线性累计漂移</span>
+          </div>
+          <div class="ctl">
+            <label>随机测量噪声 <output id="o-noise">1.0 σ</output></label>
+            <input type="range" id="s-noise" min="0.3" max="2.5" step="0.1" value="1.0">
+            <span class="tip">方法本身的重复性波动，σ = r/2.77</span>
+          </div>
+          <div class="ctl">
+            <label>审核阈值 |Z| <output id="o-thr">3.0</output></label>
+            <input type="range" id="s-thr" min="1.5" max="4" step="0.1" value="3.0">
+            <span class="tip">ASTM D6299 行动限取 3σ；调严会推高误报率</span>
+          </div>
+          <div class="ctl">
+            <label>录入错误混入率 <output id="o-err">3 %</output></label>
+            <input type="range" id="s-err" min="0" max="10" step="0.5" value="3">
+            <span class="tip">小数点错位 / 指标串行等抄写错误混入比例</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <button id="btn-reseed">换一批数据</button>
+          <span class="btn-note">σ 由方法 r 折算：σ = r / 2.77</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">规则口径：① 量程/有效数字拦截（如密度录成 83.2 kg/m³）；② 物理一致性——闪点与馏程 50% 点正相关，柴油 闪点&lt;50 ℃ 而 50% 点&gt;285 ℃ 判矛盾；硫含量与密度同向，密度&gt;845 而硫&lt;3 mg/kg 判存疑；③ 平行样 |Δ|&gt;r 复测；④ 控制图 |Z|&gt;2 警告、&gt;阈值行动；连续 7 点同向判漂移（Western Electric 规则精简版）。审核结论优先级：重采 &gt; 复测 &gt; 关注 &gt; 通过。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>真实标准与文献（8 条 · 均已核实）</h2><span class="hint">每条注明与本 demo 的模块对应关系</span></div>
+      <div class="src-bar">
+        <span class="tag real">口径说明</span>
+        <span>本 demo 的规则限值、精密度参数与质量控制方法全部来自下列公开标准；演示数据本身为伪随机模拟，但<b>审核规则的口径、限值量级与判定逻辑</b>与真实标准一致。</span>
+      </div>
+
+      <div class="ref-list">
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：② 控制图 / ③ 平行样</span><b>GB/T 4756-2015 石油液体手工取样法</b></div>
+          <p>规定从罐、管线采集液体石油产品样品的规程（修改采用 ISO 3170:2004）。采样偏差是「平行样偏差」与「重采」结论的现实来源——demo 中「平行样偏差幅度」滑块即模拟采样/制样环节引入的成对偏差。</p>
+          <a href="https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D80EABD3A7E05397BE0A0AB82A" target="_blank" rel="noopener">国家标准全文公开系统↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：④ 化验单 · 密度规则</span><b>GB/T 1884-2000 原油和液体石油产品密度实验室测定法（密度计法）</b></div>
+          <p>规定 20 ℃ 密度的密度计测定方法（等效 ISO 3675:1998），给出精密度（透明液体重复性约 0.6 kg/m³ 量级）。demo 化验单中密度列的量程拦截与平行样 |Δ| 判定以此折算。</p>
+          <a href="https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=3D54A56441FDEDA2B8583C2DDB06081D" target="_blank" rel="noopener">国家标准全文公开系统↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：④ 化验单 · 馏程与一致性</span><b>GB/T 6536-2010 石油产品常压蒸馏特性测定法</b></div>
+          <p>规定馏分燃料等石油产品常压蒸馏特性的测定（50% 回收温度精密度按回收速率公式计算，柴油组 r 约 3–4 ℃）。demo 中「闪点—馏程50%」物理一致性校验的馏程一侧即来自本方法的 50% 点。</p>
+          <a href="https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=8D2172CFB424D635BC273ED59013D8CA" target="_blank" rel="noopener">国家标准全文公开系统↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：④ 化验单 · 硫含量规则</span><b>GB/T 17040-2019 石油和石油产品中硫含量的测定 能量色散X射线荧光光谱法</b></div>
+          <p>能量色散 X 射线荧光法测硫，重复性 r 按硫含量水平的幂函数公式折算。demo 中硫含量列的超限判定与「密度—硫同向」存疑规则以本方法精密度为基准。</p>
+          <a href="https://std.samr.gov.cn/gb/search/gbDetailed?id=8531C702DBBC6551E05397BE0A0ACD16" target="_blank" rel="noopener">国家标准全文公开系统↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：规则库 · 辛烷值方法</span><b>GB/T 5487-2015 汽油辛烷值的测定 研究法</b></div>
+          <p>CFR 辛烷值试验机测定研究法辛烷值（RON），方法精密度 r=0.2、R=0.7（RON 单位）。汽油批次化验单的辛烷值审核规则以此为准——demo 规则库中汽油指标复用同一套 r/R 框架。</p>
+          <a href="https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=DBD08342C4BCBD31176FD2ED408CC008" target="_blank" rel="noopener">国家标准全文公开系统↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：④ 化验单 · 闪点与一致性</span><b>GB/T 261-2021 闪点的测定 宾斯基-马丁闭口杯法</b></div>
+          <p>宾斯基-马丁闭口杯测定可燃液体闪点，柴油闪点重复性约 2–3 ℃。闪点是柴油出厂安全指标，也是「闪点低于轻组分水平」这类逻辑矛盾校验的核心字段（对应案例库中「闪点 62 录成 26」的录入错误场景）。</p>
+          <a href="https://www.spc.org.cn/online/8f4a02de97828e5ceb348586d0ec1632.html" target="_blank" rel="noopener">中国标准在线服务网↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：② 控制图 / 审核阈值</span><b>ASTM D6299-23e1 应用统计质量保证与控制图技术评价分析测量系统性能的标准规程</b></div>
+          <p>规定用 SQC 控制图监控分析测量系统的稳定性、精密度与偏倚：中心线、±2σ 警告限、±3σ 行动限及失控判定规则。demo 的 Z-score 控制图、审核阈值滑块（默认 3.0）与「连续同向判漂移」规则直接对应本规程（ISO 4259-4:2021 与其等效）。</p>
+          <a href="https://store.astm.org/d6299-26.html" target="_blank" rel="noopener">ASTM 标准页面↗</a>
+        </div>
+        <div class="ref-item">
+          <div class="ref-head"><span class="tag sim">对应模块：整体 · 质量管理体系</span><b>ISO/IEC 17025:2017 检测和校准实验室能力的通用要求</b></div>
+          <p>规定实验室能力、公正性与一致运作的通用要求，其中结果质量保证（7.7 条）要求实验室建立监控结果有效性的程序（质控样、控制图、留样复测等）。demo 的「留样复查 / 平行样 / 待确认清单人工签字」流程即 17025 结果质量保证条款在 LIMS 中的落地。</p>
+          <a href="https://www.iso.org/obp/ui/en/#iso:std:iso-iec:17025:en" target="_blank" rel="noopener">ISO 在线浏览平台↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>模块—标准对照速查</h2><span class="hint">demo 各模块的规则来源</span></div>
+      <table class="lit-table">
+        <thead><tr><th>demo 模块</th><th>规则内容</th><th>来源标准</th></tr></thead>
+        <tbody>
+          <tr><td>① 审核流水线</td><td>全量预筛 + 待确认清单、人工确认签字</td><td class="num">ISO/IEC 17025:2017 §7.7</td></tr>
+          <tr><td>② Z-score 控制图</td><td>CL、±2σ 警告、±3σ 行动、连续同向判漂移</td><td class="num">ASTM D6299 / ISO 4259-4</td></tr>
+          <tr><td>③ 平行样偏差</td><td>|Δ|&gt;r 判复测，采样偏差注入</td><td class="num">GB/T 4756 + 各方法精密度</td></tr>
+          <tr><td>④ 化验单 · 密度</td><td>量程拦截、平行样限</td><td class="num">GB/T 1884-2000</td></tr>
+          <tr><td>④ 化验单 · 馏程50%</td><td>精密度限、与闪点一致性</td><td class="num">GB/T 6536-2010</td></tr>
+          <tr><td>④ 化验单 · 硫含量</td><td>超限判定、与密度同向校验</td><td class="num">GB/T 17040-2019</td></tr>
+          <tr><td>④ 化验单 · 闪点/凝点</td><td>出厂安全指标、一致性校验</td><td class="num">GB/T 261-2021 / GB/T 510</td></tr>
+          <tr><td>规则库 · 辛烷值</td><td>RON 精密度 r=0.2 / R=0.7</td><td class="num">GB/T 5487-2015</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

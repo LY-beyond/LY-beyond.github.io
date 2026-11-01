@@ -9,8 +9,8 @@
     { name: '白云岩', color: 'var(--acc)' },
     { name: '过渡岩性', color: 'var(--gold)' }
   ];
-  var FILL = ['#b9a179', '#87906f', '#a3aeae', '#cfccb8', '#a3a06a'];
-  var EDGE = ['#d8c49b', '#aab393', '#c3cdcd', '#e8e5d2', '#c4c189'];
+  var FILL = ['#866e46', '#87906f', '#515c5c', '#474430', '#95925c'];
+  var EDGE = ['#645027', '#636c4c', '#323c3c', '#2d2a17', '#76733b'];
 
   var GROUP_DEF = [
     { key: 'A', name: '细砂岩', classes: [0, 0, 0, 0, 4, 0, 1, 0], hard: 0.25, pair: [0, 4] },
@@ -77,15 +77,15 @@
       x = (rnd(p.seed + k * 2.3) - 0.5) * r * 1.05;
       y = (rnd(p.seed + k * 3.1 + 5) - 0.5) * r * 1.05;
       if (cls === 0 || cls === 4) {
-        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.4" fill="#3c3a2a" opacity=".55"/>';
+        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.4" fill="#d5d3c3" opacity=".55"/>';
       } else if (cls === 1) {
-        s += '<path d="M' + (x - 4).toFixed(1) + ' ' + y.toFixed(1) + ' L' + (x + 4).toFixed(1) + ' ' + y.toFixed(1) + '" stroke="#31352a" stroke-width="1.1" opacity=".55"/>';
+        s += '<path d="M' + (x - 4).toFixed(1) + ' ' + y.toFixed(1) + ' L' + (x + 4).toFixed(1) + ' ' + y.toFixed(1) + '" stroke="#d1d5ca" stroke-width="1.1" opacity=".55"/>';
       } else {
-        s += '<path d="M' + x.toFixed(1) + ' ' + (y - 2.6).toFixed(1) + ' L' + (x + 2.6).toFixed(1) + ' ' + y.toFixed(1) + ' L' + x.toFixed(1) + ' ' + (y + 2.6).toFixed(1) + ' L' + (x - 2.6).toFixed(1) + ' ' + y.toFixed(1) + ' Z" fill="#2f3a3a" opacity=".42"/>';
+        s += '<path d="M' + x.toFixed(1) + ' ' + (y - 2.6).toFixed(1) + ' L' + (x + 2.6).toFixed(1) + ' ' + y.toFixed(1) + ' L' + x.toFixed(1) + ' ' + (y + 2.6).toFixed(1) + ' L' + (x - 2.6).toFixed(1) + ' ' + y.toFixed(1) + ' Z" fill="#c5d0d0" opacity=".42"/>';
       }
     }
     if (cls === 4) {
-      s += '<path d="M' + (-r * 0.5) + ' ' + (r * 0.2) + ' L' + (r * 0.5) + ' ' + (r * 0.2) + '" stroke="#31352a" stroke-width="1" opacity=".4"/>';
+      s += '<path d="M' + (-r * 0.5) + ' ' + (r * 0.2) + ' L' + (r * 0.5) + ' ' + (r * 0.2) + '" stroke="#d1d5ca" stroke-width="1" opacity=".4"/>';
     }
     return s;
   }
@@ -115,10 +115,10 @@
       if (sel) {
         s += '<circle r="' + (p.size + 8) + '" fill="none" stroke="var(--acc)" stroke-width="1.4" stroke-dasharray="4 3"/>';
       }
-      s += '<circle r="' + (p.size + 3) + '" fill="#0a0e09" opacity=".55"/>';
+      s += '<circle r="' + (p.size + 3) + '" fill="#f2f6f1" opacity=".55"/>';
       s += '<g transform="rotate(' + (i * 9 - 20) + ')">' + particleShape(p, i) + texture(p, p.size) + '</g>';
       if (p.oil === '中') {
-        s += '<path d="M' + (-p.size * 0.7) + ' ' + (-p.size * 0.6) + ' Q0 ' + (-p.size * 0.95) + ' ' + (p.size * 0.6) + ' ' + (-p.size * 0.55) + '" fill="none" stroke="#8a6a3a" stroke-width="1.1" opacity=".55"/>';
+        s += '<path d="M' + (-p.size * 0.7) + ' ' + (-p.size * 0.6) + ' Q0 ' + (-p.size * 0.95) + ' ' + (p.size * 0.6) + ' ' + (-p.size * 0.55) + '" fill="none" stroke="#c5a575" stroke-width="1.1" opacity=".55"/>';
       }
       s += '<text x="0" y="' + (p.size + 18) + '" font-size="9" fill="' + (sel ? 'var(--acc)' : 'var(--tx-3)') + '" text-anchor="middle">' + grp.def.key + '-0' + (i + 1) + '</text>';
       s += '</g>';

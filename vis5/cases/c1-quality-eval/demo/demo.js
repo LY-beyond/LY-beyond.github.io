@@ -2,6 +2,18 @@
 (function () {
   'use strict';
 
+  /* HiDPI 适配：canvas backing store 按 dpr × CSS 拉伸系数放大，绘制仍用逻辑坐标 */
+  function setupCanvas(cv, lw, lh) {
+    const dpr = window.devicePixelRatio || 1;
+    const ratio = dpr * ((cv.clientWidth || lw) / lw);
+    const bw = Math.max(1, Math.round(lw * ratio));
+    const bh = Math.max(1, Math.round(lh * ratio));
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return ctx;
+  }
+
   const FPA = 320;
   const N = 600;
   const DEPTH = 3000;
@@ -46,7 +58,7 @@
     var cur = {};
     try { cur = JSON.parse(localStorage.getItem(SHARED_KEY) || '{}'); } catch (e) {}
     MY_KEYS.forEach(function (k) { if (typeof S[k] === 'number') cur[k] = S[k]; });
-    localStorage.setItem(SHARED_KEY, JSON.stringify(cur));
+    try { localStorage.setItem(SHARED_KEY, JSON.stringify(cur)); } catch (e) {}
   }
 
   function mulberry32(seed) {
@@ -292,6 +304,8 @@
     // 深度轴
     for (let d = 0; d <= DEPTH; d += 500) {
       const x = padL + d / DEPTH * plotW;
+      // 与底部轴标题"井深 m"同一列的刻度不画，避免压字
+      if (Math.abs(x - (padL + plotW / 2)) < 40) continue;
       s += `<text x="${x}" y="${H - 7}" font-size="7.5" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${d}</text>`;
     }
 
@@ -325,8 +339,8 @@
 
   function drawVDL(data, ai) {
     const canvas = document.getElementById('vdl');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const W = 430, H = 150;
+    const ctx = setupCanvas(canvas, W, H);
     const Nt = 80;
     const cellW = W / N, cellH = H / Nt;
 
@@ -461,9 +475,11 @@
     });
   }
 
+  var LAST_SIM = null;
   function run() {
     const data = generate();
     const ai = aiClassify(data.bi);
+    LAST_SIM = { data: data, ai: ai };
     drawWell(data);
     drawCross();
     drawCBL(data, ai);
@@ -560,4 +576,799 @@
 
   document.getElementById('btn-apply-rec').addEventListener('click', applyRecommended);
   document.getElementById('btn-cur').addEventListener('click', renderCompare);
+
+  /* =========================================================
+     真实井段：Utah FORGE 56-32（CBL/TT，不含 VDL 原始波形）
+     ========================================================= */
+  function clamp01(v) { return Math.min(1, Math.max(0, v)); }
+
+  var REAL = window.__C1_REAL__;
+
+  function gradeOfRel(r) {
+    return r <= 20 ? 'A' : r <= 30 ? 'B' : r <= 40 ? 'C' : 'D';
+  }
+
+  function analyzeReal() {
+    var d = REAL;
+    var n = d.cbl.length;
+    var fpa = d.fpa;
+    var rel = new Float64Array(n);
+    var bi = new Float64Array(n);
+    var form = new Float64Array(n);
+    var ref = new Array(n);
+
+    for (var i = 0; i < n; i++) {
+      rel[i] = d.cbl[i] / fpa * 100;
+      bi[i] = clamp01(1 - d.cbl[i] / fpa);
+      /* 第二界面耦合代理：无 VDL 原始波形，用相对幅度与声波时差的单调映射，
+         仅作教学演示，不代表独立测量。 */
+      form[i] = clamp01(0.98 - rel[i] / 100 * 1.05 + (d.tt[i] - 290) * 0.0025);
+      ref[i] = gradeOfRel(rel[i]);
+    }
+
+    /* 平滑 + 高斯类概率（演示用规则分类器，非训练模型）
+       按拼接段分别平滑与分段，避免人工拼接边界产生跨段伪影。 */
+    var W = 8;
+    var centers = { A: 0.90, B: 0.75, C: 0.65, D: 0.35 };
+    var widths = { A: 0.10, B: 0.07, C: 0.08, D: 0.13 };
+    var mean = new Float64Array(n);
+    var probs = new Array(n);
+    var pred = new Array(n);
+    var merged = [];
+    var minLen = 4;
+
+    REAL.blocks.forEach(function (b) {
+      var s0 = b.start, s1 = b.end;
+
+      /* 段内滑动平均，窗口在拼接边界处截断 */
+      for (var k = s0; k < s1; k++) {
+        var sum = 0, cnt = 0;
+        for (var j = Math.max(s0, k - W); j <= Math.min(s1 - 1, k + W); j++) { sum += bi[j]; cnt++; }
+        mean[k] = sum / cnt;
+      }
+
+      var localProbs = [];
+      for (var p = s0; p < s1; p++) {
+        var pr = {}, tot = 0;
+        ['A', 'B', 'C', 'D'].forEach(function (g) {
+          pr[g] = Math.exp(-Math.pow((mean[p] - centers[g]) / widths[g], 2));
+          tot += pr[g];
+        });
+        ['A', 'B', 'C', 'D'].forEach(function (g) { pr[g] /= tot; });
+        localProbs.push(pr);
+      }
+
+      var smooth = localProbs.map(function (q) { return { A: q.A, B: q.B, C: q.C, D: q.D }; });
+      var len = s1 - s0;
+      for (var it = 0; it < 3; it++) {
+        var old = smooth.map(function (q) { return { A: q.A, B: q.B, C: q.C, D: q.D }; });
+        for (var m = 1; m < len - 1; m++) {
+          ['A', 'B', 'C', 'D'].forEach(function (g) {
+            smooth[m][g] = old[m][g] * 0.5 + (old[m - 1][g] + old[m + 1][g]) * 0.25;
+          });
+          var tt2 = smooth[m].A + smooth[m].B + smooth[m].C + smooth[m].D;
+          ['A', 'B', 'C', 'D'].forEach(function (g) { smooth[m][g] /= tt2; });
+        }
+      }
+
+      for (var q = 0; q < len; q++) {
+        var pp = smooth[q];
+        var best = 'A', bv = 0;
+        ['A', 'B', 'C', 'D'].forEach(function (g) {
+          if (pp[g] > bv) { bv = pp[g]; best = g; }
+        });
+        pred[s0 + q] = { grade: best, conf: bv, prob: pp };
+        probs[s0 + q] = pp;
+      }
+
+      var segs = [];
+      var cur = { start: s0, grade: pred[s0].grade };
+      for (var t = s0 + 1; t < s1; t++) {
+        if (pred[t].grade !== cur.grade) { cur.end = t; segs.push(cur); cur = { start: t, grade: pred[t].grade }; }
+      }
+      cur.end = s1; segs.push(cur);
+
+      var localMerged = [];
+      for (var u = 0; u < segs.length; u++) {
+        var g = segs[u];
+        if (g.end - g.start < minLen && localMerged.length > 0) {
+          localMerged[localMerged.length - 1].end = g.end;
+        } else {
+          localMerged.push({ start: g.start, end: g.end, grade: g.grade });
+        }
+      }
+      merged = merged.concat(localMerged);
+    });
+
+    merged.forEach(function (g) {
+      var counts = { A: 0, B: 0, C: 0, D: 0 };
+      var confSum = 0;
+      for (var x = g.start; x < g.end; x++) { counts[ref[x]]++; confSum += pred[x].conf; }
+      var tg = 'A', mx = 0;
+      ['A', 'B', 'C', 'D'].forEach(function (gg) { if (counts[gg] > mx) { mx = counts[gg]; tg = gg; } });
+      g.refMajor = tg;
+      g.conf = confSum / (g.end - g.start);
+    });
+
+    return { n: n, rel: rel, bi: bi, form: form, ref: ref, mean: mean, probs: probs, pred: pred, segs: merged, fpa: fpa };
+  }
+
+  function blockOfIndex(idx) {
+    var bs = REAL.blocks;
+    for (var i = 0; i < bs.length; i++) if (idx >= bs[i].start && idx < bs[i].end) return i;
+    return bs.length - 1;
+  }
+
+  function segDepthLabel(g) {
+    var d0 = REAL.depth[g.start], d1 = REAL.depth[g.end - 1];
+    var b0 = blockOfIndex(g.start), b1 = blockOfIndex(g.end - 1);
+    if (b0 === b1) return d0 + '–' + d1;
+    return d0 + '–' + d1 + ' *';
+  }
+
+  var RA = null;
+  var RI = { hover: -1, seg: -1, gain: 1.0, z0: 0, z1: 1 };
+  var VDL_OFF = null;
+  var MINSPAN = 40; // 最小视窗（1 ft/点），避免放大到失去参考意义
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+
+  function zoomDepthLabel(a, b) {
+    var d0 = REAL.depth[clamp(a, 0, REAL.depth.length - 1)];
+    var d1 = REAL.depth[clamp(b - 1, 0, REAL.depth.length - 1)];
+    return d0 + '–' + d1 + ' ft';
+  }
+  function updateZoomLabel() {
+    var el = document.getElementById('z-label');
+    if (!el) return;
+    if (!RA) { el.textContent = '视窗 —'; return; }
+    var full = (RI.z0 === 0 && RI.z1 === RA.n);
+    el.textContent = '视窗 ' + zoomDepthLabel(RI.z0, RI.z1) + (full ? '（全段）' : ' · 跨度 ' + (RI.z1 - RI.z0) + ' ft');
+  }
+
+  var zoomRaf = 0;
+  function setZoom(a, b) {
+    if (!RA) return;
+    var n = RA.n;
+    a = Math.round(a); b = Math.round(b);
+    var span = b - a;
+    if (span < MINSPAN) {
+      var c = (a + b) / 2;
+      a = Math.round(c - MINSPAN / 2); b = a + MINSPAN;
+    }
+    if (a < 0) { b -= a; a = 0; }
+    if (b > n) { a -= (b - n); b = n; }
+    a = clamp(a, 0, n); b = clamp(b, a, n);
+    if (b - a < MINSPAN) { b = n; a = Math.max(0, n - MINSPAN); }
+    RI.z0 = a; RI.z1 = b;
+    if (RI.hover >= 0 && (RI.hover < a || RI.hover >= b)) RI.hover = -1;
+    if (zoomRaf) return;
+    zoomRaf = requestAnimationFrame(function () {
+      zoomRaf = 0;
+      if (!RA) return;
+      drawRealCBL(RA);
+      buildVDLOff(RA);
+      paintVDL(RA);
+      applyCrosshair();
+      updateZoomLabel();
+    });
+  }
+
+  function resetZoom() {
+    if (!RA) return;
+    RI.hover = -1;
+    setZoom(0, RA.n);
+    hideTip('r-cbl-tip');
+    hideTip('r-vdl-tip');
+  }
+
+  function drawRealCBL(ra) {
+    var svg = document.getElementById('r-cbl');
+    if (!svg) return;
+    var W = 900, H = 300, pl = 52, pr = 62, pt = 32, pb = 34;
+    var pw = W - pl - pr, ph = H - pt - pb;
+    var a = RI.z0, b = RI.z1, m = Math.max(2, b - a);
+    var AMAX = 65;
+
+    function xOf(i) { return pl + (i - a) / (m - 1) * pw; }
+    function yAmp(v) { return pt + (1 - Math.min(AMAX, v) / AMAX) * ph; }
+    function yR(v) { return pt + (1 - v) * ph; }
+
+    var s = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fdfcf8" rx="6"/>';
+
+    /* 分段底色 + 顶部标签（仅绘制与视窗相交的部分） */
+    REAL.blocks.forEach(function (blk, idx) {
+      var s0 = Math.max(blk.start, a), s1 = Math.min(blk.end, b);
+      if (s1 <= s0) return;
+      var x0 = xOf(s0), x1 = xOf(s1 - 1);
+      if (idx % 2 === 1) s += '<rect x="' + x0 + '" y="' + pt + '" width="' + Math.max(1, x1 - x0) + '" height="' + ph + '" fill="#f4f1e7"/>';
+      if (x1 - x0 > 96) {
+        s += '<text x="' + ((x0 + x1) / 2) + '" y="' + (pt - 15) + '" font-size="9.5" fill="#4d565b" text-anchor="middle" font-weight="600">' + blk.label + '</text>';
+        s += '<text x="' + ((x0 + x1) / 2) + '" y="' + (pt - 4) + '" font-size="8.5" fill="#9ba3a9" text-anchor="middle" font-family="monospace">' + blk.top + '–' + blk.bottom + ' ft</text>';
+      }
+    });
+    REAL.blocks.forEach(function (blk, idx) {
+      if (idx === 0 || blk.start < a || blk.start >= b) return;
+      var x = xOf(blk.start);
+      s += '<line x1="' + x + '" y1="' + pt + '" x2="' + x + '" y2="' + (pt + ph) + '" stroke="#b9b1a0" stroke-width="1.2"/>';
+    });
+
+    /* 网格：左轴幅度；右轴 BI */
+    [0, 20, 40, 60].forEach(function (v) {
+      var y = yAmp(v);
+      s += '<line x1="' + pl + '" y1="' + y + '" x2="' + (pl + pw) + '" y2="' + y + '" stroke="#ece7d8"/>';
+      s += '<text x="' + (pl - 6) + '" y="' + (y + 3) + '" font-size="8" fill="#9ba3a9" text-anchor="end" font-family="monospace">' + v + '</text>';
+    });
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      var y = yR(v);
+      s += '<text x="' + (pl + pw + 6) + '" y="' + (y + 3) + '" font-size="8" fill="#2f7d6b" text-anchor="start" font-family="monospace">' + v.toFixed(2) + '</text>';
+    });
+
+    /* FPA 基准 */
+    var yFpa = yAmp(ra.fpa);
+    s += '<line x1="' + pl + '" y1="' + yFpa + '" x2="' + (pl + pw) + '" y2="' + yFpa + '" stroke="#9a9486" stroke-width="1" stroke-dasharray="5 3"/>';
+    s += '<text x="' + (pl + pw - 3) + '" y="' + (yFpa - 4) + '" font-size="8.5" fill="#7d776a" text-anchor="end" font-family="monospace">FPA ' + ra.fpa.toFixed(1) + ' mV</text>';
+
+    /* AI 分段边界（仅视窗内） */
+    ra.segs.forEach(function (g) {
+      if (g.start === 0 || g.start < a || g.start >= b) return;
+      var x = xOf(g.start);
+      s += '<line x1="' + x + '" y1="' + pt + '" x2="' + x + '" y2="' + (pt + ph) + '" stroke="#8a9298" stroke-width="0.8" stroke-dasharray="3 2" opacity="0.65"/>';
+    });
+
+    /* 曲线：按视窗重采样，放大后自动加密 */
+    var step = Math.max(1, Math.round(m / 360));
+    var path = '';
+    var lastI = -1;
+    for (var i = a; i < b; i += step) {
+      path += (i === a ? 'M' : 'L') + xOf(i).toFixed(1) + ' ' + yAmp(REAL.cbl[i]).toFixed(1) + ' ';
+      lastI = i;
+    }
+    if (lastI !== b - 1) path += 'L' + xOf(b - 1).toFixed(1) + ' ' + yAmp(REAL.cbl[b - 1]).toFixed(1);
+    s += '<path d="' + path + '" fill="none" stroke="#242b2e" stroke-width="1.1" stroke-linejoin="round"/>';
+
+    /* BI 曲线 */
+    path = ''; lastI = -1;
+    for (var j = a; j < b; j += step) {
+      path += (j === a ? 'M' : 'L') + xOf(j).toFixed(1) + ' ' + yR(ra.bi[j]).toFixed(1) + ' ';
+      lastI = j;
+    }
+    if (lastI !== b - 1) path += 'L' + xOf(b - 1).toFixed(1) + ' ' + yR(ra.bi[b - 1]).toFixed(1);
+    s += '<path d="' + path + '" fill="none" stroke="#2f7d6b" stroke-width="1.4" opacity="0.9"/>';
+
+    /* 第二界面代理评分 */
+    path = ''; lastI = -1;
+    for (var q = a; q < b; q += step) {
+      path += (q === a ? 'M' : 'L') + xOf(q).toFixed(1) + ' ' + yR(ra.form[q]).toFixed(1) + ' ';
+      lastI = q;
+    }
+    if (lastI !== b - 1) path += 'L' + xOf(b - 1).toFixed(1) + ' ' + yR(ra.form[b - 1]).toFixed(1);
+    s += '<path d="' + path + '" fill="none" stroke="#c9a15a" stroke-width="1" stroke-dasharray="4 2" opacity="0.9"/>';
+
+    /* 参考评级色带（仅视窗内） */
+    var stripY = pt + ph + 8, stripH = 8;
+    s += '<text x="' + (pl - 6) + '" y="' + (stripY + 7) + '" font-size="8" fill="#9ba3a9" text-anchor="end">参考</text>';
+    var runStart = a;
+    for (var r2 = a + 1; r2 <= b; r2++) {
+      if (r2 === b || ra.ref[r2] !== ra.ref[runStart]) {
+        s += '<rect x="' + xOf(runStart) + '" y="' + stripY + '" width="' + Math.max(1, xOf(r2 - 1) - xOf(runStart) + 1) + '" height="' + stripH + '" fill="' + GRADE_COLOR[ra.ref[runStart]] + '"/>';
+        runStart = r2;
+      }
+    }
+    s += '<rect x="' + pl + '" y="' + stripY + '" width="' + pw + '" height="' + stripH + '" fill="none" stroke="#e0d9c8"/>';
+
+    /* 轴标题：显示当前深度视窗 */
+    s += '<text x="' + (pl + pw / 2) + '" y="' + (H - 3) + '" font-size="8.5" fill="#9ba3a9" text-anchor="middle">深度视窗 ' + zoomDepthLabel(a, b) + '（1 ft/点）</text>';
+
+    /* 选中分段高亮（裁剪到视窗） */
+    if (RI.seg >= 0 && ra.segs[RI.seg]) {
+      var sg = ra.segs[RI.seg];
+      var hs = Math.max(sg.start, a), he = Math.min(sg.end, b);
+      if (he > hs) {
+        var hx0 = xOf(hs), hx1 = xOf(he - 1);
+        s += '<rect x="' + hx0 + '" y="' + pt + '" width="' + Math.max(2, hx1 - hx0) + '" height="' + ph + '" fill="rgba(201,161,90,0.10)" stroke="#b05a51" stroke-width="1.3"/>';
+      }
+    }
+
+    /* 悬停十字线 */
+    s += '<g id="r-cross" style="display:none">'
+      + '<line id="r-cross-line" y1="' + pt + '" y2="' + (pt + ph) + '" stroke="#8a9298" stroke-width="1" stroke-dasharray="3 2"/>'
+      + '<circle id="r-cross-cbl" r="3.2" fill="#242b2e" stroke="#fff" stroke-width="1.2"/>'
+      + '<circle id="r-cross-bi" r="3" fill="#2f7d6b" stroke="#fff" stroke-width="1.2"/>'
+      + '</g>';
+
+    svg.innerHTML = s;
+  }
+
+  function vdlAmps(grade) {
+    if (grade === 'A') return { casing: 0.22, formation: 0.92 };
+    if (grade === 'B') return { casing: 0.42, formation: 0.72 };
+    if (grade === 'C') return { casing: 0.72, formation: 0.38 };
+    return { casing: 0.95, formation: 0.10 };
+  }
+
+  function buildVDLOff(ra) {
+    var cv = document.getElementById('r-vdl');
+    if (!cv) return;
+    var W = 900, H = 160, Nt = 60;
+    var z0 = RI.z0, z1 = RI.z1, m = Math.max(1, z1 - z0);
+    var cellW = W / m, cellH = H / Nt;
+    var off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    var ctx = off.getContext('2d');
+    ctx.fillStyle = '#fdfcf8';
+    ctx.fillRect(0, 0, W, H);
+
+    for (var d = z0; d < z1; d++) {
+      var grade = ra.pred[d].grade;
+      var amps = vdlAmps(grade);
+      for (var t = 0; t < Nt; t++) {
+        var intensity;
+        if (t < 20) intensity = amps.casing * Math.exp(-Math.pow((t - 9) / 4.5, 2));
+        else if (t > 25) intensity = amps.formation * Math.exp(-Math.pow((t - 41) / 10, 2));
+        else intensity = 0;
+        var base = Math.floor(clamp01(intensity * RI.gain) * 255);
+        var rr, gg, bb;
+        if (grade === 'A') { rr = base * 0.7; gg = base; bb = base * 0.85; }
+        else if (grade === 'B') { rr = base * 0.88; gg = base; bb = base * 0.82; }
+        else if (grade === 'C') { rr = base; gg = base * 0.92; bb = base * 0.72; }
+        else { rr = base; gg = base * 0.78; bb = base * 0.72; }
+        ctx.fillStyle = 'rgb(' + Math.floor(rr) + ',' + Math.floor(gg) + ',' + Math.floor(bb) + ')';
+        ctx.fillRect((d - z0) * cellW, t * cellH, Math.ceil(cellW), Math.ceil(cellH));
+      }
+    }
+    VDL_OFF = off;
+  }
+
+  function paintVDL(ra) {
+    var cv = document.getElementById('r-vdl');
+    if (!cv || !VDL_OFF) return;
+    var W = 900, H = 160;
+    var ctx = setupCanvas(cv, W, H);
+    var z0 = RI.z0, z1 = RI.z1, m = Math.max(1, z1 - z0);
+    function px(i) { return (i - z0) / m * W; }
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(VDL_OFF, 0, 0);
+
+    /* 选中分段范围（裁剪到视窗） */
+    if (RI.seg >= 0 && ra.segs[RI.seg]) {
+      var sg = ra.segs[RI.seg];
+      var s0 = Math.max(sg.start, z0), s1 = Math.min(sg.end, z1);
+      if (s1 > s0) {
+        var sx0 = px(s0), sx1 = px(s1);
+        ctx.fillStyle = 'rgba(201,161,90,0.16)';
+        ctx.fillRect(sx0, 0, Math.max(2, sx1 - sx0), H);
+        ctx.strokeStyle = '#b05a51'; ctx.lineWidth = 1.4;
+        ctx.strokeRect(sx0 + 0.7, 0.7, Math.max(2, sx1 - sx0) - 1.4, H - 1.4);
+      }
+    }
+
+    /* 分段边界（仅视窗内） */
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    REAL.blocks.forEach(function (blk, idx) {
+      if (idx === 0 || blk.start <= z0 || blk.start >= z1) return;
+      var x = px(blk.start);
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    });
+    ctx.restore();
+
+    /* 分段标签：只保留视窗内且足够宽的块 */
+    ctx.font = '10px Consolas, monospace';
+    REAL.blocks.forEach(function (blk) {
+      var s0 = Math.max(blk.start, z0), s1 = Math.min(blk.end, z1);
+      if (s1 <= s0) return;
+      var x0 = px(s0), x1 = px(s1);
+      if (x1 - x0 < 150) return;
+      var cx = (x0 + x1) / 2;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(253,252,248,0.85)';
+      ctx.fillRect(cx - 62, 2, 124, 14);
+      ctx.fillStyle = '#4d565b';
+      ctx.fillText(blk.label + ' · ' + blk.top + '–' + blk.bottom + ' ft', cx, 13);
+    });
+
+    /* 视窗角标（右下角，避开顶部分段标签） */
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#9ba3a9';
+    ctx.fillText('视窗 ' + zoomDepthLabel(z0, z1), W - 6, H - 6);
+
+    /* 角标 */
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#9a7a1c';
+    ctx.fillText('模拟 VDL（非原始波形）', 6, H - 6);
+    ctx.fillStyle = '#79828a';
+    ctx.fillText('套管波 ↑', 6, 26);
+    ctx.fillText('地层波 ↓', 6, H - 20);
+
+    /* 悬停深度线 */
+    if (RI.hover >= 0 && RI.hover >= z0 && RI.hover < z1) {
+      var hx = (RI.hover - z0 + 0.5) / m * W;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, H); ctx.stroke();
+      ctx.strokeStyle = '#b05a51'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, H); ctx.stroke();
+    }
+  }
+
+  function drawRealVDL(ra) {
+    buildVDLOff(ra);
+    paintVDL(ra);
+  }
+
+  function drawRealMetrics(ra) {
+    var agree = 0, dTotal = 0, dHit = 0, confSum = 0, lenSum = 0;
+    ra.segs.forEach(function (g) {
+      var len = g.end - g.start;
+      if (g.grade === g.refMajor) agree++;
+      confSum += g.conf * len; lenSum += len;
+    });
+    /* D 级召回按样本统计，与下方混淆矩阵同一口径 */
+    for (var i = 0; i < ra.n; i++) {
+      if (ra.ref[i] === 'D') { dTotal++; if (ra.pred[i].grade === 'D') dHit++; }
+    }
+    var agreeRate = ra.segs.length ? (agree / ra.segs.length * 100) : 0;
+    var recall = dTotal ? (dHit / dTotal * 100) : NaN;
+    var conf = lenSum ? confSum / lenSum : 0;
+
+    document.getElementById('r-fpa').textContent = ra.fpa.toFixed(1) + ' mV';
+
+    var el = document.getElementById('r-agree');
+    el.textContent = agreeRate.toFixed(0) + '%';
+    el.parentElement.className = 'metric' + (agreeRate < 70 ? ' bad' : '');
+
+    var rc = document.getElementById('r-recall');
+    rc.textContent = isNaN(recall) ? '—' : recall.toFixed(0) + '%';
+    rc.parentElement.className = 'metric' + (!isNaN(recall) && recall < 70 ? ' warn' : '');
+
+    var cf = document.getElementById('r-conf');
+    cf.textContent = conf.toFixed(2);
+    cf.parentElement.className = 'metric' + (conf < 0.6 ? ' warn' : '');
+  }
+
+  function drawRealTable(ra) {
+    var tbody = document.getElementById('r-seg-body');
+    if (!tbody) return;
+    var html = '';
+    ra.segs.forEach(function (g, idx) {
+      var len = g.end - g.start;
+      var cblSum = 0, biSum = 0, formSum = 0, relSum = 0;
+      for (var i = g.start; i < g.end; i++) {
+        cblSum += REAL.cbl[i];
+        biSum += ra.bi[i];
+        formSum += ra.form[i];
+        relSum += ra.rel[i];
+      }
+      var confLow = g.conf < 0.6;
+      html += '<tr data-seg="' + idx + '"' + (RI.seg === idx ? ' class="sel"' : '') + '>'
+        + '<td>' + (idx + 1) + '</td>'
+        + '<td class="mono">' + segDepthLabel(g) + '</td>'
+        + '<td class="mono">' + len + ' ft</td>'
+        + '<td class="mono">' + (cblSum / len).toFixed(1) + '</td>'
+        + '<td class="mono">' + (relSum / len).toFixed(0) + '%</td>'
+        + '<td class="mono">' + (biSum / len).toFixed(3) + '</td>'
+        + '<td class="mono">' + (formSum / len).toFixed(2) + '</td>'
+        + '<td><span class="grade ' + g.grade.toLowerCase() + '">' + g.grade + '</span></td>'
+        + '<td class="mono"' + (confLow ? ' style="color:#b05a51;font-weight:600"' : '') + '>' + g.conf.toFixed(2) + (confLow ? ' 待复核' : '') + '</td>'
+        + '<td><span class="grade ' + g.refMajor.toLowerCase() + '">' + g.refMajor + '</span></td>'
+        + '</tr>';
+    });
+    tbody.innerHTML = html;
+    tbody.onclick = function (e) {
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      var k = parseInt(tr.getAttribute('data-seg'), 10);
+      if (!isNaN(k)) selectSeg(k);
+    };
+  }
+
+  function drawRealConfmat(ra) {
+    var box = document.getElementById('r-confmat');
+    if (!box) return;
+    var G = ['A', 'B', 'C', 'D'];
+    var mat = { A: {}, B: {}, C: {}, D: {} };
+    G.forEach(function (a) { G.forEach(function (b) { mat[a][b] = 0; }); });
+    for (var i = 0; i < ra.n; i++) mat[ra.ref[i]][ra.pred[i].grade]++;
+
+    var html = '<div class="cm-corner">参考↓ / AI→</div>';
+    G.forEach(function (g) { html += '<div class="cm-head">' + g + '</div>'; });
+
+    G.forEach(function (row) {
+      var rowSum = 0;
+      G.forEach(function (col) { rowSum += mat[row][col]; });
+      html += '<div class="cm-lab">' + row + '</div>';
+      G.forEach(function (col) {
+        var v = mat[row][col];
+        var ratio = rowSum ? v / rowSum : 0;
+        var diag = row === col;
+        var color = diag ? '47,125,107' : '176,90,81';
+        var alpha = v ? 0.10 + ratio * 0.55 : 0;
+        html += '<div class="cm-cell' + (diag ? ' cm-diag' : '') + '" style="background:rgba(' + color + ',' + alpha.toFixed(2) + ');'
+          + (v === 0 ? 'color:#c3bdb0' : 'color:#242b2e') + '">' + v
+          + '<small>' + (rowSum ? (ratio * 100).toFixed(0) + '%' : '—') + '</small></div>';
+      });
+    });
+    box.innerHTML = html;
+    if (!box.parentElement.querySelector('.confmat-legend')) {
+      var legend = document.createElement('div');
+      legend.className = 'confmat-legend';
+      legend.textContent = '对角线（绿色）= 与参考一致；非对角线（红色）= 分歧。数值为 1 ft 样本数，百分比为行内占比。';
+      box.parentElement.appendChild(legend);
+    }
+  }
+
+  /* ---------- 图表交互：悬停联动 + 分段选择 ---------- */
+  function segIndexOf(i) {
+    for (var k = 0; k < RA.segs.length; k++) {
+      var g = RA.segs[k];
+      if (i >= g.start && i < g.end) return k;
+    }
+    return -1;
+  }
+
+  function applyCrosshair() {
+    var svg = document.getElementById('r-cbl');
+    if (!svg) return;
+    var g = svg.querySelector('#r-cross');
+    if (!g) return;
+    var i = RI.hover;
+    if (i < 0) { g.style.display = 'none'; return; }
+    var pl = 52, pr = 62, pt = 32, pb = 34;
+    var pw = 900 - pl - pr, ph = 300 - pt - pb;
+    var x = pl + (i - RI.z0) / Math.max(1, RI.z1 - RI.z0 - 1) * pw;
+    g.style.display = '';
+    var line = g.querySelector('#r-cross-line');
+    line.setAttribute('x1', x); line.setAttribute('x2', x);
+    var c1 = g.querySelector('#r-cross-cbl');
+    c1.setAttribute('cx', x);
+    c1.setAttribute('cy', pt + (1 - Math.min(65, REAL.cbl[i]) / 65) * ph);
+    var c2 = g.querySelector('#r-cross-bi');
+    c2.setAttribute('cx', x);
+    c2.setAttribute('cy', pt + (1 - RA.bi[i]) * ph);
+  }
+
+  function setHover(i) {
+    if (!RA) return;
+    RI.hover = i;
+    applyCrosshair();
+    paintVDL(RA);
+  }
+
+  function showTip(id, html, evt, boxId) {
+    var tip = document.getElementById(id), box = document.getElementById(boxId);
+    if (!tip || !box) return;
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    var r = box.getBoundingClientRect();
+    var x = evt.clientX - r.left + 14;
+    if (x + 190 > r.width) x = evt.clientX - r.left - 190;
+    tip.style.left = Math.max(6, x) + 'px';
+    tip.style.top = '8px';
+  }
+
+  function hideTip(id) {
+    var tip = document.getElementById(id);
+    if (tip) tip.style.display = 'none';
+  }
+
+  function selectSeg(k) {
+    if (!RA) return;
+    if (k < 0 && RI.seg < 0) return;
+    RI.seg = (k === RI.seg) ? -1 : k;
+    if (RI.seg >= 0 && RA.segs[RI.seg]) {
+      var g = RA.segs[RI.seg];
+      /* 从明细表选中视窗外分段时，自动把视窗移过去 */
+      if (g.end <= RI.z0 || g.start >= RI.z1) {
+        var span = Math.min(RI.z1 - RI.z0, Math.max(MINSPAN, g.end - g.start));
+        var c = (g.start + g.end) / 2;
+        setZoom(c - span / 2, c + span / 2);
+      }
+    }
+    drawRealCBL(RA);
+    applyCrosshair();
+    paintVDL(RA);
+    renderDetail();
+  }
+
+  function segAvg(g) {
+    var len = g.end - g.start;
+    var cbl = 0, bi = 0, form = 0, rel = 0;
+    for (var i = g.start; i < g.end; i++) {
+      cbl += REAL.cbl[i]; bi += RA.bi[i]; form += RA.form[i]; rel += RA.rel[i];
+    }
+    return { len: len, cbl: cbl / len, bi: bi / len, form: form / len, rel: rel / len };
+  }
+
+  function renderDetail() {
+    var box = document.getElementById('r-detail');
+    if (!box) return;
+    Array.prototype.forEach.call(document.querySelectorAll('#r-seg-body tr'), function (tr) {
+      var k = parseInt(tr.getAttribute('data-seg'), 10);
+      tr.classList.toggle('sel', k === RI.seg);
+    });
+    if (!RA || RI.seg < 0 || !RA.segs[RI.seg]) {
+      box.className = 'r-detail';
+      box.textContent = '悬停曲线查看采样点；滚轮缩放深度视窗；点击曲线或 VDL 选区可选中分段，查看平均值并与明细表联动。';
+      return;
+    }
+    var g = RA.segs[RI.seg], m = segAvg(g);
+    var ok = g.grade === g.refMajor;
+    box.className = 'r-detail active';
+    box.innerHTML = '已选分段 <b>#' + (RI.seg + 1) + '</b> · <b>' + segDepthLabel(g) + '</b> ft · 厚 ' + m.len + ' ft'
+      + ' ｜ 平均 CBL <b>' + m.cbl.toFixed(1) + '</b> mV（相对 ' + m.rel.toFixed(0) + '%）'
+      + ' ｜ BI <b>' + m.bi.toFixed(3) + '</b> ｜ 二界面 <b>' + m.form.toFixed(2) + '</b>'
+      + ' ｜ AI <b>' + g.grade + '</b>（置信 ' + g.conf.toFixed(2) + '） ｜ 参考 <b>' + g.refMajor + '</b> ｜ '
+      + (ok ? '<b class="ok-txt">评级一致</b>' : '<b class="bad-txt">分歧，建议复核</b>');
+  }
+
+  function initRealCharts() {
+    var svg = document.getElementById('r-cbl');
+    var cv = document.getElementById('r-vdl');
+    if (!svg || !cv || !RA) return;
+    var drag = null, suppressClick = false;
+
+    function plotFrac(clientX, r) {
+      var sx = (clientX - r.left) / r.width * 900;
+      return clamp((sx - 52) / (900 - 52 - 62), 0, 1);
+    }
+    function cblIndex(e) {
+      var r = svg.getBoundingClientRect();
+      var span = RI.z1 - RI.z0;
+      return clamp(RI.z0 + Math.round(plotFrac(e.clientX, r) * (span - 1)), RI.z0, RI.z1 - 1);
+    }
+    function vdlIndex(e) {
+      var r = cv.getBoundingClientRect();
+      var span = RI.z1 - RI.z0;
+      return clamp(RI.z0 + Math.floor(clamp((e.clientX - r.left) / r.width, 0, 1) * span), RI.z0, RI.z1 - 1);
+    }
+
+    function zoomFromWheel(e, chart, isCbl) {
+      e.preventDefault();
+      if (!e.deltaY) return;
+      var r = chart.getBoundingClientRect();
+      var frac = isCbl ? plotFrac(e.clientX, r) : clamp((e.clientX - r.left) / r.width, 0, 1);
+      var span = RI.z1 - RI.z0;
+      var cur = RI.z0 + frac * span;
+      var ns = span * (e.deltaY < 0 ? 0.8 : 1.25);
+      setZoom(cur - frac * ns, cur - frac * ns + ns);
+    }
+    function panFromDrag(e, chart, isCbl) {
+      var r = chart.getBoundingClientRect();
+      var dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 3) suppressClick = true;
+      var span = drag.z1 - drag.z0;
+      var shift = isCbl ? -dx / r.width * 900 / 786 * span : -dx / r.width * span;
+      setZoom(drag.z0 + shift, drag.z1 + shift);
+    }
+
+    svg.addEventListener('mousemove', function (e) {
+      if (drag) { panFromDrag(e, svg, true); hideTip('r-cbl-tip'); return; }
+      var i = cblIndex(e);
+      setHover(i);
+      var b = REAL.blocks[blockOfIndex(i)], pr = RA.pred[i];
+      showTip('r-cbl-tip',
+        '<b>' + REAL.depth[i] + ' ft</b> · ' + b.label + '<br>'
+        + 'CBL <b>' + REAL.cbl[i].toFixed(1) + '</b> mV · 相对 ' + RA.rel[i].toFixed(0) + '%<br>'
+        + 'BI <b>' + RA.bi[i].toFixed(3) + '</b> · 二界面 ' + RA.form[i].toFixed(2) + '<br>'
+        + 'AI <b>' + pr.grade + '</b>（置信 ' + pr.conf.toFixed(2) + '） · 参考 <b>' + RA.ref[i] + '</b>',
+        e, 'r-cbl-box');
+    });
+    svg.addEventListener('mouseleave', function () {
+      setHover(-1); hideTip('r-cbl-tip');
+    });
+    svg.addEventListener('mousedown', function (e) {
+      if (RI.z1 - RI.z0 >= RA.n) return;
+      drag = { x: e.clientX, z0: RI.z0, z1: RI.z1 };
+      suppressClick = false;
+      e.preventDefault();
+    });
+    svg.addEventListener('wheel', function (e) { zoomFromWheel(e, svg, true); }, { passive: false });
+    svg.addEventListener('dblclick', resetZoom);
+    svg.addEventListener('click', function (e) {
+      if (suppressClick) { suppressClick = false; return; }
+      selectSeg(segIndexOf(cblIndex(e)));
+    });
+
+    cv.addEventListener('mousemove', function (e) {
+      if (drag) { panFromDrag(e, cv, false); hideTip('r-vdl-tip'); return; }
+      var i = vdlIndex(e);
+      setHover(i);
+      var grade = RA.pred[i].grade, a = vdlAmps(grade);
+      showTip('r-vdl-tip',
+        '<b>' + REAL.depth[i] + ' ft</b><br>AI 评级 <b>' + grade + '</b>（置信 ' + RA.pred[i].conf.toFixed(2) + '）<br>'
+        + '套管波 ' + (a.casing * 100).toFixed(0) + '% · 地层波 ' + (a.formation * 100).toFixed(0) + '%',
+        e, 'r-vdl-box');
+    });
+    cv.addEventListener('mouseleave', function () {
+      setHover(-1); hideTip('r-vdl-tip');
+    });
+    cv.addEventListener('mousedown', function (e) {
+      if (RI.z1 - RI.z0 >= RA.n) return;
+      drag = { x: e.clientX, z0: RI.z0, z1: RI.z1 };
+      suppressClick = false;
+      e.preventDefault();
+    });
+    cv.addEventListener('wheel', function (e) { zoomFromWheel(e, cv, false); }, { passive: false });
+    cv.addEventListener('dblclick', resetZoom);
+    cv.addEventListener('click', function (e) {
+      if (suppressClick) { suppressClick = false; return; }
+      selectSeg(segIndexOf(vdlIndex(e)));
+    });
+    window.addEventListener('mouseup', function () {
+      drag = null;
+      setTimeout(function () { suppressClick = false; }, 0);
+    });
+
+    function zoomCenter(factor) {
+      var span = RI.z1 - RI.z0;
+      var c = RI.hover >= 0 ? RI.hover : (RI.z0 + RI.z1) / 2;
+      var ns = Math.max(MINSPAN, span * factor);
+      setZoom(c - ns / 2, c + ns / 2);
+    }
+    var zin = document.getElementById('z-in');
+    if (zin) zin.addEventListener('click', function () { zoomCenter(0.7); });
+    var zout = document.getElementById('z-out');
+    if (zout) zout.addEventListener('click', function () { zoomCenter(1.4); });
+    var zreset = document.getElementById('z-reset');
+    if (zreset) zreset.addEventListener('click', resetZoom);
+
+    var gain = document.getElementById('vd-gain');
+    if (gain) gain.addEventListener('input', function () {
+      RI.gain = parseInt(this.value, 10) / 100;
+      var lab = document.getElementById('vd-gain-val');
+      if (lab) lab.textContent = this.value + '%';
+      buildVDLOff(RA);
+      paintVDL(RA);
+    });
+    var reset = document.getElementById('vd-reset');
+    if (reset) reset.addEventListener('click', function () { selectSeg(-1); });
+    updateZoomLabel();
+  }
+
+  function renderReal() {
+    if (!REAL) return;
+    RA = analyzeReal();
+    RI.z0 = 0; RI.z1 = RA.n; RI.hover = -1; RI.seg = -1;
+    drawRealCBL(RA);
+    drawRealVDL(RA);
+    drawRealMetrics(RA);
+    drawRealTable(RA);
+    drawRealConfmat(RA);
+    initRealCharts();
+    renderDetail();
+  }
+
+  /* 页签切换 */
+  (function bindTabs() {
+    var tabs = document.querySelectorAll('.tab');
+    var panes = { real: document.getElementById('pane-real'), synth: document.getElementById('pane-synth') };
+    Array.prototype.forEach.call(tabs, function (btn) {
+      btn.addEventListener('click', function () {
+        Array.prototype.forEach.call(tabs, function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        Object.keys(panes).forEach(function (k) {
+          if (panes[k]) panes[k].classList.toggle('active', k === btn.getAttribute('data-tab'));
+        });
+      });
+    });
+  })();
+
+  if (REAL) {
+    renderReal();
+  } else {
+    var pane = document.getElementById('pane-real');
+    if (pane) pane.innerHTML = '<div class="section">真实测井切片未加载（缺少 demo/data.js）。</div>';
+  }
+
+  /* 尺寸变化时重建 canvas backing store，保持清晰 */
+  var rsTimer = null;
+  window.addEventListener('resize', function () {
+    if (rsTimer) clearTimeout(rsTimer);
+    rsTimer = setTimeout(function () {
+      if (LAST_SIM) drawVDL(LAST_SIM.data, LAST_SIM.ai);
+      if (RA) drawRealVDL(RA);
+    }, 120);
+  });
 })();

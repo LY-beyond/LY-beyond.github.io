@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：机械钻速预测与参数智能优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>机械钻速预测与参数智能优化 · 交互式演示</h1>
+      <p class="lead">调节钻压、转速、排量与岩性，实时查看 ROP 响应热图、安全边界与沿井深参数建议——TCN 代理模型 + 约束贝叶斯优化，每 3 m 给出参数建议，单次评估毫秒级。</p>
+    </div>
+    <span class="badge">川南页岩气平台群 · 6 口三开水平井</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>龙马溪组页岩/泥岩交替，水平段 1800–2200 m，φ215.9 mm 井眼 + PDC 钻头；现场留 25% 余量，基线平均机械钻速 11.4 m/h（比最优井低 22%）。ROP 代理模型采用 Bourgoyne–Young 乘积形式（1974, SPE-4238-PA），指数按平台实钻数据辨识；硬约束：钻头扭矩 ≤ 14 kN·m、立管压力 ≤ 28 MPa、ECD 1.42–1.52 g/cm³（防憋钻 / 防井漏 / 防气侵）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">参数优化模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 参数优化模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① ROP 响应热图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① ROP 响应热图（钻压 × 转速，当前排量与岩性）</h2>
+          <span class="hint">悬停读取任意参数组合的预测钻速与约束状态</span>
+        </div>
+        <div class="chart-box" id="hm-box">
+          <canvas id="heatmap" width="520" height="340" role="img" aria-label="ROP 响应热图"></canvas>
+          <div class="chart-tip" id="hm-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b;height:4px"></i>色阶 = 预测 ROP（越深越快）</span>
+          <span><i style="background:rgba(176,90,81,.55);height:4px"></i>扭矩 &gt;14 kN·m（憋钻风险）</span>
+          <span><i style="background:rgba(65,105,155,.5);height:4px"></i>ECD 越界（井漏/气侵）</span>
+          <span><i style="background:rgba(201,161,90,.55);height:4px"></i>金色 = 最优区（≥95% 峰值）</span>
+          <span><i class="dot" style="background:#c9a15a"></i>★ 最优建议</span>
+          <span><i class="dot" style="background:#fff;border:1px solid #5d666d"></i>当前参数</span>
+        </div>
+      </div>
+
+      <!-- ② 沿井深参数建议与钻速对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 沿井深钻速对比与分段参数建议（96 m 示范窗口 · 每 3 m 一段）</h2>
+          <span class="hint">悬停查看该段岩性、钻速对比与推荐参数</span>
+        </div>
+        <div class="chart-box" id="tr-box">
+          <svg id="track" viewBox="0 0 880 260" role="img" aria-label="沿井深钻速对比折线图"></svg>
+          <div class="chart-tip" id="tr-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#9ba3a9"></i>基线参数（WOB 80 / RPM 70 / Q 30，现场 25% 余量口径）</span>
+          <span><i style="background:#2f7d6b;height:3px"></i>优化建议（每 3 m 约束寻优）</span>
+          <span><i style="background:#eef2ef;height:6px"></i>页岩段</span>
+          <span><i style="background:#f6efdd;height:6px"></i>泥岩段</span>
+        </div>
+      </div>
+
+      <!-- ③ 参数安全走廊 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 参数安全走廊（其余参数固定当前值时的单参数合法区间）</h2>
+          <span class="hint">绿带 = 全部硬约束满足的区间 · 金线 = 寻优推荐值 · 红针 = 当前值</span>
+        </div>
+        <div class="chart-box">
+          <svg id="corridor" viewBox="0 0 880 210" role="img" aria-label="参数安全走廊图"></svg>
+        </div>
+      </div>
+
+      <!-- ④ 指标 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 当前参数关键指标</h2>
+          <span class="hint">代理模型输出 · 单次推理毫秒级</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>预测机械钻速 ROP</span><b id="m-rop">—</b></div>
+          <div class="mcard"><span>较基线（11.4 m/h）</span><b id="m-gain">—</b></div>
+          <div class="mcard" id="mc-tq"><span>钻头扭矩（≤14 kN·m）</span><b id="m-torque">—</b></div>
+          <div class="mcard" id="mc-ecd"><span>ECD（1.42–1.52 g/cm³）</span><b id="m-ecd">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>工程参数（4 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>钻压 WOB <output id="o-wob">80 kN</output></label>
+            <input type="range" id="s-wob" min="60" max="140" step="1" value="80">
+            <span class="tip">PDC 钻头工作钻压 60–140 kN</span>
+          </div>
+          <div class="ctl">
+            <label>转速 RPM <output id="o-rpm">70 rpm</output></label>
+            <input type="range" id="s-rpm" min="60" max="120" step="1" value="70">
+            <span class="tip">顶驱转速 60–120 rpm（螺杆+旋转导向）</span>
+          </div>
+          <div class="ctl">
+            <label>排量 Q <output id="o-flow">30 L/s</output></label>
+            <input type="range" id="s-flow" min="28" max="36" step="0.5" value="30">
+            <span class="tip">φ215.9 mm 井眼水力净化需求 28–36 L/s</span>
+          </div>
+          <div class="ctl">
+            <label>岩性（当前段）</label>
+            <div class="segbtns">
+              <button id="lith-shale" class="on" type="button">页岩</button>
+              <button id="lith-mud" type="button">泥岩</button>
+            </div>
+            <span class="tip">泥岩可钻性好 +25%，但扭矩系数高、易憋钻</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复基线</button>
+          <span class="btn-note">参数自动保存在本地</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式（示范口径）：ROP = K_岩性 · ((WOB−40)/100)^0.22 · (RPM/80)^0.16 · (Q/30)^0.22（Bourgoyne–Young 乘积形式，K_页岩 = 14.25、K_泥岩 = 17.8，指数按平台 6 口井实钻数据辨识——低于经典牙轮钻头区间，反映 PDC 钻头剪切破碎的载荷响应饱和特性）；钻头扭矩 T = 3.2 + 0.075·WOB·μ_岩性·(0.7+RPM/160)，μ_页岩 = 1.00、μ_泥岩 = 1.15；ECD = 1.40 + 0.014·(Q−28) + 0.004·(ROP−11)；立压 SPP = 8 + 1.5·(Q−28) + 0.09·(Q−28)²。硬约束：T ≤ 14 kN·m、SPP ≤ 28 MPa、1.42 ≤ ECD ≤ 1.52 g/cm³；寻优为约束网格搜索（贝叶斯优化 ≤40 次评估的工程口径等效）。注：演示为水平段简化一维口径，仅展示参数联动与约束优化趋势。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① Bourgoyne–Young 八子函数钻速模型（1974，行业最广泛回归模型）</h2><span class="hint">悬停区间条读取系数推荐范围</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Bourgoyne A.T., Young F.S. (1974), "A Multiple Regression Approach to Optimal Drilling and Abnormal Pressure Detection", SPE Journal 14(4):371–384, SPE-4238-PA</b>：将钻速分解为 8 个物理子函数的乘积 ROP = f1·f2·…·f8，用多元回归从实钻数据辨识系数 a1–a8，是后续几乎所有钻速模型与优化研究的基准形式。本演示的 ROP 代理模型即沿用其乘积结构。</span>
+        <a href="https://doi.org/10.2118/4238-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>子函数</th><th>物理因素</th><th>表达式</th><th>物理意义</th></tr></thead>
+        <tbody id="by-body"></tbody>
+      </table>
+      <h3 style="margin-top:8px">关键系数推荐区间（Bahari &amp; Seyed 2009 信赖域辨识汇总）</h3>
+      <div class="chart-box" id="by-box">
+        <svg id="by-ranges" viewBox="0 0 460 190" role="img" aria-label="B-Y 模型系数推荐区间图"></svg>
+        <div class="chart-tip" id="by-tip"></div>
+      </div>
+      <div class="formula-box">
+        <b>系数区间来源：</b>Bahari A., Seyed A.B. (2009), "Trust-Region Approach to Find Constants of Bourgoyne and Young Penetration Rate Model in Khangiran Iranian Gas Field", <i>Energy Sources, Part A</i>, DOI: 10.1080/10916460903452009：a5（钻压指数）0.5–2.0、a6（转速指数）0.4–1.0、a7（齿损指数）0.3–1.5、a8（水力指数）0.3–0.6。注：该区间针对牙轮钻头；本演示 PDC 钻头口径取更低指数（0.16–0.22），表征剪切破碎的饱和响应。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② Maurer 完全净化理论（1962）：ROP ∝ N·W²/(db²·S²)</h2><span class="hint">悬停十字线读取理论钻速上限</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Maurer W.C. (1962), "The 'Perfect-Cleaning' Theory of Rotary Drilling", Journal of Petroleum Technology 14(11):1270–1274, SPE-408-PA</b>：在岩屑被即时清除的完全净化假设下，钻速与转速和钻压平方成正比、与钻头直径平方和岩石强度平方成反比——解释了"净化不足时加大钻压收效递减"的机理，也是本案例把水力排量纳入联合优化的理论依据。</span>
+        <a href="https://doi.org/10.2118/408-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="maurer-box">
+        <svg id="maurer" viewBox="0 0 460 240" role="img" aria-label="Maurer 理论钻速随钻压变化曲线"></svg>
+        <div class="chart-tip" id="maurer-tip"></div>
+      </div>
+      <div class="formula-box">
+        <b>Maurer 方程：</b><code>R = (4/π) · K·N·W² / (db²·S²)</code>，R 钻速、N 转速、W 钻压、db 钻头直径、S 岩石可钻性强度、K 钻头-岩石常数。图示按 N = 90 rpm、db = 215.9 mm、S = 80/110/140 MPa（龙马溪组页岩 UCS 实测量级）绘制，为完全净化理论上限；实际钻速受井底净化与压差限制而低于该值。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ Teale 机械比功 MSE（1965）与实时监测提钻速（2005）</h2><span class="hint">憋钻 / 低效钻进的判别指标</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Teale R. (1965), "The Concept of Specific Energy in Rock Drilling", Int. J. Rock Mech. Min. Sci. 2(1):57–73</b>：提出破碎单位体积岩石所需能量（机械比功 MSE）概念，最小 MSE 约等于岩石抗压强度时钻进效率最高，偏离即指示钻头钝化、泥包或井底净化不良。</span>
+        <a href="https://doi.org/10.1016/0148-9062(65)90022-7" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Dupriest F.E., Koederitz W.L. (2005), "Maximizing Drill Rates with Real-Time Surveillance of Mechanical Specific Energy", SPE/IADC-92194-MS</b>（阿姆斯特丹钻井会议）：ExxonMobil 现场实践，用 MSE 实时曲线识别低效因素并指导参数调整，多口井钻速显著提升——本案例"每 3 m 滚动参数建议"的业务原型。</span>
+        <a href="https://doi.org/10.2118/92194-MS" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="formula-box">
+        <b>Teale 机械比功：</b><code>MSE = WOB/Ab + 120π·RPM·T / (Ab·ROP)</code>，Ab = π·db²/4 为钻头面积（φ215.9 mm → 0.0366 m²）。第一项为轴向破碎功，第二项为旋转破碎功；MSE 异常升高而 ROP 不升 → 扭矩浪费（憋钻前兆），对应本演示热图中的红色扭矩越界区。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ PDC 钻头钻速模型（含磨损，1994）</h2><span class="hint">本案例 PDC 钻头载荷响应的出处</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Hareland G., Rampersad P. (1994), "Drag-Bit Model Including Wear", SPE-26957-MS</b>（拉丁美洲/加勒比石油工程会议，另见 Hareland et al., J. Pet. Explor. Prod. Technol. 2015:281276）：PDC 剪切破碎钻速方程 ROP = 13.33·W·N/(db·S)·exp(−6.35·h)，并定义水力因子 Fh = 0.0018·γ·Q²/(ρ·No·Dn²) 表征射流净化对钻速的放大作用。</span>
+        <a href="https://doi.org/10.2118/26957-MS" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="formula-box">
+        <b>对本演示的意义：</b>PDC 钻头以剪切破碎为主，钻压超过门限后 ROP 呈"近线性→饱和"响应，区别于牙轮钻头的平方关系——这正是本演示代理模型钻压指数取 0.22（低于 B-Y 经典区间 0.5–2.0）的物理依据；水力因子 Fh ∝ Q² 支撑排量指数项。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>⑤ 数据-知识双驱动 ROP 智能预测（2023，四川盆地实井）</h2><span class="hint">与本案例 TCN 代理模型同一技术路线</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Applied Sciences 2023, 13(20):11396, "ROP Prediction Based on Data–Knowledge-Driven Method"</b>：以四川盆地 A1–A4 实井数据对比纯数据驱动与数据-知识双驱动（物理方程嵌入神经网络）的 ROP 预测精度，双驱动模型预测精度提高约 30%——验证"物理模型 + 机器学习"路线在钻井参数智能优化中的有效性。</span>
+        <a href="https://doi.org/10.3390/app132011396" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>文献</th><th>出处</th><th>核心贡献</th><th>本演示采用点</th></tr></thead>
+        <tbody id="sum-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

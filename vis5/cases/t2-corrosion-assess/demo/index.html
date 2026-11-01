@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：管道腐蚀缺陷智能评估</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>管道腐蚀缺陷智能评估 · 交互式演示</h1>
+      <p class="lead">中俄原油管道漠河—大庆段 K386—K396 管段（DN 813 · X70）：查看管道展开壁厚损失热力图与漏磁信号，调节壁厚、运行压力与安全系数，按 B31G / RSTRENG / DNV-RP-F101 实时评估失效压力、剩余寿命与维修优先级。</p>
+    </div>
+    <span class="badge">ASME B31G / DNV-RP-F101 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>X70 螺旋焊管（API 5L：SMYS 483 MPa · UTS 565 MPa），D=813 mm，t 8.0–12.7 mm，设计压力 8.5 MPa；失效压力按 ASME B31G-2012、RSTRENG(PR-3-805)、DNV-RP-F101 计算；ILI 测深精度 ±10%t @80%（API 1163:2021）；缺陷样本为按案例设定生成的模拟内检测数据。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：管道展开热力图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 管道展开壁厚损失热力图（K386—K396 · 环向 0–360°）</h2>
+          <span class="hint">悬停查看缺陷 · 点击载入该缺陷参数</span>
+        </div>
+        <div class="chart-wrap chart-box" id="heat-box">
+          <canvas id="heat" width="450" height="198" role="img" aria-label="管道展开壁厚损失热力图"></canvas>
+          <div class="chart-tip" id="heat-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>浅缺陷（&lt;30%t）</span>
+          <span><i style="background:#c9a15a"></i>中等（30–55%t）</span>
+          <span><i style="background:#b05a51"></i>深缺陷（&gt;55%t）</span>
+          <span><i style="background:transparent;border:1px dashed #b05a51;width:8px"></i>当前选中缺陷</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：MFL 信号 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ MFL 漏磁信号与缺陷自动框选（当前缺陷）</h2>
+          <span class="hint">上：径向分量 Br · 下：轴向分量 Ba · 金色虚线框为 AI 检出</span>
+        </div>
+        <div class="chart-wrap chart-box" id="mfl-box">
+          <canvas id="mfl" width="450" height="154" role="img" aria-label="漏磁信号波形与缺陷框选"></canvas>
+          <div class="chart-tip" id="mfl-tip"></div>
+        </div>
+      </div>
+
+      <!-- 面板 4：深度-长度散点与 B31G 分区 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 缺陷深度-长度分布与 B31G 安全分区</h2>
+          <span class="hint">边界随压力 / 壁厚 / 安全系数联动 · 点击散点载入</span>
+        </div>
+        <div class="chart-wrap chart-box" id="scat-box">
+          <svg id="scatter" viewBox="0 0 450 208" role="img" aria-label="缺陷深度长度分布散点图"></svg>
+          <div class="chart-tip" id="scat-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>安全（P_f ≥ SF×P）</span>
+          <span><i style="background:#c9a15a"></i>监测（1.1P ≤ P_f &lt; SF×P）</span>
+          <span><i style="background:#b05a51"></i>维修（P_f &lt; 1.1P）</span>
+          <span><i style="background:#a37b2f"></i>当前评估缺陷</span>
+        </div>
+      </div>
+
+      <!-- 面板 5：剩余强度与剩余寿命 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 剩余强度与剩余寿命（当前缺陷）</h2>
+          <span class="hint">三准则失效压力 · 实际安全系数 · 退化外推</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>B31G 失效压力</span><b id="m-b31g">—</b></div>
+          <div class="mcard"><span>RSTRENG 0.85dL</span><b id="m-mod">—</b></div>
+          <div class="mcard"><span>DNV RP-F101</span><b id="m-dnv">—</b></div>
+          <div class="mcard"><span>实际安全系数</span><b id="m-sf">—</b></div>
+          <div class="mcard"><span>剩余寿命</span><b id="m-life">—</b></div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="life" viewBox="0 0 450 158" role="img" aria-label="失效压力随年份退化曲线"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>P_f 退化曲线（B31G）</span>
+          <span><i style="background:#c9a15a"></i>安全阈值 SF×P</span>
+          <span><i style="background:#b05a51"></i>运行压力 P</span>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 面板 6：维修优先级排序 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑥ 维修优先级排序 Top-8（全管段缺陷）</h2>
+          <span class="hint">按失效压力裕度 × 剩余寿命排序 · 点击行载入该缺陷</span>
+        </div>
+        <table class="lit-table">
+          <thead><tr><th>#</th><th>缺陷</th><th>里程</th><th>环向</th><th>深度</th><th>长度</th><th>P_f</th><th>剩余寿命</th><th>判定</th></tr></thead>
+          <tbody id="repair-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 评估参数（7 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="sync-note" id="sel-note">当前评估缺陷：自定义参数</div>
+        <div class="controls">
+          <div class="ctl">
+            <label>管段壁厚 t <output id="o-t">10.3 mm</output></label>
+            <input type="range" id="s-t" min="8.0" max="12.7" step="0.1" value="10.3">
+            <span class="tip">漠大段壁厚 8.0—12.7 mm</span>
+          </div>
+          <div class="ctl">
+            <label>运行压力 P <output id="o-p">7.20 MPa</output></label>
+            <input type="range" id="s-p" min="6.2" max="8.1" step="0.05" value="7.2">
+            <span class="tip">运行 6.2—8.1 MPa · 设计 8.5</span>
+          </div>
+          <div class="ctl">
+            <label>安全系数 SF <output id="o-sf">1.39</output></label>
+            <input type="range" id="s-sf" min="1.10" max="1.80" step="0.01" value="1.39">
+            <span class="tip">0.72 设计系数 ≈ SF 1.39</span>
+          </div>
+          <div class="ctl">
+            <label>缺陷深度 d <output id="o-d">45 %t</output></label>
+            <input type="range" id="s-d" min="5" max="80" step="1" value="45">
+            <span class="tip">占壁厚百分比（ILI 报告值）</span>
+          </div>
+          <div class="ctl">
+            <label>缺陷长度 L <output id="o-L">180 mm</output></label>
+            <input type="range" id="s-L" min="20" max="400" step="5" value="180">
+            <span class="tip">轴向长度；长浅缺陷易被漏判</span>
+          </div>
+          <div class="ctl">
+            <label>腐蚀速率 CR <output id="o-cr">0.12 mm/a</output></label>
+            <input type="range" id="s-cr" min="0.02" max="0.60" step="0.01" value="0.12">
+            <span class="tip">贝叶斯后验中位值</span>
+          </div>
+          <div class="ctl">
+            <label>预测年限 <output id="o-horizon">15 a</output></label>
+            <input type="range" id="s-horizon" min="5" max="25" step="1" value="15">
+            <span class="tip">剩余寿命外推窗口</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">点击热力图 / 散点 / 表格可载入缺陷参数</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式：z=L²/(D·t)；B31G-2012：M=√(1+0.8z)（z≤20）或 0.032z+3.3（z&gt;20），P_f=1.1·SMYS·(2t/D)·(1−a)/(1−a/M)，a=2d/3t（z≤20）或 d/t；RSTRENG(PR-3-805)：M=√(1+0.6275z−0.003375z²)（z≤50），a=0.85d/t，流变应力=SMYS+69 MPa；DNV-RP-F101：Q=√(1+0.31z)，P_f=(2t·UTS/(D−t))·(1−d/t)/(1−(d/t)/Q)；剩余寿命：d(yr)=d₀+CR·yr，退化至 P_f=SF×P 为止。缺陷数据为模拟内检测样本，仅用于演示。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 三种剩余强度准则计算对比（基准缺陷 d=50%t · L=200 mm）</h2><span class="hint">悬停读数 · 各准则公式见页脚与来源表</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准公式</span>
+        <span><b>ASME B31G-2012 (R2017)；Kiefner &amp; Vieth (1989) PR-3-805（RSTRENG）；DNV-RP-F101（2019-09, amended 2025）</b>：同一基准缺陷（t=10.3 mm、D=813 mm、X70）下三准则失效压力分别为 10.58 / 10.24 / 10.62 MPa；B31G 原式对中长缺陷偏保守，DNV 式采用 UTS 与 Q=√(1+0.31z) 修正。</span>
+        <a href="https://www.asme.org/codes-standards/find-codes-standards/b31g-manual-determining-remaining-strength-corroded-pipelines/2012" target="_blank" rel="noopener">ASME↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-chartA" viewBox="0 0 900 240" role="img" aria-label="三种剩余强度准则失效压力对比柱状图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② ILI 测深精度校验：开挖实测 vs 报告深度（API 1163 ±10%t 带）</h2><span class="hint">散点为按规格生成的 40 个示意开挖点 · 悬停读数</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准规格</span>
+        <span><b>API STD 1163:2021（第 3 版，2021-09-29）</b>：内检测系统鉴定标准；金属损失测深精度典型表述为 <b>±10%t（容差）@ 80% 置信度</b>。本案例 86 处开挖验证用于两代检测器批次归一，深度偏差从 7.4% 降到 2.1%。</span>
+        <a href="https://shop.standards.ie/en-ie/standards/api-std-1163-2021-96728_saig_api_api_3067539/" target="_blank" rel="noopener">API↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxB">
+        <svg id="lit-chartB" viewBox="0 0 900 240" role="img" aria-label="开挖实测与ILI报告深度对比散点图"></svg>
+        <div class="chart-tip" id="lit-tipB"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 数据来源汇总（标准 / 文献 8 条）</h2><span class="hint">每条注明在本 demo 中的用途</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>年份 / 编号</th><th>关键内容</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>ASME B31G</td><td>2012 (R2017) / 2023 修订</td><td>腐蚀管道剩余强度手册：Folias 鼓胀因子 M、2/3 抛物线面积近似、流变应力 1.1×SMYS</td><td>主评估公式：失效压力、安全分区边界、剩余寿命</td></tr>
+          <tr><td class="num">2</td><td>Kiefner &amp; Vieth，AGA/PRC Final Report</td><td>1989 · PR-3-805（RSTRENG）</td><td>0.85dL 面积法、改良 Folias 因子（z≤50）、流变应力 SMYS+69 MPa</td><td>对比准则②：RSTRENG 失效压力指标卡</td></tr>
+          <tr><td class="num">3</td><td>DNV-RP-F101 Corroded Pipelines</td><td>2019-09 版（2025-09 修订）</td><td>单缺陷方程 Q=√(1+0.31z)、基于 UTS 的失效压力、分安全系数法</td><td>对比准则③：DNV 失效压力指标卡</td></tr>
+          <tr><td class="num">4</td><td>API STD 1163 In-line Inspection Systems Qualification</td><td>2021 · 第 3 版</td><td>ILI 系统性能鉴定；金属损失测深精度 ±10%t @ 80% 置信</td><td>开挖校验 parity 图的 ±10%t 误差带；MFL 反演深度误差设定</td></tr>
+          <tr><td class="num">5</td><td>Maxey, Kiefner, Eiber &amp; Duffy，ASTM STP 514（NG-18）</td><td>1971/1972</td><td>流变应力概念与 Folias 鼓胀分析的原始出处</td><td>B31G / RSTRENG 公式系数的理论来源</td></tr>
+          <tr><td class="num">6</td><td>NACE SP0169（现 AMPP SP0169）</td><td>2013 版</td><td>埋地管道外腐蚀控制与阴极保护准则（−850 mV CSE）</td><td>热力图中阴保异常段腐蚀聚集区的业务设定依据</td></tr>
+          <tr><td class="num">7</td><td>Cosham &amp; Hopkins，Pipeline Defect Assessment Manual（PDAM，Penspen JIP）</td><td>2002 起</td><td>缺陷评估最佳实践：开挖验证流程、维修决策与准则选用</td><td>维修优先级表的「立即维修 / 开挖复核 / 监测」判定框架</td></tr>
+          <tr><td class="num">8</td><td>Vanaei, Eslami &amp; Egbewande，Int. J. Press. Vessels Pip. 149:43–54</td><td>2017</td><td>ILI 技术（MFL/UT）与腐蚀增长率模型（线性 / Gamma / Monte-Carlo）综述</td><td>腐蚀速率先验范围与剩余寿命线性外推设定</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

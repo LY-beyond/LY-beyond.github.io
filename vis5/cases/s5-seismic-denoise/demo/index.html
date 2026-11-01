@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：地震资料噪声智能压制</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>地震资料噪声智能压制 · 交互式演示</h1>
+      <p class="lead">程序合成黄土塬工区含噪炮集（96 道 × 0–1 s 窗口）：调节随机噪声、面波强度与同相轴倾角，对比均值滤波、f-x 预测滤波与 DnCNN 式去噪的剖面、差值、频谱与保真指标。</p>
+    </div>
+    <span class="badge">合成数据 · 真值已知</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>96 道、道距 25 m、采样 4 ms，主频 28 Hz Ricker 子波，4 条倾斜同相轴（0.80 s 处为弱反射，模拟 5.0 s 以下深部弱信号）；噪声 = 随机噪声 σ + 280–480 m/s 低频面波扇 + 50 Hz 工业干扰 + 多次波。干净真值由程序正演给出，SNR 提升 / 面波残留 / 弱反射保全率 / 振幅保真误差均为合成口径，对应案例验收四项指标。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 含噪炮集与三种去噪结果对比</h2>
+          <span class="hint">悬停读取 道号 / 时间 / 振幅 · 金色描边为当前评估方法</span>
+        </div>
+        <div class="grid4">
+          <div class="cbox" id="box-noisy">
+            <h3>含噪输入（σ + 面波 + 50 Hz + 多次波）</h3>
+            <canvas id="cv-noisy" role="img" aria-label="含噪地震剖面"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+          <div class="cbox" data-m="mean" id="box-mean">
+            <h3>均值滤波 5×5</h3>
+            <canvas id="cv-mean" role="img" aria-label="均值滤波去噪结果"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+          <div class="cbox" data-m="fx" id="box-fx">
+            <h3>f-x 预测滤波（倾斜叠加近似）</h3>
+            <canvas id="cv-fx" role="img" aria-label="f-x 预测滤波去噪结果"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+          <div class="cbox" data-m="nlm" id="box-nlm">
+            <h3>DnCNN 式去噪（非局部均值代理）</h3>
+            <canvas id="cv-nlm" role="img" aria-label="DnCNN 式去噪结果"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>正振幅（波峰）</span>
+          <span><i style="background:#41699b"></i>负振幅（波谷）</span>
+          <span style="color:#79828a">四幅图共用同一振幅色标，便于横向对比残余噪声</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 差值剖面与平均振幅谱</h2>
+          <span class="mchips" id="mchips">
+            <button class="mchip" data-m="mean" type="button">均值滤波</button>
+            <button class="mchip" data-m="fx" type="button">f-x 预测滤波</button>
+            <button class="mchip active" data-m="nlm" type="button">DnCNN 式</button>
+          </span>
+        </div>
+        <p class="hint">差值 = 含噪输入 − 去噪结果：理想差值里只应看到噪声（面波扇、随机点、50 Hz 条带），<b>不应看到连续同相轴</b>——若差值里出现与剖面一致的倾斜轴，说明有效信号被误伤。</p>
+        <div class="grid2">
+          <div class="cbox" id="box-diff">
+            <h3 id="diff-title">差值剖面 · DnCNN 式</h3>
+            <canvas id="cv-diff" role="img" aria-label="差值剖面"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+          <div class="cbox" id="box-spec">
+            <h3>平均振幅谱对比（全道平均）</h3>
+            <canvas id="cv-spec" role="img" aria-label="振幅谱对比曲线"></canvas>
+            <div class="chart-tip"></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>干净信号谱</span>
+          <span><i style="background:#8a9298"></i>含噪输入谱</span>
+          <span><i style="background:#c9a15a"></i>去噪结果谱（当前方法）</span>
+          <span style="color:#79828a">10 Hz 鼓包 = 面波 · 50 Hz 尖峰 = 工业干扰 · 主频 28 Hz 不应漂移</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 去噪质量指标（当前方法）</h2>
+          <span class="hint">四类指标对应案例验收口径，合格阈值按本合成数据标定（见页脚）</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>输入 SNR</span><b id="m-snrin">—</b></div>
+          <div class="mcard" id="c-gain"><span>SNR 提升</span><b id="m-gain">—</b></div>
+          <div class="mcard" id="c-roll"><span>面波残留能量</span><b id="m-roll">—</b></div>
+          <div class="mcard" id="c-weak"><span>弱反射保全率</span><b id="m-weak">—</b></div>
+          <div class="mcard" id="c-avo"><span>振幅保真误差</span><b id="m-avo">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 数据与噪声参数</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>随机噪声强度 σ <output id="o-noise">0.28</output></label>
+            <input type="range" id="s-noise" min="0.05" max="0.80" step="0.05" value="0.28">
+            <span class="tip">高斯随机噪声标准差，有效信号峰值 ≈ 1.0</span>
+          </div>
+          <div class="ctl">
+            <label>面波强度 <output id="o-roll">1.2</output></label>
+            <input type="range" id="s-roll" min="0" max="2.0" step="0.1" value="1.2">
+            <span class="tip">280–480 m/s、8–12 Hz 面波扇振幅倍数（黄土塬面波能量常高于有效反射）</span>
+          </div>
+          <div class="ctl">
+            <label>同相轴倾角 <output id="o-dip">1.2 ms/道</output></label>
+            <input type="range" id="s-dip" min="0.2" max="3.0" step="0.1" value="1.2">
+            <span class="tip">控制 4 条反射轴的视倾角；倾角越大，f-x 类方法越易伤信号</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-seed" type="button">换一组噪声样本</button>
+          <button id="btn-reset" type="button">恢复默认</button>
+        </div>
+        <span class="btn-note">噪声随机种子固定可复现；三种去噪器在每次参数变化后全部重算。</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">方法说明：均值滤波 = 5 道 × 5 采样点滑动平均；f-x 预测滤波按 Canales (1984)「线性同相轴在 f-x 域可预测」的思想，以逐点倾角扫描 + 倾斜叠加近似；DnCNN 式去噪按 Zhang et al. (2017) 残差学习与案例两阶段训练思想，以 f-x 结构估计为 pilot、非局部均值（块匹配加权）精修后与结构支路融合，代理网络输出。指标口径：SNR 提升 = 10·log₁₀(残余噪声能量比)；面波残留 = 面波锥区内去噪残余低频能量 / 输入低频噪声能量；弱反射保全率 = 0.80 s 弱反射窗内投影系数；振幅保真误差 = 首强轴窗内投影系数偏差。合格阈值（合成标定）：SNR 提升 ≥6 dB、面波残留 ≤30%、弱反射保全 ≥80%、振幅误差 ≤8%——案例真实验收口径为 ≥12 dB / ≤8% / ≥92% / ≤5%，需真实网络与工区数据方能达到。全部计算在浏览器本地完成，无网络请求。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+    <div class="section">
+      <div class="sec-head">
+        <h2>真实文献与数据依据（8 条）</h2>
+        <span class="hint">每条说明其数据 / 方法如何用于本 demo</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">方法原型</span>
+        <span><b>Canales, L. L. (1984), “Random noise reduction”, 54th SEG Annual Meeting, Expanded Abstracts, 525–527</b>：f-x 预测滤波（f-x 反褶积）开山之作，利用线性同相轴在频率-空间域的可预测性压制随机噪声，是工业界随机噪声衰减的标准流程。<b>在本 demo 中：</b>「f-x 预测滤波」面板按其思想以逐点倾角扫描 + 倾斜叠加实现，体现其压制随机噪声有效、但对大倾角信号易失真的特点。</span>
+        <a href="https://doi.org/10.1190/1.1893858" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">方法改进</span>
+        <span><b>Gülüny, N. (1986), “FXDECON and complex Wiener prediction filter”, 56th SEG Annual Meeting, Expanded Abstracts, 279–281</b>：把 f-x 预测推广为复数维纳预测滤波，提高对含噪数据中线性事件的估计稳健性。<b>在本 demo 中：</b>f-x 面板的「沿最优倾角加权平均」即复数维纳预测的时域等价近似；其“信号可预测、噪声不可预测”假设决定了大倾角、强噪声下的保真边界。</span>
+        <a href="https://doi.org/10.1190/1.1893128" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">面波参数</span>
+        <span><b>Naghadeh, D. H. &amp; Morley, C. K. (2016), “Ground roll attenuation using SVD and time–frequency–wavenumber filters”, Journal of Geophysics and Engineering, 13(5): 657–665</b>：给出陆上面波视速度、低频（8–15 Hz）与时频-波数域压制方法。<b>在本 demo 中：</b>面波扇的视速度（280–480 m/s）、频率（8–12 Hz）与时间衰减包络按该类实测参数生成，频谱图上 10 Hz 鼓包即对应此干扰。</span>
+        <a href="https://doi.org/10.1088/1742-2132/13/5/657" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">深度去噪</span>
+        <span><b>Zhang, K., Zuo, W., Chen, Y., Meng, D. &amp; Zhang, L. (2017), “Beyond a Gaussian denoiser: Residual learning of deep CNN for image denoising”, IEEE Trans. Image Processing, 26(7): 3142–3155</b>：DnCNN 以残差学习让网络预测噪声而非信号，配合批归一化在去噪任务上超过传统滤波。<b>在本 demo 中：</b>「DnCNN 式」面板沿用其“预测噪声再相减”的残差结构思想，以非局部均值块匹配加权代理网络前向输出；差值剖面正是残差学习的监督对象。</span>
+        <a href="https://doi.org/10.1109/TIP.2017.2662206" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">地震深度去噪</span>
+        <span><b>Zhu, W., Mousavi, S. M. &amp; Beroza, G. C. (2019), “Seismic signal denoising and decomposition using deep neural networks”, IEEE Trans. Geosci. Remote Sensing, 57(11): 9476–9488</b>：深度网络同时压制地震噪声并分解信号与噪声，强调 SNR 提升的同时波形形态改变最小。<b>在本 demo 中：</b>指标卡的「振幅保真误差」「弱反射保全率」即对应其 minimal waveform change 口径——不能只看 SNR。</span>
+        <a href="https://doi.org/10.1109/TGRS.2019.2926772" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">自监督训练</span>
+        <span><b>Lehtinen, J. et al. (2018), “Noise2Noise: Learning image restoration without clean data”, ICML 2018, PMLR 80: 2965–2974</b>：证明只用成对含噪样本即可训练去噪网络，无需干净真值。<b>在本 demo 中：</b>对应案例「自监督实际适配」环节的理论依据——真实黄土塬炮集没有干净标签，正演合成只做预训练；demo 页脚与案例流程中的 Noise2Noise 设定来源于此。</span>
+        <a href="https://proceedings.mlr.press/v80/lehtinen18a.html" target="_blank" rel="noopener">PMLR↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">盲点网络</span>
+        <span><b>Birnie, C., Ravasi, M., Alkhalifah, T. &amp; Liu, S. (2021), “The potential of self-supervised networks for random noise suppression in seismic data”, Artificial Intelligence in Geosciences, 2: 47–59</b>：把 Noise2Void 盲点网络用于合成与实测地震资料的随机噪声压制，无需干净标签即可在实际数据上收敛。<b>在本 demo 中：</b>案例两阶段训练（合成预训练 + 盲点自监督微调）的实证依据；也解释了为何真实炮集验收要看实际抽检指标而非合成 PSNR。</span>
+        <a href="https://arxiv.org/abs/2109.07344" target="_blank" rel="noopener">arXiv↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">工区背景</span>
+        <span><b>《鄂尔多斯盆地黄土塬三维地震勘探进展、难点及技术需求》, 石油物探 / 中国工程科学（2024）</b>：黄土塬低降速层厚 100–300 m、速度仅 400–800 m/s、近地表吸收衰减严重、原始资料信噪比极低，被称为“地震勘探禁区”。<b>在本 demo 中：</b>噪声强于信号、面波能量高出有效反射 20 dB 以上的参数设定依据；滑块默认档（σ=0.35、面波 1.2）对应文中“信噪比极低”的典型单炮面貌。</span>
+        <a href="https://www.geophysics.cn/cn/article/doi/10.12431/issn.1000-1441.2024.63.03.001" target="_blank" rel="noopener">全文↗</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

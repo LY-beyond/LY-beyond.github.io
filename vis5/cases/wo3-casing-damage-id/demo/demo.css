@@ -1,0 +1,89 @@
+/* ========= 套管损伤智能识别 ========= */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f4ef;
+  color: #242b2e;
+  font-size: 12px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.panel { max-width: none; margin: 0; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 10px; align-items: start; }
+.side { position: sticky; top: 6px; }
+.data-note {
+  font-size: 10.5px; color: #8a9298; margin: 0 0 6px; line-height: 1.5;
+  border-left: 3px solid #c9a15a; padding-left: 8px;
+}
+h1 { font-size: 15px; font-weight: 600; margin: 0 0 3px; color: #2f7d6b; letter-spacing: .3px; }
+.lead { color: #4d565b; font-size: 11.5px; margin: 0 0 8px; max-width: none; }
+
+.section { background: #fff; border: 1px solid #e6e0d2; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.section h2 { font-size: 12.5px; font-weight: 600; margin: 0 0 4px; color: #2f7d6b; }
+.hint { font-size: 10.5px; color: #79828a; margin: 4px 0 0; line-height: 1.45; }
+
+svg { display: block; width: 100%; max-width: 100%; height: auto; background: #fdfcf8; border-radius: 6px; }
+canvas { display: block; width: 100%; max-width: 100%; height: auto; background: #fdfcf8; border-radius: 6px; }
+
+/* 图表显示尺寸收敛：避免在宽 viz 列里被放大得过高 */
+.viz > .section > svg, .viz > .section > canvas { max-width: 480px; margin-left: auto; margin-right: auto; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 10px; color: #5d666d; margin-top: 4px; }
+.legend span { display: flex; align-items: center; gap: 4px; }
+.legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.metric-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.metric-row.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.metric { background: #f5f2ea; border-radius: 7px; padding: 6px 8px; display: flex; flex-direction: column; gap: 1px; }
+.metric span { font-size: 10.5px; color: #79828a; }
+.metric b { font-family: ui-monospace, Consolas, monospace; font-size: 15px; color: #2f7d6b; font-weight: 600; line-height: 1.25; }
+.metric.warn b { color: #c9a15a; }
+.metric.bad b { color: #b05a51; }
+
+.controls { display: grid; grid-template-columns: 1fr !important; gap: 6px; }
+.ctl { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; background: #f5f2ea; border-radius: 7px; min-width: 0; }
+.ctl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.ctl label { font-size: 10.5px; font-weight: 500; color: #3c4448; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctl output { font-family: ui-monospace, Consolas, monospace; color: #2f7d6b; font-weight: 600; font-size: 10.5px; white-space: nowrap; }
+.ctl input[type="range"] { width: 100%; margin: 2px 0 0; accent-color: #2f7d6b; height: 14px; }
+
+.table-wrap { max-height: 190px; overflow: auto; margin-top: 4px; border: 1px solid #efece1; border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+th { position: sticky; top: 0; z-index: 1; background: #f5f2ea; padding: 4px 6px; text-align: left; font-weight: 600; font-size: 9.5px; color: #4d565b; white-space: nowrap; }
+td { padding: 3px 6px; border-bottom: 1px solid #f2efe5; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #faf8f2; }
+.mono { font-family: ui-monospace, Consolas, monospace; }
+.type { font-family: ui-monospace, Consolas, monospace; font-weight: 600; }
+.type.N { color: #9ba3a9; }
+.type.D { color: #b05a51; }
+.type.C { color: #c9a15a; }
+.type.P { color: #8e3f37; }
+
+/* ===== 方案对比面板 ===== */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.compare-col { background: #f9f7f0; border: 1px solid #e9e4d8; border-radius: 8px; padding: 8px 10px; }
+.compare-col.rec { border-color: #2f7d6b; background: #f1f7f4; }
+.compare-col h3 { font-size: 11.5px; margin: 0 0 6px; color: #2f7d6b; }
+.compare-col.rec h3 { color: #235f51; }
+.compare-col .metric { background: #fff; border-radius: 6px; padding: 5px 8px; margin-bottom: 5px; display: flex; flex-direction: column; gap: 1px; }
+.compare-col .metric span { font-size: 10px; color: #79828a; }
+.compare-col .metric b { font-family: ui-monospace, Consolas, monospace; font-size: 14px; color: #2f7d6b; font-weight: 600; }
+.compare-actions { margin-top: 8px; display: flex; gap: 8px; }
+.compare-actions button { padding: 5px 10px; border-radius: 6px; border: 1px solid #2f7d6b; background: #2f7d6b; color: #fff; cursor: pointer; font-size: 11px; }
+.compare-actions button:hover { background: #235f51; }
+.compare-actions button.secondary { background: #fff; color: #2f7d6b; }
+.compare-actions button.secondary:hover { background: #f1f7f4; }
+
+@media (max-width: 720px) {
+  body { padding: 8px 10px; }
+  .layout { grid-template-columns: 1fr; }
+  .side { position: static; }
+  .two-col { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .metric-row, .metric-row.five { grid-template-columns: 1fr 1fr; }
+}

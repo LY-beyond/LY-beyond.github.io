@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>套管损伤智能识别</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+
+  <p class="data-note">数据口径：套管 Φ139.7 mm × 7.72 mm；多臂井径 40 / 60 臂，深度采样 0.05 m；变形分级 2% / 5% / 10%（最大最小井径差占公称直径），腐蚀按壁厚减薄 10% / 20% / 30%，穿孔出现即三级。参考 SY/T 6646、API RP 5C7。</p>
+
+  <h1>套管损伤智能识别</h1>
+  <p class="lead">调节变形、腐蚀与穿孔的严重程度，以及井径臂数、测量噪声和成像分支开关，观察多臂井径曲线、超声成像图与双分支 AI 的分级结果。关闭成像分支即可复现「只看曲线」时腐蚀与穿孔的漏判。</p>
+
+  <div class="layout">
+    <div class="viz">
+
+      <div class="section">
+        <h2>① 井筒剖面与损伤横截面</h2>
+        <div class="two-col">
+          <svg id="well" viewBox="0 0 400 200" role="img" aria-label="井筒纵剖面"></svg>
+          <svg id="cross" viewBox="0 0 400 170" role="img" aria-label="损伤横截面"></svg>
+        </div>
+        <p class="hint">左：纵剖面按真值类型着色（红=变形/穿孔、黄=腐蚀）；右：横截面按当前参数放大显示椭圆化、腐蚀弧与穿孔方位。</p>
+      </div>
+
+      <div class="section">
+        <h2>② 多臂井径曲线</h2>
+        <canvas id="caliper" width="430" height="230" role="img" aria-label="多臂井径曲线"></canvas>
+        <p class="hint">40—60 条曲线按臂方位叠画，深色包络为逐深度最大/最小井径；两条包络分开即椭圆化。曲线以 10 m 采样、0.01 mm 量化，红色括号为变形段。</p>
+      </div>
+
+      <div class="section">
+        <h2>③ 超声成像图</h2>
+        <canvas id="imaging" width="430" height="200" role="img" aria-label="超声成像图"></canvas>
+        <p class="hint">横轴为方位（0°—360°），纵轴为井深；亮色为厚壁、暗色为壁厚减薄（腐蚀），白色斑点为穿孔。当前成像分支：<b id="img-state">开启</b>。</p>
+      </div>
+
+      <div class="section">
+        <h2>④ 评价指标</h2>
+        <div class="metric-row five">
+          <div class="metric" id="m-d-wrap"><span>变形查全率</span><b id="m-d">—</b></div>
+          <div class="metric" id="m-c-wrap"><span>腐蚀查准率</span><b id="m-c">—</b></div>
+          <div class="metric" id="m-p-wrap"><span>穿孔查全率</span><b id="m-p">—</b></div>
+          <div class="metric" id="m-g-wrap"><span>分级一致率</span><b id="m-g">—</b></div>
+          <div class="metric" id="m-miss-wrap"><span>漏判率</span><b id="m-miss">—</b></div>
+        </div>
+        <p class="hint">查全率按深度样点统计；腐蚀查准率 = 预测腐蚀段中真腐蚀占比（成像关闭时为「—」）；分级一致率为三类损伤的三档等级完全一致比例。</p>
+      </div>
+
+      <div class="section">
+        <h2>⑤ 逐段明细</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>深度段 (m)</th><th>长度 (m)</th><th>类型</th><th>AI 等级</th><th>真值</th><th>置信度</th></tr></thead>
+            <tbody id="seg-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>⑦ 方案对比：当前 vs 推荐</h2>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h3>当前（仅曲线 · 40 臂 · 噪声 1.5）</h3>
+            <div class="metric"><span>变形查全率</span><b id="c-cur-d">—</b></div>
+            <div class="metric"><span>穿孔查全率</span><b id="c-cur-p">—</b></div>
+            <div class="metric"><span>分级一致率</span><b id="c-cur-g">—</b></div>
+            <div class="metric"><span>漏判率</span><b id="c-cur-miss">—</b></div>
+          </div>
+          <div class="compare-col rec">
+            <h3>推荐（双分支 · 60 臂 · 噪声 0.4）</h3>
+            <div class="metric"><span>变形查全率</span><b id="c-rec-d">—</b></div>
+            <div class="metric"><span>穿孔查全率</span><b id="c-rec-p">—</b></div>
+            <div class="metric"><span>分级一致率</span><b id="c-rec-g">—</b></div>
+            <div class="metric"><span>漏判率</span><b id="c-rec-miss">—</b></div>
+          </div>
+        </div>
+        <div class="compare-actions">
+          <button id="btn-apply-rec">应用推荐参数</button>
+          <button id="btn-cur" class="secondary">刷新当前对比</button>
+        </div>
+        <p class="hint">曲线分支只擅长变形，腐蚀与穿孔必须由成像分支判定；两分支按物理归属分工，冲突时输出低置信。</p>
+      </div>
+
+    </div>
+    <div class="side">
+
+      <div class="section">
+        <h2>⑥ 参数控制</h2>
+        <div class="controls" id="controls"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

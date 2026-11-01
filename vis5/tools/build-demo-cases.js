@@ -17,7 +17,8 @@ const ROOT = path.join(__dirname, '..');
 const CASES_DIR = path.join(ROOT, 'cases');
 const OUT_DIR = path.join(ROOT, 'assets', 'cases');
 
-const DEMO_FILES = ['demo/demo.css', 'demo/demo.js', 'demo/index.html'];
+const CORE_FILES = ['demo/index.html', 'demo/demo.js', 'demo/demo.css'];
+const EXT_FILES = /\.(html|htm|js|mjs|css|json|csv|txt)$/i;
 
 function padJson(obj) {
   return JSON.stringify(obj, null, 2).split('\n').join('\n  ');
@@ -32,10 +33,15 @@ function build(id) {
   const meta = Object.assign({}, data.tabs.demo || {});
   delete data.tabs.demo;
 
-  const files = DEMO_FILES.map(function (name) {
-    const p = path.join(dir, name);
-    if (!fs.existsSync(p)) throw new Error(id + ' 缺少 ' + name);
-    return { name: name, data: fs.readFileSync(p, 'utf8') };
+  CORE_FILES.forEach(function (name) {
+    if (!fs.existsSync(path.join(dir, name))) throw new Error(id + ' 缺少 ' + name);
+  });
+
+  const demoDir = path.join(dir, 'demo');
+  const files = fs.readdirSync(demoDir).filter(function (name) {
+    return EXT_FILES.test(name);
+  }).map(function (name) {
+    return { name: 'demo/' + name, data: fs.readFileSync(path.join(demoDir, name), 'utf8') };
   });
 
   const label = meta.label || '可运行示范';

@@ -5,6 +5,18 @@
   var $ = function (id) { return document.getElementById(id); };
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
+  /* HiDPI 适配：canvas backing store 按 dpr × CSS 拉伸系数放大，绘制仍用逻辑坐标 */
+  function setupCanvas(cv, lw, lh) {
+    var dpr = window.devicePixelRatio || 1;
+    var ratio = dpr * ((cv.clientWidth || lw) / lw);
+    var bw = Math.max(1, Math.round(lw * ratio));
+    var bh = Math.max(1, Math.round(lh * ratio));
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return ctx;
+  }
+
   var PSI_TO_MPA = 0.00689476;
   var MPA_TO_PSI = 145.038;
 
@@ -203,7 +215,9 @@
     if (woc !== null && woc <= tmax) {
       var wx = x(woc), wy = y(S.target * PSI_TO_MPA);
       s += '<circle cx="' + wx.toFixed(1) + '" cy="' + wy.toFixed(1) + '" r="5" fill="#2f7d6b" stroke="#fff" stroke-width="1.6"/>';
-      s += '<text x="' + wx.toFixed(1) + '" y="' + (wy - 8) + '" font-size="9" fill="#235f51" text-anchor="middle" font-family="monospace" font-weight="600">WOC ' + woc.toFixed(1) + ' h</text>';
+      /* 达标点就在目标线上，标注放到线下方并靠右，避开左侧「目标 X psi」文字与左轴刻度 */
+      var wocNear = wx > pl + pw - 84;
+      s += '<text x="' + (wocNear ? wx - 10 : wx + 10).toFixed(1) + '" y="' + (wocNear ? wy - 10 : wy + 14) + '" font-size="9" fill="#235f51" text-anchor="' + (wocNear ? 'end' : 'start') + '" font-family="monospace" font-weight="600">WOC ' + woc.toFixed(1) + ' h</text>';
     }
 
     /* 时间游标 */
@@ -233,8 +247,8 @@
 
   /* ---------- 面板 2a：强度-温度-时间热力图 ---------- */
   function drawHeat() {
-    var cv = $('heat'), ctx = cv.getContext('2d');
-    var W = cv.width, H = cv.height;
+    var W = 430, H = 244;
+    var cv = $('heat'), ctx = setupCanvas(cv, W, H);
     var pl = 40, pr = 16, pt = 12, pb = 26;
     var pw = W - pl - pr, ph = H - pt - pb;
 
@@ -347,6 +361,7 @@
     var y500 = y(500 * PSI_TO_MPA);
     s += '<line x1="' + pl + '" y1="' + y500 + '" x2="' + (pl + pw) + '" y2="' + y500 + '" stroke="#c9a15a" stroke-width="1" stroke-dasharray="4 3"/>';
 
+    var ends = [];
     for (var i = 0; i < temps.length; i++) {
       var temp = temps[i];
       var line = '';
@@ -357,9 +372,16 @@
         line += (j ? 'L' : 'M') + x(th).toFixed(1) + ' ' + y(str).toFixed(1) + ' ';
       }
       s += '<path d="' + line + '" fill="none" stroke="' + colors[i] + '" stroke-width="2"/>';
-      var endStr = computeUcs(temp, tmax);
-      s += '<text x="' + (x(tmax) - 4) + '" y="' + (y(endStr) - 5) + '" font-size="8.5" fill="' + colors[i] + '" text-anchor="end" font-family="monospace">' + temp + '℃</text>';
+      ends.push({ temp: temp, color: colors[i], y: y(computeUcs(temp, tmax)) - 5 });
     }
+    /* 三条曲线的末端标注按 y 排序后强制相邻间隔 ≥12px，避免 30℃/150℃ 标注互压 */
+    ends.sort(function (a, b) { return a.y - b.y; });
+    for (var k = 1; k < ends.length; k++) {
+      if (ends[k].y - ends[k - 1].y < 12) ends[k].y = ends[k - 1].y + 12;
+    }
+    ends.forEach(function (e) {
+      s += '<text x="' + (x(tmax) - 4) + '" y="' + e.y.toFixed(1) + '" font-size="8.5" fill="' + e.color + '" text-anchor="end" font-family="monospace">' + e.temp + '℃</text>';
+    });
 
     s += '<text x="' + (pl - 28) + '" y="' + (pt + ph / 2) + '" font-size="9" fill="#5d666d" text-anchor="middle" transform="rotate(-90 ' + (pl - 28) + ' ' + (pt + ph / 2) + ')">抗压强度 (MPa)</text>';
     s += '<text x="' + (pl + pw / 2) + '" y="' + (H - 4) + '" font-size="9" fill="#5d666d" text-anchor="middle">候凝时间 (h)</text>';
@@ -702,4 +724,270 @@
   updateSyncNote();
   render();
   drawPareto();
+
+  /* 尺寸变化时重建 canvas backing store，保持清晰 */
+  var rsTimer = null;
+  window.addEventListener('resize', function () {
+    if (rsTimer) clearTimeout(rsTimer);
+    rsTimer = setTimeout(function () { drawHeat(); }, 120);
+  });
+})();
+
+/* ======= 实验数据页：强度实测（真实实验数据 / 文献数字化） ======= */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  // Tariq et al. 2020, ACS Omega 5(20):11643-11654 (CC BY)：G 级，w/c 0.44，70℃/3000 psi，UCA 24h
+  var UCA = [
+    { name: '净浆 G 级', psi: 3015, mpa: 20.79 },
+    { name: '+1% 纳米黏土', psi: 2676, mpa: 18.45 },
+    { name: '+2% 纳米黏土', psi: 3015, mpa: 20.79 }
+  ];
+  // Pernites & Santra 2016, Cem. Concr. Compos. 72:89-103（Fig.1 数字化）：净浆 G 15.9 ppg，0% 硅粉，UCA 峰值
+  var RETRO = [
+    { t: 121,   psi: 2160, mpa: 14.9 },
+    { t: 148.9, psi: 940,  mpa: 6.5 }
+  ];
+  var X0 = 20, X1 = 160, MINSPAN = 20;
+  var Z = { x0: X0, x1: X1, sel: -1 };   // sel 为 RETRO 索引
+  var selA = -1;
+  var PL = 56, PR = 16;
+
+  function el(tag, attrs, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+  function txt(x, y, s, attrs, parent) { var t = el('text', attrs || {}, parent); t.setAttribute('x', x); t.setAttribute('y', y); t.textContent = s; return t; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function xOf(t, plotW) { return PL + (t - Z.x0) / (Z.x1 - Z.x0) * plotW; }
+
+  function drawA() {
+    var svg = document.getElementById('lit-chartA'); if (!svg) return;
+    var W = 900, H = 280, PT = 42, PB = 46, plotW = W - PL - PR, plotH = H - PT - PB;
+    var Y1 = 24;
+    function yOf(m) { return PT + (Y1 - m) / Y1 * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var m = 0; m <= Y1; m += 4) {
+      var y = yOf(m);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: m ? '#f1ebdd' : '#d8d0bc', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, m + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    txt(12, PT + plotH / 2, '24h 抗压强度 (MPa)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // API 阈值
+    var y5 = yOf(3.45), y15 = yOf(10.34);
+    el('line', { x1: PL, y1: y5, x2: W - PR, y2: y5, stroke: '#c9a15a', 'stroke-width': 1.4, 'stroke-dasharray': '6 3' }, svg);
+    txt(W - PR - 4, y5 + 12, 'WOC 500 psi', { 'font-size': 9, fill: '#9a7a1c', 'text-anchor': 'end' }, svg);
+    el('line', { x1: PL, y1: y15, x2: W - PR, y2: y15, stroke: '#b05a51', 'stroke-width': 1.2, 'stroke-dasharray': '4 3' }, svg);
+    txt(W - PR - 4, y15 - 5, '试压 1500 psi', { 'font-size': 9, fill: '#b05a51', 'text-anchor': 'end' }, svg);
+    var bw = 130;
+    UCA.forEach(function (u, i) {
+      var cx = PL + plotW * (i + 0.5) / UCA.length;
+      var y = yOf(u.mpa), sel = selA === i;
+      el('rect', { x: cx - bw / 2, y: y, width: bw, height: PT + plotH - y, rx: 3, fill: '#2f7d6b', opacity: sel ? 1 : 0.72, stroke: sel ? '#1d4a3f' : 'none', 'stroke-width': sel ? 2 : 0 }, svg);
+      txt(cx, y - 17, u.psi + ' psi', { 'font-size': 9, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+      txt(cx, y - 2, u.mpa.toFixed(2) + ' MPa', { 'font-size': 10, fill: sel ? '#1d4a3f' : '#2f7d6b', 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+      txt(cx, PT + plotH + 14, u.name, { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    });
+    /* 来源注记独占图表顶部注记带（PT 上方），不与刻度、柱条数值标签重叠 */
+    txt(PL + 4, 16, 'Tariq 2020 · 70℃ / 3000 psi · UCA · w/c 0.44', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawB() {
+    var svg = document.getElementById('lit-chartB'); if (!svg) return;
+    var W = 900, H = 250, PT = 24, PB = 36, plotW = W - PL - PR, plotH = H - PT - PB;
+    var Y1 = 18;
+    function yOf(m) { return PT + (Y1 - m) / Y1 * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var m = 0; m <= Y1; m += 3) {
+      var y = yOf(m);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: m ? '#f1ebdd' : '#d8d0bc', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, m + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    var span = Z.x1 - Z.x0, step = span <= 30 ? 5 : span <= 70 ? 10 : 20;
+    for (var t = Math.ceil(Z.x0 / step) * step; t <= Z.x1; t += step) {
+      var x = xOf(t, plotW);
+      el('line', { x1: x, y1: PT, x2: x, y2: PT + plotH, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(x, PT + plotH + 14, t + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '养护温度 (℃)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '强度峰值 (MPa)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // 110℃ 倒缩起始线
+    if (Z.x0 <= 110 && 110 <= Z.x1) {
+      var xr = xOf(110, plotW);
+      el('line', { x1: xr, y1: PT, x2: xr, y2: PT + plotH, stroke: '#b05a51', 'stroke-width': 1.2, 'stroke-dasharray': '5 3' }, svg);
+      txt(xr + 4, PT + 12, '110℃ 倒缩起始', { 'font-size': 9, fill: '#b05a51' }, svg);
+      el('rect', { x: xr, y: PT, width: PL + plotW - xr, height: plotH, fill: '#b05a51', opacity: 0.05 }, svg);
+    }
+    // 数据点与连线
+    var pts = RETRO.filter(function (p) { return p.t >= Z.x0 && p.t <= Z.x1; });
+    if (pts.length > 1) {
+      var d = pts.map(function (p, k) { return (k ? 'L' : 'M') + xOf(p.t, plotW) + ' ' + yOf(p.mpa); }).join(' ');
+      el('path', { d: d, fill: 'none', stroke: '#b05a51', 'stroke-width': 2, 'stroke-dasharray': '6 3', opacity: 0.7 }, svg);
+    }
+    pts.forEach(function (p) {
+      var i = RETRO.indexOf(p), sel = Z.sel === i;
+      el('circle', { cx: xOf(p.t, plotW), cy: yOf(p.mpa), r: sel ? 8 : 6, fill: '#b05a51', opacity: sel ? 1 : 0.85, stroke: sel ? '#6b2f2a' : '#fdfcf8', 'stroke-width': sel ? 2 : 1.2 }, svg);
+      txt(xOf(p.t, plotW), yOf(p.mpa) - 10, p.psi + ' psi', { 'font-size': 9.5, fill: '#8a5a52', 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+      txt(xOf(p.t, plotW), yOf(p.mpa) + 18, p.mpa + ' MPa', { 'font-size': 9, fill: '#8a5a52', 'text-anchor': 'middle' }, svg);
+    });
+    txt(PL + 4, PT + 12, '视窗 ' + Z.x0.toFixed(0) + '–' + Z.x1.toFixed(0) + ' ℃ · 净浆 G 级 0% 硅粉', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawAll() { drawA(); drawB(); updateLabel(); }
+  function updateLabel() { var l = document.getElementById('z-label'); if (l) l.textContent = '视窗 ' + Z.x0.toFixed(0) + '–' + Z.x1.toFixed(0) + ' ℃'; }
+
+  function setView(a, b) {
+    var span = b - a;
+    if (span < MINSPAN) { var c = (a + b) / 2; a = c - MINSPAN / 2; b = a + MINSPAN; }
+    if (a < X0) { b -= (a - X0); a = X0; }
+    if (b > X1) { a -= (b - X1); b = X1; }
+    a = clamp(a, X0, X1); b = clamp(b, a, X1);
+    if (b - a < MINSPAN) { b = X1; a = X1 - MINSPAN; }
+    Z.x0 = a; Z.x1 = b; drawAll();
+  }
+
+  function renderDetail() {
+    var d = document.getElementById('lit-detail'); if (!d) return;
+    if (selA >= 0) {
+      var u = UCA[selA];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>Tariq 2020（UCA 实测）</b>：' + u.name + '，70℃ / 3000 psi 养护 24h 强度 <b>' + u.psi + ' psi（' + u.mpa.toFixed(2) + ' MPa）</b>，' +
+        '远超试压 1500 psi（10.34 MPa）要求。同研究 UCS 结果显示：养护温度 70→100℃，净浆强度再升 7.7%，+20% 硅粉配方升 20%；但 140℃ 下强度发展快而 24h 终值反而低于 70/100℃——与倒缩规律一致。';
+    } else if (Z.sel >= 0) {
+      var p = RETRO[Z.sel];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>Pernites & Santra 2016（Fig.1 数字化）</b>：净浆 G 级（15.9 ppg，0% 硅粉）在 <b>' + p.t + '℃</b> 养护的强度峰值约 <b>' + p.psi + ' psi（' + p.mpa + ' MPa）</b>。' +
+        (p.t > 110 ? '已越过 110℃ 倒缩拐点：相较 121℃ 峰值损失约 56%——α-C₂SH 等弱相取代 C-S-H，孔隙率与渗透率同步上升；工程上须加 35–40% 硅粉（200–325 目）把 C/S 比降到 ≈1.0，形成雪硅钙石/硬硅钙石稳定相。' : '低于 110℃ 倒缩拐点，净浆强度正常发展。');
+    } else {
+      d.className = 'r-detail';
+      d.innerHTML = '悬停读取数据点；点击柱条 / 散点锁定该条实验数据；点击下表行同样联动。要点：70–100℃ 强度随温度上升，<b>超过 110℃ 净浆发生强度倒缩</b>（148.9℃ 峰值仅为 121℃ 的 44%），硅粉是标准抑制手段。';
+    }
+  }
+
+  function syncTable() {
+    var rows = document.querySelectorAll('#lit-body tr');
+    rows.forEach(function (r) { r.classList.remove('sel'); });
+    if (selA >= 0 && rows[selA]) rows[selA].classList.add('sel');
+    else if (Z.sel >= 0 && rows[UCA.length + Z.sel]) rows[UCA.length + Z.sel].classList.add('sel');
+  }
+
+  function selectA(i) { selA = i; Z.sel = -1; drawAll(); renderDetail(); syncTable(); }
+  function selectB(i, pan) {
+    Z.sel = i; selA = -1;
+    if (pan && i >= 0) {
+      var p = RETRO[i];
+      if (p.t < Z.x0 || p.t > Z.x1) { var s = Z.x1 - Z.x0; setView(p.t - s / 2, p.t + s / 2); }
+    }
+    drawAll(); renderDetail(); syncTable();
+  }
+
+  function bindChartA() {
+    var svg = document.getElementById('lit-chartA'), tip = document.getElementById('lit-tipA'), box = document.getElementById('lit-boxA');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function barAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      var k = Math.floor((vx - PL) / (W - PL - PR) * UCA.length);
+      return (k >= 0 && k < UCA.length) ? k : -1;
+    }
+    svg.addEventListener('mousemove', function (evt) {
+      var k = barAt(evt);
+      if (k >= 0) {
+        var u = UCA[k], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>' + u.name + '</b><br>24h UCA <b>' + u.psi + ' psi</b> (' + u.mpa.toFixed(2) + ' MPa)<br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 190) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    svg.addEventListener('click', function (evt) { selectA(barAt(evt)); });
+  }
+
+  function bindChartB() {
+    var svg = document.getElementById('lit-chartB'), tip = document.getElementById('lit-tipB'), box = document.getElementById('lit-boxB');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function tAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      return Z.x0 + clamp((vx - PL) / (W - PL - PR), 0, 1) * (Z.x1 - Z.x0);
+    }
+    function nearest(t) {
+      var bi = -1, bd = 1e9;
+      RETRO.forEach(function (p, i) { var d = Math.abs(p.t - t); if (d < bd) { bd = d; bi = i; } });
+      return { i: bi, d: bd };
+    }
+    var drag = null, moved = 0;
+    svg.addEventListener('wheel', function (evt) {
+      evt.preventDefault();
+      var t0 = tAt(evt), f = evt.deltaY > 0 ? 1.25 : 0.8;
+      setView(t0 - (t0 - Z.x0) * f, t0 + (Z.x1 - t0) * f);
+    }, { passive: false });
+    svg.addEventListener('mousedown', function (evt) { drag = { x: evt.clientX, a: Z.x0, b: Z.x1 }; moved = 0; evt.preventDefault(); });
+    window.addEventListener('mousemove', function (evt) {
+      if (drag) {
+        var r = svg.getBoundingClientRect();
+        var dx = (evt.clientX - drag.x) * (W / r.width);
+        moved = Math.max(moved, Math.abs(dx));
+        if (moved > 3) { var dz = dx / (W - PL - PR) * (drag.b - drag.a); setView(drag.a - dz, drag.b - dz); }
+        return;
+      }
+      var t0 = tAt(evt), n = nearest(t0), tol = (Z.x1 - Z.x0) / 12;
+      if (n.i >= 0 && n.d <= tol) {
+        var p = RETRO[n.i], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>' + p.t + '℃ 养护</b><br>强度峰值 ≈<b>' + p.psi + ' psi</b> (' + p.mpa + ' MPa)<br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 190) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    window.addEventListener('mouseup', function () { drag = null; });
+    svg.addEventListener('dblclick', function () { setView(X0, X1); });
+    svg.addEventListener('click', function (evt) {
+      if (moved > 3) return;
+      var n = nearest(tAt(evt)), tol = (Z.x1 - Z.x0) / 12;
+      selectB(n.i >= 0 && n.d <= tol ? n.i : -1, false);
+    });
+  }
+
+  function bindTable() {
+    var body = document.getElementById('lit-body'); if (!body) return;
+    var rows = [];
+    UCA.forEach(function (u, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>Tariq 2020</td><td>' + u.name + '，70℃ / 3000 psi</td><td class="num">' + u.psi + ' psi（' + u.mpa.toFixed(2) + ' MPa）</td><td>UCA 无损连续测量，w/c 0.44</td>', click: function () { selectA(i); } });
+    });
+    RETRO.forEach(function (p, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>Pernites 2016</td><td>净浆 G 级 0% 硅粉，' + p.t + '℃</td><td class="num">' + p.psi + ' psi（' + p.mpa + ' MPa）</td><td>' + (p.t > 110 ? '倒缩区，强度损失 56%' : '倒缩拐点以下') + '</td>', click: function () { selectB(i, true); } });
+    });
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = r.html;
+      tr.addEventListener('click', r.click);
+      body.appendChild(tr);
+    });
+  }
+
+  function bindZoomBtns() {
+    var zi = document.getElementById('z-in'), zo = document.getElementById('z-out'), zr = document.getElementById('z-reset');
+    if (zi) zi.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 0.7; setView(c - s / 2, c + s / 2); });
+    if (zo) zo.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 1.4; setView(c - s / 2, c + s / 2); });
+    if (zr) zr.addEventListener('click', function () { setView(X0, X1); });
+  }
+
+  function bindTabs() {
+    var tabs = document.querySelectorAll('.tab'), panes = document.querySelectorAll('.tabpane');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var id = this.getAttribute('data-tab');
+        tabs.forEach(function (o) { o.classList.remove('active'); });
+        this.classList.add('active');
+        panes.forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + id); });
+      });
+    });
+  }
+
+  bindTabs(); bindChartA(); bindChartB(); bindTable(); bindZoomBtns();
+  drawAll(); renderDetail();
 })();

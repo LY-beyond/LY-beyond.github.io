@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：智能完井滑套控制策略</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>智能完井滑套（ICV）控制策略 · 交互式演示</h1>
+      <p class="lead">拖动 8 级滑套的开度档位，观察 5 年含水率与产油曲线如何变化：压小高渗段、放大低渗段，用短期液量换延迟见水——这就是强化学习策略「以控水换累产」的核心逻辑。</p>
+    </div>
+    <span class="badge">SAC × 储层模拟</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>南海东部某油田 12 口水平井，水平段 1,200–1,800 m，每井 8 级滑套、每级 5 档开度（0/25/50/75/100%），单次决策 5<sup>8</sup> = 390,625 种组合；综合含水 62%。本页为<b>简化集总模型</b>（8 段渗透率 / 见水时间各异，非真实储层模拟器），用于演示策略趋势；案例实测口径：SAC 策略 5 年累产油 +11.4%、累产水 −8.6%、含水上升率 2.4→1.2 个百分点/年。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">控制策略模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 控制策略模拟页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 8 级滑套开度编辑器（跟端 → 趾端）</h2>
+        <span class="hint">点击或按住拖动档位柱切换 0/25/50/75/100%</span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="seg-editor" viewBox="0 0 900 232" role="img" aria-label="8级滑套开度编辑器"></svg>
+      </div>
+      <div class="legend risk-legend">
+        <span><i style="background:#2f7d6b"></i>低水窜风险（低渗段）</span>
+        <span><i style="background:#c9a15a"></i>中风险</span>
+        <span><i style="background:#b05a51"></i>高水窜风险（高渗段，见水早）</span>
+      </div>
+      <div class="btn-row">
+        <button id="btn-full" type="button">固定全开（基线）</button>
+        <button id="btn-exp" type="button">经验开度</button>
+        <button id="btn-rl" type="button">强化学习策略（SAC）</button>
+        <span class="btn-note" id="preset-note">当前：<b>强化学习策略</b>——压小高渗段 S4/S7，放大低渗段 S3/S6</span>
+      </div>
+      <h3>分段含水饱和度随时间演变（当前策略，绿 → 红 = 含水低 → 高）</h3>
+      <div class="chart-wrap">
+        <canvas id="fw-heat" width="900" height="196" role="img" aria-label="分段含水饱和度热力图"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② 含水率 / 日产油 5 年时序：固定全开 vs 当前策略</h2>
+        <span class="hint">悬停读取两条策略同一时刻的数值</span>
+      </div>
+      <div class="chart-box">
+        <svg id="ts-chart" viewBox="0 0 900 330" role="img" aria-label="含水率与产油量时序对比曲线"></svg>
+        <div class="chart-tip" id="ts-tip"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#9aa2a8"></i>含水率 · 固定全开</span>
+        <span><i style="background:#b05a51"></i>含水率 · 当前策略</span>
+        <span><i style="background:#9aa2a8" class="dash"></i>日产油 · 固定全开</span>
+        <span><i style="background:#2f7d6b"></i>日产油 · 当前策略</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>③ 5 年累产油 / 累产水对比与关键指标</h2>
+        <span class="hint">简化模型 60 个月累计，全开为基线</span>
+      </div>
+      <div class="metrics">
+        <div class="mcard"><span>5 年累产油（当前）</span><b id="m-oil">—</b></div>
+        <div class="mcard"><span>5 年累产水（当前）</span><b id="m-water">—</b></div>
+        <div class="mcard"><span>第 60 月含水率</span><b id="m-fw60">—</b></div>
+        <div class="mcard"><span>5 年含水增量</span><b id="m-fwinc">—</b></div>
+        <div class="mcard"><span>相对全开累计液量</span><b id="m-liq">—</b></div>
+      </div>
+      <div class="chart-wrap">
+        <svg id="cum-chart" viewBox="0 0 900 250" role="img" aria-label="累产油累产水对比柱状图"></svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:#9aa2a8"></i>固定全开</span>
+        <span><i style="background:#2f7d6b"></i>当前策略 · 油</span>
+        <span><i style="background:#41699b"></i>当前策略 · 水</span>
+      </div>
+      <div class="verdict" id="verdict">正在计算…</div>
+    </div>
+
+    <p class="foot">集总模型：段 i 流量权重 wᵢ = aᵢ^0.7·kᵢ^0.85（a=开度，k=渗透率 120–720 mD）；全井液量 Q = 500·(0.7+0.3·ā) m³/d（节流降液）；见水时间 tbᵢ = tb0ᵢ/(0.55+0.45·a)（开大提前见水）；段含水 fwᵢ(t) 按逻辑斯蒂曲线自 fw0ᵢ 升至 0.90+k/10000，速率 rᵢ = 0.028+k/11000。模型仅演示趋势，数值以案例储层模拟器结果（累产油 +11.4%、累产水 −8.6%）为准。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 公开文献中的智能井控制收益（可查证数据点）</h2>
+        <span class="hint">悬停柱条查看完整出处</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">公开文献</span>
+        <span><b>智能完井 / 强化学习控制的公开量化结果</b>：自 Yeten et al. (2002, SPE 79031) 提出智能井开度优化以来，最优控制（Brouwer &amp; Jansen 2004）、自主流入控制阀（Taghavi et al. 2024）与深度强化学习（Nasir &amp; Durlofsky 2022；李斌旺 &amp; 汪志明 2026）均报告了可复现的增产 / 降水幅度。图中蓝条为产水 / 产气下降（向左），绿条为产油 / NPV 提升（向右）。</span>
+        <a href="https://www.onepetro.org/SJ/article-abstract/9/04/391/110802/Dynamic-Optimization-of-Waterflooding-With-Smart" target="_blank" rel="noopener">OnePetro↗</a>
+      </div>
+      <div class="chart-box">
+        <svg id="lit-chart" viewBox="0 0 900 300" role="img" aria-label="文献增产降水幅度对比图"></svg>
+        <div class="chart-tip" id="lit-tip"></div>
+      </div>
+      <div class="note-bar"><b>Brouwer &amp; Jansen (2004, SPE-78278-PA) 的定性结论未入图</b>：在定井底压力约束下，智能井的主要收益是「减少产水」而非「增加产油」；在定产液量约束下则有大幅提速增产空间——这正是滑套控制「以控水换累产」策略的理论依据，具体幅度随模型而定。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② 数据来源汇总（作者 / 年份 / 编号均可查证）</h2>
+        <span class="hint">点击来源列链接可跳转原文页面</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>方法 / 对象</th><th>关键数据点</th><th>链接</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>③ 本案例算法：SAC（Soft Actor-Critic）原始论文</h2>
+        <span class="hint">PMLR 页面含全文 PDF 与引用格式</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag sim">算法出处</span>
+        <span><b>Haarnoja, Zhou, Abbeel &amp; Levine (2018), “Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor”, ICML 2018, PMLR 80:1861–1870</b>：最大熵离线策略 actor-critic 框架，兼顾样本效率与训练稳定性；论文在 21 维连续动作的 Humanoid 基准上稳定收敛（DDPG 等离线方法通常难以求解该任务）。本案例以其离散动作变体学习 8 级滑套开度策略（800 回合 × 5 年 / 回合）。</span>
+        <a href="https://proceedings.mlr.press/v80/haarnoja18b.html" target="_blank" rel="noopener">PMLR↗</a>
+      </div>
+      <div class="note-bar">奖励设计（案例口径）：<b>r = Δ累产油 − 0.6×Δ累产水 − 0.05×动作变化量</b>；状态 24 维（分段压力 / 含水 / 产量 / 开度 / 累产），决策间隔 30 天；安全层以<b>动作屏蔽</b>在训练时即生效（相邻段压差 ≤3 MPa、单级动作 ≤2 次/年），训练后不再二次裁剪。</div>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

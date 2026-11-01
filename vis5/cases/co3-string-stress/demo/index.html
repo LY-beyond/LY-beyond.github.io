@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：完井管柱受力智能分析</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>完井管柱受力智能分析 · 交互式演示</h1>
+      <p class="lead">四川盆地某高压气田 33 口井复核场景：调节井深、井口压力、井底温度、壁厚与钢级，实时重算温度 / 鼓胀 / 活塞效应下的有效轴力、三轴应力安全系数与屈曲判定。</p>
+    </div>
+    <span class="badge">API 5CT · ISO/TR 10400 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>油管 Φ88.9 mm (3-1/2")，钢级 P110 / 110S / 125（屈服 758–1034 MPa，API 5CT Table C.5），壁厚 6.45–9.53 mm；封隔器坐封管柱按 Lubinski et al. (1962, SPE-178-PA) 温度 / 鼓胀 / 活塞效应叠加；屈曲判据 Chen, Lin &amp; Cheatham (1990) F<sub>sin</sub>=2√(EIw·sinθ/r)、F<sub>hel</sub>=√2·F<sub>sin</sub>；三轴屈服按 ISO/TR 10400:2018 Von Mises 准则，接头效率折减 0.85。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">受力模拟分析</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 受力模拟分析页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：管柱示意 + 关键指标 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 完井管柱示意与关键指标</h2>
+          <span class="hint">封隔器坐封管柱 · 温度 / 鼓胀 / 活塞效应叠加</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>管柱结构示意</h3>
+            <svg id="schem" viewBox="0 0 430 330" role="img" aria-label="完井管柱结构示意图"></svg>
+            <div class="legend">
+              <span><i style="background:#2f7d6b"></i>油管 Φ88.9 mm</span>
+              <span><i style="background:#8a9298"></i>技术套管 7"</span>
+              <span><i style="background:#c9a15a"></i>封隔器</span>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>关键指标（实时重算）</h3>
+            <div class="metrics2">
+              <div class="mcard"><span>井口有效轴力</span><b id="m-fwh">—</b></div>
+              <div class="mcard"><span>井底有效轴力</span><b id="m-fbh">—</b></div>
+              <div class="mcard"><span>Von Mises 峰值</span><b id="m-vm">—</b></div>
+              <div class="mcard"><span>最小安全系数 (管体/接头)</span><b id="m-sf">—</b></div>
+              <div class="mcard"><span>屈曲状态</span><b id="m-buck">—</b></div>
+              <div class="mcard"><span>自由伸缩当量 ΔL</span><b id="m-dl">—</b></div>
+            </div>
+            <div class="verdict" id="verdict" style="margin-top:8px">正在计算…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 2：轴向力沿井深分布 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 轴向力（有效轴力）沿井深分布</h2>
+          <span class="hint">悬停读取井深处数值 · 负值 = 压缩，红色虚线 = 屈曲临界载荷</span>
+        </div>
+        <div class="chart-box" id="axial-box">
+          <svg id="axial" viewBox="0 0 900 320" role="img" aria-label="轴向力沿井深分布曲线"></svg>
+          <div class="chart-tip" id="axial-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>有效轴力 F<sub>eff</sub></span>
+          <span><i style="background:#41699b"></i>真实轴力 F<sub>true</sub> = F<sub>eff</sub> + p<sub>i</sub>A<sub>i</sub> − p<sub>o</sub>A<sub>o</sub></span>
+          <span><i style="background:#c9a15a"></i>正弦屈曲临界 −F<sub>sin</sub></span>
+          <span><i style="background:#b05a51"></i>螺旋屈曲临界 −F<sub>hel</sub></span>
+          <span style="color:#79828a;font-size:10px">底色带：绿=稳定 / 金=正弦屈曲 / 红=螺旋屈曲</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：三轴应力与安全系数 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 三轴应力 (Von Mises) 与安全系数沿井深分布</h2>
+          <span class="hint">下轴 MPa 对应绿色曲线 · 上轴安全系数对应蓝色曲线 · 悬停读数</span>
+        </div>
+        <div class="chart-box" id="triax-box">
+          <svg id="triax" viewBox="0 0 900 320" role="img" aria-label="三轴应力与安全系数沿井深分布"></svg>
+          <div class="chart-tip" id="triax-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>Von Mises 等效应力</span>
+          <span><i style="background:#41699b"></i>安全系数 SF（管体）</span>
+          <span><i style="background:#b05a51"></i>屈服强度（温度折减）</span>
+          <span><i style="background:#c9a15a"></i>设计线 SF = 1.25</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：屈曲判定 + 载荷分解 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 屈曲临界载荷判定与井底载荷分解</h2>
+          <span class="hint">左：屈曲区间沿井深分布；右：四项效应力合成井底有效轴力</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>屈曲判定色带</h3>
+            <svg id="buckband" viewBox="0 0 430 200" role="img" aria-label="屈曲判定色带"></svg>
+          </div>
+          <div class="chart">
+            <h3>井底有效轴力分解（kN，+拉 −压）</h3>
+            <canvas id="decomp" width="430" height="200" role="img" aria-label="井底载荷分解柱状图"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>工况与管柱参数（5 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>井深 <output id="o-depth">5800 m</output></label>
+            <input type="range" id="s-depth" min="5200" max="6400" step="50" value="5800">
+            <span class="tip">区块井深范围 5200–6400 m</span>
+          </div>
+          <div class="ctl">
+            <label>井口压力 <output id="o-whp">95 MPa</output></label>
+            <input type="range" id="s-whp" min="85" max="105" step="1" value="95">
+            <span class="tip">高压气田 85–105 MPa</span>
+          </div>
+          <div class="ctl">
+            <label>井底温度 <output id="o-bht">152 ℃</output></label>
+            <input type="range" id="s-bht" min="145" max="158" step="0.5" value="152">
+            <span class="tip">温度效应是最大不确定源</span>
+          </div>
+          <div class="ctl">
+            <label>壁厚 <output id="o-wall">7.34 mm</output></label>
+            <input type="range" id="s-wall" min="6.45" max="9.53" step="0.01" value="7.34">
+            <span class="tip">API 规格档 6.45 / 7.34 / 9.52 mm</span>
+          </div>
+          <div class="ctl">
+            <label>钢级</label>
+            <div class="seg" id="seg-grade">
+              <button type="button" data-g="P110" class="active">P110</button>
+              <button type="button" data-g="110S">110S</button>
+              <button type="button" data-g="125">125</button>
+            </div>
+            <span class="tip" id="grade-tip">P110：屈服 758–965 MPa（API 5CT）</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">坐封管柱 · 环空保护液 1.10 g/cm³ · 平均井斜 5°</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">简化机理模型（Lubinski, Althouse &amp; Logan 1962, JPT 14(6):655–670, SPE-178-PA）：温度效应 ΔF<sub>T</sub> = −E·A<sub>s</sub>·α·ΔT̄（α = 1.24×10⁻⁵/℃，生产剖面井口 60℃→井底线性，坐封基准 20℃）；鼓胀效应 ΔF<sub>b</sub> = +2ν·(Δp̄<sub>i</sub>·A<sub>i</sub> − Δp̄<sub>o</sub>·A<sub>o</sub>)（ν = 0.3）；活塞效应 ΔF<sub>p</sub> = p<sub>wh</sub>·(A<sub>p</sub> − A<sub>i</sub>)（密封腔 A<sub>p</sub>：Φ76.2 mm）；有效轴力 F<sub>eff</sub>(z) = w<sub>b</sub>·(H−z) + ΔF<sub>T</sub> + ΔF<sub>b</sub> + ΔF<sub>p</sub>；真实轴力 F<sub>true</sub> = F<sub>eff</sub> + p<sub>i</sub>A<sub>i</sub> − p<sub>o</sub>A<sub>o</sub>；三轴 Von Mises 按 Lamé 平均环向 + 轴向 + 径向应力合成，屈服强度温度折减 k<sub>T</sub> = 1 − 0.0006·max(0, T−93℃)；屈曲判据 F<sub>sin</sub> = 2√(EI·w<sub>b</sub>·sinθ / r<sub>c</sub>)、F<sub>hel</sub> = √2·F<sub>sin</sub>（Chen, Lin &amp; Cheatham 1990，7" 套管内径 157.1 mm，r<sub>c</sub> = 34.1 mm）。本页为机理仿真代理模型的原理演示，非工程判据替代品。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① API 5CT 油管钢级屈服 / 抗拉强度（规范表值）</h2><span class="hint">悬停读取数值 · 点击柱条锁定</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准数据</span>
+        <span><b>API Spec 5CT《套管和油管规范》（10th ed., 2018；等效采用 ISO 11960）Table C.5</b>：钢级屈服强度范围与最小抗拉强度。P110 屈服 110–140 ksi（758–965 MPa）、最小抗拉 125 ksi（862 MPa）；酸性服役 C110（对应本例 110S）屈服 110–120 ksi（758–828 MPa）；Q125（对应本例 125）屈服 125–150 ksi（862–1034 MPa）。换算 1 ksi = 6.895 MPa。</span>
+        <a href="https://www.iso.org/obp/ui/#!iso:std:75259:en" target="_blank" rel="noopener">ISO 11960/10400↗</a>
+      </div>
+      <div class="chart-box" id="gr-box">
+        <svg id="gr-chart" viewBox="0 0 900 300" role="img" aria-label="API 5CT 钢级屈服强度区间图"></svg>
+        <div class="chart-tip" id="gr-tip"></div>
+      </div>
+      <div class="r-detail" id="gr-detail">悬停读取数据；点击柱条锁定该钢级。要点：本例三档钢级 P110 / 110S / 125 最小屈服分别为 758 / 758 / 862 MPa——110S 为酸性服役钢级，屈服上限被控制在 828 MPa 以抑制硫化物应力开裂，设计取最小屈服计算。</div>
+      <table class="lit-table">
+        <thead><tr><th>钢级</th><th>屈服下限</th><th>屈服上限</th><th>最小抗拉</th><th>服役定位</th></tr></thead>
+        <tbody id="gr-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② Φ88.9 mm (3-1/2") 油管尺寸规格（API 5CT 尺寸表）</h2><span class="hint">截面积 / 惯性矩为由公称尺寸计算的几何量</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准数据</span>
+        <span><b>API Spec 5CT Table C.2/C.3（ISO 11960 尺寸表）</b>：3-1/2"（88.9 mm）油管标准壁厚档 6.45 / 7.34 / 9.52 mm，对应名义线重 9.20 / 10.20 / 12.70 lb/ft（含接箍裕量）；本例壁厚上限 9.53 mm 为该档公称圆整值。截面积 A<sub>s</sub> = π/4·(D²−d²)、惯性矩 I = π/64·(D⁴−d⁴) 由公称尺寸计算。</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>壁厚 (mm)</th><th>名义线重 (lb/ft)</th><th>计算线重 (kg/m)</th><th>内径 (mm)</th><th>截面积 A<sub>s</sub> (mm²)</th><th>惯性矩 I (×10⁶ mm⁴)</th></tr></thead>
+        <tbody id="tub-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ Lubinski 封隔器管柱力学经典模型（1962）</h2><span class="hint">四项效应是全部商业管柱力学软件的计算内核</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Lubinski A., Althouse W.S., Logan J.L. (1962), "Helical Buckling of Tubing Sealed in Packers", J. Pet. Tech. 14(6):655–670, SPE-178-PA</b>：给出温度效应、鼓胀（泊松）效应、活塞效应与螺旋屈曲判据的封闭解，是封隔器完井管柱受力分析的奠基模型；有效轴力 F<sub>eff</sub> = F<sub>true</sub> − (p<sub>i</sub>A<sub>i</sub> − p<sub>o</sub>A<sub>o</sub>) 为屈曲判定的载荷量。</span>
+        <a href="https://www.onepetro.org/JPT/article-pdf/14/06/655/2213160/spe-178-pa.pdf" target="_blank" rel="noopener">SPE-178-PA↗</a>
+      </div>
+      <div class="fcards">
+        <div class="fcard"><b>温度效应</b><span class="fm">ΔL = α·ΔT̄·L ｜ ΔF<sub>T</sub> = −E·A<sub>s</sub>·α·ΔT̄</span><br>投产升温使管柱伸长，封隔器约束伸长转化为压缩力；钢 α = 1.24×10⁻⁵/℃，E = 206.8 GPa。本例井底 145–158℃，是最主要压缩来源。</div>
+        <div class="fcard"><b>鼓胀（泊松）效应</b><span class="fm">ΔF<sub>b</sub> = +2ν·(Δp̄<sub>i</sub>·A<sub>i</sub> − Δp̄<sub>o</sub>·A<sub>o</sub>)</span><br>内压升高使管径胀大、轴向缩短，封隔器约束缩短转化为拉力；ν = 0.3。高压气井 85–105 MPa 内压下为百 kN 量级拉力项。</div>
+        <div class="fcard"><b>活塞效应</b><span class="fm">ΔF<sub>p</sub> = p<sub>i</sub>·(A<sub>p</sub> − A<sub>i</sub>) − p<sub>o</sub>·(A<sub>p</sub> − A<sub>o</sub>)</span><br>井口压力作用于密封腔与管柱内孔的环形面积（A<sub>p</sub> &gt; A<sub>i</sub> 时产生拉力）；随壁厚增加 A<sub>i</sub> 减小，该项减弱甚至反号。</div>
+        <div class="fcard"><b>有效轴力与屈曲</b><span class="fm">F<sub>eff</sub> = F<sub>true</sub> − (p<sub>i</sub>A<sub>i</sub> − p<sub>o</sub>A<sub>o</sub>)</span><br>屈曲由有效轴力驱动而非真实轴力：F<sub>eff</sub> &lt; 0 进入压缩，超过临界载荷发生正弦 → 螺旋屈曲，接头承受附加弯矩（本例 3 起接头泄漏的力学根源）。</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 管柱屈曲临界载荷（SPE 文献公式）</h2><span class="hint">按 Chen et al. (1990) 公式对 Φ88.9×7.34 mm 油管计算</span></div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Chen Y.C., Lin Y.H., Cheatham J.B. (1990), "Tubular Buckling in Inclined Wells", SPE Drilling Engineering</b>：斜井正弦屈曲 F<sub>sin</sub> = 2√(EI·w·sinθ / r<sub>c</sub>)，螺旋屈曲 F<sub>hel</sub> = 2√(2EI·w·sinθ / r<sub>c</sub>) = √2·F<sub>sin</sub>；<b>Mitchell (1982, SPE 9267)</b> 给出封隔器效应系统解；综述见 <b>《Petroleum Science》"A review of down-hole tubular string buckling in well engineering"</b>（中国石油大学）。</span>
+        <a href="https://www.cup.edu.cn/petroleumscience/docs/2019-08/20150306.pdf" target="_blank" rel="noopener">综述 PDF↗</a>
+      </div>
+      <div class="chart-box" id="bk-box">
+        <svg id="bk-chart" viewBox="0 0 900 260" role="img" aria-label="屈曲临界载荷随井斜角变化"></svg>
+        <div class="chart-tip" id="bk-tip"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#c9a15a"></i>正弦屈曲临界 F<sub>sin</sub></span>
+        <span><i style="background:#b05a51"></i>螺旋屈曲临界 F<sub>hel</sub> = √2·F<sub>sin</sub></span>
+        <span><i style="background:#8a9298"></i>本例平均井斜 5°</span>
+        <span style="color:#79828a;font-size:10px">7" 套管（内径 157.1 mm）· 环空液 1.10 g/cm³ · 悬停读数</span>
+      </div>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

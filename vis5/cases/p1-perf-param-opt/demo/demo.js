@@ -23,46 +23,46 @@
     const W = 430, H = 256;
     const cx = 116, cy = 136;
     const len = 16 + (st.dp - 200) / 600 * 28;
-    let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f130d" rx="6"/>';
-    g += '<rect x="8" y="12" width="216" height="226" rx="7" fill="#161c13" stroke="#2c3327"/>';
-    g += '<text x="18" y="28" font-size="9" fill="#8b8778">地层 · 渗透率 ' + st.perm + ' mD</text>';
-    g += '<text x="18" y="40" font-size="8" fill="#7b8070">横截面（俯视井眼）</text>';
+    let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#eef2ec" rx="6"/>';
+    g += '<rect x="8" y="12" width="216" height="226" rx="7" fill="#e6ece3" stroke="#d1d8cc"/>';
+    g += '<text x="18" y="28" font-size="9" fill="#878374">地层 · 渗透率 ' + st.perm + ' mD</text>';
+    g += '<text x="18" y="40" font-size="8" fill="#8a8f7f">横截面（俯视井眼）</text>';
 
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="56" fill="#3a4238" stroke="#4a5446" stroke-width="1"/>';
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="47" fill="#5b6358" stroke="#79856f" stroke-width="1.2"/>';
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="40" fill="#12160f" stroke="#79856f" stroke-width="1"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="56" fill="#bfc7bd" stroke="#afb9ab" stroke-width="1"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="47" fill="#9fa79c" stroke="#84907a" stroke-width="1.2"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="40" fill="#ecf0e9" stroke="#84907a" stroke-width="1"/>';
 
     const n = 360 / st.ph;
     for (let k = 0; k < n; k++) {
       const a = -Math.PI / 2 + k * 2 * Math.PI / n;
       const x1 = cx + Math.cos(a) * 47, y1 = cy + Math.sin(a) * 47;
       const x2 = cx + Math.cos(a) * (47 + len), y2 = cy + Math.sin(a) * (47 + len);
-      g += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + (st.optimal ? '#f0c76e' : '#d0a85c') + '" stroke-width="' + (st.optimal ? 3 : 2.5) + '" stroke-linecap="round" opacity=".92"/>';
-      g += '<circle cx="' + x2.toFixed(1) + '" cy="' + y2.toFixed(1) + '" r="3.2" fill="' + (st.optimal ? '#f0c76e' : '#d0a85c') + '"/>';
+      g += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + (st.optimal ? '#91680f' : '#a37b2f') + '" stroke-width="' + (st.optimal ? 3 : 2.5) + '" stroke-linecap="round" opacity=".92"/>';
+      g += '<circle cx="' + x2.toFixed(1) + '" cy="' + y2.toFixed(1) + '" r="3.2" fill="' + (st.optimal ? '#91680f' : '#a37b2f') + '"/>';
     }
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (47 + len + 6) + '" fill="none" stroke="#d0a85c" stroke-width=".8" stroke-dasharray="3 4" opacity=".5"/>';
-    g += '<text x="' + (cx + 62) + '" y="' + (cy + 58) + '" font-size="8" fill="#8b8778">套管</text>';
-    g += '<text x="' + (cx + 34) + '" y="' + (cy - 54) + '" font-size="8" fill="#8b8778">水泥环</text>';
-    g += '<text x="' + (cx + 66) + '" y="' + (cy - 76) + '" font-size="8" fill="#d0a85c">孔道</text>';
-    g += '<text x="10" y="250" font-size="8.5" fill="#c9c4b4">相位角 ' + st.ph + '° · ' + n + ' 条孔道 · 穿深 ' + st.dp + ' mm</text>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (47 + len + 6) + '" fill="none" stroke="#a37b2f" stroke-width=".8" stroke-dasharray="3 4" opacity=".5"/>';
+    g += '<text x="' + (cx + 62) + '" y="' + (cy + 58) + '" font-size="8" fill="#878374">套管</text>';
+    g += '<text x="' + (cx + 34) + '" y="' + (cy - 54) + '" font-size="8" fill="#878374">水泥环</text>';
+    g += '<text x="' + (cx + 66) + '" y="' + (cy - 76) + '" font-size="8" fill="#a37b2f">孔道</text>';
+    g += '<text x="10" y="250" font-size="8.5" fill="#4b4636">相位角 ' + st.ph + '° · ' + n + ' 条孔道 · 穿深 ' + st.dp + ' mm</text>';
 
     const sx = 238;
-    g += '<text x="' + sx + '" y="28" font-size="9" fill="#8b8778">1 m 井段展开</text>';
-    g += '<text x="' + sx + '" y="40" font-size="8" fill="#7b8070">金色圆点 = 射孔孔眼</text>';
-    g += '<rect x="' + sx + '" y="48" width="110" height="152" rx="6" fill="#161c13" stroke="#2c3327"/>';
+    g += '<text x="' + sx + '" y="28" font-size="9" fill="#878374">1 m 井段展开</text>';
+    g += '<text x="' + sx + '" y="40" font-size="8" fill="#8a8f7f">金色圆点 = 射孔孔眼</text>';
+    g += '<rect x="' + sx + '" y="48" width="110" height="152" rx="6" fill="#e6ece3" stroke="#d1d8cc"/>';
     const rows = Math.ceil(st.d / 3);
     for (let i = 0; i < st.d; i++) {
       const col = i % 3, row = Math.floor(i / 3);
       const px = sx + 27 + col * 28;
       const py = 62 + row * (128 / Math.max(rows, 1));
-      g += '<circle cx="' + px + '" cy="' + py.toFixed(1) + '" r="3" fill="' + (st.optimal ? '#f0c76e' : '#d0a85c') + '"/>';
+      g += '<circle cx="' + px + '" cy="' + py.toFixed(1) + '" r="3" fill="' + (st.optimal ? '#91680f' : '#a37b2f') + '"/>';
     }
-    g += '<text x="' + (sx + 4) + '" y="59" font-size="7.5" fill="#7b8070">0 m</text>';
-    g += '<text x="' + (sx + 4) + '" y="212" font-size="7.5" fill="#7b8070">1.0 m</text>';
-    g += '<text x="' + (sx + 55) + '" y="212" font-size="9" fill="#c9c4b4" text-anchor="middle">' + st.d + ' 孔 / m</text>';
-    g += '<text x="' + sx + '" y="226" font-size="7.5" fill="#8b8778">PI ∝ 孔密^0.35 × 穿深^0.30 × 相位系数</text>';
+    g += '<text x="' + (sx + 4) + '" y="59" font-size="7.5" fill="#8a8f7f">0 m</text>';
+    g += '<text x="' + (sx + 4) + '" y="212" font-size="7.5" fill="#8a8f7f">1.0 m</text>';
+    g += '<text x="' + (sx + 55) + '" y="212" font-size="9" fill="#4b4636" text-anchor="middle">' + st.d + ' 孔 / m</text>';
+    g += '<text x="' + sx + '" y="226" font-size="7.5" fill="#878374">PI ∝ 孔密^0.35 × 穿深^0.30 × 相位系数</text>';
     if (st.optimal) {
-      g += '<text x="' + (sx + 55) + '" y="240" font-size="8" fill="#f0c76e" text-anchor="middle">★ 自动寻优组合</text>';
+      g += '<text x="' + (sx + 55) + '" y="240" font-size="8" fill="#91680f" text-anchor="middle">★ 自动寻优组合</text>';
     }
     $('perf').innerHTML = g;
     return c;

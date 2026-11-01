@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：电潜泵故障智能预警</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>电潜泵故障智能预警 · 交互式演示</h1>
+      <p class="lead">切换 4 类故障场景，看 30 天分钟级电流卡片如何退化、健康度评分怎样逐级跌破三级预警阈值；拖动分析时点读取预警级别与处置建议。</p>
+    </div>
+    <span class="badge">渤海湾某采油区 · 86 口 ESP 井</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>健康度评分 0–100，三级预警：&lt;60 关注（跟踪不动作）、&lt;40 预警（建议 7 天内处置）、&lt;20 紧急（3 天内停机检泵）；故障从早期退化到停机窗口 5–30 天；验收口径：7 天窗口召回率 ≥80%、误报 ≤1 次/井·年、平均提前量 ≥7 天。演示时序为按 4 类故障经典电流卡片形态（气锁锯齿波动 / 结垢缓慢爬升 / 电机过热温流联动 / 相间短路骤降）生成的模拟数据；真实文献与公开数据集见「真实数据来源」页签。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">故障预警模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 故障预警模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 多参数时序主图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 多参数时序主图：电流卡片（30 天 · 30min 采样）</h2>
+          <span class="hint">悬停显示十字线读数 · ▲ 为三级预警触发点 · 红竖线为故障停机</span>
+        </div>
+        <div class="chart-box" id="main-box">
+          <svg id="main" viewBox="0 0 920 316" role="img" aria-label="电流卡片多参数时序主图"></svg>
+          <div class="chart-tip" id="main-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b;height:3px"></i>电流（按健康度着色，左轴 A）</span>
+          <span><i style="background:#41699b"></i>电机温度（右轴 ℃，可关）</span>
+          <span><i style="background:#c9a15a"></i>井口油压（下方面板 MPa，可关）</span>
+          <span><i class="band" style="background:#c9a15a"></i>前兆窗口</span>
+          <span><i style="background:#b05a51"></i>故障停机</span>
+          <span><i class="tri"></i>预警触发点（关注/预警/紧急）</span>
+        </div>
+      </div>
+
+      <!-- ② 健康度评分 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 健康度评分与三级预警阈值带</h2>
+          <span class="lamp"><i id="lamp-dot"></i>当前状态（分析时点）：<b id="lamp-txt">—</b></span>
+        </div>
+        <div class="chart-box" id="hl-box">
+          <svg id="hl" viewBox="0 0 920 180" role="img" aria-label="健康度评分曲线与预警阈值带"></svg>
+          <div class="chart-tip" id="hl-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i class="band" style="background:#2f7d6b"></i>正常区 ≥60</span>
+          <span><i class="band" style="background:#c9a15a"></i>关注区 40–60</span>
+          <span><i class="band" style="background:#b05a51"></i>预警区 20–40</span>
+          <span><i class="band" style="background:#7a3a33"></i>紧急区 &lt;20</span>
+          <span><i style="background:#5d666d"></i>分析时点游标（右侧滑块联动）</span>
+        </div>
+        <div class="metrics" style="margin-top:8px">
+          <div class="mcard"><span>分析时点健康度</span><b id="m-hl">—</b></div>
+          <div class="mcard"><span>预警级别</span><b id="m-lvl">—</b></div>
+          <div class="mcard"><span>距故障停机</span><b id="m-eta">—</b></div>
+          <div class="mcard"><span>本场景预警提前量（关注/预警）</span><b id="m-lead">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>故障场景与参数</h2>
+          <span class="hint">切换 / 拖动即时重绘</span>
+        </div>
+        <div class="well-btns" id="scen-btns">
+          <button class="well-btn" data-scen="0" type="button">气锁（96 起）<small>锯齿波动 · 前兆约 10 天</small></button>
+          <button class="well-btn" data-scen="1" type="button">结垢（118 起）<small>缓慢爬升 · 前兆约 14 天</small></button>
+          <button class="well-btn" data-scen="2" type="button">电机过热（74 起）<small>温流联动 · 前兆约 14 天</small></button>
+          <button class="well-btn" data-scen="3" type="button">相间短路（45 起）<small>骤降跳机 · 前兆约 7 天</small></button>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>分析时点 <output id="o-cursor">第 21.0 天</output></label>
+            <input type="range" id="s-cursor" min="0" max="30" step="0.5" value="21">
+            <span class="tip">健康度、级别与处置建议对齐到该时点</span>
+          </div>
+        </div>
+        <div class="chk-row">
+          <label class="chk"><input type="checkbox" id="ov-tmp" checked> 叠加电机温度（右轴）</label>
+          <label class="chk"><input type="checkbox" id="ov-prs" checked> 叠加井口油压（下方面板）</label>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset" type="button">恢复默认</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><h2>区块背景</h2></div>
+        <p class="hint" style="line-height:1.6">86 口 ESP 井、分钟级 6 参数（电流/电压/油压/套压/温度/频率）；近 5 年检泵 412 起：气锁 96、结垢 118、电机过热 74、相间短路 45、其他 79，年故障率约 11%。单次检泵 30–60 万元。系统目标：7 天窗口召回 ≥80%、误报 ≤1 次/井·年、平均提前量 ≥7 天，把 30% 非计划停机转为计划内检泵（年节约约 1,400 万元）。</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">示范口径：时序按各故障经典电流卡片形态生成（气锁＝波动幅值随退化指数放大；结垢＝电流按幂律缓慢爬升至过流跳闸；电机过热＝温度爬升与电流线性耦合；相间短路＝高频抖动加剧后骤降跳机）；健康度 h(t) = 92 − 84·p^e，p 为前兆窗口归一化进度（e 按场景取 0.8–1.1），叠加低频漂移与测量噪声；三级阈值 60/40/20 由案例库业务口径给定。演示数据为模拟，形态与文献记载的典型卡片一致（见「真实数据来源」）。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① ESP 失效统计与「浴盆」失效模型（Milne Point 油田实证）</h2><span class="hint">浴盆曲线按 Sawaryn 1999 模型绘制（示意）</span></div>
+      <div class="src-bar">
+        <span class="tag real">SPE 论文</span>
+        <span><b>Sawaryn S.J., Norrell K.S., Whelehan O.P. (1999), "The Analysis and Prediction of Electric-Submersible-Pump Failures in the Milne Point Field, Alaska", SPE-56663-MS</b>：Milne Point 油田以 ESP 为主要举升方式，<b>每年约发生 50 起 ESP 失效</b>；用浴盆模型刻画失效率，并将早期失效（浴盆前段）视为一系列伯努利试验；影响可靠性的三大因素为储层、防砂方式、首装机组还是替换机组；失效率是动态的，受新井投产节奏与失效—替换时间差影响。</span>
+        <a href="https://doi.org/10.2118/56663-MS" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box">
+        <canvas id="lit-bath" width="880" height="210" role="img" aria-label="ESP 失效浴盆曲线"></canvas>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>条目</th><th>Sawaryn et al. (1999) 结论</th><th>对本案例的含义</th></tr></thead>
+        <tbody>
+          <tr><td>失效规模</td><td class="num">Milne Point 约 50 起/年</td><td>本案例 86 口井、年均约 83 井次非计划停机，量级相当</td></tr>
+          <tr><td>失效模型</td><td>浴盆曲线：早期失效 → 随机失效（恒定 λ）→ 磨损失效</td><td>预警重点在随机失效段与磨损前段的「退化窗口」（5–30 天）</td></tr>
+          <tr><td>早期失效</td><td>作为伯努利试验序列单独建模</td><td>新装机组设 30 天学习期只记录不预警，避免磨合期误报</td></tr>
+          <tr><td>影响因素</td><td>储层、防砂、首装/替换机组</td><td>分井建立自适应基线，不用全区块统一阈值</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 电流卡片诊断法与 SPC 自动判异规则</h2><span class="hint">下图为 4 种典型卡片形态（按文献归纳绘制）</span></div>
+      <div class="src-bar">
+        <span class="tag real">方法文献</span>
+        <span><b>Yang X. et al. (2022), "Fault Diagnosis Method and Application of ESP Well Based on SPC Rules and Real-Time Data Fusion", Mathematical Problems in Engineering 2022:8497299</b>：电流卡片法由 Powers 首创，文中详述典型特征成因，是 ESP 故障诊断的理论基础；该文将 SPC（统计过程控制）判异规则与实时数据融合用于 ESP 井故障自动诊断。另见<b>《基于机器学习的电潜泵工况诊断》（石油钻采工艺， 2022, DOI 10.13639/j.odpt.2022.02.019）</b>：电流卡片诊断是 API 于 1982 年提出的故障分类方法，依据不同工况下电流波动的时间长短、频次、峰值与额定值关系进行分类。</span>
+        <a href="https://doi.org/10.1155/2022/8497299" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box">
+        <svg id="lit-cards" viewBox="0 0 880 122" role="img" aria-label="四种典型电流卡片形态"></svg>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>SPC 判异规则（Nelson / WECO 口径）</th><th>对应 ESP 前兆示例</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>单点超出 μ±3σ 控制限</td><td>短路瞬间电流尖峰 / 骤降</td></tr>
+          <tr><td class="num">2</td><td>连续 9 点落在中心线同侧</td><td>结垢导致电流均值缓慢抬升</td></tr>
+          <tr><td class="num">3</td><td>连续 6 点单调递增或递减</td><td>电机过热温流联动漂移</td></tr>
+          <tr><td class="num">4</td><td>连续 14 点上下交替</td><td>气锁引起的周期性强波动</td></tr>
+          <tr><td class="num">5</td><td>连续 3 点中 2 点超出同侧 μ±2σ</td><td>退化加速段的预警确认</td></tr>
+          <tr><td class="num">6</td><td>连续 5 点中 4 点超出同侧 μ±1σ</td><td>基线整体漂移（区别于随机噪声）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 机器学习预测性维护与公开基准数据集</h2><span class="hint">均为可查证公开工作</span></div>
+      <div class="src-bar">
+        <span class="tag real">公开数据集</span>
+        <span><b>Vargas R.E.V., Munaro C.J., Ciarelli P.M. et al. (2019), "A realistic and public dataset with rare undesirable real events in oil wells", Journal of Petroleum Science and Engineering 181:106223（3W 数据集）</b>：Petrobras 发布的油井罕见不良事件公开基准，9 个类别（0 正常 + 8 类事件），标注事件约 1,984 个（正常类真实实例 597 个），实例分真实 / OLGA 模拟 / 手绘三类，多变量时序（井口/井下压力、温度等），极端类别不均衡——与本案例「前兆段占比 &lt;2%」的场景同构；已收入 UCI ML Repository（#540）。</span>
+        <a href="https://doi.org/10.1016/j.petrol.2019.106223" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>方法路线</th><th>代表工作（可查证）</th><th>数据</th><th>要点</th></tr></thead>
+        <tbody>
+          <tr><td>电流卡片人工诊断</td><td>Powers 首创；API 1982 年提出分类（据石油钻采工艺 2022 归纳）</td><td>电流记录曲线</td><td>锯齿＝气锁、爬升＝结垢等形态经验识别；人工逐张判读，管 30–50 口井即饱和</td></tr>
+          <tr><td>SPC 规则 + 实时数据融合</td><td>Yang et al. 2022, Math. Probl. Eng. 2022:8497299</td><td>多参数实时数据</td><td>6 条判异规则自动触发，替代人工盯卡片</td></tr>
+          <tr><td>PCA + XGBoost</td><td>Samara H. et al. 2022, ACS Omega 7(21):17641–17651</td><td>多变量传感器实时数据</td><td>降维 + 梯度提升树预测 ESP 失效，缩短拆泵检查时间</td></tr>
+          <tr><td>LSTM-CNN 混合网络</td><td>SPE Journal 29(5):2130–2147 (2024), SPE-218418-PA</td><td>电参数时序</td><td>超参优化 LSTM 拟合现场电参数，实现故障前异常预警（测试集 R² 高拟合）</td></tr>
+          <tr><td>公开基准评测</td><td>Vargas et al. 2019（3W 数据集）</td><td>9 类井事件时序</td><td>罕见事件检测方法的可比性基准，UCI #540</td></tr>
+        </tbody>
+      </table>
+      <div class="formula-box">
+        <b>为什么必须分级预警（评估三角）：</b>前兆段占总数据量 &lt;2%，「全部判正常」即有 98% 总体准确率——因此验收必须同时卡住 7 天召回率 ≥80%、误报 ≤1 次/井·年、平均提前量 ≥7 天三条线，并按故障类型分层统计（气锁提前 1–3 天即合格，结垢类慢退化要求 7 天以上）；漏报 : 误报代价按 4 : 1 设权。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">本页全部文献均可按 DOI 查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Sawaryn, Norrell &amp; Whelehan (1999), SPE-56663-MS, SPE ATCE Houston</td><td>ESP 失效统计 + 浴盆模型</td><td>失效规模（~50 起/年）、浴盆曲线、早期失效伯努利建模、新泵学习期口径</td></tr>
+          <tr><td class="num">2</td><td>Yang X. et al. (2022), Mathematical Problems in Engineering 2022:8497299</td><td>SPC 规则 + 数据融合诊断</td><td>电流卡片法源流（Powers 首创）与 SPC 判异规则表</td></tr>
+          <tr><td class="num">3</td><td>《基于机器学习的电潜泵工况诊断》，石油钻采工艺 2022, DOI 10.13639/j.odpt.2022.02.019</td><td>中文方法综述</td><td>电流卡片为 API 1982 故障分类方法的口径与形态依据</td></tr>
+          <tr><td class="num">4</td><td>Samara H. et al. (2022), ACS Omega 7(21):17641–17651</td><td>机器学习预测性维护</td><td>PCA + XGBoost 多参数实时失效预测路线</td></tr>
+          <tr><td class="num">5</td><td>Hybrid LSTM-CNN for ESP Condition Prediction and Diagnosis, SPE Journal 29(5):2130–2147 (2024), SPE-218418-PA</td><td>深度学习早期预警</td><td>电参数时序的故障前异常预测路线</td></tr>
+          <tr><td class="num">6</td><td>Vargas et al. (2019), JPSE 181:106223（3W 数据集，UCI #540）</td><td>公开基准数据集</td><td>罕见事件检测基准；类别不均衡与本案例同构</td></tr>
+          <tr><td class="num">7</td><td>案例库业务数据（渤海湾盆地某采油区）</td><td>工程边界条件</td><td>86 口井、412 起检泵（96/118/74/45/79）、年故障率 ~11%、单次检泵 30–60 万元、三级阈值 60/40/20</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

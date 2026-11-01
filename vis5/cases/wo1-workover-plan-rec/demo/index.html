@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：修井作业方案智能推荐</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>修井作业方案智能推荐 · 交互式演示</h1>
+      <p class="lead">给定故障井画像（故障类型、井深、日产液、含水、沉没度、历史作业次数），系统按「故障硬匹配 → 井身结构约束 → 加权相似度」检索 Top-8 相似案例，对候选修井方案按预期增油、成功率、费用、工期、增油费效比打分排序，输出推荐方案与工序甘特。</p>
+    </div>
+    <span class="badge">知识图谱 + 案例推理</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>故障构成参照采油厂 5 年 1,240 井次（落物 31%、套管变形 24%、出水 22%、砂卡 15%、其他 8%）；一次成功率人工编制基线 76%，系统目标 ≥85%；工序口径对齐 SY/T 5587《常规修井作业规程》压井、井筒准备、解卡打捞等部分；费效比 = 年增油量（t）÷ 作业费用（万元）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：指标卡 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 推荐结果 · 关键指标</h2>
+          <span class="hint">随右侧井况参数实时重算</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>综合得分（满分100）</span><b id="m-score">—</b></div>
+          <div class="mcard"><span>预期增油</span><b id="m-gain">—</b></div>
+          <div class="mcard"><span>一次成功率</span><b id="m-succ">—</b></div>
+          <div class="mcard"><span>作业费用</span><b id="m-cost">—</b></div>
+          <div class="mcard"><span>工期 P50 / P80</span><b id="m-days">—</b></div>
+          <div class="mcard"><span>增油费效比</span><b id="m-eff">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 面板 2：候选方案打分排序 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 候选方案综合打分排序</h2>
+          <span class="hint">悬停查看五维明细 · 点击条柱指定方案</span>
+        </div>
+        <div class="chart-box" id="box-score">
+          <canvas id="cv-score" width="640" height="210" role="img" aria-label="候选方案打分排序条形图"></canvas>
+          <div class="chart-tip" id="tip-score"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>小修</span>
+          <span><i style="background:#c9a15a"></i>中修</span>
+          <span><i style="background:#b05a51"></i>大修</span>
+          <span style="color:#79828a">得分 = 0.30·增油 + 0.25·成功率 + 0.20·费效比 + 0.15·费用 + 0.10·工期（归一化）</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：成功率-费用帕累托散点 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 成功率—费用权衡空间（帕累托）</h2>
+          <span class="hint">点大小 = 预期增油 · 金色描边 = 帕累托前沿 · 点击散点指定方案</span>
+        </div>
+        <div class="chart-box" id="box-pareto">
+          <canvas id="cv-pareto" width="640" height="280" role="img" aria-label="成功率费用帕累托散点图"></canvas>
+          <div class="chart-tip" id="tip-pareto"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#2f7d6b"></i>小修候选</span>
+          <span><i class="dot" style="background:#c9a15a"></i>中修候选</span>
+          <span><i class="dot" style="background:#b05a51"></i>大修候选</span>
+          <span><i class="dot" style="background:#41699b"></i>当前推荐</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：推荐方案工序甘特 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 推荐方案工序流程（甘特）</h2>
+          <span class="hint">实段 = P50 时长 · 浅色延伸 = 至 P80（含等工具/等压井/候凝等停）</span>
+        </div>
+        <div class="chart-box" id="box-gantt">
+          <canvas id="cv-gantt" width="640" height="240" role="img" aria-label="推荐方案工序甘特图"></canvas>
+          <div class="chart-tip" id="tip-gantt"></div>
+        </div>
+      </div>
+
+      <!-- 面板 5：与人工经验对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 与人工编制经验对比</h2>
+          <span class="hint">编制周期与一次成功率双口径</span>
+        </div>
+        <div class="chart-box" id="box-cmp">
+          <canvas id="cv-cmp" width="640" height="180" role="img" aria-label="与人工经验对比柱状图"></canvas>
+          <div class="chart-tip" id="tip-cmp"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑥ 故障井画像</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>故障类型</label>
+            <select id="s-fault">
+              <option value="sand">砂卡（砂埋管柱）</option>
+              <option value="wax">结蜡（井筒结蜡堵塞）</option>
+              <option value="rod">杆断（抽油杆断脱）</option>
+              <option value="pump">泵漏失（泵效下降）</option>
+              <option value="junk">落物（油管落井）</option>
+              <option value="casing">套管变形</option>
+              <option value="water">出水（含水突升）</option>
+            </select>
+            <span class="tip">决定故障硬匹配的第一层过滤</span>
+          </div>
+          <div class="ctl">
+            <label>井型</label>
+            <select id="s-wtype">
+              <option value="v">直井</option>
+              <option value="d">定向井（井斜 30–60°）</option>
+              <option value="h">水平井</option>
+            </select>
+            <span class="tip">井型影响作业难度与成功率</span>
+          </div>
+          <div class="ctl">
+            <label>井深 <output id="o-depth">2200 m</output></label>
+            <input type="range" id="s-depth" min="1000" max="3500" step="50" value="2200">
+            <span class="tip">井深放大费用与工期</span>
+          </div>
+          <div class="ctl">
+            <label>日产液 <output id="o-rate">18 t/d</output></label>
+            <input type="range" id="s-rate" min="2" max="60" step="1" value="18">
+            <span class="tip">产液量越高，恢复后增油空间越大</span>
+          </div>
+          <div class="ctl">
+            <label>含水 <output id="o-wc">82 %</output></label>
+            <input type="range" id="s-wc" min="10" max="98" step="1" value="82">
+            <span class="tip">高含水井堵水类方案增油更显著</span>
+          </div>
+          <div class="ctl">
+            <label>沉没度 <output id="o-subm">300 m</output></label>
+            <input type="range" id="s-subm" min="50" max="800" step="10" value="300">
+            <span class="tip">沉没度低提示供液不足，检泵收益大</span>
+          </div>
+          <div class="ctl">
+            <label>历史作业次数 <output id="o-hist">3 次</output></label>
+            <input type="range" id="s-hist" min="0" max="10" step="1" value="3">
+            <span class="tip">多次作业井况复杂，成功率折减</span>
+          </div>
+          <div class="ctl">
+            <label>套管尺寸 <output id="o-csg">139.7 mm</output></label>
+            <input type="range" id="s-csg" min="0" max="1" step="1" value="0">
+            <span class="tip">0=Φ139.7mm · 1=Φ177.8mm，井身结构硬过滤</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">推荐定位：模型出草稿 + 依据链，工程师会审下发</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型口径：预期增油 = 方案基值 × (0.5+0.5·日产液/18) × 故障修正（堵水类随含水升、检泵类随沉没度降）；成功率 = 基值 × (1−0.025·历史作业次数) × 井型系数（直井 1.0 / 定向 0.95 / 水平 0.88）× (1−(井深−2000)/8000)；费用 = 基值 × (0.8+0.2·井深/2000)；工期 = 基值 × √(井深/2000) ×（历史作业 &gt;5 次再 ×1.1）；费效比 = 预期增油×12 ÷ 费用。工期 P80 = P50×1.3 + 等停 0.5 天（对齐案例中「不含等停实际超 30%」教训）。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 修井作业规程类标准（工序与方案候选口径）</h2><span class="hint">现行石油天然气行业标准</span></div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 5587.12—2018《常规修井作业规程 第12部分：解卡打捞》</b>（2018-10-29 发布，2019-03-01 实施，代替 SY/T 5587.12—2004）：规定解卡打捞作业的施工设计、工具选择与操作要求。对应 demo 模块：<b>砂卡/杆断/落物类候选方案（冲砂解卡、液压解卡、卡瓦打捞筒打捞）的工序设置与成功率基值</b>。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F1A029BB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 5587.3—2024《常规修井作业规程 第3部分：压井、替喷、诱喷》</b>（2024-09-24 发布，2025-03-24 实施，代替 SY/T 5587.3—2013）：规定压井液选择、压井方式与诱喷作业程序。对应 demo 模块：<b>甘特图中「压井」「诱喷投产」工序及其 P50/P80 时长</b>。</span>
+        <a href="https://www.spc.org.cn/online/6388a48817d6a591434ad50ebcfe9584.html" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 5587.5—2018《常规修井作业规程 第5部分：井下作业井筒准备》</b>（2018-10-29 发布，2019-03-01 实施，代替 SY/T 5587.5—2004）：规定通井、刮削、洗井等井筒准备作业要求。对应 demo 模块：<b>井身结构硬过滤（套管尺寸约束工具下入）与通井/井筒准备工序</b>。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F25571BB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 案例推理 / 机器学习方案优选文献（推荐算法口径）</h2><span class="hint">CBR 与成功率预测</span></div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Popa A., Popa C., Malamma M., Hicks J. (Chevron)：Case-Based Reasoning Approach for Well Failure Diagnostics and Planning，SPE 114229</b>，2008 SPE Western Regional &amp; Pacific Section AAPG Joint Meeting, Bakersfield。针对砂卡/卡阻类井故障，用案例推理在清砂工艺（bailing / washback / foaming）中检索最相似历史井并推荐作业方案，作为修井规划设计的前端工具。对应 demo 模块：<b>「故障硬匹配 → 加权相似度 → Top-8 相似案例 → 方案推荐」主框架</b>。</span>
+        <a href="https://onepetro.org/SPEWRM/proceedings-abstract/SPEWRM/All-SPEWRM/SPE-114229-MS/24050" target="_blank" rel="noopener">OnePetro↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Application of Machine Learning Algorithm Approach to Enhance the Workover Program Success Ratio in Pertamina Hulu Sanga Sanga Field，SPE-570431-MS</b>，2024 SPE Asia Pacific Oil and Gas Conference：以决策树算法对修井方案做 FLOW / NO FLOW 成功率分类预测，训练/验证按 80:20 划分，用于提高修井项目成功率。对应 demo 模块：<b>候选方案「一次成功率」预测与成功率折减项（历史作业次数、井型、井深）</b>。</span>
+        <a href="https://onepetro.org/SPEAPOG/proceedings-abstract/24APOG/24APOG/570431" target="_blank" rel="noopener">OnePetro↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>Construction and application of an ontology-based domain-specific knowledge graph for petroleum exploration and development（Petro-KG），Geoscience Frontiers 13(3): 101426, 2022</b>：面向石油勘探开发构建本体驱动的领域知识图谱（Petro-Onto），为中石化上游业务建成百万节点级图谱并支撑智能检索与问答。对应 demo 模块：<b>「故障—工艺—工具—效果」知识图谱构建与实体抽取环节</b>。</span>
+        <a href="https://doi.org/10.1016/j.gsf.2022.101426" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 措施经济评价文献（费效比口径）</h2><span class="hint">增油量 × 费用 → 盈亏平衡</span></div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>《油田开发中后期措施投入经济效益预测及后评价研究》，天然气地球科学，2012, 23(5): 973—980</b>：引用措施增油量函数关系式，用「措施增油量 × 措施费用」两个指标，基于盈亏平衡原理给出不同油价下措施最低增油界限公式。对应 demo 模块：<b>增油费效比指标与方案经济排序</b>。</span>
+        <a href="http://www.nggs.ac.cn/EN/PDF/10.11764/j.issn.1672-1926.2012.05.973" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业方法</span>
+        <span><b>《探讨油井措施经济评价的方法与程序》（中国石油勘探开发研究院，石油知识/方法综述）</b>：确立措施收益、措施增量投入产出比、措施投入回收期等评价指标体系，措施投入含措施投资与增量成本。对应 demo 模块：<b>指标卡中「增油费效比（t/万元）」与费用口径</b>。</span>
+        <a href="https://www.cnpc.com.cn/syzs/ktkf/201206/e0b7d6b7e5c24a9a8742ce962bc9b0fa.shtml" target="_blank" rel="noopener">原文↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 来源—模块对照表</h2><span class="hint">共 8 条，全部真实可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型 / 年份</th><th>关键口径</th><th>对应 demo 模块</th></tr></thead>
+        <tbody id="src-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

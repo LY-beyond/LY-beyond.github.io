@@ -12,7 +12,7 @@ window.ATLAS = {
     tagline: '按石油作业链条逐环节展示可被深度学习改造的候选场景，标注技术介入点、数据条件与难度等级。',
     version: 'v1.0',
     updated: '2026-10',
-    upstreamNote: '上游环节（地质勘察 → 采油）已详解；下游 4 个环节标注为「待扩展」。',
+    upstreamNote: '13 个环节的 63 个场景均已给出完整案例；其中 20 个场景提供可运行交互演示。',
     email: 'atlas@example.com'
   },
 
@@ -771,7 +771,7 @@ window.ATLAS = {
           ],
           refs: ['曲线 + 图像融合', '异常检测', '分级分类'],
           cross: ['测井'],
-          status: 'ext'
+          demo: true
         },
         {
           id: 'wo4', name: '修井作业风险预警', methods: ['ts'], diff: '中',
@@ -1037,7 +1037,7 @@ window.ATLAS = {
             ['在线分析仪', '若已配置', '作参考']
           ],
           refs: ['软测量', '半监督回归', '不确定度估计'],
-          status: 'ext'
+          demo: true
         }
       ]
     }

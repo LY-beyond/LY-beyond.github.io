@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：射孔孔道形态智能预测</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>射孔孔道形态智能预测 · 交互式演示</h1>
+      <p class="lead">选择弹型、调节地层强度 / 孔隙度 / 地应力与相位角，实时查看射流侵彻孔道形态、穿深-强度曲线与「仿真 vs 靶试」贝叶斯偏差校准——代理模型把单套方案评估从 32 h 压到 &lt;1 s。</p>
+    </div>
+    <span class="badge">准噶尔盆地致密砂岩 · 35 口待射孔井</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>穿深强度校正按 Thompson (1962, API Drill. &amp; Prod. Prac. 191–197) 半对数公式（Berea 基准 6500 psi）；应力折减按 Halleck et al. (1988, SPE-18245)：3,000 psi 有效应力下穿深降 10–14%；射流头部 ≈7 km/s、尾部 ≈1 km/s、全程 &lt;200 μs（Halleck et al. 1992 X 射线 CT 观测）；压实带渗透率降至原岩 10–30%（King et al. 1986, SPE-14321）。案例训练集：2,400 组显式动力学仿真 + 47 发靶试真值（混凝土靶 34、岩心靶 13），贝叶斯校准后穿深误差 ≤10%。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">穿深预测模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 穿深预测模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 射流侵彻示意 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 射流侵彻与孔道形态示意（实时联动）</h2>
+          <span class="hint">穿深 / 入口孔径 / 压实带均随参数即时重算</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="jet" viewBox="0 0 500 250" role="img" aria-label="射流侵彻孔道形态示意图"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#8a9298;height:4px"></i>套管 / 水泥环</span>
+          <span><i style="background:#2f7d6b;height:4px"></i>孔道（有效穿深）</span>
+          <span><i style="background:#e3cfa4;height:6px"></i>压实带（k 降至原岩 10–30%）</span>
+          <span><i style="background:#c9a15a"></i>尺寸标注</span>
+        </div>
+      </div>
+
+      <!-- ② 穿深-强度曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 有效穿深随抗压强度变化（4 种代表弹型对比）</h2>
+          <span class="hint">悬停显示十字线与读数 · 绿带为校准后 ±10% 误差带</span>
+        </div>
+        <div class="chart-box" id="uc-box">
+          <svg id="ucurve" viewBox="0 0 480 250" role="img" aria-label="穿深随抗压强度变化曲线"></svg>
+          <div class="chart-tip" id="uc-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>SDP-115 超深穿透</span>
+          <span><i style="background:#2f7d6b;height:3px"></i>DP-98 深穿透（当前加粗）</span>
+          <span><i style="background:#c9a15a"></i>LD-90 低伤害</span>
+          <span><i style="background:#b05a51"></i>BH-80 大孔径</span>
+        </div>
+      </div>
+
+      <!-- ③ 偏差校准散点 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 仿真 vs 靶试：贝叶斯偏差校准（47 发真值）</h2>
+          <span class="hint">悬停读数 · 横轴靶试实测、纵轴仿真预测</span>
+        </div>
+        <p class="hint">混凝土靶 34 发（蓝）、岩心靶 13 发（金）；未校准仿真存在系统偏差（混凝土靶 +9.6%、岩心靶 +13.2%），贝叶斯校准后偏差中位数降到 4.8%，落在 ±10% 验收带内（案例流程第 2 步）。</p>
+        <div class="btnrow" style="margin:2px 0 6px">
+          <span class="seg" id="cal-seg">
+            <button type="button" data-mode="raw">未校准仿真</button>
+            <button type="button" data-mode="cal" class="active">贝叶斯校准后</button>
+          </span>
+          <span class="btn-note" id="cal-stats">—</span>
+        </div>
+        <div class="chart-box" id="sc-box">
+          <canvas id="scatter" width="480" height="270" role="img" aria-label="仿真与靶试对比散点图"></canvas>
+          <div class="chart-tip" id="sc-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#41699b"></i>混凝土靶（校准后）</span>
+          <span><i class="dot" style="background:#c9a15a"></i>岩心靶（校准后）</span>
+          <span><i class="ring"></i>未校准仿真点</span>
+          <span><i style="background:#8a9298"></i>y = x 理想线</span>
+          <span><i style="background:#2f7d6b"></i>±10% 验收带</span>
+        </div>
+      </div>
+
+      <!-- ④ 指标 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 当前方案代理模型输出</h2>
+          <span class="hint">单次推理 &lt;1 s（三维显式仿真需 20–60 h）</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>有效穿深</span><b id="m-lp">—</b></div>
+          <div class="mcard"><span>入口孔径</span><b id="m-ehd">—</b></div>
+          <div class="mcard"><span>压实带厚度</span><b id="m-cz">—</b></div>
+          <div class="mcard"><span>压实带渗透率比</span><b id="m-kr">—</b></div>
+          <div class="mcard"><span>穿深预测误差</span><b id="m-err">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>设计参数（6 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>射孔弹型号 <output id="o-chg">DP-98</output></label>
+            <div class="chg-group" id="chg-group"></div>
+            <span class="tip">候选 12 种中的 4 种代表弹型</span>
+          </div>
+          <div class="ctl">
+            <label>混凝土靶标称穿深 <output id="o-lp0">1000 mm</output></label>
+            <input type="range" id="s-lp0" min="800" max="1200" step="10" value="1000">
+            <span class="tip">API RP 19B Section 1 无围压混凝土靶口径</span>
+          </div>
+          <div class="ctl">
+            <label>地层抗压强度 UCS <output id="o-ucs">78 MPa</output></label>
+            <input type="range" id="s-ucs" min="60" max="90" step="1" value="78">
+            <span class="tip">Thompson 校正：强度越高穿深折减越大</span>
+          </div>
+          <div class="ctl">
+            <label>孔隙度 <output id="o-phi">10.0 %</output></label>
+            <input type="range" id="s-phi" min="8" max="12" step="0.5" value="10">
+            <span class="tip">高孔隙度 → 基质变疏松 → 穿深略增</span>
+          </div>
+          <div class="ctl">
+            <label>有效地应力 <output id="o-sig">30 MPa</output></label>
+            <input type="range" id="s-sig" min="15" max="45" step="1" value="30">
+            <span class="tip">Halleck 1988：应力挤压使射流提前减速</span>
+          </div>
+          <div class="ctl">
+            <label>相位角 <output id="o-phase">90°</output></label>
+            <input type="range" id="s-phase" min="60" max="120" step="30" value="90">
+            <span class="tip">60°/90°/120°；小相位孔间应力干扰略增</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">方案参数自动保存在本地</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式（示范口径）：强度校正 f_C = 10^(3.7×10⁻⁵·(6500 − UCS_psi))（Thompson 1962，Berea 6500 psi 基准）；应力校正 f_σ = max(0.70, 1 − 0.0058·σ_eff)，按 Halleck et al. (1988) 3,000 psi → −12% 标定；孔隙度校正 f_φ = (10/φ)^0.15、相位干扰 f_θ = 1 − (120°−θ)/1200 为示范关联式；有效穿深 Lp = Lp₀·f_C·f_φ·f_σ·f_θ；入口孔径 EHD = EHD₀·(0.85+0.15·f_σ)；压实带厚度 t = t₀·(φ/10)^0.5；渗透率比按 King et al. (1986) 的 10–30% 口径取弹型基准值。代理模型（2,400 组仿真 + 47 发靶试贝叶斯校准）穿深误差 ≤10%（案例库口径）。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 聚能射孔弹穿深实测：API RP 19B 混凝土靶（4 种 HSD 弹）</h2><span class="hint">悬停柱条读数 · 装药量越大穿深越深</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Elsharafi M.O., Bodi T. (2017), "Evaluation of the Productivity of Vertical Oil Wells by Using Different High Shot Density (HSD) Guns", Int. J. Petrochem. Sci. Eng. 2(2): IPCSE.00032</b>：4 种 2⅞ in 高孔密射孔枪（Schlumberger 弹型）的 API RP 19B 混凝土靶实测穿深与入口孔径，用于匈牙利油田实井评价。</span>
+        <a href="https://doi.org/10.15406/ipcse.2017.02.00032" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="chg-box">
+        <svg id="lit-charge" viewBox="0 0 880 220" role="img" aria-label="射孔弹穿深实测柱状图"></svg>
+        <div class="chart-tip" id="chg-tip"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>弹型</th><th>炸药</th><th>最大装药 (g)</th><th>API 穿深</th><th>入口孔径</th></tr></thead>
+        <tbody id="charge-body"></tbody>
+      </table>
+      <div class="formula-box">
+        <b>靶试口径（API RP 19B《Recommended Practices for Evaluation of Well Perforators》，2001 年首版取代 API RP 43，2006 / 2021 修订）：</b>Section 1 为无围压混凝土靶测试——射孔弹厂家数据表上的「标称穿深」即此口径；Section 4 为 3,000–6,000 psi 围压下的 Berea 砂岩岩心靶，更接近井下真实条件。深穿透弹混凝土靶穿深典型 <code>20–40 in（508–1,016 mm）</code>；受地应力影响，地层有效穿深通常比混凝土靶低 35–60%（perforators.org / Oil Authority 综述）。本案例 12 种候选弹标称穿深 800–1,200 mm，落在深穿透/超深穿透弹区间。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 穿深-强度校正与地应力折减（Thompson 1962 + 应力实验）</h2><span class="hint">绿带为本案例 UCS 60–90 MPa 区间</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准 / 论文数据</span>
+        <span><b>Thompson G.D. (1962), "Effects of Formation Compressive Strength on Perforator Performance", API Drilling and Production Practice: 191–197</b>：穿深随岩石抗压强度半对数下降的行业基准校正式；应力折减实验见下表（Saucier &amp; Lands 1978；Halleck et al. 1988）。</span>
+        <a href="https://www.semanticscholar.org/paper/Effects-of-Formation-Compressive-Strength-on-Thompson/07827415c07c4897c717572f39d8c5baa91840db" target="_blank" rel="noopener">题录↗</a>
+      </div>
+      <div class="chart-wrap">
+        <svg id="lit-thompson" viewBox="0 0 880 250" role="img" aria-label="Thompson穿深强度校正曲线"></svg>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>实验条件</th><th>关键实测结论</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Thompson (1962), API Drill. &amp; Prod. Prac. 191–197</td><td>多种岩心强度系列靶试</td><td>穿深 ∝ 10^(3.7×10⁻⁵·(6500 − C))，Berea 砂岩 6500 psi 为基准 1.0；本案例 UCS 60–90 MPa 对应折减系数 0.57–0.83</td></tr>
+          <tr><td class="num">2</td><td>Saucier &amp; Lands (1978), JPT 30(9), SPE-6758-PA</td><td>3.2 g、1-11/16 in 弹；Berea 砂岩 / Wasson 白云岩 / Bedford 灰岩；围压至 138 MPa</td><td>受应力岩石中穿深约降低 30%；单一强度指标不足以预测井下穿深</td></tr>
+          <tr><td class="num">3</td><td>Halleck, Saucier, Behrmann &amp; Ahrens (1988), SPE-18245-MS</td><td>约 300 发射孔、120 组试验，1 m 岩样多轴应力架</td><td>施加 3,000 psi（20.7 MPa）有效应力，穿深下降 10–14%；流动效率随有效应力升高而下降</td></tr>
+          <tr><td class="num">4</td><td>Xu, Liang &amp; Guo (2022), Front. Earth Sci. 10:783556</td><td>珠海组砂岩 Φ400×800 mm 大靶（UCS≈45 MPa），CN-127 弹，围压 20–35 MPa、负压差 5–15 MPa、25–150℃</td><td>孔深随有效应力增大而减小；温度影响很小；混凝土强度每 +6.9 MPa 平均孔深 −5~7%</td></tr>
+        </tbody>
+      </table>
+      <div class="formula-box">
+        <b>混凝土靶 → 地层穿深的折算链（本演示采用）：</b><code>Lp_地层 = Lp_混凝土靶 × f_强度(Thompson) × f_应力(Halleck) × f_孔隙度 × f_相位</code>。60–90 MPa 强度折减 0.57–0.83，15–45 MPa 有效应力再折减 0.74–0.91——两级折减叠加后，1,000 mm 标称穿深在井下只剩约 420–760 mm，这正是「必须用仿真 + 靶试标定、不能照搬厂家手册」的原因（案例背景：经验折算误差常达 30% 以上）。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 孔道压实带 / 损伤带实测（CT 扫描与数字岩心）</h2><span class="hint">悬停色带读数 · 压实带渗透率只剩原岩 10–30%</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Xu C., Liang H., Guo S. (2022), "Characteristics of Porosity and Permeability of Ultra-High Temperature Perforated Damage Zone in Sandstone Targets", Front. Earth Sci. 10:783556</b>：150℃ 超高温射孔大靶 CT 扫描，孔道周围损伤带按孔隙度/渗透率分为裂缝区、过渡区、压实区与未扰动区。</span>
+        <a href="https://doi.org/10.3389/feart.2022.783556" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="dmg-box">
+        <svg id="lit-dmg" viewBox="0 0 880 120" role="img" aria-label="射孔损伤带分区占比图"></svg>
+        <div class="chart-tip" id="dmg-tip"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>方法</th><th>压实带 / 损伤带实测结论</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>King, Anderson &amp; Bingham (1986), JPT 38(6):662–664, SPE-14321-PA</td><td>85 口井 TCP 负压射孔现场统计</td><td>射孔压实带使孔道周围初始渗透率降低 70% 以上，是主要伤害源；足够负压差可冲出碎屑</td></tr>
+          <tr><td class="num">2</td><td>Asadi, Preston, Green &amp; Ghalambor (1994), SPE-27384-MS</td><td>Berea 砂岩射孔 + 产能数值模拟</td><td>孔道周围渗透率降低 55% → 井产能下降 60%；压实带渗透率分布方向影响产能</td></tr>
+          <tr><td class="num">3</td><td>Karacan &amp; Halleck (2003), Petrophysics 44(4)（转引自 Xu 2022 综述）</td><td>饱和氮气 / 硅油 Berea 岩心射孔 + 显微 CT</td><td>饱和氮气试样孔径 0.5–0.7 cm、孔深约 14 cm；压实带开口处厚约 6 mm，孔隙度比原岩低 6–8 个百分点</td></tr>
+          <tr><td class="num">4</td><td>Satti et al. (2019), Baker Hughes 数字岩心技术报告（AGC/HGS）</td><td>射孔岩心塞 CT + 孔隙尺度流动模拟</td><td>损伤带厚约 10–11 mm；孔隙度 9% vs 原岩 13%，渗透率 40 mD vs 原岩 160 mD（降至 25%）</td></tr>
+          <tr><td class="num">5</td><td>Xu, Liang &amp; Guo (2022), Front. Earth Sci. 10:783556</td><td>Φ400 mm 砂岩大靶 150℃ 射孔 + 自动扫描</td><td>扫描面积占比：裂缝区 8.3%、过渡区 8.5%、压实区 24.2%、未扰动区 59.0%；裂缝区平均厚度 15.27 mm</td></tr>
+        </tbody>
+      </table>
+      <div class="formula-box">
+        <b>工程含义：</b>只预测穿深不预测压实带，产能评价会系统性偏乐观——压实带渗透率只剩原岩的 <code>10–30%</code>（案例库口径，与 King 1986 的「−70% 以上」一致），故本案例代理模型同时输出穿深、孔径、压实带厚度与渗透率比三个目标，且大孔径/低伤害弹的产能比往往优于单纯穿深最深的弹型。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">演示页全部模型系数均可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>API RP 19B（2001 首版 / 2006 / 2021 修订）, Recommended Practices for Evaluation of Well Perforators</td><td>行业靶试标准</td><td>混凝土靶标称穿深口径（Section 1）与围压岩心靶口径（Section 4，3,000–6,000 psi）</td></tr>
+          <tr><td class="num">2</td><td>Thompson G.D. (1962), API Drill. &amp; Prod. Prac. 191–197</td><td>穿深-强度校正公式</td><td>强度折减 f_C = 10^(3.7×10⁻⁵·(6500 − UCS_psi))，Berea 6500 psi 基准</td></tr>
+          <tr><td class="num">3</td><td>Saucier R.J., Lands J.F. (1978), JPT 30(9), SPE-6758-PA</td><td>应力靶试实验</td><td>应力折减方向与量级（138 MPa 下约 −30%）</td></tr>
+          <tr><td class="num">4</td><td>Halleck P.M., Saucier R.J., Behrmann L.A., Ahrens T.J. (1988), SPE-18245-MS</td><td>应力折减系统实验</td><td>f_σ 标定：3,000 psi 有效应力 → 穿深 −10~14%</td></tr>
+          <tr><td class="num">5</td><td>Halleck P.M. et al. (1992), X-Ray CT Observations of Flow Distribution in a Shaped-Charge Perforation（SPE 年会）</td><td>射流物理观测</td><td>射流头部 ≈7 km/s、尾部 ≈1 km/s，侵彻全程微秒级（&lt;200 μs）</td></tr>
+          <tr><td class="num">6</td><td>King G.E., Anderson A.R., Bingham M.D. (1986), JPT 38(6):662–664, SPE-14321-PA</td><td>现场统计</td><td>压实带渗透率降至原岩 10–30% 的口径来源</td></tr>
+          <tr><td class="num">7</td><td>Asadi M., Preston F.W., Green D.W., Ghalambor A. (1994), SPE-27384-MS</td><td>压实带-产能量化</td><td>「压实带 k −55% → 产能 −60%」：压实带必须纳入预测目标</td></tr>
+          <tr><td class="num">8</td><td>Karacan C.Ö., Halleck P.M. (2003), Petrophysics 44(4)</td><td>显微 CT 实测</td><td>压实带厚度 ~6 mm、孔隙度降 6–8 个百分点的量级校验</td></tr>
+          <tr><td class="num">9</td><td>Satti R. et al. (2019), Baker Hughes / AGC-HGS 数字岩心报告</td><td>数字岩心</td><td>损伤带 10–11 mm、渗透率 40/160 mD 的逐点分布证据</td></tr>
+          <tr><td class="num">10</td><td>Xu C., Liang H., Guo S. (2022), Front. Earth Sci. 10:783556</td><td>HTHP 大靶实验</td><td>损伤带四分区占比（裂缝 8.3% / 过渡 8.5% / 压实 24.2% / 未扰动 59.0%）与温度影响小的结论</td></tr>
+          <tr><td class="num">11</td><td>Elsharafi M.O., Bodi T. (2017), IPCSE 2(2): 00032</td><td>弹型 API 实测</td><td>4 种 HSD 弹混凝土靶穿深 487–660 mm、入口孔径 7.1–7.6 mm</td></tr>
+          <tr><td class="num">12</td><td>案例库业务数据（准噶尔盆地某致密砂岩区块）</td><td>工程边界条件</td><td>UCS 60–90 MPa、孔隙度 8–12%、候选弹 12 种、孔密 12–20 孔/m、相位 60°/90°/120°、仿真 2,400 组（单组 20–60 h）、靶试 47 发、校准后偏差中位 4.8%、穿深误差 ≤10%、单方案评估 &lt;1 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

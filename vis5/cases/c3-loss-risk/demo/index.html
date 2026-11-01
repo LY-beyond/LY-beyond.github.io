@@ -12,6 +12,55 @@
   <p class="data-source">数据口径：ECD(ppg)＝钻井液当量密度＋环空摩阻／(0.052×TVD_ft)；安全窗口需满足 孔隙压力梯度 ＜ ECD ＜ 破裂压力梯度；幂律流体层流环空摩阻 dP/dL＝4K/de·(8V/de)^n，de＝井径−套管外径（m）。模型为工程简化示意，非商业软件计算结果。</p>
   <p class="lead">调节井深、水泥浆密度、排量、流性参数等，实时观察 ECD 是否突破破裂压力窗口、漏失概率与漏失量的变化。</p>
 
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">现场数据 · IODP 348 C0002P</button>
+    <button class="tab" data-tab="sim" role="tab">漏失模拟 · 参数联动</button>
+  </div>
+
+  <!-- ================= 现场数据页 ================= -->
+  <div class="tabpane active" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 现场漏失事件：漏失速率随深度分布</h2><span class="hint">滚轮缩放深度窗 · 拖拽平移 · 双击复位 · 点击漏失事件锁定读数</span></div>
+      <div class="src-bar">
+        <span class="tag real">现场实测</span>
+        <span><b>IODP 348 航次 · Site C0002 · Hole C0002P</b>（2013，南海海槽 Nankai Trough，CC BY）：随钻泥浆密度 1.13 sg ≈ <b>9.43 ppg</b>，实测漏失阈值 ECD ≈ 1.162 g/cm³ ≈ <b>9.70 ppg</b>；1950–2120 mbsf 段记录 5 次漏失事件，漏失速率 5–50 m³/h。</span>
+        <a href="https://doi.org/10.2204/iodp.proc.348.103.2015" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-chartA" viewBox="0 0 900 300" role="img" aria-label="漏失速率随深度分布柱状图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放 · 按住拖拽平移 · 双击复位</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 漏失阈值判定：泥浆当量 vs 漏失 ECD 阈值</h2><span class="hint">与上图共享深度视窗，圆点为漏失事件（点击联动）</span></div>
+      <div class="chart-box" id="lit-boxB">
+        <svg id="lit-chartB" viewBox="0 0 900 200" role="img" aria-label="压力梯度阈值与漏失事件"></svg>
+        <div class="chart-tip" id="lit-tipB"></div>
+      </div>
+      <div class="r-detail" id="lit-detail">悬停读取事件读数；点击柱状或圆点锁定该次漏失事件；点击下表行同样联动。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 漏失事件明细（IODP 348 航次报告）</h2><span class="hint">单位：深度 mbsf，速率 m³/h</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>深度 (mbsf)</th><th>漏失速率 (m³/h)</th><th>事件描述</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ================= 模拟页 ================= -->
+  <div class="tabpane" id="pane-sim">
   <div class="layout">
     <div class="viz">
 
@@ -160,6 +209,7 @@
 
     </div>
   </div>
+  </div><!-- /pane-sim -->
 
 </div>
 <script src="demo.js"></script>

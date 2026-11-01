@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：历史地质图要素智能提取与矢量化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>历史地质图要素智能提取与矢量化 · 交互式演示</h1>
+      <p class="lead">在一幅程序生成的合成地质图上跑「检测 + 矢量追踪」流水线：调节置信度阈值、线宽容差、颜色容差与最小图元长度，看断层 / 地层界线 / 产状 / 钻孔的检出、漏检、误检如何变化，以及精度—召回曲线与拓扑完整率的联动。</p>
+    </div>
+    <span class="badge">GB/T 958-2015 图例口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>合成图幅按 1:20 万区域地质图结构生成：6 个地层单元（C2b / J3t / K1d / K2s / E1h / Q）、3 条断层（正 / 逆 / 走滑，GB/T 958-2015 符号）、8 个产状符号、6 个钻孔；验收口径取自案例设定：要素级 F1 ≥ 0.85、拓扑完整率 ≥ 90%、属性正确率 ≥ 95%（断层线不参与地层多边形闭合）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：合成地质图 + 识别叠加 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 合成地质图 · 要素提取叠加对比</h2>
+          <span class="hint">悬停查看要素置信度与检出状态 · 切换显示模式</span>
+        </div>
+        <div class="segbtns" id="mode-btns">
+          <button data-mode="overlay" class="active" type="button">真值 + 识别叠加</button>
+          <button data-mode="truth" type="button">仅真值（原图）</button>
+          <button data-mode="pred" type="button">仅 AI 识别结果</button>
+        </div>
+        <div class="chart-box" id="mapbox">
+          <canvas id="mapc" width="470" height="340" role="img" aria-label="合成地质图要素提取叠加"></canvas>
+          <div class="chart-tip" id="maptip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>正确检出（TP）</span>
+          <span><i style="background:#b05a51"></i>漏检（FN）</span>
+          <span><i style="background:#c9a15a"></i>误检（FP：等高线 / 图例框）</span>
+          <span><i style="background:#41699b"></i>钻孔符号</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：P-R 曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 精度 / 召回 / F1 随置信度阈值变化</h2>
+          <span class="hint">悬停读数 · 金色竖线为当前阈值</span>
+        </div>
+        <div class="chart-box" id="prbox">
+          <svg id="pr" viewBox="0 0 470 220" role="img" aria-label="精度召回随阈值变化曲线"></svg>
+          <div class="chart-tip" id="prtip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>检出准确率 P</span>
+          <span><i style="background:#41699b"></i>召回率 R</span>
+          <span><i style="background:#c9a15a"></i>要素级 F1</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 分类召回 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 要素级指标与分类召回</h2>
+          <span class="hint">验收线：F1 ≥ 0.85 · 拓扑 ≥ 90% · 属性 ≥ 95%</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>要素级 F1</span><b id="m-f1">—</b></div>
+          <div class="mcard"><span>召回率 R</span><b id="m-rec">—</b></div>
+          <div class="mcard"><span>检出准确率 P</span><b id="m-pre">—</b></div>
+          <div class="mcard"><span>拓扑完整率</span><b id="m-topo">—</b></div>
+          <div class="mcard"><span>属性正确率</span><b id="m-attr">—</b></div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="cls" viewBox="0 0 470 128" role="img" aria-label="分要素类别召回率条形图"></svg>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <!-- 面板 2：参数 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 提取流水线参数（4 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>置信度阈值 <output id="o-thr">0.65</output></label>
+            <input type="range" id="s-thr" min="0.30" max="0.95" step="0.01" value="0.65">
+            <span class="tip">低于阈值判为不可靠；过低混入误检，过高漏检小符号</span>
+          </div>
+          <div class="ctl">
+            <label>线宽容差 <output id="o-wtol">3 px</output></label>
+            <input type="range" id="s-wtol" min="0" max="6" step="0.5" value="3">
+            <span class="tip">断层整体偏移约 2.5 px：容差 &lt; 3 px 时断层匹配率骤降</span>
+          </div>
+          <div class="ctl">
+            <label>颜色容差 <output id="o-ctol">32</output></label>
+            <input type="range" id="s-ctol" min="0" max="60" step="1" value="32">
+            <span class="tip">过小：相似地层单元合并丢界线；过大：单元内过度分割</span>
+          </div>
+          <div class="ctl">
+            <label>最小图元长度 <output id="o-mlen">18 px</output></label>
+            <input type="range" id="s-mlen" min="0" max="60" step="2" value="18">
+            <span class="tip">过滤碎线；本区 40% 断层 &lt; 2 km，过大将误删小断层</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">推荐区间：阈值 0.6–0.75 · 线宽 ≥ 3 px</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">仿真口径：每个真值要素带固定置信度（0.45–0.97）；线宽容差 &lt; 3 px 时断层匹配置信度折减、&lt; 2 px 时界线折减；颜色容差 &lt; 25 时两组相似地层界线丢失、&gt; 45 时产生过度分割误检；长度 &lt; 最小图元长度的线段直接滤除。误检源：等高线 2 条、图例框色块 1 处、注记笔画 1 处（未做版面切分的典型陷阱）。拓扑完整率 = 61% 基线 + 界线长度加权召回增益 − 误检惩罚。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 标准与图例依据（2 条）</h2><span class="hint">合成图幅的符号体系与验收口径来源</span></div>
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB/T 958-2015《区域地质图图例》</b>（2015-05-15 发布，2015-06-30 实施，现行）：规定正 / 逆 / 走滑断层符号、产状符号、地层界线线型与地质体单位代号编排。本 demo 的断层齿线、产状 T 形符号与 C2b / J3t / K1d 等地层代号均按此绘制。<b>对应模块：图例匹配、产状读取、断层性质分类。</b></span>
+        <a href="https://std.cgs.gov.cn/webfile/upload/2025/03-11/01-44-410072-1260736517.pdf" target="_blank" rel="noopener">标准全文↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB/T 958-2015 配套用色规范 ·《地质图用色标准》（1:500 000～1:1 000 000，报批稿公示）</b>：按年代地层单位设色、岩石花纹叠加原则。本 demo 地层色块按「年代越新色越浅」原则用主色调制。<b>对应模块：地层色块分割、颜色容差参数的物理意义。</b></span>
+        <a href="https://std.samr.gov.cn/dcpspTools/gbPlan/download?path=%2Fzxd%2F2022003444%2F20_%E6%A0%87%E5%87%86%E8%B5%B7%E8%8D%89%2F20_WD_2022003444_%E5%9C%B0%E8%B4%A8%E5%9B%BE%E7%94%A8%E8%89%B2%E6%A0%87%E5%87%86.pdf" target="_blank" rel="noopener">公示稿↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 地质图要素提取核心文献（5 条）</h2><span class="hint">检测 / 分割 / 线追踪 / OCR 各环节的方法出处</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文 · IEEE GRSL</span>
+        <span><b>Luo, Saxton, Bode, Mazumdar, Kindratenko (2023). Critical Minerals Map Feature Extraction Using Deep Learning. IEEE Geoscience and Remote Sensing Letters, 20.</b> 改进 U-Net：把图例色块特征与图幅 RGB 拼接为 6 通道输入，实现「按图例分割」地层多边形——本 demo 颜色容差滑块控制的正是这一环节的成败。<b>对应模块：地层色块分割（① 图色块与④ 属性正确率）。</b></span>
+        <a href="https://ieeexplore.ieee.org/document/10236599" target="_blank" rel="noopener">IEEE↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">论文 · arXiv 2025</span>
+        <span><b>DIGMAPPER: A Modular System for Automated Geologic Map Digitization（arXiv:2506.16006）</b>：提出线性目标检测 Transformer（LDTR）与 N-hop 连通性预测模块，显式建模线条走向、曲率与拓扑连接，直接输出带拓扑的地质界线矢量。<b>对应模块：地层界线追踪、断线拓扑重建（④ 拓扑完整率）。</b></span>
+        <a href="https://arxiv.org/abs/2506.16006" target="_blank" rel="noopener">arXiv↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">论文 · Geosciences</span>
+        <span><b>Accurate Feature Extraction from Historical Geologic Maps Using Open-Set Segmentation and Detection. Geosciences 2024, 14(11):305（MDPI）</b>：基于 USGS ScienceBase 约 10 万幅历史图件与 DARPA 标注子集，用开放集分割 + 检测提取面要素（地层单元）与点要素（产状符号），并把产状归类为点目标检测问题。<b>对应模块：产状符号检测（① 图中 T 形符号、④ 产状召回）。</b></span>
+        <a href="https://doi.org/10.3390/geosciences14110305" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">论文 · ACM KDD</span>
+        <span><b>Exploiting Polygon Metadata to Understand Raster Maps: Accurate Polygonal Feature Extraction. ACM KDD 2023, DOI 10.1145/3589132.3625659</b>：把图例（map key）作为元数据编码进卷积模型，在 USGS 地质图上做图例驱动的多边形提取并达中位 F1 领先水平。<b>对应模块：图例匹配 → 面要素矢量化。</b></span>
+        <a href="https://dl.acm.org/doi/10.1145/3589132.3625659" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">论文 · JGR Solid Earth</span>
+        <span><b>Automatic Fault Mapping in Remote Optical Images and Topographic Data With Deep Learning. JGR Solid Earth, 2021, DOI 10.1029/2020JB021269</b>：U-Net 在中低质量光学影像与地形数据上自动识别断层 / 裂缝，验证中等规模人工标注即可训练可用模型。<b>对应模块：断层识别与正 / 逆 / 走滑性质分类。</b></span>
+        <a href="https://doi.org/10.1029/2020JB021269" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 中文注记与知识引导抽取（1 条）</h2><span class="hint">地层代号 OCR 校正的国内进展</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文 · 地质科学</span>
+        <span><b>《联合知识引导与少样本学习的地质图件信息抽取》（GMIKF）. 地质科学, DOI 10.12017/dzkx.2026.043</b>：把领域知识注入少样本学习框架做地质图件信息抽取，缓解标注不足下的注记与语义抽取问题。<b>对应模块：注记 OCR 与地层代号（K1d / J3t / C2b）一致性校正。</b></span>
+        <a href="https://t4.sciengine.com/CJGeol/doi/10.12017/dzkx.2026.043" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 模块 — 依据对照表</h2><span class="hint">demo 各交互模块与真实出处的对应关系</span></div>
+      <table class="lit-table">
+        <thead><tr><th>demo 模块</th><th>仿真行为</th><th>真实依据</th></tr></thead>
+        <tbody>
+          <tr><td>① 地层色块</td><td>颜色容差控制分割成败：过小丢界线、过大过度分割</td><td>IEEE GRSL 2023 图例驱动 U-Net；KDD 2023 图例元数据多边形提取</td></tr>
+          <tr><td>① 断层符号</td><td>正 / 逆 / 走滑三类线型与齿线、箭头</td><td>GB/T 958-2015 图例；JGR Solid Earth 2021 U-Net 断层制图</td></tr>
+          <tr><td>① 产状 T 形符号</td><td>点目标检测，读走向 / 倾角</td><td>Geosciences 2024 开放集检测（点要素）</td></tr>
+          <tr><td>② 线宽容差滑块</td><td>容差 &lt; 3 px 时偏移断层匹配失败</td><td>案例口径：2 px 宽断层偏移 3 px 时 IoU 仍高但拓扑已错</td></tr>
+          <tr><td>③ P-R-F1 曲线</td><td>阈值扫描生成阶梯曲线</td><td>DIGMAPPER（LDTR 线条检测）评估方式；DARPA 标注评测集</td></tr>
+          <tr><td>④ 拓扑完整率</td><td>断线未补 → 多边形不闭合比例下降</td><td>DIGMAPPER N-hop 拓扑重建；案例口径 61% → 91%</td></tr>
+          <tr><td>注记 OCR（页脚说明）</td><td>地层代号上标与图幅内一致性校验</td><td>GMIKF（地质科学）；GB/T 958-2015 代号编排规则</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

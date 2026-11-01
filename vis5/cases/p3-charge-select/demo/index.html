@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：射孔弹型智能选型</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>射孔弹型智能选型 · 交互式演示</h1>
+      <p class="lead">输入井况（岩性、强度、套管钢级与壁厚、井斜、出砂倾向），42 条安全规则先硬过滤、再按适配度打分排序——被拦截的弹型灰显并标注命中规则，Top-3 候选附带对比与依据链。</p>
+    </div>
+    <span class="badge">渤海湾某油田 · 62 口井集中选型</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>穿深统一折算岩心靶等效值（混凝土靶 ×0.55–0.65）；有效穿深按 Thompson (1962) 随抗压强度折减；适配度 = 穿深 0.4 + 孔径 0.25 + 套管兼容 0.2 + 历史效果 0.15；安全规则示例：套管损伤深度 ≤ 壁厚安全比（N80 55% / P110 45%）、井斜 &gt;45° 须相位补偿兼容、出砂层孔径下限 10 mm、停产型号一律拦截。演示弹型库为按真实性能区间（穿深 400–1200 mm、孔径 8–14 mm）构造的 33 个型号样本。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">智能选型模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 智能选型模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 安全规则过滤 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 安全规则硬过滤（42 条规则 · 本演示激活 6 类）</h2>
+          <span class="hint">召回率门槛 100%：违规弹型一律拦截，不进候选集</span>
+        </div>
+        <div class="metrics" style="margin-bottom:6px">
+          <div class="mcard"><span>弹型库样本</span><b id="m-total">—</b></div>
+          <div class="mcard"><span>规则拦截</span><b id="m-blocked">—</b></div>
+          <div class="mcard"><span>进入候选</span><b id="m-pass">—</b></div>
+          <div class="mcard"><span>Top-1 适配度</span><b id="m-top1">—</b></div>
+        </div>
+        <div class="rule-list" id="rule-list"></div>
+        <div class="blocked-bar">
+          <span class="blocked-title">被拦截弹型（灰显，标注命中规则）：</span>
+          <span id="blocked-chips"></span>
+        </div>
+      </div>
+
+      <!-- ② 候选散点 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 候选弹型分布：等效岩心靶穿深 × 入口孔径</h2>
+          <span class="hint">颜色 = 当前井况适配度 · 金圈数字 = 推荐 Top-3 · 灰点 = 被规则拦截</span>
+        </div>
+        <div class="chart-box" id="sc-box">
+          <canvas id="scatter" width="470" height="268" role="img" aria-label="候选弹型穿深孔径散点图"></canvas>
+          <div class="chart-tip" id="sc-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#b05a51"></i>适配度低</span>
+          <span><i class="dot" style="background:#c9a15a"></i>适配度中</span>
+          <span><i class="dot" style="background:#2f7d6b"></i>适配度高</span>
+          <span><i class="dot" style="background:#c9c4b6"></i>被规则拦截</span>
+          <span><i style="background:#c9a15a"></i>Top-3 金圈标注</span>
+        </div>
+      </div>
+
+      <!-- ③ 排序表 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 候选弹型排序（适配度打分）</h2>
+          <span class="hint">权重：穿深 0.4 · 孔径 0.25 · 套管兼容 0.2 · 历史效果 0.15</span>
+        </div>
+        <table class="lit-table rank-table">
+          <thead><tr><th>#</th><th>弹型</th><th>类型</th><th>有效穿深</th><th>孔径</th><th>穿深分</th><th>孔径分</th><th>兼容分</th><th>历史分</th><th>适配度</th></tr></thead>
+          <tbody id="rank-body"></tbody>
+        </table>
+      </div>
+
+      <!-- ④ Top3 对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ Top-3 弹型对比</h2>
+          <span class="hint">有效穿深（当前 UCS 折减后）/ 入口孔径 / 适配度归一对比</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="cmp" viewBox="0 0 470 190" role="img" aria-label="Top3弹型对比条形图"></svg>
+        </div>
+        <div class="legend" id="cmp-legend"></div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 井况输入 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>井况输入（6 项）</h2>
+          <span class="hint">改动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>储层岩性</label>
+            <div class="seg" id="seg-litho">
+              <button type="button" data-v="loose" class="on">疏松砂岩</button>
+              <button type="button" data-v="tight">致密砂岩</button>
+              <button type="button" data-v="carb">灰岩</button>
+            </div>
+            <span class="tip">决定穿深目标与强度区间</span>
+          </div>
+          <div class="ctl">
+            <label>抗压强度 UCS <output id="o-ucs">20 MPa</output></label>
+            <input type="range" id="s-ucs" min="5" max="140" step="1" value="20">
+            <span class="tip">强度越高穿深折减越大（Thompson 口径）</span>
+          </div>
+          <div class="ctl">
+            <label>套管钢级</label>
+            <div class="seg" id="seg-grade">
+              <button type="button" data-v="N80" class="on">N80</button>
+              <button type="button" data-v="P110">P110</button>
+            </div>
+            <span class="tip">P110 高强钢损伤阈值更严（45% 壁厚）</span>
+          </div>
+          <div class="ctl">
+            <label>套管壁厚（5½″） <output id="o-wall">7.72 mm</output></label>
+            <input type="range" id="s-wall" min="0" max="3" step="1" value="0">
+            <span class="tip">17# / 20# / 23# / 26# 四档 API 5CT 规格</span>
+          </div>
+          <div class="ctl">
+            <label>井斜角 <output id="o-dev">12°</output></label>
+            <input type="range" id="s-dev" min="0" max="70" step="1" value="12">
+            <span class="tip">&gt;45° 触发相位补偿兼容规则</span>
+          </div>
+          <div class="ctl">
+            <label>出砂倾向</label>
+            <div class="seg" id="seg-sand">
+              <button type="button" data-v="0" class="on">无</button>
+              <button type="button" data-v="1">有</button>
+            </div>
+            <span class="tip">出砂层孔径下限 10 mm，孔径权重上调</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">规则与评分随井况实时联动</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型口径（示范）：有效穿深 Lp = Lp_岩心靶 × 10^(3.7×10⁻⁵·(6500 − UCS_psi))（Thompson 1962，Berea 6500 psi 基准）；穿深目标：疏松砂岩 430+2.5·(UCS−10)、致密砂岩 560+3.5·(UCS−45)、灰岩 620+2.8·(UCS−60) mm；套管损伤阈值 = 壁厚 × 55%（N80，延展性好）/ 45%（P110，高强钢脆性敏感）；适配度 = 0.4·穿深分 + 0.25·孔径分 + 0.2·套管兼容分 + 0.15·历史效果分（权重经 380 井次历史数据校准，致密层 Top-1 命中率 61%→87%）。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 射孔枪弹性能实测：API RP 43 Section I 靶试数据（Devon Energy 公开培训材料）</h2><span class="hint">悬停散点读数 · 深穿透与大孔径的取舍清晰可见</span></div>
+      <div class="src-bar">
+        <span class="tag real">公开数据</span>
+        <span><b>Hansen B. (Devon Energy), "Casing Perforating Overview"（美国 EPA 档案站公开 PDF）</b>：API RP 19B 自 2006 年 9 月起替代 API RP 43 成为射孔器性能评价标准；文中给出某公司 API-RP 43 Section I（第 5 版）混凝土靶性能表——枪径、孔密、相位、入口孔径、穿深、靶强度、套管规格、炸药类型与装药量。炸药耐温：RDX 330℉ / HMX 400℉ / HNS 520℉，单发装药 3–60 g，射孔孔眼 0.23″–0.72″、穿深 6″–48″。</span>
+        <a href="https://19january2017snapshot.epa.gov/sites/production/files/documents/casingperforatedoverview.pdf" target="_blank" rel="noopener">原文 PDF↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-scatter" viewBox="0 0 880 250" role="img" aria-label="真实射孔弹穿深孔径散点图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>枪径</th><th>弹型 / 炸药</th><th>装药 (g)</th><th>入口孔径 (in)</th><th>混凝土靶穿深 (in)</th><th>穿深 (mm)</th><th>孔径 (mm)</th><th>靶强度 (psi)</th><th>套管</th></tr></thead>
+        <tbody id="lit-bodyA"></tbody>
+      </table>
+      <div class="formula-box"><b>读图要点：</b>同装药量下「深穿透型（Predator/X-Jet/DP）」穿深长而孔径小（0.24–0.40″），「大孔径型（AJ）」孔径 0.46–0.50″ 但穿深明显短——正是选型页散点图左下 ↔ 右上的对角分布来源；该取舍关系与本案例库「深穿透弹穿深长但孔径小，大孔径弹反之」一致。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 套管钢级与壁厚：API 5CT / ISO 11960 参数</h2><span class="hint">N80 / P110 强度区间与本案例四档壁厚</span></div>
+      <div class="src-bar">
+        <span class="tag real">标准数据</span>
+        <span><b>API Spec 5CT（ISO 11960）套管钢级与 5½″ 套管规格</b>：N80 屈服强度 552–758 MPa（80–110 ksi）、抗拉 ≥689 MPa；P110 屈服 758–965 MPa（110–140 ksi）、抗拉 ≥862 MPa。5½″（139.7 mm）套管：17# → 壁厚 7.72 mm（0.304″）、20# → 9.17 mm（0.361″）、23# → 10.54 mm（0.415″）、26# → 12.09 mm（0.476″）。</span>
+        <a href="https://www.nipponsteel.com/product/catalog_download/pdf/P003en.pdf" target="_blank" rel="noopener">厂商手册↗</a>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>钢级强度区间（MPa）</h3>
+          <div class="chart-box" id="lit-boxB">
+            <svg id="lit-grade" viewBox="0 0 430 190" role="img" aria-label="套管钢级强度区间图"></svg>
+            <div class="chart-tip" id="lit-tipB"></div>
+          </div>
+        </div>
+        <div>
+          <h3>5½″ 套管壁厚规格</h3>
+          <div class="chart-box" id="lit-boxC">
+            <svg id="lit-wall" viewBox="0 0 430 190" role="img" aria-label="套管壁厚规格柱状图"></svg>
+            <div class="chart-tip" id="lit-tipC"></div>
+          </div>
+        </div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>钢级</th><th>屈服强度 (MPa)</th><th>屈服强度 (ksi)</th><th>最小抗拉 (MPa)</th><th>本案例损伤阈值口径</th></tr></thead>
+        <tbody>
+          <tr><td>N80（1/Q）</td><td class="num">552 – 758</td><td class="num">80 – 110</td><td class="num">689</td><td>延展性较好，损伤深度 ≤ 55% 壁厚</td></tr>
+          <tr><td>P110</td><td class="num">758 – 965</td><td class="num">110 – 140</td><td class="num">862</td><td>高强钢脆性敏感，损伤深度 ≤ 45% 壁厚</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 穿深基准折算：混凝土靶 → 岩心靶等效 → 原地有效</h2><span class="hint">跨品牌比较必须先统一基准，否则穿深虚高 40%+</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献口径</span>
+        <span><b>Oil Authority 术语库 "Perforation Penetration"</b>：API 混凝土靶穿深对深穿透弹典型 20–40 in，受原地应力影响有效地层穿深要低 35%–60%；<b>Wan Renpu《Advanced Well Completion Engineering》3rd ed. 式 (6-43)</b>：按储层与 Berea 靶抗压强度比计算校正系数 C。本案例库据此将三厂商手册统一折算为岩心靶等效值（混凝土靶 ×0.55–0.65，按弹型类别分别标定）。</span>
+        <a href="https://oilauthority.com/glossary/perforation-penetration" target="_blank" rel="noopener">来源↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxD">
+        <svg id="lit-conv" viewBox="0 0 880 170" role="img" aria-label="穿深基准折算示意图"></svg>
+        <div class="chart-tip" id="lit-tipD"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>折算环节</th><th>系数口径</th><th>依据</th><th>本案例库做法</th></tr></thead>
+        <tbody>
+          <tr><td>混凝土靶 → 岩心靶等效</td><td class="num">×0.55 – 0.65</td><td>混凝土靶无孔隙流体、无原地应力，穿深系统性偏高</td><td>按弹型类别（深穿透/大孔径/低伤害）分别标定后入库</td></tr>
+          <tr><td>岩心靶 → 原地有效（应力/强度）</td><td class="num">再低 35% – 60%</td><td>Oil Authority 术语库；Thompson (1962) 强度校正</td><td>选型页按井况 UCS 实时折算有效穿深</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">演示页全部口径均可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Hansen B. (Devon Energy), Casing Perforating Overview，EPA 档案站公开 PDF</td><td>API RP 43 Section I 实测性能表 + API RP 19B 标准沿革</td><td>真实弹型穿深/孔径分布、炸药耐温、深穿透↔大孔径取舍</td></tr>
+          <tr><td class="num">2</td><td>API Spec 5CT / ISO 11960（Nippon Steel 无缝套管手册等公开转载）</td><td>钢级强度与 5½″ 套管规格</td><td>N80/P110 强度区间、壁厚 7.72/9.17/10.54/12.09 mm 四档</td></tr>
+          <tr><td class="num">3</td><td>Oil Authority Glossary: Perforation Penetration</td><td>穿深基准与原地折减口径</td><td>混凝土靶 → 岩心靶等效 ×0.55–0.65、原地再低 35–60%</td></tr>
+          <tr><td class="num">4</td><td>Thompson G.D. (1962), API Drill. &amp; Prod. Prac. 191–197</td><td>穿深-抗压强度校正公式</td><td>选型页有效穿深随 UCS 实时折减（Berea 6500 psi 基准）</td></tr>
+          <tr><td class="num">5</td><td>Wan Renpu, Advanced Well Completion Engineering, 3rd ed., 式 (6-43)</td><td>穿深校正系数模型</td><td>按储层/Berea 强度比折算穿深的理论依据</td></tr>
+          <tr><td class="num">6</td><td>案例库业务数据（渤海湾盆地某油田）</td><td>工程边界条件</td><td>弹型库 186 型号 / 在用 27、三元组 1,240 条、安全规则 42 条、62 口井、8 min/井、Top-3 命中率 91%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

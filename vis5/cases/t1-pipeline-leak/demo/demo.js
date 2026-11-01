@@ -55,65 +55,65 @@
   function draw(data, tDet, est) {
     const W = 430, H = 243;
     const n = data.n;
-    let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f130d" rx="6"/>';
+    let g = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#eef2ec" rx="6"/>';
 
-    g += '<line x1="45" y1="17" x2="396" y2="17" stroke="#5b6358" stroke-width="4" stroke-linecap="round"/>';
-    g += '<circle cx="45" cy="17" r="3.5" fill="#78b7a8"/><circle cx="396" cy="17" r="3.5" fill="#78b7a8"/>';
-    g += '<text x="45" y="32" font-size="8" fill="#8b8778">上游泵站 · 压力测点</text>';
-    g += '<text x="396" y="32" text-anchor="end" font-size="8" fill="#8b8778">下游阀室 · 流量测点</text>';
+    g += '<line x1="45" y1="17" x2="396" y2="17" stroke="#9fa79c" stroke-width="4" stroke-linecap="round"/>';
+    g += '<circle cx="45" cy="17" r="3.5" fill="#488778"/><circle cx="396" cy="17" r="3.5" fill="#488778"/>';
+    g += '<text x="45" y="32" font-size="8" fill="#878374">上游泵站 · 压力测点</text>';
+    g += '<text x="396" y="32" text-anchor="end" font-size="8" fill="#878374">下游阀室 · 流量测点</text>';
     const lx = 45 + st.pos / D_KM * 350;
-    g += '<polygon points="' + (lx - 4).toFixed(1) + ',11 ' + (lx + 4).toFixed(1) + ',11 ' + lx.toFixed(1) + ',17" fill="#d46a5c"/>';
-    g += '<text x="' + lx.toFixed(1) + '" y="8" text-anchor="middle" font-size="8" fill="#d46a5c">真实泄漏 ' + st.pos + ' km</text>';
+    g += '<polygon points="' + (lx - 4).toFixed(1) + ',11 ' + (lx + 4).toFixed(1) + ',11 ' + lx.toFixed(1) + ',17" fill="#a3392b"/>';
+    g += '<text x="' + lx.toFixed(1) + '" y="8" text-anchor="middle" font-size="8" fill="#a3392b">真实泄漏 ' + st.pos + ' km</text>';
     if (est !== null) {
       const ex = 45 + est / 96000 * 350;
-      g += '<circle cx="' + ex.toFixed(1) + '" cy="17" r="5" fill="none" stroke="#78b7a8" stroke-width="1.5" stroke-dasharray="3 2"/>';
-      g += '<text x="' + ex.toFixed(1) + '" y="41" text-anchor="middle" font-size="8" fill="#78b7a8">估算 ' + (est / 1000).toFixed(1) + ' km</text>';
+      g += '<circle cx="' + ex.toFixed(1) + '" cy="17" r="5" fill="none" stroke="#488778" stroke-width="1.5" stroke-dasharray="3 2"/>';
+      g += '<text x="' + ex.toFixed(1) + '" y="41" text-anchor="middle" font-size="8" fill="#488778">估算 ' + (est / 1000).toFixed(1) + ' km</text>';
     }
 
     [7.6, 7.8, 8.0, 8.2, 8.4].forEach(function (v) {
-      g += '<line x1="45" y1="' + py(v) + '" x2="396" y2="' + py(v) + '" stroke="#242b20"/>';
-      g += '<text x="41" y="' + (py(v) + 3) + '" text-anchor="end" font-size="8" fill="#7b8070">' + v.toFixed(1) + '</text>';
+      g += '<line x1="45" y1="' + py(v) + '" x2="396" y2="' + py(v) + '" stroke="#d8dfd4"/>';
+      g += '<text x="41" y="' + (py(v) + 3) + '" text-anchor="end" font-size="8" fill="#8a8f7f">' + v.toFixed(1) + '</text>';
     });
     [1100, 1150, 1200, 1250].forEach(function (v) {
-      g += '<text x="401" y="' + (qy(v) + 3) + '" font-size="8" fill="#7b8070">' + v + '</text>';
+      g += '<text x="401" y="' + (qy(v) + 3) + '" font-size="8" fill="#8a8f7f">' + v + '</text>';
     });
     for (let t = 0; t <= T; t += 40) {
       const x = 45 + t / T * 350;
-      g += '<line x1="' + x + '" y1="54" x2="' + x + '" y2="198" stroke="#242b20"/>';
-      g += '<text x="' + x + '" y="208" text-anchor="middle" font-size="8" fill="#7b8070">' + t + '</text>';
+      g += '<line x1="' + x + '" y1="54" x2="' + x + '" y2="198" stroke="#d8dfd4"/>';
+      g += '<text x="' + x + '" y="208" text-anchor="middle" font-size="8" fill="#8a8f7f">' + t + '</text>';
     }
-    g += '<line x1="45" y1="198" x2="396" y2="198" stroke="#3a4433"/>';
-    g += '<line x1="45" y1="54" x2="45" y2="198" stroke="#3a4433"/>';
-    g += '<line x1="396" y1="54" x2="396" y2="198" stroke="#3a4433"/>';
-    g += '<text x="45" y="221" font-size="8" fill="#8b8778">上游压力 / MPa</text>';
-    g += '<text x="396" y="221" text-anchor="end" font-size="8" fill="#8b8778">下游流量 / (m³/h)</text>';
-    g += '<text x="220" y="221" text-anchor="middle" font-size="8" fill="#8b8778">时间 / s</text>';
+    g += '<line x1="45" y1="198" x2="396" y2="198" stroke="#c2ccbb"/>';
+    g += '<line x1="45" y1="54" x2="45" y2="198" stroke="#c2ccbb"/>';
+    g += '<line x1="396" y1="54" x2="396" y2="198" stroke="#c2ccbb"/>';
+    g += '<text x="45" y="221" font-size="8" fill="#878374">上游压力 / MPa</text>';
+    g += '<text x="396" y="221" text-anchor="end" font-size="8" fill="#878374">下游流量 / (m³/h)</text>';
+    g += '<text x="220" y="221" text-anchor="middle" font-size="8" fill="#878374">时间 / s</text>';
 
     const ty = py(8.2 - st.thr);
-    g += '<line x1="45" y1="' + ty + '" x2="396" y2="' + ty + '" stroke="#d0a85c" stroke-width="1" stroke-dasharray="5 4"/>';
-    g += '<text x="391" y="' + (ty - 4) + '" text-anchor="end" font-size="8" fill="#d0a85c">检测阈值</text>';
+    g += '<line x1="45" y1="' + ty + '" x2="396" y2="' + ty + '" stroke="#a37b2f" stroke-width="1" stroke-dasharray="5 4"/>';
+    g += '<text x="391" y="' + (ty - 4) + '" text-anchor="end" font-size="8" fill="#a37b2f">检测阈值</text>';
     const t0x = 45 + T0 / T * 350;
-    g += '<line x1="' + t0x + '" y1="54" x2="' + t0x + '" y2="198" stroke="#d46a5c" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>';
-    g += '<text x="' + (t0x + 3) + '" y="61" font-size="8" fill="#d46a5c">泄漏注入 t=50 s</text>';
+    g += '<line x1="' + t0x + '" y1="54" x2="' + t0x + '" y2="198" stroke="#a3392b" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>';
+    g += '<text x="' + (t0x + 3) + '" y="61" font-size="8" fill="#a3392b">泄漏注入 t=50 s</text>';
     if (tDet !== null) {
       const dx = 45 + tDet / T * 350;
-      g += '<line x1="' + dx + '" y1="54" x2="' + dx + '" y2="198" stroke="#78b7a8" stroke-width="1" stroke-dasharray="2 2"/>';
-      g += '<polygon points="' + (dx - 3) + ',' + (ty - 2) + ' ' + (dx + 3) + ',' + (ty - 2) + ' ' + dx + ',' + (ty + 4) + '" fill="#78b7a8"/>';
-      g += '<text x="' + (dx + 4) + '" y="' + (ty + 11) + '" font-size="8" fill="#78b7a8">检测 ' + tDet.toFixed(1) + ' s</text>';
+      g += '<line x1="' + dx + '" y1="54" x2="' + dx + '" y2="198" stroke="#488778" stroke-width="1" stroke-dasharray="2 2"/>';
+      g += '<polygon points="' + (dx - 3) + ',' + (ty - 2) + ' ' + (dx + 3) + ',' + (ty - 2) + ' ' + dx + ',' + (ty + 4) + '" fill="#488778"/>';
+      g += '<text x="' + (dx + 4) + '" y="' + (ty + 11) + '" font-size="8" fill="#488778">检测 ' + tDet.toFixed(1) + ' s</text>';
     }
     if (st.dist) {
       const dxx = 45 + 120 / T * 350;
-      g += '<line x1="' + dxx + '" y1="54" x2="' + dxx + '" y2="198" stroke="#d0a85c" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>';
-      g += '<text x="' + (dxx + 3) + '" y="' + (py(8.4) + 9) + '" font-size="8" fill="#d0a85c">启泵扰动</text>';
+      g += '<line x1="' + dxx + '" y1="54" x2="' + dxx + '" y2="198" stroke="#a37b2f" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>';
+      g += '<text x="' + (dxx + 3) + '" y="' + (py(8.4) + 9) + '" font-size="8" fill="#a37b2f">启泵扰动</text>';
     }
 
-    g += '<path d="' + linePath(data.p, n, py) + '" fill="none" stroke="#78b7a8" stroke-width="1.8" stroke-linejoin="round"/>';
-    g += '<path d="' + linePath(data.q, n, qy) + '" fill="none" stroke="#d0a85c" stroke-width="1.6" stroke-linejoin="round" opacity=".92"/>';
+    g += '<path d="' + linePath(data.p, n, py) + '" fill="none" stroke="#488778" stroke-width="1.8" stroke-linejoin="round"/>';
+    g += '<path d="' + linePath(data.q, n, qy) + '" fill="none" stroke="#a37b2f" stroke-width="1.6" stroke-linejoin="round" opacity=".92"/>';
 
-    g += '<line x1="45" y1="230" x2="52" y2="230" stroke="#78b7a8" stroke-width="2"/><text x="56" y="233" font-size="8" fill="#8b8778">上游压力</text>';
-    g += '<line x1="91" y1="230" x2="98" y2="230" stroke="#d0a85c" stroke-width="2"/><text x="101" y="233" font-size="8" fill="#8b8778">下游流量</text>';
-    g += '<line x1="136" y1="230" x2="143" y2="230" stroke="#d0a85c" stroke-width="1" stroke-dasharray="4 3"/><text x="146" y="233" font-size="8" fill="#8b8778">检测阈值</text>';
-    g += '<line x1="187" y1="230" x2="194" y2="230" stroke="#d46a5c" stroke-width="1" stroke-dasharray="3 3"/><text x="197" y="233" font-size="8" fill="#8b8778">泄漏注入</text>';
+    g += '<line x1="45" y1="230" x2="52" y2="230" stroke="#488778" stroke-width="2"/><text x="56" y="233" font-size="8" fill="#878374">上游压力</text>';
+    g += '<line x1="91" y1="230" x2="98" y2="230" stroke="#a37b2f" stroke-width="2"/><text x="101" y="233" font-size="8" fill="#878374">下游流量</text>';
+    g += '<line x1="136" y1="230" x2="143" y2="230" stroke="#a37b2f" stroke-width="1" stroke-dasharray="4 3"/><text x="146" y="233" font-size="8" fill="#878374">检测阈值</text>';
+    g += '<line x1="187" y1="230" x2="194" y2="230" stroke="#a3392b" stroke-width="1" stroke-dasharray="3 3"/><text x="197" y="233" font-size="8" fill="#878374">泄漏注入</text>';
     $('chart').innerHTML = g;
   }
 

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：落物打捞工具智能选型</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>落物打捞工具智能选型 · 交互式演示</h1>
+      <p class="lead">设定落物类型、鱼顶深度与状态、套管与井斜条件，知识图谱按 38 条选型规则对工具库打分排序，输出首选 + 2 套备选，并完成间隙与大钩载荷安全校核。</p>
+    </div>
+    <span class="badge">SY/T 5572 · API RP 7G 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>工具分类与适用区间依据 SY/T 5572-2012《钻井和修井用打捞工具分类与通用技术条件》；作业流程依据 SY/T 5587.12-2018 解卡打捞规程；震击器管柱组合依据 SY/T 5827-2005；管柱抗拉与 80% 安全线依据 API RP 7G；落物分布为大港油田某采油厂 684 井次统计（案例库数据）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：井筒-落物-工具示意 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 井筒 · 落物 · 推荐工具示意</h2>
+          <span class="hint">悬停查看套管 / 管柱 / 工具 / 落物详情</span>
+        </div>
+        <div class="chart-box" id="well-box">
+          <canvas id="well" width="430" height="330" role="img" aria-label="井筒与落物打捞工具示意图"></canvas>
+          <div class="chart-tip" id="well-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>打捞管柱与推荐工具</span>
+          <span><i style="background:#b05a51"></i>落物（鱼顶位置）</span>
+          <span><i style="background:#79828a"></i>套管</span>
+          <span><i style="background:#c9a15a"></i>间隙 / 井斜标注</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：大钩载荷校核 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 大钩载荷校核曲线</h2>
+          <span class="hint">悬停读数 · 红虚线为管柱抗拉 80% 安全线（API RP 7G）</span>
+        </div>
+        <div class="chart-box" id="load-box">
+          <canvas id="load" width="430" height="250" role="img" aria-label="大钩载荷校核曲线"></canvas>
+          <div class="chart-tip" id="load-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>大钩载荷（静悬重 + 过提）</span>
+          <span><i style="background:#c9a15a"></i>震击器冲击载荷（含加速器放大）</span>
+          <span><i style="background:#b05a51"></i>抗拉 80% 安全线</span>
+          <span><i style="background:#79828a"></i>管柱抗拉屈服</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：工具评分对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 备选工具评分对比</h2>
+          <span class="hint">悬停查看扣分原因 · 斜线条为硬规则淘汰（间隙 &lt; 8 mm 或超适用区间）</span>
+        </div>
+        <div class="chart-box" id="score-box">
+          <canvas id="score" width="430" height="220" role="img" aria-label="打捞工具评分对比条形图"></canvas>
+          <div class="chart-tip" id="score-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>首选</span>
+          <span><i style="background:#c9a15a"></i>备选 1 / 2</span>
+          <span><i style="background:#79828a"></i>其余可用</span>
+          <span><i style="background:#b05a51"></i>规则淘汰</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 选型理由 + 流程 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 推荐结论与作业流程</h2>
+          <span class="hint">首选命中率口径：首趟捞获比例（案例库 78%）</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>首选工具组合</span><b id="m-tool">—</b></div>
+          <div class="mcard"><span>预测一次成功率</span><b id="m-prob">—</b></div>
+          <div class="mcard"><span>预计趟数</span><b id="m-trips">—</b></div>
+          <div class="mcard"><span>单趟费用</span><b id="m-cost">—</b></div>
+          <div class="mcard"><span>间隙校核</span><b id="m-gap">—</b></div>
+          <div class="mcard"><span>载荷校核</span><b id="m-load">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+        <div class="steps" id="steps"></div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 落物与井况参数（8 项）</h2>
+          <span class="hint">改动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>落物类型</label>
+            <select id="s-type">
+              <option value="tubing">油管</option>
+              <option value="rod">抽油杆</option>
+              <option value="cable">电缆 / 钢丝</option>
+              <option value="junk">小件落物</option>
+              <option value="stuck">卡钻管柱</option>
+            </select>
+            <span class="tip" id="tip-type">684 井次中油管 268、抽油杆 197、工具 121、电缆 63、碎屑 35</span>
+          </div>
+          <div class="ctl">
+            <label>鱼顶状态</label>
+            <select id="s-top">
+              <option value="ok">完好（规则圆口）</option>
+              <option value="deformed">变形（椭圆 / 劈口）</option>
+              <option value="broken">碎裂（断口不规则）</option>
+            </select>
+            <span class="tip">变形鱼顶宜造扣打捞，碎裂鱼顶宜强磁 / 一把抓</span>
+          </div>
+          <div class="ctl">
+            <label>鱼顶深度 <output id="o-depth">2200 m</output></label>
+            <input type="range" id="s-depth" min="500" max="3500" step="50" value="2200">
+            <span class="tip">决定管柱悬重与单趟费用</span>
+          </div>
+          <div class="ctl">
+            <label>套管内径 <output id="o-casing">124 mm</output></label>
+            <input type="range" id="s-casing" min="100" max="160" step="1" value="124">
+            <span class="tip">5½″ 套管约 121–126 mm；规则：工具外径间隙 ≥ 8 mm</span>
+          </div>
+          <div class="ctl">
+            <label>最大井斜 <output id="o-dev">25 °</output></label>
+            <input type="range" id="s-dev" min="0" max="60" step="1" value="25">
+            <span class="tip">&gt;45° 后下入摩阻与造扣难度显著上升，启用加长引鞋</span>
+          </div>
+          <div class="ctl">
+            <label>落物长度 <output id="o-len">9.0 m</output></label>
+            <input type="range" id="s-len" min="0.2" max="9" step="0.2" value="9">
+            <span class="tip">打捞筒 / 打捞矛要求可抓长度 ≥ 1.2 m</span>
+          </div>
+          <div class="ctl">
+            <label>落物最大外径 <output id="o-od">73 mm</output></label>
+            <input type="range" id="s-od" min="15" max="110" step="1" value="73">
+            <span class="tip">规则：打捞筒内径 ≥ 落物外径 + 10 mm</span>
+          </div>
+          <div class="ctl">
+            <label>打捞管柱</label>
+            <select id="s-string">
+              <option value="tubing">Φ73×5.51 N80 油管（抗拉 490 kN）</option>
+              <option value="dp">Φ88.9 G105 钻杆（抗拉 1560 kN）</option>
+            </select>
+            <span class="tip">安全线 = 管柱抗拉屈服 × 80%（API RP 7G）</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">选型规则 38 条 · 工具库 46 种（本演示取常用 8 种）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">评分模型：基准分（工具 × 落物类型命中表）− 间隙 / 适用区间 / 鱼顶状态 / 井斜 / 可抓长度扣分；预测一次成功率 p = 0.88 × 评分，预计趟数 = 1/p（几何分布期望）；大钩载荷 = 管柱浮重 ×（1 + 0.35·sin 井斜）+ 落物重 + 过提力，震击冲击 = 过提 × 放大系数（井斜 ≤45° 取 2.2，&gt;45° 取 1.6）；安全线 = 抗拉屈服 × 80%。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 标准与文献（8 条，均真实可查证）</h2><span class="hint">每条注明对应的本 demo 模块</span></div>
+      <div class="src-list" id="src-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 落物类型分布：某采油厂 5 年 684 井次打捞记录</h2><span class="hint">悬停读数 · 案例库统计数据</span></div>
+      <div class="src-bar">
+        <span class="tag real">案例统计</span>
+        <span><b>大港油田某采油厂 684 井次打捞记录（案例库脱敏统计）</b>：油管 268、抽油杆 197、工具落物 121、电缆与钢丝 63、碎屑 35。平均 2.3 趟起下钻、单趟 4—6 h / 3—8 万元、一次成功率 61%、落物尺寸字段缺失率 41%——构成本 demo 落物类型与基准成功率的统计口径。</span>
+      </div>
+      <div class="chart-box" id="dist-box">
+        <canvas id="dist" width="860" height="250" role="img" aria-label="684井次落物类型分布柱状图"></canvas>
+        <div class="chart-tip" id="dist-tip"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 来源 → 模块对应表</h2><span class="hint">规则编号对应 case.json 所述 38 条选型规则的代表条款</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>标准 / 文献</th><th>关键内容</th><th>本 demo 对应模块</th></tr></thead>
+        <tbody id="map-body"></tbody>
+      </table>
+      <p class="foot" style="margin-top:8px">说明：案例业务统计（684 井次、2.3 趟、61% 一次成功率、46 种工具 / 38 条规则）来自案例库脱敏数据；工程参数口径（间隙 ≥8 mm、打捞筒内径 ≥ 落物外径 +10 mm、抗拉 80% 安全线、震击器管柱组合）分别对应上表所列标准与文献。</p>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

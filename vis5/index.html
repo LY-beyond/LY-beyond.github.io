@@ -6,10 +6,10 @@
 <title>石油勘探开发的智能化可能性地图</title>
 <meta name="description" content="按石油作业链条逐环节展示可被深度学习改造的候选场景，标注 AI 介入点、数据条件与难度等级；带可运行的案例示范。">
 
-<link rel="stylesheet" href="assets/core/tokens.css?v=20261030q">
-<link rel="stylesheet" href="assets/core/layout.css?v=20261030q">
-<link rel="stylesheet" href="assets/core/ui.css?v=20261030q">
-<link rel="stylesheet" href="assets/core/theme.css?v=20261030q">
+<link rel="stylesheet" href="assets/core/tokens.css?v=20261101q">
+<link rel="stylesheet" href="assets/core/layout.css?v=20261101q">
+<link rel="stylesheet" href="assets/core/ui.css?v=20261101q">
+<link rel="stylesheet" href="assets/core/theme.css?v=20261101q">
 </head>
 <body>
 
@@ -36,109 +36,109 @@
      6. case-upload     案例包导入（读 localStorage，必须在 shell 前）
      7. shell.js        外壳，必须最后
      ========================================================= -->
-<script src="assets/data.js?v=20261030q"></script>
-<script src="assets/core/registry.js?v=20261030q"></script>
-<script src="assets/core/kit.js?v=20261030q"></script>
+<script src="assets/data.js?v=20261101q"></script>
+<script src="assets/core/registry.js?v=20261101q"></script>
+<script src="assets/core/kit.js?v=20261101q"></script>
 
 <!-- ---------- 已有案例（带可运行示范） ---------- -->
-<script src="assets/cases/welllog-layer.case.js?v=20261030q"></script>
-<script src="assets/cases/welllog-layer.demo.js?v=20261030q"></script>
-<script src="assets/cases/c1-quality-eval.case.js?v=20261030q"></script>
-<script src="assets/cases/c2-cement-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/c3-loss-risk.case.js?v=20261030q"></script>
-<script src="assets/cases/c4-casing-centering.case.js?v=20261030q"></script>
-<script src="assets/cases/pr1-pumping-diagnosis.case.js?v=20261030q"></script>
-<script src="assets/cases/g1-remote-lithology.case.js?v=20261030q"></script>
-<script src="assets/cases/s1-fault-interpret.case.js?v=20261030q"></script>
-<script src="assets/cases/d2-drill-risk-warning.case.js?v=20261030q"></script>
-<script src="assets/cases/m1-cuttings-lithology.case.js?v=20261030q"></script>
-<script src="assets/cases/m5-mudlog-report-nlp.case.js?v=20261030q"></script>
-<script src="assets/cases/w3-imaging-fracture.case.js?v=20261030q"></script>
-<script src="assets/cases/co1-completion-selection.case.js?v=20261030q"></script>
-<script src="assets/cases/p1-perf-param-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/e1-frac-param-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/t1-pipeline-leak.case.js?v=20261030q"></script>
-<script src="assets/cases/c5-channeling-detect.case.js?v=20261030q"></script>
-<script src="assets/cases/c6-strength-predict.case.js?v=20261030q"></script>
+<script src="assets/cases/welllog-layer.case.js?v=20261101q"></script>
+<script src="assets/cases/welllog-layer.demo.js?v=20261101q"></script>
+<script src="assets/cases/c1-quality-eval.case.js?v=20261101q"></script>
+<script src="assets/cases/c2-cement-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/c3-loss-risk.case.js?v=20261101q"></script>
+<script src="assets/cases/c4-casing-centering.case.js?v=20261101q"></script>
+<script src="assets/cases/pr1-pumping-diagnosis.case.js?v=20261101q"></script>
+<script src="assets/cases/g1-remote-lithology.case.js?v=20261101q"></script>
+<script src="assets/cases/s1-fault-interpret.case.js?v=20261101q"></script>
+<script src="assets/cases/d2-drill-risk-warning.case.js?v=20261101q"></script>
+<script src="assets/cases/m1-cuttings-lithology.case.js?v=20261101q"></script>
+<script src="assets/cases/m5-mudlog-report-nlp.case.js?v=20261101q"></script>
+<script src="assets/cases/w3-imaging-fracture.case.js?v=20261101q"></script>
+<script src="assets/cases/co1-completion-selection.case.js?v=20261101q"></script>
+<script src="assets/cases/p1-perf-param-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/e1-frac-param-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/t1-pipeline-leak.case.js?v=20261101q"></script>
+<script src="assets/cases/c5-channeling-detect.case.js?v=20261101q"></script>
+<script src="assets/cases/c6-strength-predict.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：地质勘察 ---------- -->
-<script src="assets/cases/g2-geochem-anomaly.case.js?v=20261030q"></script>
-<script src="assets/cases/g3-geomap-extract.case.js?v=20261030q"></script>
-<script src="assets/cases/g4-outcrop-fracture.case.js?v=20261030q"></script>
+<script src="assets/cases/g2-geochem-anomaly.case.js?v=20261101q"></script>
+<script src="assets/cases/g3-geomap-extract.case.js?v=20261101q"></script>
+<script src="assets/cases/g4-outcrop-fracture.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：物探 ---------- -->
-<script src="assets/cases/s2-seismic-facies.case.js?v=20261030q"></script>
-<script src="assets/cases/s3-first-break-pick.case.js?v=20261030q"></script>
-<script src="assets/cases/s4-elastic-inversion.case.js?v=20261030q"></script>
-<script src="assets/cases/s5-seismic-denoise.case.js?v=20261030q"></script>
+<script src="assets/cases/s2-seismic-facies.case.js?v=20261101q"></script>
+<script src="assets/cases/s3-first-break-pick.case.js?v=20261101q"></script>
+<script src="assets/cases/s4-elastic-inversion.case.js?v=20261101q"></script>
+<script src="assets/cases/s5-seismic-denoise.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：钻井 ---------- -->
-<script src="assets/cases/d1-rop-optimize.case.js?v=20261030q"></script>
-<script src="assets/cases/d3-trajectory-control.case.js?v=20261030q"></script>
-<script src="assets/cases/d4-drillstring-failure.case.js?v=20261030q"></script>
-<script src="assets/cases/d5-mud-property-control.case.js?v=20261030q"></script>
+<script src="assets/cases/d1-rop-optimize.case.js?v=20261101q"></script>
+<script src="assets/cases/d3-trajectory-control.case.js?v=20261101q"></script>
+<script src="assets/cases/d4-drillstring-failure.case.js?v=20261101q"></script>
+<script src="assets/cases/d5-mud-property-control.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：录井 ---------- -->
-<script src="assets/cases/m2-gas-log-anomaly.case.js?v=20261030q"></script>
-<script src="assets/cases/m3-fluorescence-read.case.js?v=20261030q"></script>
-<script src="assets/cases/m4-ropcurve-layering.case.js?v=20261030q"></script>
+<script src="assets/cases/m2-gas-log-anomaly.case.js?v=20261101q"></script>
+<script src="assets/cases/m3-fluorescence-read.case.js?v=20261101q"></script>
+<script src="assets/cases/m4-ropcurve-layering.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：测井 ---------- -->
-<script src="assets/cases/w2-reservoir-param-interp.case.js?v=20261030q"></script>
-<script src="assets/cases/w4-log-lithology.case.js?v=20261030q"></script>
-<script src="assets/cases/w5-log-repair.case.js?v=20261030q"></script>
+<script src="assets/cases/w2-reservoir-param-interp.case.js?v=20261101q"></script>
+<script src="assets/cases/w4-log-lithology.case.js?v=20261101q"></script>
+<script src="assets/cases/w5-log-repair.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：完井 ---------- -->
-<script src="assets/cases/co2-perf-param-design.case.js?v=20261030q"></script>
-<script src="assets/cases/co3-string-stress.case.js?v=20261030q"></script>
-<script src="assets/cases/co4-smart-sleeve-control.case.js?v=20261030q"></script>
+<script src="assets/cases/co2-perf-param-design.case.js?v=20261101q"></script>
+<script src="assets/cases/co3-string-stress.case.js?v=20261101q"></script>
+<script src="assets/cases/co4-smart-sleeve-control.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：射孔 ---------- -->
-<script src="assets/cases/p2-perf-tunnel-predict.case.js?v=20261030q"></script>
-<script src="assets/cases/p3-charge-select.case.js?v=20261030q"></script>
-<script src="assets/cases/p4-perf-effect-eval.case.js?v=20261030q"></script>
+<script src="assets/cases/p2-perf-tunnel-predict.case.js?v=20261101q"></script>
+<script src="assets/cases/p3-charge-select.case.js?v=20261101q"></script>
+<script src="assets/cases/p4-perf-effect-eval.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：采油 ---------- -->
-<script src="assets/cases/pr2-production-forecast.case.js?v=20261030q"></script>
-<script src="assets/cases/pr3-water-injection-alloc.case.js?v=20261030q"></script>
-<script src="assets/cases/pr4-esp-fault-warning.case.js?v=20261030q"></script>
-<script src="assets/cases/pr5-wax-scale-predict.case.js?v=20261030q"></script>
+<script src="assets/cases/pr2-production-forecast.case.js?v=20261101q"></script>
+<script src="assets/cases/pr3-water-injection-alloc.case.js?v=20261101q"></script>
+<script src="assets/cases/pr4-esp-fault-warning.case.js?v=20261101q"></script>
+<script src="assets/cases/pr5-wax-scale-predict.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：修井 ---------- -->
-<script src="assets/cases/wo1-workover-plan-rec.case.js?v=20261030q"></script>
-<script src="assets/cases/wo2-fishing-tool-select.case.js?v=20261030q"></script>
-<script src="assets/cases/wo3-casing-damage-id.case.js?v=20261030q"></script>
-<script src="assets/cases/wo4-workover-risk-warning.case.js?v=20261030q"></script>
-<script src="assets/cases/wo5-workover-cycle-predict.case.js?v=20261030q"></script>
+<script src="assets/cases/wo1-workover-plan-rec.case.js?v=20261101q"></script>
+<script src="assets/cases/wo2-fishing-tool-select.case.js?v=20261101q"></script>
+<script src="assets/cases/wo3-casing-damage-id.case.js?v=20261101q"></script>
+<script src="assets/cases/wo4-workover-risk-warning.case.js?v=20261101q"></script>
+<script src="assets/cases/wo5-workover-cycle-predict.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：增采 ---------- -->
-<script src="assets/cases/e2-fracture-geometry-predict.case.js?v=20261030q"></script>
-<script src="assets/cases/e3-chemical-flood-screen.case.js?v=20261030q"></script>
-<script src="assets/cases/e4-steam-huffpuff-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/e5-microbial-eor.case.js?v=20261030q"></script>
+<script src="assets/cases/e2-fracture-geometry-predict.case.js?v=20261101q"></script>
+<script src="assets/cases/e3-chemical-flood-screen.case.js?v=20261101q"></script>
+<script src="assets/cases/e4-steam-huffpuff-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/e5-microbial-eor.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：运输 ---------- -->
-<script src="assets/cases/t2-corrosion-assess.case.js?v=20261030q"></script>
-<script src="assets/cases/t3-gathering-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/t4-metering-calib.case.js?v=20261030q"></script>
-<script src="assets/cases/t5-tank-monitor.case.js?v=20261030q"></script>
+<script src="assets/cases/t2-corrosion-assess.case.js?v=20261101q"></script>
+<script src="assets/cases/t3-gathering-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/t4-metering-calib.case.js?v=20261101q"></script>
+<script src="assets/cases/t5-tank-monitor.case.js?v=20261101q"></script>
 
 <!-- ---------- 新增案例：加工 ---------- -->
-<script src="assets/cases/r1-atmos-vacuum-opt.case.js?v=20261030q"></script>
-<script src="assets/cases/r2-fcc-product-predict.case.js?v=20261030q"></script>
-<script src="assets/cases/r3-equipment-pdm.case.js?v=20261030q"></script>
-<script src="assets/cases/r4-lab-data-audit.case.js?v=20261030q"></script>
-<script src="assets/cases/r5-soft-sensor-quality.case.js?v=20261030q"></script>
+<script src="assets/cases/r1-atmos-vacuum-opt.case.js?v=20261101q"></script>
+<script src="assets/cases/r2-fcc-product-predict.case.js?v=20261101q"></script>
+<script src="assets/cases/r3-equipment-pdm.case.js?v=20261101q"></script>
+<script src="assets/cases/r4-lab-data-audit.case.js?v=20261101q"></script>
+<script src="assets/cases/r5-soft-sensor-quality.case.js?v=20261101q"></script>
 <!-- ↑ 新案例加在这里：<script src="assets/cases/你的案例.case.js"></script> -->
 
 <!-- 上传的案例包（localStorage）在这里恢复注册，必须在 shell.js 之前 -->
-<script src="assets/core/case-demo-host.js?v=20261030q"></script>
-<script src="assets/core/case-upload.js?v=20261030q"></script>
+<script src="assets/core/case-demo-host.js?v=20261101q"></script>
+<script src="assets/core/case-upload.js?v=20261101q"></script>
 
-<script src="assets/core/admin.js?v=20261030q"></script>
+<script src="assets/core/admin.js?v=20261101q"></script>
 
-<script src="assets/core/animations.js?v=20261030q"></script>
-<script src="assets/core/shell.js?v=20261030q"></script>
+<script src="assets/core/animations.js?v=20261101q"></script>
+<script src="assets/core/shell.js?v=20261101q"></script>
 
 </body>
 </html>

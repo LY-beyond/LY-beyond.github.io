@@ -18,6 +18,60 @@
 
   <p class="data-src"><b>数据口径：</b>API RP 10B-2 抗压强度；钻开水泥塞前须 ≥ 500 psi (3.45 MPa)；井口试压 ≥ 1500–2000 psi；典型 24h UCS 14–21 MPa，7d 35 MPa；高温 > 110℃ 须加硅粉 30–40% 防强度倒缩；强度发展 UCS(t) = UCS_ult·(1−e^(−(t/τ)^p))。</p>
 
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">实验数据 · 强度实测</button>
+    <button class="tab" data-tab="sim" role="tab">强度预测 · 参数联动</button>
+  </div>
+
+  <!-- ================= 实验数据页 ================= -->
+  <div class="tabpane active" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 24h 抗压强度对比：纳米黏土 / 硅粉配方（UCA 实测）</h2><span class="hint">悬停读数 · 点击柱条锁定</span></div>
+      <div class="src-bar">
+        <span class="tag real">实验数据</span>
+        <span><b>Tariq et al. (2020), ACS Omega 5(20):11643–11654（CC BY）</b>：G 级水泥、w/c 0.44、70℃ / 3000 psi 养护 24h，超声水泥分析仪（UCA）实测：净浆 3015 psi、+1% 纳米黏土 2676 psi、+2% 纳米黏土 3015 psi；UCS 随养护温度 70→100℃ 提升 7.7%（净浆）至 20%（+20% 硅粉）。</span>
+        <a href="https://doi.org/10.1021/acsomega.0c00943" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-chartA" viewBox="0 0 900 280" role="img" aria-label="24小时抗压强度对比柱状图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 高温强度倒缩：净浆 G 级水泥（文献数字化）</h2><span class="hint">滚轮缩放温度轴 · 拖拽平移 · 双击复位 · 点击数据点锁定</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献数字化</span>
+        <span><b>Pernites &amp; Santra (2016), Cem. Concr. Compos. 72:89–103</b>：Dyckerhoff G 级净浆（15.9 ppg，0% 硅粉），UCA 实时测量（2500–3000 psi）：121℃ 强度峰值约 2160 psi（14.9 MPa），148.9℃ 仅约 940 psi（6.5 MPa）——超过 110℃ 发生强度倒缩，须加 35–40% 硅粉抑制。</span>
+        <a href="https://doi.org/10.1016/j.cemconcomp.2016.05.018" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxB">
+        <svg id="lit-chartB" viewBox="0 0 900 250" role="img" aria-label="高温强度倒缩散点图"></svg>
+        <div class="chart-tip" id="lit-tipB"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放温度轴 · 按住拖拽平移 · 双击复位</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+      <div class="r-detail" id="lit-detail">悬停读取数据点；点击柱条 / 散点锁定该条实验数据；点击下表行同样联动。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 实验数据汇总</h2><span class="hint">强度换算：1 MPa = 145.04 psi；API WOC 阈值 500 psi = 3.45 MPa</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>配方 / 工况</th><th>24h 强度</th><th>备注</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ================= 模拟页 ================= -->
+  <div class="tabpane" id="pane-sim">
   <div class="layout">
     <div class="viz">
       <!-- 面板 1：强度-时间曲线 -->
@@ -172,6 +226,7 @@
   </div>
 
   <p class="foot">模型公式：UCS_ult = 38·(0.44/wc)^1.2·(ρ/1.9)^0.8·(1−0.003·缓凝剂%)·(1−0.025·污染%)·(1+0.004·硅粉%)·(1−0.4·R)；τ = 36·e^(−0.015·(T−30))·(1+1.5·缓凝剂%) h；UCS(t) = UCS_ult·(1−e^(−(t/τ)^0.7))·(1+0.004·P)；高温倒缩风险 R = ((T−90)/90)·(0.2+0.8·(30−硅粉%)/30)（0–1，硅粉最多削减 80%，R ≥ 0.5 判为高风险）。</p>
+  </div><!-- /pane-sim -->
 </div>
 <script src="demo.js"></script>
 </body>

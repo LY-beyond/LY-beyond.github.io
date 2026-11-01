@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：修井周期智能预测 · 免修期可靠性与检泵周期优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>修井周期智能预测 · 交互式演示</h1>
+      <p class="lead">以两参数 Weibull 分布拟合抽油机井免修期（失效时间），调节出砂、含水、泵挂深度、冲次、腐蚀与工艺措施，看生存曲线、失效率与经济检泵周期如何联动。</p>
+    </div>
+    <span class="badge">Weibull 可靠性统计口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>免修期定义按 SY/T 6126-2017（末次检、下泵投产之日至统计日的天数）；两参数 Weibull：F(t)=1−e^(−(t/η)^β)、R(t)=e^(−(t/η)^β)、h(t)=β/η·(t/η)^(β−1)、预期免修期 MTBF=η·Γ(1+1/β)；经济检泵周期按经典预防性更换模型 min C(T)=(Cp·R(T)+Cf·F(T))/∫₀ᵀR(t)dt；β&lt;1 为早期失效主导（不宜预防性更换）、β&gt;1 为耗损失效主导。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：生存曲线与累积失效 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 生存曲线 R(t) 与累积失效 F(t)</h2>
+          <span class="hint">悬停读数 · 竖虚线为预期免修期 MTBF</span>
+        </div>
+        <div class="chart-wrap chart-box" id="box-surv">
+          <canvas id="cv-surv" width="460" height="235" role="img" aria-label="生存曲线与累积失效曲线"></canvas>
+          <div class="chart-tip" id="tip-surv"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>可靠度 R(t)（免修 t 天不失效概率）</span>
+          <span><i style="background:#b05a51"></i>累积失效 F(t)</span>
+          <span><i style="background:#79828a"></i>预期免修期 MTBF</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：失效率 + 经济检泵周期 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 失效率曲线与检泵周期优化</h2>
+          <span class="hint">左：失效率 h(t)；右：单位时间成本 C(T)，绿点为最优检泵周期</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>失效率 h(t)（每 100 天）</h3>
+            <div class="chart-box" id="box-haz">
+              <canvas id="cv-haz" width="460" height="215" role="img" aria-label="失效率曲线"></canvas>
+              <div class="chart-tip" id="tip-haz"></div>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>单位时间成本 C(T)（万元/天）</h3>
+            <div class="chart-box" id="box-econ">
+              <canvas id="cv-econ" width="460" height="215" role="img" aria-label="经济检泵周期优化曲线"></canvas>
+              <div class="chart-tip" id="tip-econ"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 3：分组对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 同类井分组：工艺措施前后免修期对比</h2>
+          <span class="hint">4 个典型井组经同一模型推算 · 悬停读数</span>
+        </div>
+        <div class="chart-wrap chart-box" id="box-group">
+          <canvas id="cv-group" width="460" height="225" role="img" aria-label="工艺措施前后免修期对比柱状图"></canvas>
+          <div class="chart-tip" id="tip-group"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>措施前 MTBF</span>
+          <span><i style="background:#2f7d6b"></i>措施后 MTBF</span>
+          <span style="color:#79828a;font-size:10px">出砂井→防砂泵；其余井组→防蜡/防垢/防腐工艺</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 结论 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 关键指标与结论</h2>
+          <span class="hint">预期免修期 · 90 天可靠度 · 最优检泵周期 · 年节约成本</span>
+        </div>
+        <div class="metrics" style="margin-bottom: 8px;">
+          <div class="mcard"><span>预期免修期 MTBF</span><b id="m-mbf">—</b></div>
+          <div class="mcard"><span>90 天可靠度 R(90)</span><b id="m-r90">—</b></div>
+          <div class="mcard"><span>最优检泵周期 T*</span><b id="m-topt">—</b></div>
+          <div class="mcard"><span>年节约成本</span><b id="m-save">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>工况与工艺参数（9 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>出砂程度 <output id="o-sand">30 %</output></label>
+            <input type="range" id="s-sand" min="0" max="100" step="1" value="30">
+            <span class="tip">砂卡/砂磨是检泵首因，显著缩短 η</span>
+          </div>
+          <div class="ctl">
+            <label>含水率 <output id="o-water">70 %</output></label>
+            <input type="range" id="s-water" min="40" max="98" step="1" value="70">
+            <span class="tip">高含水加剧腐蚀与结垢</span>
+          </div>
+          <div class="ctl">
+            <label>泵挂深度 <output id="o-depth">2200 m</output></label>
+            <input type="range" id="s-depth" min="1500" max="3600" step="50" value="2200">
+            <span class="tip">深井杆柱载荷大、偏磨重</span>
+          </div>
+          <div class="ctl">
+            <label>冲次 <output id="o-spm">6 次/min</output></label>
+            <input type="range" id="s-spm" min="2" max="10" step="0.5" value="6">
+            <span class="tip">冲次越高，泵阀与杆柱疲劳越快</span>
+          </div>
+          <div class="ctl">
+            <label>介质腐蚀性 <output id="o-corr">30 %</output></label>
+            <input type="range" id="s-corr" min="0" max="100" step="1" value="30">
+            <span class="tip">H₂S/CO₂/矿化度综合，腐蚀穿孔失效</span>
+          </div>
+          <div class="ctl">
+            <label>防砂工艺措施 <output id="o-sandctrl">未实施</output></label>
+            <input type="range" id="s-sandctrl" min="0" max="1" step="1" value="0">
+            <span class="tip">防砂泵/防砂管柱，出砂井效果最大</span>
+          </div>
+          <div class="ctl">
+            <label>防蜡防垢防腐工艺 <output id="o-waxctrl">未实施</output></label>
+            <input type="range" id="s-waxctrl" min="0" max="1" step="1" value="0">
+            <span class="tip">加药/涂层/缓蚀剂，高含水腐蚀井受益</span>
+          </div>
+          <div class="ctl">
+            <label>检泵作业费 Cp <output id="o-costwo">9 万元/次</output></label>
+            <input type="range" id="s-costwo" min="6" max="18" step="0.5" value="9">
+            <span class="tip">计划性检泵，含停井 2 天产量损失</span>
+          </div>
+          <div class="ctl">
+            <label>日产量损失 <output id="o-loss">6 万元/天</output></label>
+            <input type="range" id="s-loss" min="2" max="15" step="0.5" value="6">
+            <span class="tip">停井期间日均产油折算损失</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">β、η 由影响因素加权推算，见页脚公式</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式：工况严苛度 H = 0.28·出砂 + 0.16·含水 + 0.16·泵挂 + 0.12·冲次 + 0.28·腐蚀（各归一化 0–1）；工艺缓解 M = 0.55·防砂·min(1.4·出砂,1) + 0.45·防蜡防腐·min(0.7·(含水+腐蚀),1)；β = clamp(2.3 − 1.6·H + 0.4·M, 0.7, 2.8)；η = clamp(620·(1 − 0.58·H)·(1 + 0.42·M), 120, 1100) 天；故障后更换成本 Cf = 1.8·作业费 + (6+8H)·日损失（抢修加价 + 非计划停井更长），计划检泵 Cp 含停井 2 天损失；C(T) 分母 ∫₀ᵀR(t)dt 为期望有效运行天数。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 浴缸曲线：失效率三阶段（可靠性工程通用形态）</h2><span class="hint">悬停查看各阶段含义与 β 对应关系</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Abernethy, R.B.《The New Weibull Handbook》第 5 版（2006）</b>：失效率三阶段——早期失效期（β&lt;1，递减）、偶然失效期（β≈1，近似恒定）、耗损失效期（β&gt;1，递增）；GB/T 5080.7-1986 给出恒定失效率假设下失效率与 MTBF 的验证试验方案。本图为通用形态示意；本 demo 单机理 Weibull 曲线只覆盖其中一段。</span>
+      </div>
+      <div class="chart-box" id="box-bath">
+        <canvas id="cv-bath" width="900" height="255" role="img" aria-label="浴缸曲线示意图"></canvas>
+        <div class="chart-tip" id="tip-bath"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 国内油田公开报道：工艺治理前后免修期 / 检泵周期</h2><span class="hint">悬停查看逐条出处与口径说明</span></div>
+      <div class="src-bar">
+        <span class="tag real">公开报道</span>
+        <span><b>三组真实案例</b>：吴起作业区抗砂抽油泵应用，平均检泵周期由 <b>128 天延长至 412 天</b>（《抽油泵砂卡机理及综合防治技术研究》）；中原油田卫 305-24 井防腐优化，免修期由不足 1 年延长至 <b>600 余天</b>（濮阳日报 2025-11-27）；大庆采油七厂短周期井治理前平均免修期 <b>186 天</b>、全厂平均检泵周期 <b>1092 天</b>创外围油田最好成绩（中国石油网 2021-06）。</span>
+      </div>
+      <div class="chart-box" id="box-pub">
+        <canvas id="cv-pub" width="900" height="265" role="img" aria-label="公开报道免修期对比柱状图"></canvas>
+        <div class="chart-tip" id="tip-pub"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#b05a51"></i>治理前（天）</span>
+        <span><i style="background:#2f7d6b"></i>治理后 / 对标值（天）</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 文献与标准对照表（8 条，均可查证）</h2><span class="hint">每条注明与本 demo 的对应模块</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>文献 / 标准</th><th>出处 / 编号</th><th>与本 demo 对应模块</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

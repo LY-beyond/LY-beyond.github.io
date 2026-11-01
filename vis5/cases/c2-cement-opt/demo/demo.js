@@ -144,17 +144,24 @@
       s += `<line x1="${padL}" y1="${y}" x2="${padL + plotW}" y2="${y}" stroke="#ece7d8"/>`;
       s += `<text x="${padL - 5}" y="${y + 3}" font-size="7.5" fill="#9ba3a9" text-anchor="end" font-family="monospace">${b}</text>`;
     }
-    for (let t = 0; t <= tMax; t += 60) {
+    // 时间轴步长随稠化时间自适应，避免刻度标签互相压叠
+    const tStep = tMax <= 300 ? 60 : tMax <= 720 ? 120 : tMax <= 1800 ? 300 : 600;
+    for (let t = 0; t <= tMax; t += tStep) {
       const x = xT(t);
+      // 与底部轴标题"时间 min"同一列的刻度不画，避免压字
+      if (Math.abs(x - (padL + plotW / 2)) < 34) continue;
       s += `<text x="${x}" y="${H - 9}" font-size="7.5" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${t}</text>`;
     }
 
     s += `<line x1="${padL}" y1="${yBc(70)}" x2="${padL + plotW}" y2="${yBc(70)}" stroke="#b05a51" stroke-width="1" stroke-dasharray="5 3"/>`;
-    s += `<text x="${padL + plotW - 4}" y="${yBc(70) - 4}" font-size="8" fill="#b05a51" text-anchor="end" font-family="monospace">70 Bc</text>`;
+    // 70 Bc 注记放左侧，右侧留给 t₇₀ 标注
+    s += `<text x="${padL + 4}" y="${yBc(70) - 4}" font-size="8" fill="#b05a51" font-family="monospace">70 Bc</text>`;
 
     const tJob = Math.min(JOB_TIME, tMax);
     s += `<line x1="${xT(tJob)}" y1="${padT}" x2="${xT(tJob)}" y2="${padT + plotH}" stroke="#c9a15a" stroke-width="1" stroke-dasharray="5 3"/>`;
-    s += `<text x="${xT(tJob)}" y="${padT - 4}" font-size="8" fill="#c9a15a" text-anchor="middle" font-family="monospace">施工 ${tJob} min</text>`;
+    // 施工窗口注记放在绘图区顶部内，避开左上角的"稠度 Bc"轴标题
+    const jobNearRight = xT(tJob) > padL + plotW - 72;
+    s += `<text x="${jobNearRight ? xT(tJob) - 4 : xT(tJob) + 4}" y="${padT + 11}" font-size="8" fill="#c9a15a" text-anchor="${jobNearRight ? 'end' : 'start'}" font-family="monospace">施工 ${tJob} min</text>`;
 
     let path = '';
     const steps = 120;
@@ -167,7 +174,9 @@
     s += `<path d="${path}" fill="none" stroke="#2f7d6b" stroke-width="1.8" stroke-linejoin="round"/>`;
 
     s += `<circle cx="${xT(c.t70)}" cy="${yBc(70)}" r="3.5" fill="#b05a51"/>`;
-    s += `<text x="${xT(c.t70) + 7}" y="${yBc(70) - 5}" font-size="8.5" fill="#b05a51" font-family="monospace">t₇₀=${c.t70.toFixed(0)} min</text>`;
+    // t₇₀ 标注靠左侧/右侧自动避让，避免越出绘图区或压住 70 Bc 注记
+    const t70NearRight = xT(c.t70) > padL + plotW * 0.55;
+    s += `<text x="${t70NearRight ? xT(c.t70) - 7 : xT(c.t70) + 7}" y="${yBc(70) - 5}" font-size="8.5" fill="#b05a51" text-anchor="${t70NearRight ? 'end' : 'start'}" font-family="monospace">t₇₀=${c.t70.toFixed(0)} min</text>`;
 
     s += `<text x="${padL}" y="${padT - 5}" font-size="8" fill="#9ba3a9" font-family="monospace">稠度 Bc</text>`;
     s += `<text x="${padL + plotW / 2}" y="${H - 2}" font-size="8" fill="#9ba3a9" text-anchor="middle">时间 min</text>`;
@@ -243,9 +252,10 @@
     const xPore = xPpg(S.poreGrad);
     const xFrac = xPpg(S.fracGrad);
     s += `<line x1="${xPore}" y1="${padT}" x2="${xPore}" y2="${padT + plotH}" stroke="#c9a15a" stroke-width="1.5"/>`;
-    s += `<text x="${xPore}" y="${padT - 4}" font-size="8" fill="#c9a15a" text-anchor="middle" font-family="monospace">孔隙 ${S.poreGrad.toFixed(1)}</text>`;
+    // 线注记放绘图区内侧，避开左上角"ECD ppg"轴标题
+    s += `<text x="${xPore}" y="${padT + 11}" font-size="8" fill="#c9a15a" text-anchor="middle" font-family="monospace">孔隙 ${S.poreGrad.toFixed(1)}</text>`;
     s += `<line x1="${xFrac}" y1="${padT}" x2="${xFrac}" y2="${padT + plotH}" stroke="#b05a51" stroke-width="1.5"/>`;
-    s += `<text x="${xFrac}" y="${padT - 4}" font-size="8" fill="#b05a51" text-anchor="middle" font-family="monospace">破裂 ${S.fracGrad.toFixed(1)}</text>`;
+    s += `<text x="${xFrac}" y="${padT + 11}" font-size="8" fill="#b05a51" text-anchor="middle" font-family="monospace">破裂 ${S.fracGrad.toFixed(1)}</text>`;
 
     const steps = 80;
     let pts = [];
@@ -545,4 +555,267 @@
   updateSyncNote();
   run();
   drawPareto();
+})();
+
+/* ======= 实验数据页：稠化时间与早期强度（真实实验数据） ======= */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  // Joel O. F. (2009) ARPN JEAS 4(9)：木质素磺酸盐缓凝剂，Dyckerhoff G 级，BHCT 121℉/2980 psi，70 Bc
+  var TT = [
+    { dose: 0.01, min: 163,  txt: '2:43' },
+    { dose: 0.05, min: 233,  txt: '3:53' },
+    { dose: 0.07, min: 302,  txt: '5:02' },
+    { dose: 0.09, min: 720,  txt: '12:00' },
+    { dose: 0.11, min: 1008, txt: '16:48' }
+  ];
+  // 谢云媚等 2025《钻井液与完井液》42(3)：AMND 3%，150℃/75 MPa 稠化 316 min；60℃ 养护强度
+  var AMND_TT = { dose: 3.0, min: 316, cond: '150℃/75 MPa，3% BWOC' };
+  var STR = [
+    { d: 1, mpa: 6.34 }, { d: 2, mpa: 8.24 }, { d: 3, mpa: 14.66 }
+  ];
+  var X0 = 0, X1 = 0.12, MINSPAN = 0.02;
+  var Z = { x0: X0, x1: X1, sel: -1 };
+  var selB = -1, selT = -1;
+  var PL = 56, PR = 16;
+
+  function el(tag, attrs, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+  function txt(x, y, s, attrs, parent) { var t = el('text', attrs || {}, parent); t.setAttribute('x', x); t.setAttribute('y', y); t.textContent = s; return t; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function xOf(d, plotW) { return PL + (d - Z.x0) / (Z.x1 - Z.x0) * plotW; }
+  function fmtMin(m) { var h = Math.floor(m / 60), mm = Math.round(m % 60); return h + ':' + (mm < 10 ? '0' : '') + mm; }
+
+  function drawA() {
+    var svg = document.getElementById('lit-chartA'); if (!svg) return;
+    var W = 900, H = 300, PT = 24, PB = 38, plotW = W - PL - PR, plotH = H - PT - PB;
+    var Y1 = 1100;
+    function yOf(m) { return PT + (Y1 - m) / Y1 * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var m = 0; m <= Y1; m += 200) {
+      var y = yOf(m);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: m ? '#f1ebdd' : '#d8d0bc', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, fmtMin(m), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    var span = Z.x1 - Z.x0, step = span <= 0.04 ? 0.01 : span <= 0.08 ? 0.02 : 0.05;
+    for (var d = Math.ceil(Z.x0 / step) * step; d <= Z.x1 + 1e-9; d += step) {
+      var x = xOf(Math.round(d * 100) / 100, plotW);
+      el('line', { x1: x, y1: PT, x2: x, y2: PT + plotH, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(x, PT + plotH + 14, (Math.round(d * 100) / 100).toFixed(2), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '缓凝剂加量 (gal/sk)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '稠化时间 h:mm (70 Bc)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // 常见施工要求参考带：稠化时间 4–8 h
+    var y4 = yOf(240), y8 = yOf(480);
+    el('rect', { x: PL, y: y8, width: plotW, height: y4 - y8, fill: '#2f7d6b', opacity: 0.07 }, svg);
+    txt(PL + 6, y8 + 12, '常见施工窗口 4:00–8:00', { 'font-size': 9, fill: '#2f7d6b' }, svg);
+    // 折线 + 数据点
+    var pts = TT.filter(function (p) { return p.dose >= Z.x0 && p.dose <= Z.x1; });
+    var dPath = pts.map(function (p, k) { return (k ? 'L' : 'M') + xOf(p.dose, plotW) + ' ' + yOf(p.min); }).join(' ');
+    if (pts.length > 1) el('path', { d: dPath, fill: 'none', stroke: '#2f7d6b', 'stroke-width': 2, opacity: 0.55 }, svg);
+    pts.forEach(function (p) {
+      var i = TT.indexOf(p), sel = Z.sel === i;
+      el('circle', { cx: xOf(p.dose, plotW), cy: yOf(p.min), r: sel ? 8 : 6, fill: '#2f7d6b', opacity: sel ? 1 : 0.85, stroke: sel ? '#242b2e' : '#fdfcf8', 'stroke-width': sel ? 2 : 1.2 }, svg);
+      txt(xOf(p.dose, plotW), yOf(p.min) - 10, p.txt, { 'font-size': 9.5, fill: '#235f51', 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+    });
+    txt(PL + 4, PT + 12, '视窗 ' + Z.x0.toFixed(2) + '–' + Z.x1.toFixed(2) + ' gal/sk', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawB() {
+    var svg = document.getElementById('lit-chartB'); if (!svg) return;
+    var W = 900, H = 250, PT = 24, PB = 34, plotW = W - PL - PR, plotH = H - PT - PB;
+    var Y1 = 16;
+    function yOf(m) { return PT + (Y1 - m) / Y1 * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var m = 0; m <= Y1; m += 2) {
+      var y = yOf(m);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: m ? '#f1ebdd' : '#d8d0bc', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, m + '', { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    txt(12, PT + plotH / 2, '抗压强度 (MPa)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // API WOC 500 psi = 3.45 MPa
+    var yw = yOf(3.45);
+    el('line', { x1: PL, y1: yw, x2: W - PR, y2: yw, stroke: '#c9a15a', 'stroke-width': 1.4, 'stroke-dasharray': '6 3' }, svg);
+    txt(W - PR - 4, yw - 5, 'WOC 钻塞阈值 500 psi (3.45 MPa)', { 'font-size': 9, fill: '#9a7a1c', 'text-anchor': 'end' }, svg);
+    var bw = 110;
+    STR.forEach(function (s, i) {
+      var cx = PL + plotW * (i + 0.5) / STR.length;
+      var y = yOf(s.mpa), sel = selB === i;
+      el('rect', { x: cx - bw / 2, y: y, width: bw, height: PT + plotH - y, rx: 3, fill: '#3a6ea5', opacity: sel ? 1 : 0.72, stroke: sel ? '#223d58' : 'none', 'stroke-width': sel ? 2 : 0 }, svg);
+      txt(cx, y - 6, s.mpa.toFixed(2), { 'font-size': 10, fill: sel ? '#223d58' : '#3a6ea5', 'text-anchor': 'middle', 'font-weight': sel ? 700 : 400 }, svg);
+      txt(cx, PT + plotH + 14, s.d + ' d', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    });
+    txt(PL + 4, PT + 12, 'AMND 3%，150℃ 循环 / 60℃ 养护，稠化 316 min', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawAll() { drawA(); drawB(); updateLabel(); }
+  function updateLabel() { var l = document.getElementById('z-label'); if (l) l.textContent = '视窗 ' + Z.x0.toFixed(2) + '–' + Z.x1.toFixed(2) + ' gal/sk'; }
+
+  function setView(a, b) {
+    var span = b - a;
+    if (span < MINSPAN) { var c = (a + b) / 2; a = c - MINSPAN / 2; b = a + MINSPAN; }
+    if (a < X0) { b -= (a - X0); a = X0; }
+    if (b > X1) { a -= (b - X1); b = X1; }
+    a = clamp(a, X0, X1); b = clamp(b, a, X1);
+    if (b - a < MINSPAN) { b = X1; a = X1 - MINSPAN; }
+    Z.x0 = a; Z.x1 = b; drawAll();
+  }
+
+  function renderDetail() {
+    var d = document.getElementById('lit-detail'); if (!d) return;
+    if (Z.sel >= 0) {
+      var p = TT[Z.sel];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>Joel 2009 稠化实验</b>：缓凝剂加量 <b>' + p.dose + ' gal/sk</b>，稠化时间 <b>' + p.txt + '</b>（' + p.min + ' min，70 Bc，BHCT 121℉/2980 psi）。' +
+        (p.min < 240 ? '低于常见 4:00 施工窗口下限，存在提前稠化、憋泵风险，需增加缓凝剂。' :
+         p.min > 480 ? '超过 8:00，候凝时间过长、早期强度发展慢，影响下步作业。' :
+         '落在 4:00–8:00 常见施工窗口内，兼顾泵送安全与候凝时间。') +
+        ' 注意加量 0.07→0.09 时稠化时间跃升 5:02→12:00，敏感性极强，现场须精确计量。';
+    } else if (selT === 0) {
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>谢云媚等 2025</b>：AMND 缓凝剂 <b>3% BWOC</b>，150℃ / 75 MPa 下稠化时间 <b>316 min</b>（嘉华 G 级水泥）。AMND 温度与加量敏感性低，适用于 110–150℃ 长封固段大温差井，高温缓凝而井口低温段不超缓凝。';
+    } else if (selB >= 0) {
+      var s = STR[selB];
+      d.className = 'r-detail active';
+      d.innerHTML = '<b>谢云媚等 2025</b>：60℃ 养护 <b>' + s.d + ' d</b> 抗压强度 <b>' + s.mpa.toFixed(2) + ' MPa</b>（150℃ 循环 / AMND 3%）。' +
+        (s.mpa >= 3.45 ? '已超过 500 psi (3.45 MPa) 钻塞阈值，满足该龄期作业要求。' : '低于 500 psi (3.45 MPa) 钻塞阈值。') +
+        ' 3d 强度达 14.66 MPa，说明 AMND 在保证高温缓凝的同时不损害井口低温段强度发展。';
+    } else {
+      d.className = 'r-detail';
+      d.innerHTML = '悬停读取数据点；点击散点 / 柱条锁定该条实验数据；点击下表行同样联动。要点：木质素磺酸盐在 0.07→0.09 gal/sk 间稠化时间跃升（5:02→12:00），<b>加量敏感性极强</b>；AMND 类合成缓凝剂敏感性低且早强。';
+    }
+  }
+
+  function syncTable() {
+    var rows = document.querySelectorAll('#lit-body tr');
+    rows.forEach(function (r) { r.classList.remove('sel'); });
+    if (Z.sel >= 0 && rows[Z.sel]) rows[Z.sel].classList.add('sel');
+    else if (selT === 0 && rows[TT.length]) rows[TT.length].classList.add('sel');
+    else if (selB >= 0 && rows[TT.length + 1 + selB]) rows[TT.length + 1 + selB].classList.add('sel');
+  }
+
+  function selectA(i, pan) {
+    Z.sel = i; selB = -1; selT = -1;
+    if (pan && i >= 0) {
+      var p = TT[i];
+      if (p.dose < Z.x0 || p.dose > Z.x1) { var s = Z.x1 - Z.x0; setView(p.dose - s / 2, p.dose + s / 2); }
+    }
+    drawAll(); renderDetail(); syncTable();
+  }
+  function selectB(i) { selB = i; Z.sel = -1; selT = -1; drawAll(); renderDetail(); syncTable(); }
+  function selectT(i) { selT = i; Z.sel = -1; selB = -1; drawAll(); renderDetail(); syncTable(); }
+
+  function bindChartA() {
+    var svg = document.getElementById('lit-chartA'), tip = document.getElementById('lit-tipA'), box = document.getElementById('lit-boxA');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function doseAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      return Z.x0 + clamp((vx - PL) / (W - PL - PR), 0, 1) * (Z.x1 - Z.x0);
+    }
+    function nearest(d) {
+      var bi = -1, bd = 1e9;
+      TT.forEach(function (p, i) { var dd = Math.abs(p.dose - d); if (dd < bd) { bd = dd; bi = i; } });
+      return { i: bi, d: bd };
+    }
+    var drag = null, moved = 0;
+    svg.addEventListener('wheel', function (evt) {
+      evt.preventDefault();
+      var d0 = doseAt(evt), f = evt.deltaY > 0 ? 1.25 : 0.8;
+      setView(d0 - (d0 - Z.x0) * f, d0 + (Z.x1 - d0) * f);
+    }, { passive: false });
+    svg.addEventListener('mousedown', function (evt) { drag = { x: evt.clientX, a: Z.x0, b: Z.x1 }; moved = 0; evt.preventDefault(); });
+    window.addEventListener('mousemove', function (evt) {
+      if (drag) {
+        var r = svg.getBoundingClientRect();
+        var dx = (evt.clientX - drag.x) * (W / r.width);
+        moved = Math.max(moved, Math.abs(dx));
+        if (moved > 3) { var dz = dx / (W - PL - PR) * (drag.b - drag.a); setView(drag.a - dz, drag.b - dz); }
+        return;
+      }
+      var d0 = doseAt(evt), n = nearest(d0), tol = (Z.x1 - Z.x0) / 12;
+      if (n.i >= 0 && n.d <= tol) {
+        var p = TT[n.i], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>加量 ' + p.dose + ' gal/sk</b><br>稠化时间 <b>' + p.txt + '</b> (' + p.min + ' min)<br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 180) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    window.addEventListener('mouseup', function () { drag = null; });
+    svg.addEventListener('dblclick', function () { setView(X0, X1); });
+    svg.addEventListener('click', function (evt) {
+      if (moved > 3) return;
+      var n = nearest(doseAt(evt)), tol = (Z.x1 - Z.x0) / 12;
+      selectA(n.i >= 0 && n.d <= tol ? n.i : -1, false);
+    });
+  }
+
+  function bindChartB() {
+    var svg = document.getElementById('lit-chartB'), tip = document.getElementById('lit-tipB'), box = document.getElementById('lit-boxB');
+    if (!svg || !tip || !box) return;
+    var W = 900;
+    function barAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      var plotW = W - PL - PR;
+      var k = Math.floor((vx - PL) / plotW * STR.length);
+      return (k >= 0 && k < STR.length) ? k : -1;
+    }
+    svg.addEventListener('mousemove', function (evt) {
+      var k = barAt(evt);
+      if (k >= 0) {
+        var s = STR[k], rb = box.getBoundingClientRect();
+        tip.innerHTML = '<b>' + s.d + ' d 龄期</b><br>抗压强度 <b>' + s.mpa.toFixed(2) + ' MPa</b><br><span style="color:#8a9298">点击锁定</span>';
+        tip.style.display = 'block';
+        tip.style.left = clamp(evt.clientX - rb.left + 12, 4, rb.width - 180) + 'px';
+        tip.style.top = clamp(evt.clientY - rb.top - 8, 4, rb.height - 70) + 'px';
+      } else tip.style.display = 'none';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    svg.addEventListener('click', function (evt) { selectB(barAt(evt)); });
+  }
+
+  function bindTable() {
+    var body = document.getElementById('lit-body'); if (!body) return;
+    var rows = [];
+    TT.forEach(function (p, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>Joel 2009</td><td>BHCT 121℉ / 2980 psi</td><td class="num">' + p.dose + ' gal/sk</td><td class="num">' + p.txt + '</td><td>' + (p.min < 240 ? '偏短，有早凝风险' : p.min > 480 ? '过长，候凝慢' : '施工窗口内') + '</td>', click: function () { selectA(i, true); } });
+    });
+    rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>谢云媚 2025</td><td>150℃ / 75 MPa</td><td class="num">3 %BWOC</td><td class="num">5:16 (316 min)</td><td>AMND，大温差井适用</td>', click: function () { selectT(0); } });
+    STR.forEach(function (s, i) {
+      rows.push({ html: '<td class="num">' + (rows.length + 1) + '</td><td>谢云媚 2025</td><td>150℃ 循环 / 60℃ 养护</td><td class="num">3 %BWOC</td><td class="num">' + s.d + ' d：' + s.mpa.toFixed(2) + ' MPa</td><td>' + (s.mpa >= 3.45 ? '超 500 psi 阈值' : '低于钻塞阈值') + '</td>', click: function () { selectB(i); } });
+    });
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = r.html;
+      tr.addEventListener('click', r.click);
+      body.appendChild(tr);
+    });
+  }
+
+  function bindZoomBtns() {
+    var zi = document.getElementById('z-in'), zo = document.getElementById('z-out'), zr = document.getElementById('z-reset');
+    if (zi) zi.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 0.7; setView(c - s / 2, c + s / 2); });
+    if (zo) zo.addEventListener('click', function () { var c = (Z.x0 + Z.x1) / 2, s = (Z.x1 - Z.x0) * 1.4; setView(c - s / 2, c + s / 2); });
+    if (zr) zr.addEventListener('click', function () { setView(X0, X1); });
+  }
+
+  function bindTabs() {
+    var tabs = document.querySelectorAll('.tab'), panes = document.querySelectorAll('.tabpane');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var id = this.getAttribute('data-tab');
+        tabs.forEach(function (o) { o.classList.remove('active'); });
+        this.classList.add('active');
+        panes.forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + id); });
+      });
+    });
+  }
+
+  bindTabs(); bindChartA(); bindChartB(); bindTable(); bindZoomBtns();
+  drawAll(); renderDetail();
 })();

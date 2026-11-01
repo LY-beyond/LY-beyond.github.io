@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：钻井液性能智能调控</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>钻井液性能智能调控 · 交互式演示</h1>
+      <p class="lead">切换「人工调控 / 智能调控」两种场景，看软测量（30 min 连续估计）与约束优化加量如何把黏度波动从 ±18 s 收窄到 ±9 s、处理剂单耗降低 12%。右侧滑块改变排量、密度、固相含量与返出温度，曲线与加量建议即时重算。</p>
+    </div>
+    <span class="badge">软测量 × 约束优化</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>江汉盆地某油田 8 口井，井深 2,600–3,400 m，密度 1.20–1.32 g/cm³，覆盖盐膏层与砂岩段；性能测量每班 1–2 次（漏斗黏度 45–65 s、滤失量 ≤5 mL/30 min），循环参数 1 min 采样 8 万条；每井平均加药 386 次、黏度波动 ±18 s、41% 加量属回调、单耗超设计 27%。本页为<b>简化演示模型</b>（72 h 时序），波动收窄 ±18→±9 s、单耗 −12%、越界 11%→4.2% 等指标以案例实测口径为准（见 ③ 与「真实数据来源」页签）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">性能调控模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 性能调控模拟页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：黏度时序主图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 黏度时序：班报实测（稀疏）vs 软测量（30 min）与两种调控场景</h2>
+          <span class="hint">悬停读数 · 场景按钮切换曲线</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>末态黏度（当前场景）</span><b id="m-vis">—</b></div>
+          <div class="mcard"><span>软测量误差（按井留一）</span><b id="m-err">—</b></div>
+          <div class="mcard"><span>滤失量估计</span><b id="m-filt">—</b></div>
+          <div class="mcard"><span>当量循环密度 ECD</span><b id="m-ecd">—</b></div>
+          <div class="mcard"><span>建议加量合计</span><b id="m-dose">—</b></div>
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button id="btn-scn-manual" type="button">人工调控（波动 ±18 s）</button>
+          <button id="btn-scn-smart" type="button">智能调控（波动 ±9 s）</button>
+          <button id="btn-scn-both" type="button">双场景叠加</button>
+          <span class="btn-note" id="scn-note">—</span>
+        </div>
+        <div class="chart-box">
+          <svg id="ts-chart" viewBox="0 0 900 330" role="img" aria-label="漏斗黏度时序对比图"></svg>
+          <div class="chart-tip" id="ts-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>人工调控 · 实际黏度</span>
+          <span><i style="background:#2f7d6b"></i>智能调控 · 实际黏度</span>
+          <span><i style="background:#41699b" class="dash"></i>软测量估计（30 min，误差 ≤4 s）</span>
+          <span><i style="background:#c9a15a" class="diamond"></i>班报实测（每班 1–2 次）</span>
+          <span><i style="background:#e6dcc2" class="band"></i>目标区间 45–65 s</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：加量推荐 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 加量推荐面板（约束优化，每 30 min 更新）</h2>
+          <span class="hint">左：三类处理剂建议加量；右：执行 / 不执行的加量—响应示意</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>建议加量（kg/m³）与见效时间</h3>
+            <svg id="dose-bars" viewBox="0 0 430 210" role="img" aria-label="处理剂建议加量条形图"></svg>
+          </div>
+          <div class="chart">
+            <h3>加量—响应示意（未来 4 h 黏度预测）</h3>
+            <canvas id="dose-resp" width="430" height="210" role="img" aria-label="加量响应预测曲线"></canvas>
+          </div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 面板 3：波动与单耗对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 调控效果对比：人工 vs 智能（案例实测口径）</h2>
+          <span class="hint">波动 ±18→±9 s · 单耗 −12% · 频次 2.4→1.3 次/班 · 越界 11%→4.2%</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="cmp-chart" viewBox="0 0 900 240" role="img" aria-label="人工与智能调控指标对比柱状图"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#9aa2a8"></i>人工调控（基线）</span>
+          <span><i style="background:#2f7d6b"></i>智能调控（本方案）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 循环参数（影响软测量）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>循环排量 <output id="o-flow">31 L/s</output></label>
+            <input type="range" id="s-flow" min="28" max="34" step="0.5" value="31">
+            <span class="tip">排量越大循环周期越短，加药见效越快，但 ECD 升高</span>
+          </div>
+          <div class="ctl">
+            <label>钻井液密度 <output id="o-rho">1.26 g/cm³</output></label>
+            <input type="range" id="s-rho" min="1.20" max="1.32" step="0.01" value="1.26">
+            <span class="tip">硬约束：≥1.18（防气侵）；ECD ≤1.42（防压漏）</span>
+          </div>
+          <div class="ctl">
+            <label>固相含量 <output id="o-solids">8 %</output></label>
+            <input type="range" id="s-solids" min="4" max="12" step="0.5" value="8">
+            <span class="tip">固相升高推高黏度与滤失，并放大软测量误差</span>
+          </div>
+          <div class="ctl">
+            <label>返出温度 <output id="o-temp">50 ℃</output></label>
+            <input type="range" id="s-temp" min="42" max="58" step="1" value="50">
+            <span class="tip">温度升高黏度自然下降（42→58 ℃ 约掉 8–12 s），软测量做温度归一</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">更新周期 30 min · 单次加量 ≤0.5 kg/m³</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 硬约束校核</h2>
+          <span class="hint">越界即冻结建议，升级人工处置</span>
+        </div>
+        <div class="chk-list" id="chk-list">
+          <div class="chk-item" id="chk-rho"><i></i><span>密度 ≥ 1.18 g/cm³</span><b>—</b></div>
+          <div class="chk-item" id="chk-ecd"><i></i><span>ECD ≤ 1.42 g/cm³</span><b>—</b></div>
+          <div class="chk-item" id="chk-filt"><i></i><span>滤失量 ≤ 5 mL/30 min</span><b>—</b></div>
+          <div class="chk-item" id="chk-vis"><i></i><span>黏度 45–65 s</span><b>—</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">演示模型：基础扰动 b(t)=55+4·sin(2πt/24)+温度项(−0.55 s/℃)+固相项(+1.1 s/%)+盐膏段隆起(t=30–46 h，+10 s)+AR(1) 噪声；加药响应 ΔV=6·kg·(1−e^(−Δt/τ))，增黏滞后 30 min、降滤失 60 min、稀释 90 min（按排量折算）。人工调控：每 12 h 班报实测驱动、约 5 h 一次足量加药（过调因子 1.9）；智能调控：30 min 软测量（误差 ≤4 s）+ 4 h 小剂量执行（单次 ≤0.5 kg/m³，目标含单耗与频次惩罚）。数值仅演示趋势，实测指标见 ③。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 现场测试标准：API RP 13B-1 / ISO 10414-1（可查证规程参数）</h2>
+        <span class="hint">标准原文与解读资料链接见 ④ 汇总表</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">测试标准</span>
+        <span><b>API RP 13B-1《水基钻井液现场测试推荐作法》（国际标准对应 ISO 10414-1:2008）</b>：马氏漏斗黏度 = 1 夸脱（946 mL）钻井液流出时间，清水标定 26 ± 0.5 s（21 ± 3 ℃），漏管孔径 4.76 mm；API 滤失试验 = 100 psi（690 kPa）× 30 min、Whatman No.50 滤纸（7.5 in²，2.7 μm）、室温，报告值 = 2 × V30。油基/合成基钻井液对应 API RP 13B-2，流变学参数（PV/YP）测定见 API RP 13D。</span>
+        <a href="https://www.iso.org/obp/ui/en/#!iso:std:41939:en" target="_blank" rel="noopener">ISO↗</a>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>测定项目</th><th>标准方法参数（API RP 13B-1）</th><th>本案例控制指标</th></tr></thead>
+        <tbody id="std-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② 软测量 / 智能建模文献精度（公开报告值）</h2>
+        <span class="hint">悬停柱条查看完整出处与样本量</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">公开文献</span>
+        <span><b>「稀疏实测 + 连续参数 → 性能软测量」是已验证路线</b>：Elkatatny et al. (2016, JPSE 146:1202–1210) 以马氏漏斗黏度 + 固相含量 + 密度实时预测 AV/PV/YP（白箱 ANN）；Liu et al. (2021, Sensors 21:3592) 综述了马氏漏斗法、旋转黏度计与 AI 估计等实时流变测量路线。图中柱条为各文献报告的相关系数 R / 决定系数 R²（越高越好）。</span>
+        <a href="https://doi.org/10.3390/s21113592" target="_blank" rel="noopener">综述↗</a>
+      </div>
+      <div class="chart-box">
+        <svg id="lit-chart" viewBox="0 0 900 240" role="img" aria-label="软测量文献精度对比图"></svg>
+        <div class="chart-tip" id="lit-tip"></div>
+      </div>
+      <div class="note-bar"><b>与本案例的对应关系</b>：文献普遍以「漏斗黏度 / 密度 / 固相」为输入做软测量（与本案例可用的 1 min 循环参数同类），报告 R 0.90–0.99、AAPE 0.2%–6%；本案例进一步把更新周期压到 30 min、黏度软测量误差做到 3.6 s（≤4 s 目标），并用按井留一评估防止「插值背答案」。教科书上处理剂分类与机理见 Caenn, Darley &amp; Gray《Composition and Properties of Drilling and Completion Fluids》第 7 版（Elsevier, 2017）。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>③ 处理剂类型与公开加量范围</h2>
+        <span class="hint">1 lbm/bbl ≈ 2.85 kg/m³；本案例搜索范围取自案例口径</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>类型</th><th>代表处理剂（公开资料）</th><th>公开资料加量范围</th><th>本案例搜索范围</th><th>来源</th></tr></thead>
+        <tbody id="add-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>④ 数据来源汇总（作者 / 年份 / 编号均可查证）</h2>
+        <span class="hint">点击来源列链接可跳转原文页面</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>方法 / 对象</th><th>关键数据点</th><th>链接</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

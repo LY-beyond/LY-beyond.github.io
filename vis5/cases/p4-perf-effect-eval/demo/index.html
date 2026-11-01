@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：射孔效果智能评估</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>射孔效果智能评估 · 交互式演示</h1>
+      <p class="lead">切换井例、拖动分析时点与先验强度，看 3 年生产序列如何反演全井表皮系数、按射孔段分解贡献，并给出补孔优先级建议。</p>
+    </div>
+    <span class="badge">渤海湾某断块 · 48 口井普查</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>表皮系数定义 van Everdingen (1953, Trans. AIME 198:171)；解读区间 Earlougher (1977, SPE Monograph Vol.5)：S&lt;0 完善、0–1 良好、1–3 一般、S&gt;3 不完善；射孔段贡献参照 Karakas &amp; Tariq (1991, SPE-18247-PA) 射孔表皮框架；生产数据递减反演口径 Arps (1945) / Doublet &amp; Blasingame (1994, SPE-28688) 物质平衡时间法。演示井例为按案例库业务口径生成的模拟数据（48 口井普查中抽取 3 口：1 口试井锚点井 + 2 口评估井）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">完善度反演模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 完善度反演模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 单井生产时序 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 单井生产时序（3 年日度序列 · 周采样）</h2>
+          <span class="hint">悬停显示十字线读数 · 竖虚线为补孔/措施事件 · 灰线为分析时点</span>
+        </div>
+        <div class="chart-box wide" id="prod-box">
+          <svg id="prod" viewBox="0 0 920 300" role="img" aria-label="单井生产时序曲线"></svg>
+          <div class="chart-tip" id="prod-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b;height:3px"></i>日产油（左轴，t/d）</span>
+          <span><i style="background:#41699b"></i>油压（右轴，MPa）</span>
+          <span><i style="background:#c9a15a"></i>含水率（下方面板，%）</span>
+          <span><i style="background:#b05a51"></i>补孔 / 措施事件</span>
+        </div>
+      </div>
+
+      <!-- ② 反演结果 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 反演结果：全井表皮演化 + 分射孔段贡献分解</h2>
+          <span class="hint">左：S(t) 后验曲线与区间（分析时点联动）· 右：当前时点各段贡献，红=低效段</span>
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3>全井表皮系数 S(t) 演化</h3>
+            <div class="chart-box" id="skin-box">
+              <svg id="skin" viewBox="0 0 450 240" role="img" aria-label="全井表皮系数随时间演化曲线"></svg>
+              <div class="chart-tip" id="skin-tip"></div>
+            </div>
+          </div>
+          <div>
+            <h3>分射孔段贡献分解（分析时点）</h3>
+            <div class="chart-box" id="segs-box">
+              <svg id="segs" viewBox="0 0 450 240" role="img" aria-label="分射孔段贡献分解图"></svg>
+              <div class="chart-tip" id="segs-tip"></div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b;height:3px"></i>反演表皮 Ŝ（后验中值）</span>
+          <span><i style="background:#2f7d6b;opacity:.3;height:6px"></i>后验区间</span>
+          <span><i style="background:#8a9298"></i>物理约束正演参考（演示）</span>
+          <span><i style="background:#b05a51"></i>S=3 低效阈值</span>
+          <span><i style="background:#c9a15a"></i>试井真值（锚点井）</span>
+        </div>
+        <div class="metrics" style="margin-top:8px">
+          <div class="mcard"><span>反演全井表皮 Ŝ</span><b id="m-skin">—</b></div>
+          <div class="mcard"><span>后验区间半宽</span><b id="m-band">—</b></div>
+          <div class="mcard"><span>低效射孔段（S&gt;3）</span><b id="m-low">—</b></div>
+          <div class="mcard"><span>补孔优先级 P1</span><b id="m-pri">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- ③ 表皮解读标尺 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 表皮系数解读标尺（Earlougher 1977 口径）</h2>
+          <span class="hint">指针为当前分析时点反演值 · 横杠为后验区间</span>
+        </div>
+        <div class="chart-wrap wide">
+          <svg id="gauge" viewBox="0 0 920 150" role="img" aria-label="表皮系数解读标尺"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>井例与反演参数</h2>
+          <span class="hint">切换 / 拖动即时重算</span>
+        </div>
+        <div class="well-btns" id="well-btns">
+          <button class="well-btn" data-well="0" type="button">BD-A2<br><small>锚点井 · 有试井真值</small></button>
+          <button class="well-btn" data-well="1" type="button">BD-W17<br><small>评估井 · 疑似低效</small></button>
+          <button class="well-btn" data-well="2" type="button">BD-W32<br><small>评估井 · 较完善</small></button>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>分析时点 <output id="o-cursor">第 1050 天</output></label>
+            <input type="range" id="s-cursor" min="90" max="1092" step="7" value="1050">
+            <span class="tip">分段分解与标尺读数对齐到该时点</span>
+          </div>
+          <div class="ctl">
+            <label>锚点先验校准强度 λ <output id="o-lam">0.85</output></label>
+            <input type="range" id="s-lam" min="0.2" max="1.0" step="0.05" value="0.85">
+            <span class="tip">λ 越高：含水偏差校正越充分、后验区间越窄</span>
+          </div>
+          <div class="ctl">
+            <label>反演平滑窗 <output id="o-sm">5 周</output></label>
+            <input type="range" id="s-sm" min="1" max="13" step="2" value="5">
+            <span class="tip">平滑计量噪声，窗越大曲线越平、响应越慢</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset" type="button">恢复默认</button>
+          <span class="btn-note">井例与参数自动保存在本地</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><h2>断块普查背景</h2></div>
+        <p class="hint" style="line-height:1.6">48 口生产井、4 个砂层组、87 个射孔段；仅 6 口井有近 3 年试井表皮解释（−1.8 ~ +6.4），作为锚点校准物理约束反演模型；其余 42 口井反演全井表皮并按段分解贡献。综合含水 78%。识别疑似低效段（S&gt;3）19 个，地质规则过滤后 13 个，优选 5 口井补孔、命中 4 口（80%）。</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式（示范口径）：产能因子 PF = ln(r_e/r_w) / (ln(r_e/r_w) + S)，r_w = 0.108 m、r_e = 250 m；日产油 q(t) = q₀·e^(−Dt)·(LR+S₀)/(LR+S(t))；全井表皮 S(t) = Σ c_i·s_i(t)，段权重 c_i ∝ kh_i/(1+0.25·max(s_i,0))（非负约束）；反演 Ŝ = (LR+S₀)·(q_模/q_实测) − LR + 含水偏差·(1−λ)，后验区间半宽 w = (0.35+1.7·(1−λ))·(1+0.9·(f_w−0.58)/0.3)；补孔事件按事件日对措施段表皮乘以折减因子。注：演示井例为模拟数据，仅演示反演与分解的联动趋势；工程口径为物质平衡 + 井筒多相流耦合模型。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 表皮系数定义与解读标尺（试井解释标准）</h2><span class="hint">金色括线 = 本案例 6 口锚点井试井解释范围</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>van Everdingen A.F. (1953), "The Skin Effect and Its Influence on the Productive Capacity of a Well", Trans. AIME 198:171–176（SPE-102-G）</b>：定义表皮系数 S 为近井附加压降 Δp_skin = S·qμB/(2πkh)。<b>Earlougher R.C. (1977), "Advances in Well Test Analysis", SPE Monograph Vol. 5</b>：S 为无量纲量，可从约 −5（水力压裂井）到 +∞（严重伤害无法投产）；S&lt;0 为改善、S&gt;0 为伤害。</span>
+        <a href="https://doi.org/10.2118/102-G" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box wide">
+        <svg id="lit-range" viewBox="0 0 880 170" role="img" aria-label="表皮系数解读区间图"></svg>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>S 区间</th><th>解读</th><th>典型成因</th><th>本案例处置</th></tr></thead>
+        <tbody>
+          <tr><td class="num">−7 ~ −3</td><td>水力压裂井</td><td>压裂裂缝穿透近井带</td><td>超出裸眼完善，不做措施</td></tr>
+          <tr><td class="num">−3 ~ 0</td><td>完善 / 酸化改善</td><td>酸化、深穿透射孔、天然裂缝</td><td>不做措施</td></tr>
+          <tr><td class="num">0 ~ 1</td><td>良好</td><td>射孔参数合理、近井污染轻</td><td>维持</td></tr>
+          <tr><td class="num">1 ~ 3</td><td>一般（轻–中等伤害）</td><td>钻井液污染、孔密/穿深不足</td><td>解堵、观察</td></tr>
+          <tr><td class="num">&gt; 3</td><td>不完善 / 严重伤害</td><td>射孔不完善、压实带、堵塞</td><td>识别为低效段，排补孔优先级</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② Karakas–Tariq 射孔表皮半解析模型：相位角系数表（原文 Table 1–3）</h2><span class="hint">悬停柱条读数 · 射孔段分解的物理框架来源</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Karakas M., Tariq S.M. (1991), "Semianalytical Productivity Models for Perforated Completions", SPE Production Engineering 6(1):73–82, SPE-18247-PA</b>：射孔表皮 S_p = S_h + S_v + S_wb（水平汇聚 + 垂向汇聚 + 井筒效应），系数按相位角 0°(360°)/180°/120°/90°/60°/45° 给出——行业最常用的射孔表皮模型（Sun et al. 2013, SPE-163663 验证）。本案例按射孔段分解贡献即在此框架上加非负约束与物性先验。</span>
+        <a href="https://doi.org/10.2118/18247-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="kt-box">
+        <svg id="lit-alpha" viewBox="0 0 880 210" role="img" aria-label="有效井径系数随相位角变化柱状图"></svg>
+        <div class="chart-tip" id="kt-tip"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>相位角</th><th>α_θ（有效井径）</th><th>a1</th><th>a2</th><th>b1</th><th>b2</th><th>c1_θ</th><th>c2_θ</th></tr></thead>
+        <tbody id="kt-body"></tbody>
+      </table>
+      <div class="formula-box">
+        <b>射孔表皮分解（本演示采用框架）：</b>S_p = S_h + S_v + S_wb；S_h = ln(r_w/r_w′(θ))，r_w′ = α_θ·(r_w + L_p)；S_v = 10^a·h_D^(b−1)·r_pD^b，a = a1·log10(r_pD) + a2，b = b1·r_pD + b2；S_wb = c1_θ·e^(c2_θ·r_wD)。穿深未越过污染带时另有伤害表皮 S_d；全井机械表皮 S &gt; 3 通常意味射孔不完善或近井污染。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 生产数据反演：递减分析与物质平衡时间法</h2><span class="hint">三条递减曲线按 Arps (1945) 公式实时计算（b 值不同）</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Arps J.J. (1945), "Analysis of Decline Curves", Trans. AIME 160(1):228–247</b>：提出指数（b=0）、双曲（0&lt;b&lt;1）、调和（b=1）三种递减模型 q = q_i/(1+b·D_i·t)^(1/b)。<b>Doublet L.E., Pande P.K., McCollom T.J., Blasingame T.A. (1994), "Decline Curve Analysis Using Type Curves—Analysis of Oil Well Production Data Using Material Balance Time: Application to Field Cases", SPE-28688</b>：用物质平衡时间把变产量/变压力数据规整化，从日常生产数据反演表皮与储层参数——本案例「生产数据反演表皮」的方法学源头。</span>
+        <a href="https://doi.org/10.2118/28688-MS" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box wide">
+        <canvas id="lit-decline" width="880" height="210" role="img" aria-label="Arps 三种递减模型曲线"></canvas>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f7d6b;height:3px"></i>指数递减 b=0</span>
+        <span><i style="background:#c9a15a;height:3px"></i>双曲递减 b=0.5</span>
+        <span><i style="background:#b05a51;height:3px"></i>调和递减 b=1</span>
+        <span style="color:#79828a">归一化 q/q_i，D_i = 0.6 /年（示意）</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>递减模型</th><th>b 值</th><th>公式</th><th>典型适用</th></tr></thead>
+        <tbody>
+          <tr><td>指数递减</td><td class="num">b = 0</td><td class="num">q = q_i·e^(−D·t)</td><td>定容消耗、产量递减率恒定</td></tr>
+          <tr><td>双曲递减</td><td class="num">0 &lt; b &lt; 1</td><td class="num">q = q_i·(1+b·D_i·t)^(−1/b)</td><td>水驱 / 溶解气驱油藏最常见</td></tr>
+          <tr><td>调和递减</td><td class="num">b = 1</td><td class="num">q = q_i·(1+D·t)^(−1)</td><td>重力驱或强水驱后期</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">演示页全部模型系数与口径均可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>van Everdingen (1953), Trans. AIME 198:171–176, SPE-102-G</td><td>表皮系数定义</td><td>S 的物理定义与附加压降口径</td></tr>
+          <tr><td class="num">2</td><td>Earlougher (1977), SPE Monograph Vol. 5 "Advances in Well Test Analysis"</td><td>试井解释标准</td><td>S 解读区间（−5 压裂井 ~ +∞ 严重伤害）与标尺分级</td></tr>
+          <tr><td class="num">3</td><td>Karakas &amp; Tariq (1991), SPE-18247-PA, SPE Prod. Eng. 6(1):73–82</td><td>射孔表皮半解析模型 + 相位系数表</td><td>分射孔段贡献分解的物理框架（S_h、S_v、S_wb）</td></tr>
+          <tr><td class="num">4</td><td>Arps (1945), Trans. AIME 160(1):228–247</td><td>递减分析模型</td><td>生产序列递减基底 q₀·e^(−Dt) 与递减类型曲线</td></tr>
+          <tr><td class="num">5</td><td>Doublet, Pande, McCollom &amp; Blasingame (1994), SPE-28688</td><td>生产数据反演方法（物质平衡时间 RTA）</td><td>由日常生产数据反演表皮/储层参数的方法学口径</td></tr>
+          <tr><td class="num">6</td><td>案例库业务数据（渤海湾盆地某断块）</td><td>工程边界条件</td><td>48 口井、87 个射孔段、6 口锚点井（S=−1.8~+6.4）、含水 78%、普查 2–3 月 → 1 天、补孔命中率 80%（4/5）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

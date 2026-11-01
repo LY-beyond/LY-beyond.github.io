@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：单井产量智能预测</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>单井产量智能预测 · 交互式演示</h1>
+      <p class="lead">切换井例、拖动预测起点，看带事件协变量的时序模型如何在措施井上跑赢 Arps 纯递减基线，并对措施增油做定量归因。</p>
+    </div>
+    <span class="badge">松辽盆地某老区 · 118 口井</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>递减基线 Arps (1945, Trans. AIME 160:228)：q = q_i/(1+b·D_i·t)^(1/b)；图版族与 b∈[0,1] 口径 Fetkovich (1980, JPT 32(6):1065，SPE-6849-PA)；b&gt;1 为瞬态流段标志、不宜外推 Ilk et al. (2008, SPE-116731)；事件协变量时序架构参照 TCN（Bai, Kolter &amp; Koltun 2018, arXiv:1803.01271）；实测 ML 精度 Zhang et al. (2025, ACS Omega 11(1):2206–2220)。演示井例为按案例库业务口径生成的确定性模拟数据（118 口井中抽取 3 口：正常递减井 / 压裂井 / 堵水井）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">滚动预测模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 滚动预测模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 单井产量时序 + 90 天滚动预测 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 单井产量时序与 90 天滚动预测</h2>
+          <span class="hint">悬停显示十字线读数 · 红竖线为措施事件 · 灰竖线为预测起点</span>
+        </div>
+        <div class="chart-box wide" id="fc-box">
+          <svg id="fc" viewBox="0 0 920 300" role="img" aria-label="单井产量时序与90天预测"></svg>
+          <div class="chart-tip" id="fc-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f3538;height:3px"></i>历史实际日产油（t/d）</span>
+          <span><i style="background:#2f7d6b;height:3px"></i>模型预测（含措施协变量）</span>
+          <span><i style="background:#2f7d6b;opacity:.3;height:7px"></i>预测置信带</span>
+          <span><i style="background:#c9a15a"></i>Arps 纯递减参考</span>
+          <span><i style="background:#79828a"></i>未来实际（虚线）</span>
+          <span><i style="background:#b05a51"></i>措施事件（压裂/堵水/酸化）</span>
+        </div>
+      </div>
+
+      <!-- ② 归因 + ③ 误差 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 措施增油归因分解 与 ③ 预测误差分层对比</h2>
+          <span class="hint">左：90 天窗口反事实归因瀑布 · 右：区块 118 井分层 MAPE（菱形=本井）</span>
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3>措施增油归因瀑布（90 天平均日产）</h3>
+            <div class="chart-box" id="wf-box">
+              <svg id="wf" viewBox="0 0 450 240" role="img" aria-label="措施增油归因瀑布图"></svg>
+              <div class="chart-tip" id="wf-tip"></div>
+            </div>
+          </div>
+          <div>
+            <h3>分层 MAPE：Arps 基线 vs 本模型（区块口径）</h3>
+            <div class="chart-box" id="err-box">
+              <svg id="err" viewBox="0 0 450 240" role="img" aria-label="预测误差分层对比条形图"></svg>
+              <div class="chart-tip" id="err-tip"></div>
+            </div>
+          </div>
+        </div>
+        <div class="metrics" style="margin-top:8px">
+          <div class="mcard"><span>本井 90 天 MAPE（模型）</span><b id="m-mape">—</b></div>
+          <div class="mcard"><span>本井 90 天 MAPE（Arps）</span><b id="m-arps">—</b></div>
+          <div class="mcard"><span>90 天累计产量误差</span><b id="m-cum">—</b></div>
+          <div class="mcard"><span>归因措施增油（90 天）</span><b id="m-attr">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>井例与预测参数</h2>
+          <span class="hint">切换 / 拖动即时重算</span>
+        </div>
+        <div class="well-btns" id="well-btns">
+          <button class="well-btn" data-well="0" type="button">SL-N08<br><small>正常递减井 · 无措施</small></button>
+          <button class="well-btn" data-well="1" type="button">SL-F21<br><small>压裂井 · 历史酸化 + 计划压裂</small></button>
+          <button class="well-btn" data-well="2" type="button">SL-W15<br><small>堵水井 · 历史压裂 + 计划堵水</small></button>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>预测起点 <output id="o-origin">第 960 天</output></label>
+            <input type="range" id="s-origin" min="800" max="1030" step="7" value="960">
+            <span class="tip">该日之前为历史拟合段，之后滚动预测 90 天</span>
+          </div>
+          <div class="ctl">
+            <label>预测区间置信水平 <output id="o-conf">90 %</output></label>
+            <input type="range" id="s-conf" min="50" max="95" step="5" value="90">
+            <span class="tip">分位数带宽度，90% 对应 P5–P95</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset" type="button">恢复默认</button>
+          <span class="btn-note">井例与参数自动保存在本地</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><h2>区块背景</h2></div>
+        <p class="hint" style="line-height:1.6">松辽盆地某老区开发 22 年，118 口生产井、单井历史 1,800–8,000 天；近 3 年措施 156 井次（压裂 41、堵水 63、酸化 52），注水井 34 口。此前配产靠 Arps 拟合（全井 MAPE 13.6%，措施井 27.4%）；TCN + 事件脉冲通道模型（540 天窗口、跨井 pooling）把全井 90 天 MAPE 压到 8.2%（正常井 6.9%、措施井 14.1%），归因增油与动态分析结论符合率 83%，配产编制从 1 周缩到 2 h + 半天复核。</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式（示范口径）：真实序列 q(t) = q₀·e^(−Dt)·Π(1+f_i·e^(−(t−t_i)·δ_i))·(1+g·(1−e^(−(t−t_r)/τ)))（措施脉冲 + 注水滞后见效）；Arps 参考 = 对预测起点前 240 天历史做指数递减最小二乘拟合后外推；模型预测 = 无措施反事实基线 + 措施计划协变量贡献（低估系数 0.88、响应时移 +2 天）；置信带半宽 w(h) = (0.035+0.085·h/90)·z(置信水平)/1.645·(1+0.6·措施强度)；措施归因 = 反事实对比（屏蔽事件通道）逐日积分。注：演示井例为确定性模拟数据，仅演示预测与归因的联动趋势；工程口径为 TCN + 事件脉冲通道、分位数归一与跨井 pooling。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① Arps 递减模型：三种递减类型（1945 年原文公式实时计算）</h2><span class="hint">递减分析的工业标准基线 · 本案例 Arps 参考线即此口径</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Arps J.J. (1945), "Analysis of Decline Curves", Trans. AIME 160(1):228–247（SPE-945228-G）</b>：提出指数（b=0）、双曲（0&lt;b&lt;1）、调和（b=1）三种递减模型 q = q_i/(1+b·D_i·t)^(1/b)。<b>Fetkovich M.J. (1980), "Decline Curve Analysis Using Type Curves", JPT 32(6):1065–1077（SPE-6849-PA）</b>：把 Arps 经验式与定压生产理论解统一，证明指数递减是边界控制流（BDF）的长期解，双曲图版族 b 取 0–1。</span>
+        <a href="https://doi.org/10.2118/945228-G" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box wide">
+        <canvas id="lit-decline" width="880" height="210" role="img" aria-label="Arps 三种递减模型曲线"></canvas>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f7d6b;height:3px"></i>指数递减 b=0</span>
+        <span><i style="background:#c9a15a;height:3px"></i>双曲递减 b=0.5</span>
+        <span><i style="background:#b05a51;height:3px"></i>调和递减 b=1</span>
+        <span style="color:#79828a">归一化 q/q_i，D_i = 0.8 /年（示意）</span>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>递减模型</th><th>b 值</th><th>公式</th><th>典型适用</th></tr></thead>
+        <tbody>
+          <tr><td>指数递减</td><td class="num">b = 0</td><td class="num">q = q_i·e^(−D·t)</td><td>定容消耗、边界控制流长期解（Fetkovich 1980）</td></tr>
+          <tr><td>双曲递减</td><td class="num">0 &lt; b &lt; 1</td><td class="num">q = q_i·(1+b·D_i·t)^(−1/b)</td><td>水驱 / 溶解气驱油藏最常见</td></tr>
+          <tr><td>调和递减</td><td class="num">b = 1</td><td class="num">q = q_i·(1+D·t)^(−1)</td><td>双曲特例，强水驱或重力驱后期</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 双曲递减指数 b 的取值区间与工程判读</h2><span class="hint">悬停色带读数 · 金色括线 = 本案例 118 井拟合 b 中位区间</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Fetkovich (1980, SPE-6849-PA)</b>：Arps 图版族 b ∈ [0,1]，拟合应限于边界控制流段；<b>Ilk D., Rushing J.A., Perego A.D., Blasingame T.A. (2008), "Exponential vs. Hyperbolic Decline in Tight Gas Sands", SPE-116731</b>：致密气藏常拟合出 b&gt;1，属瞬态流段特征，按双曲外推会系统性高估 EUR，建议改用指数或分段模型——这正是本案例「措施/突变后 Arps 失效」的理论镜像。</span>
+        <a href="https://doi.org/10.2118/116731-MS" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box wide" id="b-box">
+        <svg id="lit-b" viewBox="0 0 880 170" role="img" aria-label="双曲递减指数b取值区间图"></svg>
+        <div class="chart-tip" id="b-tip"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>b 区间</th><th>判读</th><th>工程含义</th><th>本案例处置</th></tr></thead>
+        <tbody>
+          <tr><td class="num">b = 0</td><td>指数递减</td><td>定容消耗、BDF 长期解</td><td>正常递减井基线，月度误差 ≤10%</td></tr>
+          <tr><td class="num">0 &lt; b ≤ 0.5</td><td>常见双曲段</td><td>水驱 / 溶解气驱油田拟合最常见区间</td><td>本案例 118 井拟合中位 b ≈ 0.42</td></tr>
+          <tr><td class="num">0.5 &lt; b &lt; 1</td><td>双曲段</td><td>强非均质、重力/弹性驱动贡献</td><td>逐井拟合，超限复核</td></tr>
+          <tr><td class="num">b = 1</td><td>调和递减</td><td>双曲特例（Arps 1945）</td><td>仅作图版对照</td></tr>
+          <tr><td class="num">b &gt; 1</td><td>瞬态流段标志</td><td>Ilk et al. 2008：外推高估 EUR</td><td>判为无效拟合，切换事件协变量模型</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 机器学习产量预测的公开实测精度</h2><span class="hint">悬停柱条查看完整出处 · 金色为案例库业务口径</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Zhang X., Yan L., Lai F., Wang H. et al. (2025), "Production Prediction for Shale Oil Horizontal Wells Using CNN–BiLSTM", ACS Omega 11(1):2206–2220</b>：鄂尔多斯盆地长 7 段页岩油 42 口水平井，CNN–BiLSTM 实测 <b>MAPE 3.2333%</b>、RMSE 0.3103、MAE 0.1731、R² 0.8856，优于 SVR / RF / XGBoost / LSTM / BiLSTM 五种对照。<b>Idris M.H.A. et al. (2025), arXiv:2508.14078</b>：北海 Volve（PF14、PF12）与 Norne（E1H）真实油田数据，LSTM/BiLSTM/GRU/XGBoost 面向未来 10–12 个月的样本外预测，并以归纳共形预测（ICP）给出保证覆盖率的区间。</span>
+        <a href="https://doi.org/10.1021/acsomega.5c11357" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box wide" id="ml-box">
+        <svg id="lit-ml" viewBox="0 0 880 210" role="img" aria-label="产量预测模型误差对比柱状图"></svg>
+        <div class="chart-tip" id="ml-tip"></div>
+      </div>
+      <div class="formula-box">
+        <b>公开数据与架构来源：</b>Volve 油田全生命周期真实生产数据（约 4 万文件）由 <b>Equinor（2018）</b> 向科研界公开，是产量预测 ML 研究最常用的基准数据集；时序卷积网络 TCN（膨胀因果卷积 + 残差连接）见 <b>Bai S., Kolter J.Z., Koltun V. (2018), arXiv:1803.01271</b>——本案例「TCN + 事件脉冲通道」即在该通用架构上加措施事件协变量。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">演示页全部模型系数与口径均可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Arps J.J. (1945), Trans. AIME 160(1):228–247, SPE-945228-G</td><td>递减分析模型</td><td>Arps 纯递减参考线与三种递减类型曲线</td></tr>
+          <tr><td class="num">2</td><td>Fetkovich M.J. (1980), JPT 32(6):1065–1077, SPE-6849-PA</td><td>递减图版方法</td><td>b ∈ [0,1] 口径、BDF 适用边界</td></tr>
+          <tr><td class="num">3</td><td>Ilk D., Rushing J.A., Perego A.D., Blasingame T.A. (2008), SPE-116731</td><td>递减适用性判读</td><td>b&gt;1 瞬态流警示与模型切换逻辑</td></tr>
+          <tr><td class="num">4</td><td>Bai S., Kolter J.Z., Koltun V. (2018), arXiv:1803.01271</td><td>时序建模架构（TCN）</td><td>事件协变量时序模型的骨干网络口径</td></tr>
+          <tr><td class="num">5</td><td>Zhang X., Yan L., Lai F., Wang H. et al. (2025), ACS Omega 11(1):2206–2220</td><td>ML 产量预测实测精度</td><td>CNN–BiLSTM MAPE 3.23% 等公开基准读数</td></tr>
+          <tr><td class="num">6</td><td>Idris M.H.A., Cebula J.M., Gholinezhad J. et al. (2025), arXiv:2508.14078</td><td>样本外预测与区间方法</td><td>Volve/Norne 真实数据 + 归纳共形预测区间口径</td></tr>
+          <tr><td class="num">7</td><td>Equinor (2018), Volve 公开数据集（北海）</td><td>公开生产数据</td><td>产量预测 ML 基准数据来源说明</td></tr>
+          <tr><td class="num">8</td><td>案例库业务数据（松辽盆地某老区）</td><td>工程边界条件</td><td>118 口井、措施 156 井次、Arps 基线 MAPE 13.6% / 模型 8.2%、归因符合率 83%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

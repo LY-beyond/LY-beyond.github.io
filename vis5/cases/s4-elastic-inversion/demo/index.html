@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：叠前弹性参数反演（AVO）</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>叠前弹性参数反演（AVO）· 交互式演示</h1>
+      <p class="lead">调节泥岩盖层、含气砂岩、含水砂岩的 Vp / Vs / 密度与子波主频，看 Zoeppritz 精确解与 Shuey 近似 AVO 曲线、截距-梯度（I-G）交会、合成角道集与 λρ–μρ 含气性指示如何联动——对应本案例常规反演流程第一步「5 个入射角道集的 AVO 拟合」。</p>
+    </div>
+    <span class="badge">Zoeppritz / Shuey 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>Zoeppritz (1919) 精确反射系数为基准解；Shuey (1985) 两项 / 三项近似给出截距 R0 与梯度 G；Rutherford &amp; Williams (1989) 含气砂 I–IV 类分区；Castagna &amp; Swan (1997) 湿相背景趋势；Goodway et al. (1997) λρ–μρ 流体因子；合成角道集用 Ricker 子波褶积（默认主频 28 Hz，与本案例库车坳陷地震资料一致）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="data" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 三层介质模型 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 三层介质模型：泥岩盖层 / 含气砂 / 含水砂</h2>
+          <span class="hint">界面①（盖层→储层）为 AVO 分析界面，各层参数由右侧滑块给定</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="svg-model" viewBox="0 0 860 190" role="img" aria-label="三层介质模型示意"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#8a9298"></i>泥岩盖层</span>
+          <span><i style="background:#c9a15a"></i>含气砂岩（储层，厚约 10 m）</span>
+          <span><i style="background:#41699b"></i>含水砂岩</span>
+          <span style="color:#79828a;font-size:10px">AI = Vp·ρ，块内数值随滑块实时更新</span>
+        </div>
+      </div>
+
+      <!-- ② AVO 曲线 + ③ I-G 交会 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② AVO 曲线对比 与 ③ 截距-梯度（I-G）交会</h2>
+          <span class="hint">悬停读数 · 下层流体切换只影响 AVO 曲线面板</span>
+        </div>
+        <div class="radio-row">
+          <span>界面① 下层流体：</span>
+          <label><input type="radio" name="fluid" value="gas" checked>含气砂岩</label>
+          <label><input type="radio" name="fluid" value="water">含水砂岩</label>
+          <span class="hint" id="avo-note">含气砂：低阻抗 + 强负梯度，典型 III 类</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart chart-box">
+            <h3>AVO 曲线：Zoeppritz 精确解 vs Shuey 近似</h3>
+            <canvas id="cv-avo" width="430" height="252" role="img" aria-label="AVO反射系数随入射角变化曲线"></canvas>
+            <div class="chart-tip" id="tip-avo"></div>
+            <div class="legend">
+              <span><i style="background:#2f7d6b"></i>Zoeppritz 精确解</span>
+              <span><i style="background:#c9a15a"></i>Shuey 三项</span>
+              <span><i style="background:#b05a51"></i>Shuey 两项</span>
+            </div>
+          </div>
+          <div class="chart chart-box">
+            <h3>截距-梯度交会（Rutherford &amp; Williams 分区）</h3>
+            <canvas id="cv-ig" width="430" height="252" role="img" aria-label="截距梯度交会图"></canvas>
+            <div class="chart-tip" id="tip-ig"></div>
+            <div class="legend">
+              <span><i class="dot" style="background:#2f7d6b"></i>盖层→含气砂</span>
+              <span><i class="dot" style="background:#41699b"></i>盖层→含水砂</span>
+              <span><i style="background:#8a9298"></i>湿相背景趋势</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 合成角道集 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 合成角道集（Ricker 子波褶积）</h2>
+          <span class="hint">界面① 70 ms、界面② 110 ms · 悬停读取各角度反射系数</span>
+        </div>
+        <div class="chart-box">
+          <canvas id="cv-gather" width="860" height="238" role="img" aria-label="合成角道集"></canvas>
+          <div class="chart-tip" id="tip-gather"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>近道 ≤15°</span>
+          <span><i style="background:#c9a15a"></i>中道 15–30°</span>
+          <span><i style="background:#b05a51"></i>远道 ≥30°</span>
+          <span style="color:#79828a;font-size:10px">含气砂顶界面振幅随炮检距（角度）增大而增强——AVO 异常的直接表现</span>
+        </div>
+      </div>
+
+      <!-- ⑤ 弹性参数条带 + 含气性指示 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 反演弹性参数剖面与含气性指示</h2>
+          <span class="hint">颜色深浅按各属性在三层中的相对大小 · 金框为含气砂层</span>
+        </div>
+        <div class="chart-box">
+          <canvas id="cv-strip" width="860" height="196" role="img" aria-label="弹性参数剖面条带"></canvas>
+          <div class="chart-tip" id="tip-strip"></div>
+        </div>
+        <div class="metrics" style="margin-top:8px">
+          <div class="mcard"><span>界面① 截距 R0（气）</span><b id="m-r0">—</b></div>
+          <div class="mcard"><span>界面① 梯度 G（气）</span><b id="m-g">—</b></div>
+          <div class="mcard"><span>AVO 类别（气砂顶）</span><b id="m-class">—</b></div>
+          <div class="mcard"><span>泊松比差 Δσ（盖→气）</span><b id="m-dsig">—</b></div>
+          <div class="mcard"><span>λρ 降幅（盖→气）</span><b id="m-lr">—</b></div>
+        </div>
+        <div class="verdict ok" id="verdict">正在计算…</div>
+      </div>
+
+    </div>
+
+    <div class="side">
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑥ 地层弹性参数（10 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <h3 class="ctl-group">泥岩盖层</h3>
+          <div class="ctl">
+            <label>盖层 Vp <output id="o-shvp">4200 m/s</output></label>
+            <input type="range" id="s-shvp" min="3000" max="5200" step="20" value="4200">
+            <span class="tip">埋深约 6,000 m 致密泥岩</span>
+          </div>
+          <div class="ctl">
+            <label>盖层 Vs <output id="o-shvs">2100 m/s</output></label>
+            <input type="range" id="s-shvs" min="1400" max="3000" step="20" value="2100">
+            <span class="tip">Vp/Vs ≈ 2.0，泊松比约 0.33</span>
+          </div>
+          <div class="ctl">
+            <label>盖层密度 <output id="o-shrho">2.45 g/cm³</output></label>
+            <input type="range" id="s-shrho" min="2.2" max="2.7" step="0.01" value="2.45">
+            <span class="tip">决定波阻抗基准</span>
+          </div>
+          <h3 class="ctl-group">含气砂岩（储层）</h3>
+          <div class="ctl">
+            <label>气砂 Vp <output id="o-gvp">3900 m/s</output></label>
+            <input type="range" id="s-gvp" min="3000" max="5000" step="20" value="3900">
+            <span class="tip">含气使 Vp 明显下降</span>
+          </div>
+          <div class="ctl">
+            <label>气砂 Vs <output id="o-gvs">2400 m/s</output></label>
+            <input type="range" id="s-gvs" min="1400" max="3000" step="20" value="2400">
+            <span class="tip">Vs 几乎不受流体影响</span>
+          </div>
+          <div class="ctl">
+            <label>气砂密度 <output id="o-grho">2.28 g/cm³</output></label>
+            <input type="range" id="s-grho" min="2.05" max="2.6" step="0.01" value="2.28">
+            <span class="tip">含气密度略降</span>
+          </div>
+          <h3 class="ctl-group">含水砂岩</h3>
+          <div class="ctl">
+            <label>水砂 Vp <output id="o-wvp">4400 m/s</output></label>
+            <input type="range" id="s-wvp" min="3000" max="5200" step="20" value="4400">
+            <span class="tip">含水使 Vp 回升</span>
+          </div>
+          <div class="ctl">
+            <label>水砂 Vs <output id="o-wvs">2350 m/s</output></label>
+            <input type="range" id="s-wvs" min="1400" max="3000" step="20" value="2350">
+            <span class="tip">与气砂骨架相当</span>
+          </div>
+          <div class="ctl">
+            <label>水砂密度 <output id="o-wrho">2.42 g/cm³</output></label>
+            <input type="range" id="s-wrho" min="2.1" max="2.65" step="0.01" value="2.42">
+            <span class="tip">含水密度更高</span>
+          </div>
+          <h3 class="ctl-group">子波</h3>
+          <div class="ctl">
+            <label>Ricker 主频 <output id="o-freq">28 Hz</output></label>
+            <input type="range" id="s-freq" min="18" max="45" step="1" value="28">
+            <span class="tip">本案例地震资料主频 28 Hz</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">默认组合为典型 III 类含气砂</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">公式：Zoeppritz (1919) 精确解（Aki &amp; Richards 1980 书后形式）；Shuey (1985)：R(θ)=R0+G·sin²θ+F·(tan²θ−sin²θ)，R0=½(ΔVp/Vp+Δρ/ρ)，G=½ΔVp/Vp−2(Vs/Vp)²(Δρ/ρ+2ΔVs/Vs)，F=½ΔVp/Vp；λρ=Ip²−2Is²，μρ=Is²（Goodway et al. 1997，Ip/Is 为纵/横波阻抗），σ=(Vp²−2Vs²)/(2(Vp²−Vs²))；Ricker 子波 w(t)=(1−2π²f²t²)·e^(−π²f²t²)。AVO 类别按 Rutherford &amp; Williams (1989)：I 类 R0&gt;0、II 类 R0≈0、III 类 R0&lt;0 且 G&lt;0、IV 类 R0&lt;0 且 G&gt;0。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-data">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 文献 AVO 类别锚点（I-G 交会空间）</h2><span class="hint">悬停读数 · 锚点按文献类别定义重绘</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献锚点</span>
+        <span><b>Rutherford &amp; Williams (1989)</b> 将泥岩盖层之下含气砂的 AVO 响应分为 I–IV 类：I 类高阻抗（R0&gt;0，G&lt;0）、II 类近零阻抗差（R0≈0，G&lt;0）、III 类低阻抗（R0&lt;0，G&lt;0，亮点）、IV 类（R0&lt;0，G&gt;0，极性反转）；<b>Castagna &amp; Swan (1997)</b> 指出湿砂/泥岩落在过原点的背景趋势附近。下图为按文献定义重绘的示意锚点。</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="cv-lit" width="860" height="240" role="img" aria-label="文献AVO类别锚点图"></canvas>
+        <div class="chart-tip" id="tip-lit"></div>
+      </div>
+      <div class="r-detail" id="lit-detail">悬停锚点查看该类别 / 文献的说明；本 demo 模拟页的 I-G 交会图采用同一坐标口径。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 参考文献与数据用途（8 条）</h2><span class="hint">均为公开出版物，可检索 DOI / 卷期页码</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>文献</th><th>核心内容</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Zoeppritz, K. (1919). Über Erdbebenwellen VIIB: Über Reflexion und Durchgang seismischer Wellen durch Unstetigkeitsflächen. <i>Nachr. Ges. Wiss. Göttingen, Math.-Phys. Kl.</i>, 1: 66–84.</td><td>平面波在弹性界面上反射 / 透射系数的精确方程组</td><td>AVO 曲线与合成角道集中反射系数的<b>基准精确解</b>（面板②曲线与面板④道集振幅）</td></tr>
+          <tr><td>2</td><td>Aki, K., &amp; Richards, P. G. (1980). <i>Quantitative Seismology: Theory and Methods</i>. W. H. Freeman.</td><td>Zoeppritz 方程的线性化近似（ΔVp、ΔVs、Δρ 三项分解）与射线参数形式</td><td>本 demo 实现的 Zoeppritz 计算式取自该书标准形式；线性化思想是 Shuey 近似的基础</td></tr>
+          <tr><td>3</td><td>Shuey, R. T. (1985). A simplification of the Zoeppritz equations. <i>Geophysics</i>, 50(4): 609–614. DOI: 10.1190/1.1441936.</td><td>R(θ)=R0+G·sin²θ+F·(tan²θ−sin²θ)，截距 R0、梯度 G、曲率 F</td><td>AVO 曲线对比的两项 / 三项近似曲线；I-G 交会图的坐标量定义</td></tr>
+          <tr><td>4</td><td>Rutherford, S. R., &amp; Williams, R. H. (1989). Amplitude-versus-offset variations in gas sands. <i>Geophysics</i>, 54(6): 680–688. DOI: 10.1190/1.1442696.</td><td>按盖层泥岩之下含气砂的阻抗高低将 AVO 异常分为 I–IV 类</td><td>I-G 交会图分区背景与「AVO 类别」指标卡的判定规则</td></tr>
+          <tr><td>5</td><td>Castagna, J. P., &amp; Swan, H. W. (1997). Principles of AVO crossplotting. <i>The Leading Edge</i>, 16(4): 337–342. DOI: 10.1190/1.1437626.</td><td>湿砂 / 泥岩落在过原点背景趋势附近，含气砂偏离背景趋势</td><td>I-G 交会图中的湿相背景趋势线；偏离距离即含气性异常强度</td></tr>
+          <tr><td>6</td><td>Fatti, J. L., Smith, G. C., Vail, P. J., Strauss, P. J., &amp; Levitt, P. R. (1994). Detection of gas in sandstone reservoirs using AVO analysis: A 3-D seismic case history using the Geostack technique. <i>Geophysics</i>, 59(9): 1362–1376.</td><td>三维工区用截距 / 梯度叠加（Geostack）检测含气砂的实例</td><td>文献锚点图中的真实工区实例；佐证 I-G 方法在三维资料中的工程化用法</td></tr>
+          <tr><td>7</td><td>Goodway, B., Chen, T., &amp; Downton, J. (1997). Improved AVO fluid detection and lithology discrimination using Lamé petrophysical parameters "λρ", "μρ", &amp; "λ/μ fluid stack", from P and S inversions. <i>67th SEG Ann. Mtg., Expanded Abstracts</i>, 183–186.</td><td>由纵 / 横波阻抗组合出 λρ、μρ：含气使 λρ 显著下降而 μρ（岩石骨架）几乎不变</td><td>弹性参数剖面条带的 λρ / μρ 列与「λρ 降幅」含气性指标卡</td></tr>
+          <tr><td>8</td><td>Ostrander, W. J. (1984). Plane-wave reflection coefficients for gas sands at nonnormal angles of incidence. <i>Geophysics</i>, 49(10): 1637–1648.</td><td>指出含气砂反射振幅随炮检距增大而显著变化（亮点 / 极性反转）</td><td>合成角道集（面板④）中近 / 中 / 远道振幅增强与极性反转现象的出处</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-data -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

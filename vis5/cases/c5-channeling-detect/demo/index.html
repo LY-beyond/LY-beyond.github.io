@@ -11,207 +11,315 @@
   <div class="head">
     <div>
       <h1>环空窜槽识别 · 顶替效率与气窜风险联动</h1>
-      <p class="lead">调整顶替与地质参数，实时重算顶替效率、残留泥浆弧长与环空压力平衡。只有同时存在通道和欠平衡，气窜才会发生。</p>
+      <p class="lead">真实参数看超声回波反演，模拟页看顶替与气窜机理：调整参数实时重算顶替效率、残留泥浆弧长与环空压力平衡。只有同时存在通道和欠平衡，气窜才会发生。</p>
     </div>
     <span class="badge">API RP 10B-2 口径</span>
   </div>
 
-  <p class="data-src"><b>数据口径：</b>窜槽路径四类——水泥环内部通道、套管-水泥界面、水泥-地层界面、微环隙；气窜条件 = 欠平衡压力 + 通道；隔离液紊流接触时间 ≥ 10 min（API RP 10B-2）；静切力 48→240 Pa 为气窜敏感期。井段 1200—1500 m，水泥浆密度 1.90 g/cm³，气层位于井段底部。</p>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">真实参数校验 · Mendeley 数据集</button>
+    <button class="tab" data-tab="sim" role="tab">窜槽模拟 · 参数联动</button>
+  </div>
 
-  <div class="layout">
-    <div class="viz">
-      <!-- 面板 1：环空截面 + 超声成像 + 指标卡 -->
-      <div class="section">
-        <div class="sec-head">
-          <h2>① 环空截面与超声成像</h2>
-          <span class="hint">左：截面示意；右：方位 × 深度超声幅度（亮区为窜槽通道）；下方：关键指标</span>
-        </div>
-        <div class="grid-a">
-          <div class="block">
-            <h3>环空截面</h3>
-            <svg id="cross" viewBox="0 0 300 300" role="img" aria-label="环空截面与窜槽扇区示意"></svg>
-          </div>
-          <div class="block">
-            <h3>展开式超声成像（方位 × 深度）</h3>
-            <canvas id="heat" width="430" height="215" role="img" aria-label="方位与深度超声幅度热力图"></canvas>
-          </div>
-          <div class="metrics">
-            <div class="mcard"><span>顶替效率 η</span><b id="m-eta">—</b></div>
-            <div class="mcard"><span>残留弧长</span><b id="m-ang">—</b></div>
-            <div class="mcard"><span>窜槽概率</span><b id="m-pch">—</b></div>
-            <div class="mcard"><span>气窜风险指数</span><b id="m-risk">—</b></div>
-          </div>
-        </div>
+  <!-- ================= 真实参数 ================= -->
+  <div class="tabpane active" id="pane-real">
+    <div class="src-bar">
+      <div>
+        <b>真实参数</b> · Diez, Viggen &amp; Johansen（2024）<i>Simulated ultrasonic pulse-echo well-integrity dataset</i> ·
+        Mendeley Data v1 · DOI 10.17632/3bs65nzpv2.1 · 1406 个数值模型 · CC BY 4.0。
+        本页取 5 个模型的<b>真实几何与材料参数</b>，波形由页面内 1D 回波模型重建，<b>不是原始记录</b>。
       </div>
-
-      <!-- 面板 2：顶替效率曲线 + 气窜风险曲线 -->
-      <div class="section">
-        <div class="sec-head">
-          <h2>③ 顶替效率与气窜风险曲线</h2>
-          <span class="hint">曲线随参数实时更新，竖线为当前取值</span>
-        </div>
-        <div class="grid-charts">
-          <div class="chart">
-            <h3>顶替效率 vs 接触时间 / 排量</h3>
-            <svg id="eff" viewBox="0 0 430 200" role="img" aria-label="顶替效率曲线"></svg>
-            <div class="legend">
-              <span><i style="background:#2f7d6b"></i>当前排量</span>
-              <span><i style="background:#b9c8c2"></i>其他排量</span>
-              <span><i style="background:#c9a15a"></i>10 min 建议线</span>
-            </div>
-          </div>
-          <div class="chart">
-            <h3>气窜风险随候凝时间</h3>
-            <svg id="risk" viewBox="0 0 430 200" role="img" aria-label="气窜风险与累积气量曲线"></svg>
-            <div class="legend">
-              <span><i style="background:#2f7d6b"></i>累积气窜量</span>
-              <span><i style="background:#b05a51"></i>气窜风险</span>
-              <span><i style="background:#c9a15a"></i>SGS 敏感期</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 面板 3：指标卡 + 分段表 + 建议措施 -->
-      <div class="section">
-        <div class="sec-head">
-          <h2>④ 风险判读与分段识别</h2>
-          <span class="hint">逐段评估顶替效率与通道概率</span>
-        </div>
-        <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 10px;">
-          <div class="mcard"><span>窜槽概率</span><b id="m-pch2">—</b></div>
-          <div class="mcard"><span>气窜风险指数</span><b id="m-risk2">—</b></div>
-          <div class="mcard"><span>静液压力</span><b id="m-ph">—</b></div>
-          <div class="mcard"><span>欠平衡压差</span><b id="m-dp">—</b></div>
-        </div>
-        <div class="verdict" id="verdict">正在计算…</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>井段 (m)</th>
-                <th>顶替效率</th>
-                <th>残留弧长 (°)</th>
-                <th>窜槽概率</th>
-                <th>累积气量 (m³)</th>
-                <th>判读</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 方案对比：当前 vs 推荐 -->
-      <div class="section" id="compare-sec">
-        <div class="sec-head">
-          <h2>⑤ 方案对比：当前 vs 推荐</h2>
-          <span class="hint">推荐：偏心 10% · 接触时间 20 min · 排量 1.5 m³/min · 旋转活动</span>
-        </div>
-        <div class="compare-grid">
-          <div class="compare-col">
-            <h3>当前方案</h3>
-            <div class="compare-row"><span>顶替效率</span><b id="cmp-cur-eta">—</b></div>
-            <div class="compare-row"><span>窜槽概率</span><b id="cmp-cur-pch">—</b></div>
-            <div class="compare-row"><span>气窜风险指数</span><b id="cmp-cur-risk">—</b></div>
-          </div>
-          <div class="compare-col rec">
-            <h3>推荐方案</h3>
-            <div class="compare-row"><span>顶替效率</span><b id="cmp-rec-eta">—</b></div>
-            <div class="compare-row"><span>窜槽概率</span><b id="cmp-rec-pch">—</b></div>
-            <div class="compare-row"><span>气窜风险指数</span><b id="cmp-rec-risk">—</b></div>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button id="btn-apply-rec">应用推荐参数</button>
-        </div>
-      </div>
+      <a href="https://data.mendeley.com/datasets/3bs65nzpv2/1" target="_blank" rel="noopener">数据来源 Mendeley ↗</a>
     </div>
 
-    <div class="side">
-      <!-- 控制面板 -->
-      <div class="section">
-        <div class="sec-head">
-          <h2>② 顶替与地质参数（12 项）</h2>
-          <span class="hint">拖动即时重算</span>
-        </div>
-        <div class="sync-note"><span id="sync-note-text">邻接参数联动：已同步 0 个共享参数（偏心/排量）</span><button id="btn-clear-shared">清空共享参数</button></div>
-        <div class="controls">
-          <div class="ctl">
-            <label>套管偏心度 <output id="o-ecc">25 %</output></label>
-            <input type="range" id="s-ecc" min="0" max="100" step="1" value="25">
-            <span class="tip">偏心越大，窄边水泥环越薄</span>
-          </div>
-          <div class="ctl">
-            <label>窜槽起始深度 <output id="o-start">45 %</output></label>
-            <input type="range" id="s-start" min="10" max="90" step="1" value="45">
-            <span class="tip">占井段比例，通道向下延伸</span>
-          </div>
-          <div class="ctl">
-            <label>窜槽弧长 <output id="o-len">80 °</output></label>
-            <input type="range" id="s-len" min="15" max="360" step="5" value="80">
-            <span class="tip">通道在环空圆周占据的角度</span>
-          </div>
-          <div class="ctl">
-            <label>窜槽宽度 <output id="o-w">8.0 mm</output></label>
-            <input type="range" id="s-w" min="0.5" max="20" step="0.5" value="8">
-            <span class="tip">通道径向开度，决定过流面积</span>
-          </div>
-          <div class="ctl">
-            <label>隔离液接触时间 <output id="o-contact">12 min</output></label>
-            <input type="range" id="s-contact" min="2" max="30" step="1" value="12">
-            <span class="tip">API 建议湍流接触 ≥ 10 min</span>
-          </div>
-          <div class="ctl">
-            <label>顶替排量 <output id="o-q">2.5 m³/min</output></label>
-            <input type="range" id="s-q" min="0.3" max="3.0" step="0.1" value="2.5">
-            <span class="tip">排量不足时泥浆残留窄边</span>
-          </div>
-          <div class="ctl">
-            <label>钻井液屈服值 <output id="o-yp">8.0 Pa</output></label>
-            <input type="range" id="s-yp" min="5" max="40" step="0.5" value="8">
-            <span class="tip">屈服值越高，顶替临界排量越大</span>
-          </div>
-          <div class="ctl">
-            <label>套管活动方式 <output id="o-act">旋转</output></label>
-            <select id="s-act">
-              <option value="0">静止</option>
-              <option value="1" selected>旋转</option>
-              <option value="2">往复</option>
-            </select>
-            <span class="tip">旋转/往复可破坏窄边滞留环</span>
-          </div>
-          <div class="ctl">
-            <label>微环隙 <output id="o-mic">30 μm</output></label>
-            <input type="range" id="s-mic" min="0" max="500" step="5" value="30">
-            <span class="tip">套管-水泥界面贯通缝隙</span>
-          </div>
-          <div class="ctl">
-            <label>气层压力 <output id="o-pg">28 MPa</output></label>
-            <input type="range" id="s-pg" min="5" max="50" step="1" value="28">
-            <span class="tip">与水泥浆静液柱压力比较</span>
-          </div>
-          <div class="ctl">
-            <label>SGS 过渡时间 <output id="o-sgs">45 min</output></label>
-            <input type="range" id="s-sgs" min="10" max="120" step="5" value="45">
-            <span class="tip">静胶凝强度 48→240 Pa 过渡期</span>
-          </div>
-          <div class="ctl">
-            <label>候凝时间 <output id="o-woc">24 h</output></label>
-            <input type="range" id="s-woc" min="2" max="72" step="1" value="24">
-            <span class="tip">累积气窜量的观察截止时间</span>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button id="btn-reset">恢复默认</button>
-          <span class="btn-note">井段 1200—1500 m · 水泥浆密度 1.90 g/cm³ · 气层位于井段底部</span>
-        </div>
+    <div class="case-chips" id="case-chips"></div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 脉冲回波波形</h2>
+        <span class="tag sim">按真实参数重建</span>
       </div>
+      <div class="chart-box" id="r-wave-box">
+        <canvas id="r-wave" width="860" height="240" role="img" aria-label="脉冲回波波形与回波包络"></canvas>
+        <div class="chart-tip" id="r-wave-tip"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放时间窗 · 按住拖拽平移 · 双击复位</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+      <div class="r-detail" id="r-detail">悬停波形读取该时刻幅度与包络 dB；点击 A₀ / A₁ 回波峰可锁定读数；点击下方表格行可切换模型。</div>
+      <div class="legend">
+        <span><i style="background:#242b2e"></i>回波信号</span>
+        <span><i style="background:#2f7d6b"></i>包络 / 回波峰</span>
+        <span><i style="background:#c9a15a"></i>理论回波时刻</span>
+        <span><i style="background:#b05a51"></i>反演壁厚</span>
+      </div>
+      <p class="hint">传感器 250 kHz、钢壁厚 13 mm，两次回波间隔约 4.5 μs。反演壁厚由回波包络峰值间隔求得；外侧阻抗由第 1/第 2 次回波幅度比求得，r = |R<sub>out</sub>|。</p>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 反演结果与真值对比</h2><span class="hint">真值来自数据集元数据</span></div>
+      <div class="metrics">
+        <div class="mcard"><span>壁厚真值</span><b id="r-th-true">—</b></div>
+        <div class="mcard"><span>壁厚反演</span><b id="r-th-pred">—</b></div>
+        <div class="mcard"><span>阻抗真值</span><b id="r-z-true">—</b></div>
+        <div class="mcard"><span>阻抗反演</span><b id="r-z-pred">—</b></div>
+      </div>
+      <div class="verdict" id="r-verdict">正在计算…</div>
+      <p class="hint">阻抗 Z = ρ·v<sub>p</sub>；反射系数 R = (Z<sub>steel</sub> − Z)/(Z<sub>steel</sub> + Z)。反演只使用重建波形，不使用真值。</p>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 五个真实模型的反演校验</h2><span class="hint">点击上方标签切换波形</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>模型</th><th>file_ID</th><th>外侧介质</th><th>间隙</th><th>Z 真值 (MRayl)</th><th>Z 反演</th><th>判别</th><th>参考类别</th></tr>
+          </thead>
+          <tbody id="r-case-body"></tbody>
+        </table>
+      </div>
+      <p class="hint">参考类别按数据集真值阻抗归档：Z ≥ 4.2 胶结良好；2.2–4.2 微环隙/液膜；0.8–2.2 自由套管/液环；&lt;0.8 气环/气窜通道。</p>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 微环隙 vs 窜槽：成像与几何鉴别</h2><span class="hint">1D 回波给阻抗，方位成像给覆盖</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>特征</th><th>微环隙</th><th>窜槽通道</th></tr></thead>
+          <tbody>
+            <tr><td>方位覆盖</td><td>整圈 360°，厚度均匀</td><td>局部扇区 θ，常沿窄边</td></tr>
+            <tr><td>垂向连续性</td><td>沿界面连续或全井段</td><td>沿深度延伸，连通长度 L</td></tr>
+            <tr><td>开度</td><td>10–100 μm</td><td>1–20 mm</td></tr>
+            <tr><td>阻抗特征</td><td>Z ≈ 2–3 MRayl（液膜）</td><td>气 Z &lt; 0.8；液 Z ≈ 1–2</td></tr>
+            <tr><td>超声成像</td><td>全周亮环、环向一致性高</td><td>扇区亮斑、环向跳变</td></tr>
+            <tr><td>处置建议</td><td>挤水泥、控制候凝压差</td><td>段塞/膨胀水泥、提高顶替效率</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">通道几何四参数：方位 φ、弧宽 θ、开度 d、连通长度 L；在“窜槽模拟”页由参数联动实时给出。</p>
     </div>
   </div>
 
-  <p class="foot">模型公式：顶替效率 η = 0.55 + 0.3·(1−e^(−接触/10)) + 0.1·(1−偏心) + 活动加成(0/0.08/0.05)，上限 0.98；残留泥浆弧长 = (1−η)·360·(1+偏心/50)；窜槽概率 = sigmoid((残留弧长−120)/40)；气窜驱动力 = 气层压力 − 水泥浆静液柱压力。</p>
+  <!-- ================= 窜槽模拟 ================= -->
+  <div class="tabpane" id="pane-sim">
+    <p class="data-src"><b>数据口径：</b>窜槽路径四类——水泥环内部通道、套管-水泥界面、水泥-地层界面、微环隙；气窜条件 = 欠平衡压力 + 通道；隔离液紊流接触时间 ≥ 10 min（API RP 10B-2）；静切力 48→240 Pa 为气窜敏感期。井段 1200—1500 m，水泥浆密度 1.90 g/cm³，气层位于井段底部。</p>
+
+    <div class="layout">
+      <div class="viz">
+        <!-- 面板 1：环空截面 + 超声成像 + 指标卡 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>① 环空截面与超声成像</h2>
+            <span class="hint">左：截面示意；右：方位 × 深度超声幅度（亮区为窜槽通道）；下方：关键指标</span>
+          </div>
+          <div class="grid-a">
+            <div class="block">
+              <h3>环空截面</h3>
+              <svg id="cross" viewBox="0 0 300 300" role="img" aria-label="环空截面与窜槽扇区示意"></svg>
+            </div>
+            <div class="block">
+              <h3>展开式超声成像（方位 × 深度）</h3>
+              <canvas id="heat" width="430" height="215" role="img" aria-label="方位与深度超声幅度热力图"></canvas>
+            </div>
+            <div class="metrics">
+              <div class="mcard"><span>顶替效率 η</span><b id="m-eta">—</b></div>
+              <div class="mcard"><span>残留弧长</span><b id="m-ang">—</b></div>
+              <div class="mcard"><span>窜槽概率</span><b id="m-pch">—</b></div>
+              <div class="mcard"><span>气窜风险指数</span><b id="m-risk">—</b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 通道几何四参数 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>② 通道几何四参数</h2>
+            <span class="hint">由截面与参数实时推导</span>
+          </div>
+          <div class="metrics geom">
+            <div class="mcard"><span>方位 φ</span><b id="g-phi">—</b></div>
+            <div class="mcard"><span>弧宽 θ</span><b id="g-theta">—</b></div>
+            <div class="mcard"><span>开度 d</span><b id="g-d">—</b></div>
+            <div class="mcard"><span>连通长度 L</span><b id="g-len">—</b></div>
+          </div>
+          <p class="hint">L 为通道从起始深度到井段底部的连续延伸长度；微环隙另计整圈液膜，不改变 φ/θ。</p>
+        </div>
+
+        <!-- 面板 2：顶替效率曲线 + 气窜风险曲线 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>③ 顶替效率与气窜风险曲线</h2>
+            <span class="hint">曲线随参数实时更新，竖线为当前取值</span>
+          </div>
+          <div class="grid-charts">
+            <div class="chart">
+              <h3>顶替效率 vs 接触时间 / 排量</h3>
+              <svg id="eff" viewBox="0 0 430 200" role="img" aria-label="顶替效率曲线"></svg>
+              <div class="legend">
+                <span><i style="background:#2f7d6b"></i>当前排量</span>
+                <span><i style="background:#b9c8c2"></i>其他排量</span>
+                <span><i style="background:#c9a15a"></i>10 min 建议线</span>
+              </div>
+            </div>
+            <div class="chart">
+              <h3>气窜风险随候凝时间</h3>
+              <svg id="risk" viewBox="0 0 430 200" role="img" aria-label="气窜风险与累积气量曲线"></svg>
+              <div class="legend">
+                <span><i style="background:#2f7d6b"></i>累积气窜量</span>
+                <span><i style="background:#b05a51"></i>气窜风险</span>
+                <span><i style="background:#c9a15a"></i>SGS 敏感期</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 面板 3：指标卡 + 分段表 + 建议措施 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>④ 风险判读与分段识别</h2>
+            <span class="hint">逐段评估顶替效率与通道概率</span>
+          </div>
+          <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 10px;">
+            <div class="mcard"><span>窜槽概率</span><b id="m-pch2">—</b></div>
+            <div class="mcard"><span>气窜风险指数</span><b id="m-risk2">—</b></div>
+            <div class="mcard"><span>静液压力</span><b id="m-ph">—</b></div>
+            <div class="mcard"><span>欠平衡压差</span><b id="m-dp">—</b></div>
+          </div>
+          <div class="verdict" id="verdict">正在计算…</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>井段 (m)</th>
+                  <th>顶替效率</th>
+                  <th>残留弧长 (°)</th>
+                  <th>窜槽概率</th>
+                  <th>累积气量 (m³)</th>
+                  <th>判读</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 方案对比：当前 vs 推荐 -->
+        <div class="section" id="compare-sec">
+          <div class="sec-head">
+            <h2>⑤ 方案对比：当前 vs 推荐</h2>
+            <span class="hint">推荐：偏心 10% · 接触时间 20 min · 排量 1.5 m³/min · 旋转活动</span>
+          </div>
+          <div class="compare-grid">
+            <div class="compare-col">
+              <h3>当前方案</h3>
+              <div class="compare-row"><span>顶替效率</span><b id="cmp-cur-eta">—</b></div>
+              <div class="compare-row"><span>窜槽概率</span><b id="cmp-cur-pch">—</b></div>
+              <div class="compare-row"><span>气窜风险指数</span><b id="cmp-cur-risk">—</b></div>
+            </div>
+            <div class="compare-col rec">
+              <h3>推荐方案</h3>
+              <div class="compare-row"><span>顶替效率</span><b id="cmp-rec-eta">—</b></div>
+              <div class="compare-row"><span>窜槽概率</span><b id="cmp-rec-pch">—</b></div>
+              <div class="compare-row"><span>气窜风险指数</span><b id="cmp-rec-risk">—</b></div>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="btn-apply-rec">应用推荐参数</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <!-- 控制面板 -->
+        <div class="section">
+          <div class="sec-head">
+            <h2>⑥ 顶替与地质参数（12 项）</h2>
+            <span class="hint">拖动即时重算</span>
+          </div>
+          <div class="sync-note"><span id="sync-note-text">邻接参数联动：已同步 0 个共享参数（偏心/排量）</span><button id="btn-clear-shared">清空共享参数</button></div>
+          <div class="controls">
+            <div class="ctl">
+              <label>套管偏心度 <output id="o-ecc">25 %</output></label>
+              <input type="range" id="s-ecc" min="0" max="100" step="1" value="25">
+              <span class="tip">偏心越大，窄边水泥环越薄</span>
+            </div>
+            <div class="ctl">
+              <label>窜槽起始深度 <output id="o-start">45 %</output></label>
+              <input type="range" id="s-start" min="10" max="90" step="1" value="45">
+              <span class="tip">占井段比例，通道向下延伸</span>
+            </div>
+            <div class="ctl">
+              <label>窜槽弧长 <output id="o-len">80 °</output></label>
+              <input type="range" id="s-len" min="15" max="360" step="5" value="80">
+              <span class="tip">通道在环空圆周占据的角度</span>
+            </div>
+            <div class="ctl">
+              <label>窜槽宽度 <output id="o-w">8.0 mm</output></label>
+              <input type="range" id="s-w" min="0.5" max="20" step="0.5" value="8">
+              <span class="tip">通道径向开度，决定过流面积</span>
+            </div>
+            <div class="ctl">
+              <label>隔离液接触时间 <output id="o-contact">12 min</output></label>
+              <input type="range" id="s-contact" min="2" max="30" step="1" value="12">
+              <span class="tip">API 建议湍流接触 ≥ 10 min</span>
+            </div>
+            <div class="ctl">
+              <label>顶替排量 <output id="o-q">2.5 m³/min</output></label>
+              <input type="range" id="s-q" min="0.3" max="3.0" step="0.1" value="2.5">
+              <span class="tip">排量不足时泥浆残留窄边</span>
+            </div>
+            <div class="ctl">
+              <label>钻井液屈服值 <output id="o-yp">8.0 Pa</output></label>
+              <input type="range" id="s-yp" min="5" max="40" step="0.5" value="8">
+              <span class="tip">屈服值越高，顶替临界排量越大</span>
+            </div>
+            <div class="ctl">
+              <label>套管活动方式 <output id="o-act">旋转</output></label>
+              <select id="s-act">
+                <option value="0">静止</option>
+                <option value="1" selected>旋转</option>
+                <option value="2">往复</option>
+              </select>
+              <span class="tip">旋转/往复可破坏窄边滞留环</span>
+            </div>
+            <div class="ctl">
+              <label>微环隙 <output id="o-mic">30 μm</output></label>
+              <input type="range" id="s-mic" min="0" max="500" step="5" value="30">
+              <span class="tip">套管-水泥界面贯通缝隙</span>
+            </div>
+            <div class="ctl">
+              <label>气层压力 <output id="o-pg">28 MPa</output></label>
+              <input type="range" id="s-pg" min="5" max="50" step="1" value="28">
+              <span class="tip">与水泥浆静液柱压力比较</span>
+            </div>
+            <div class="ctl">
+              <label>SGS 过渡时间 <output id="o-sgs">45 min</output></label>
+              <input type="range" id="s-sgs" min="10" max="120" step="5" value="45">
+              <span class="tip">静胶凝强度 48→240 Pa 过渡期</span>
+            </div>
+            <div class="ctl">
+              <label>候凝时间 <output id="o-woc">24 h</output></label>
+              <input type="range" id="s-woc" min="2" max="72" step="1" value="24">
+              <span class="tip">累积气窜量的观察截止时间</span>
+            </div>
+          </div>
+          <div class="btnrow">
+            <button id="btn-reset">恢复默认</button>
+            <span class="btn-note">井段 1200—1500 m · 水泥浆密度 1.90 g/cm³ · 气层位于井段底部</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot">模型公式：顶替效率 η = 0.55 + 0.3·(1−e^(−接触/10)) + 0.1·(1−偏心) + 活动加成(0/0.08/0.05)，上限 0.98；残留泥浆弧长 = (1−η)·360·(1+偏心/50)；窜槽概率 = sigmoid((残留弧长−120)/40)；气窜驱动力 = 气层压力 − 水泥浆静液柱压力。</p>
+  </div>
+
 </div>
+<script src="data.js"></script>
 <script src="demo.js"></script>
 </body>
 </html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：集输系统工况智能优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>集输系统工况智能优化 · 交互式演示</h1>
+      <p class="lead">调节液量、外输泵台数、变频频率、阀开度、加热温度与移峰比例，观察管网压力、流型、能耗与电费如何联动；点击「一键优化」对比人工调度与寻优方案。</p>
+    </div>
+    <span class="badge">Beggs-Brill + 达西-魏斯巴赫口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>集输干线 DN350 × 18 km（GB 50350-2015 流速限值 0.8–2.0 m/s）；最低进站压力 0.6 MPa、外输压力上限 1.6 MPa；泵变频 30–50 Hz（相似定律 H∝f²）；摩阻按达西-魏斯巴赫 + Swamee-Jain；混输支线流型按 Beggs-Brill(1973) L1–L4 边界判别；分时电价 峰 0.91 / 平 0.63 / 谷 0.35 元/kWh；人工基准电单耗 1.89 kWh/m³。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 工况联动寻优</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源 · 文献与标准</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：管网拓扑 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 集输管网拓扑与瓶颈管段</h2>
+          <span class="hint">悬停管段读数 · 红色为瓶颈/超压管段</span>
+        </div>
+        <div class="chart-box" id="topo-box">
+          <svg id="topo" viewBox="0 0 740 262" role="img" aria-label="集输管网拓扑图"></svg>
+          <div class="chart-tip" id="topo-tip"></div>
+        </div>
+        <div class="readouts">
+          <div class="ro"><span>泵出口压力</span><b id="r-pout">—</b></div>
+          <div class="ro"><span>末站进站压力</span><b id="r-pend">—</b></div>
+          <div class="ro"><span>干线压降</span><b id="r-dp">—</b></div>
+          <div class="ro"><span>实际外输 / 计划</span><b id="r-qact">—</b></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>正常管段</span>
+          <span><i style="background:#c9a15a"></i>警戒（段塞流 / 流速偏高）</span>
+          <span><i style="background:#b05a51"></i>瓶颈（超压 / 欠输）</span>
+          <span><i class="dot" style="background:#41699b"></i>节点压力标注</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：沿程压力曲线 + 流型图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 干线沿程压力-温降 &amp; 混输支线流型判定</h2>
+          <span class="hint">悬停读数 · 虚线为约束边界</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>外输干线沿程压力 / 温度（DN350 × 18 km）</h3>
+            <div class="chart-box" id="prof-box">
+              <canvas id="profile" width="430" height="246" role="img" aria-label="干线沿程压力曲线"></canvas>
+              <div class="chart-tip" id="prof-tip"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#2f7d6b"></i>沿程压力</span>
+              <span><i style="background:#41699b"></i>沿程温度(右轴)</span>
+              <span><i style="background:#b05a51"></i>上限 1.6 MPa</span>
+              <span><i style="background:#c9a15a"></i>最低进站 0.6 MPa</span>
+              <span><i style="background:#8a9298"></i>节流损失</span>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>混输支线流型图（Beggs-Brill，DN200）</h3>
+            <div class="chart-box" id="fm-box">
+              <canvas id="flowmap" width="430" height="246" role="img" aria-label="Beggs-Brill 流型图"></canvas>
+              <div class="chart-tip" id="fm-tip"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#41699b"></i>分离流</span>
+              <span><i style="background:#c9a15a"></i>过渡流</span>
+              <span><i style="background:#b05a51"></i>间歇流(段塞)</span>
+              <span><i style="background:#2f7d6b"></i>分散流</span>
+              <span><i class="dot" style="background:#242b2e"></i>当前工况点</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 4：24h 移峰 + 优化前后对比 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 24h 负荷移峰 &amp; 优化前后对比</h2>
+          <span class="hint">背景色带为分时电价 · 悬停读数</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>全站功率 24h 曲线（移峰填谷）</h3>
+            <div class="chart-box" id="day-box">
+              <canvas id="day" width="430" height="222" role="img" aria-label="24小时负荷与分时电价"></canvas>
+              <div class="chart-tip" id="day-tip"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#8a9298"></i>人工调度负荷</span>
+              <span><i style="background:#2f7d6b"></i>当前方案负荷</span>
+              <span><i style="background:#f6e3df"></i>峰段 0.91 元</span>
+              <span><i style="background:#eef0e6"></i>平段 0.63 元</span>
+              <span><i style="background:#e3efe9"></i>谷段 0.35 元</span>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>能耗 / 成本对比（人工基准 vs 当前方案）</h3>
+            <div class="chart-wrap">
+              <svg id="compare" viewBox="0 0 430 222" role="img" aria-label="优化前后能耗成本对比"></svg>
+            </div>
+            <div class="legend">
+              <span><i style="background:#8a9298"></i>人工基准（4泵·50Hz·阀60%）</span>
+              <span><i style="background:#2f7d6b"></i>当前方案</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面板 5：指标卡 + 诊断 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 关键运行指标</h2>
+          <span class="hint">电单耗 / 电费 / 节流 / 压力 / 流型</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>电单耗</span><b id="m-cons">—</b></div>
+          <div class="mcard"><span>日耗电</span><b id="m-day">—</b></div>
+          <div class="mcard"><span>日电费</span><b id="m-cost">—</b></div>
+          <div class="mcard"><span>节流损失占比</span><b id="m-throttle">—</b></div>
+          <div class="mcard"><span>末站进站压力</span><b id="m-press">—</b></div>
+          <div class="mcard"><span>支线流型</span><b id="m-flow">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 运行工况参数（6 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>处理液量 <output id="o-ql">16800 m³/d</output></label>
+            <input type="range" id="s-ql" min="12000" max="20000" step="200" value="16800">
+            <span class="tip">外输量按 0.548 折算（9200/16800）</span>
+          </div>
+          <div class="ctl">
+            <label>外输泵运行台数 <output id="o-pumps">4 台</output></label>
+            <input type="range" id="s-pumps" min="2" max="6" step="1" value="4">
+            <span class="tip">并联运行，人工调度倾向多开一台保压力</span>
+          </div>
+          <div class="ctl">
+            <label>泵组变频频率 <output id="o-freq">50 Hz</output></label>
+            <input type="range" id="s-freq" min="30" max="50" step="1" value="50">
+            <span class="tip">变频范围 30–50 Hz，H∝f²、P∝f³ 联动掺水/供水泵</span>
+          </div>
+          <div class="ctl">
+            <label>节流阀开度 <output id="o-valve">60%</output></label>
+            <input type="range" id="s-valve" min="30" max="100" step="1" value="60">
+            <span class="tip">人工常关到 30–50%，节流损失 15–25%</span>
+          </div>
+          <div class="ctl">
+            <label>加热炉出口温度 <output id="o-temp">60 ℃</output></label>
+            <input type="range" id="s-temp" min="45" max="75" step="1" value="60">
+            <span class="tip">升温降黏减摩阻，但燃料气成本上升</span>
+          </div>
+          <div class="ctl">
+            <label>谷段移峰比例 <output id="o-shift">0%</output></label>
+            <input type="range" id="s-shift" min="0" max="40" step="2" value="0">
+            <span class="tip">在罐位允许范围内把峰段负荷移向谷段</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="btn-opt">一键优化</button>
+          <button id="btn-reset">恢复人工方案</button>
+        </div>
+        <div class="btn-note">寻优逻辑：少开泵 + 开阀 + 变频 + 移峰（MILP 代理演示）</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型：泵特性 H = 217·(f/50)² − 0.0028·q²（q 为单泵 m³/h），η = 0.78·(1−1.6·(q/130−1)²)；干线压降按达西-魏斯巴赫，摩阻系数 Swamee-Jain，黏度 μ=30·e^(−0.035·(T−50)) mPa·s；阀损系数 Kv=600·(100/开度−1)^1.7；平衡流量由泵压头 = 静压差 + 末站压头 + 沿程摩阻 + 阀损迭代求解；掺水/供水泵组单耗 1.54·(0.72+0.28·(f/50)²) kWh/m³；流型按 Beggs-Brill(1973) L1–L4 边界，支线 GOR 45 m³/m³、回压 0.8 MPa；移峰保持日总电量不变，仅改变时段分布。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+    <div class="section">
+      <div class="sec-head"><h2>数据来源与文献依据（7 项）</h2><span class="hint">每条注明在本 demo 中的用途</span></div>
+
+      <div class="src-bar">
+        <span class="tag real">多相流文献</span>
+        <span><b>Beggs, H.D. &amp; Brill, J.P. (1973). “A Study of Two-Phase Flow in Inclined Pipes.” J. Pet. Technol. 25(5): 607–617（SPE-4007-PA）</b>：基于实验给出的流型判别边界 L1–L4（关于无滑脱持液率 λL 与弗劳德数 Fr）与持液率/压降相关式。<b>用途：</b>「混输支线流型图」的四区分区曲线与当前工况点判定即按该边界计算。</span>
+        <a href="https://doi.org/10.2118/4007-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">设计标准</span>
+        <span><b>GB 50350-2015《油田油气集输设计规范》</b>：输油泵进口汇管流速不宜大于 1.0 m/s、排出汇管宜 0.8–2.0 m/s；泵运行吸入压力不应低于 0.2 MPa；集输管道宜采取保温、伴热措施。<b>用途：</b>拓扑图中各管段流速合规判定与瓶颈标注阈值（&gt;2.0 m/s 判警戒）。</span>
+        <a href="https://www.qvtu.edu.cn/system/_content/download.jsp?owner=1904388571&urltype=news.DownloadAttachUrl&wbfileid=12198247" target="_blank" rel="noopener">规范↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">设计标准</span>
+        <span><b>GB 50253-2014《输油管道工程设计规范》</b>：管道水力坡降按达西-魏斯巴赫公式计算，摩阻系数按流态分区选取（层流 64/Re、湍流 Colebrook 系）。<b>用途：</b>「沿程压力曲线」的摩阻计算口径，本 demo 用其显式近似 Swamee-Jain 式。</span>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">摩阻文献</span>
+        <span><b>Colebrook, C.F. (1939). “Turbulent Flow in Pipes…” J. Inst. Civ. Eng. 11(4): 133–156；Swamee, P.K. &amp; Jain, A.K. (1976). J. Hydraul. Div. 102(5): 657–664</b>：湍流过渡区摩阻系数隐式方程及其显式近似 f = 0.25/[lg(ε/3.7D + 5.74/Re^0.9)]²。<b>用途：</b>干线压降随温度（黏度）变化的计算核心。</span>
+        <a href="https://doi.org/10.1061/(ASCE)0733-9429(1976)102:5(657)" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">优化文献</span>
+        <span><b>Abbasi, E. &amp; Garousi, V. (2010). “An MILP-based formulation for minimizing pumping energy costs of oil pipelines.” Energy Systems 1(4): 393–416</b>：以多费率电价下电费最小为目标、泵启停为 0/1 变量的输油管道 MILP 泵调度模型。<b>用途：</b>「一键优化」的决策结构（台数 0/1 + 频率连续 + 移峰）与目标函数（电费 + 启停惩罚）设定依据。</span>
+        <a href="https://doi.org/10.1007/s12667-010-0013-7" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">现场节能文献</span>
+        <span><b>Huang, Z., Li, X., Gang, Z., Xue, J. &amp; Chen, Z. (2012). “Energy Saving Measures of Oil and Gas Gathering System in Changqing Low Permeable Oilfield.” Advanced Materials Research 524–527: 2627–2631</b>：长庆低渗透油田集输系统以小泵换大泵、变频双速调节、按负载率评价泵效等节能措施。<b>用途：</b>掺水/供水泵组随频率联动的单耗折算与能耗对比口径参照该现场数据标定。</span>
+        <a href="https://doi.org/10.4028/www.scientific.net/AMR.524-527.2627" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+
+      <div class="src-bar">
+        <span class="tag real">电价政策</span>
+        <span><b>国家发改委 发改价格〔2021〕1093 号《关于进一步完善分时电价机制的通知》</b>：要求峰谷电价价差原则上不低于 3:1（最大系统峰谷差率超 40% 地区不低于 4:1），尖峰电价在峰段上再上浮不低于 20%。<b>用途：</b>「24h 移峰」面板的峰 0.91 / 平 0.63 / 谷 0.35 元/kWh（峰谷比 2.6:1，按西北电网一般工商业口径近似）与移峰收益计算。</span>
+        <a href="https://www.ndrc.gov.cn/xxgk/zcfb/tz/202107/t20210729_1292067.html" target="_blank" rel="noopener">政策↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>关键参数取值与来源对照</h2><span class="hint">案例参数为示意标定，口径来自上列文献与标准</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>参数</th><th>demo 取值</th><th>依据 / 来源</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>干线规格</td><td class="num">DN350 × 18 km</td><td>案例 DN 150–350 合计 18 km；GB 50350-2015</td></tr>
+          <tr><td class="num">2</td><td>流速限值</td><td class="num">0.8–2.0 m/s</td><td>GB 50350-2015 排出汇管流速区间</td></tr>
+          <tr><td class="num">3</td><td>最低进站压力</td><td class="num">0.6 MPa</td><td>案例安全约束；GB 50350-2015 吸入压力 ≥0.2 MPa</td></tr>
+          <tr><td class="num">4</td><td>摩阻模型</td><td class="num">达西-魏斯巴赫 + Swamee-Jain</td><td>GB 50253-2014；Colebrook 1939；Swamee-Jain 1976</td></tr>
+          <tr><td class="num">5</td><td>流型判别</td><td class="num">λL–Fr 平面 L1–L4 边界</td><td>Beggs &amp; Brill 1973</td></tr>
+          <tr><td class="num">6</td><td>泵变频换算</td><td class="num">H∝f²、P∝f³（30–50 Hz）</td><td>泵相似定律；Huang et al. 2012 变频双速调节</td></tr>
+          <tr><td class="num">7</td><td>优化目标</td><td class="num">分时电费 + 启停惩罚，MILP</td><td>Abbasi &amp; Garousi 2010</td></tr>
+          <tr><td class="num">8</td><td>分时电价</td><td class="num">峰 0.91 / 平 0.63 / 谷 0.35 元/kWh</td><td>发改价格〔2021〕1093 号；案例峰谷差 0.35 元/kWh</td></tr>
+          <tr><td class="num">9</td><td>人工基准电单耗</td><td class="num">1.89 kWh/m³</td><td>案例运行统计（年 1,160 万 kWh / 16,800 m³/d）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

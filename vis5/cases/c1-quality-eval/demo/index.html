@@ -9,98 +9,199 @@
 <body>
 <div class="panel">
 
-  <p class="data-note">数据口径：CBL 自由套管幅度 FPA≈320 mV；相对幅度 ≤20% 为优(A)、20%–30% 为中(B)、&gt;30% 为差(C/D)；胶结指数 BI = 1 − amp/FPA，BI&gt;0.8 合格；衰减率(dB/ft)越高胶结越好；VDL 套管波早到、地层波晚到。参考 API RP 10B-2 / SY/T 6646。</p>
-
-  <h1>固井质量 CBL/VDL 智能评价</h1>
-  <p class="lead">调节窜槽位置、水泥密度、微环隙与噪声，观察 CBL 幅度、胶结指数 BI、VDL 变密度图与 AI 分段评级的同步重算。微环隙会压低 BI 但地层波仍清晰，可检验评价算法的假阳性。</p>
-
-  <div class="layout">
-    <div class="viz">
-
-      <div class="section">
-        <h2>① 井筒剖面与窜槽方位</h2>
-        <div class="two-col">
-          <svg id="well" viewBox="0 0 400 200" role="img" aria-label="井筒纵剖面"></svg>
-          <svg id="cross" viewBox="0 0 400 170" role="img" aria-label="井筒横截面"></svg>
-        </div>
-        <p class="hint">左：纵剖面按真实等级着色，顶部灰色为自由套管段，红色段为窜槽；右：井筒横截面，窜槽按方位角与弧宽张开，外环偏心量表示微环隙。</p>
-      </div>
-
-      <div class="section">
-        <h2>② CBL 幅度与衰减率双轴曲线</h2>
-        <svg id="cbl" viewBox="0 0 430 190" role="img" aria-label="CBL 幅度与衰减率曲线"></svg>
-        <div class="legend">
-          <span><i style="background:#2f7d6b"></i>A 优</span>
-          <span><i style="background:#5fa88a"></i>B 中</span>
-          <span><i style="background:#c9a15a"></i>C 差</span>
-          <span><i style="background:#b05a51"></i>D 窜槽</span>
-          <span><i style="background:#d8d4c8"></i>自由套管</span>
-        </div>
-        <p class="hint">实线为 CBL 幅度(mV，左轴)，虚线为衰减率(dB/ft，右轴)；背景色带为真值等级，竖虚线为 AI 分段边界，水平点线为 BI 阈值对应幅度。</p>
-      </div>
-
-      <div class="section">
-        <h2>③ VDL 变密度图</h2>
-        <canvas id="vdl" width="430" height="150" role="img" aria-label="VDL 变密度图"></canvas>
-        <p class="hint">横轴为深度(0–3000 m)，纵轴为时间(0–80 样点)；上部早到为套管波，下部晚到为地层波。胶结好则套管波弱、地层波清晰；胶结差则相反。</p>
-      </div>
-
-      <div class="section">
-        <h2>④ 评价指标</h2>
-        <div class="metric-row">
-          <div class="metric"><span>AI 分段数</span><b id="m-seg">—</b></div>
-          <div class="metric"><span>段级一致率</span><b id="m-agree">—</b></div>
-          <div class="metric"><span>D 级召回</span><b id="m-recall">—</b></div>
-          <div class="metric"><span>BI 达标覆盖</span><b id="m-pass">—</b></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>⑤ 逐段明细</h2>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>深度段 (m)</th><th>厚度 (m)</th><th>CBL 均值 (mV)</th><th>BI 均值</th><th>AI 评级</th><th>等级概率</th><th>真值</th></tr></thead>
-            <tbody id="seg-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="section" id="compare-sec">
-        <h2>⑦ 方案对比：当前 vs 推荐</h2>
-        <div class="compare-grid">
-          <div class="compare-col">
-            <h3>当前方案</h3>
-            <div class="metric"><span>段级一致率</span><b id="c-cur-agree">—</b></div>
-            <div class="metric"><span>D 级召回</span><b id="c-cur-recall">—</b></div>
-            <div class="metric"><span>BI 达标覆盖</span><b id="c-cur-pass">—</b></div>
-          </div>
-          <div class="compare-col rec">
-            <h3>推荐方案</h3>
-            <div class="metric"><span>段级一致率</span><b id="c-rec-agree">—</b></div>
-            <div class="metric"><span>D 级召回</span><b id="c-rec-recall">—</b></div>
-            <div class="metric"><span>BI 达标覆盖</span><b id="c-rec-pass">—</b></div>
-          </div>
-        </div>
-        <div class="compare-actions">
-          <button id="btn-apply-rec">应用推荐参数</button>
-          <button id="btn-cur" class="secondary">对比当前参数</button>
-        </div>
-        <p class="hint">推荐方案：低噪声、无窜槽、BI 阈值 0.8，可获得更高的段级一致率与 BI 达标覆盖。</p>
-      </div>
-
+  <div class="head">
+    <div>
+      <h1>固井质量 CBL/VDL 智能评价</h1>
+      <p class="lead">真实井段看数据，合成井看机理：先由自由套管标定 FPA，再算胶结指数 BI 与第二界面代理评分，最后对照参考评级检查分段一致性与置信度。</p>
     </div>
-    <div class="side">
+    <span class="badge">教学演示 · API RP 10B-2 口径</span>
+  </div>
 
-      <div class="section">
-        <h2>⑥ 参数控制</h2>
-        <div class="sync-note" id="sync-note">邻接参数联动：已同步 0 个共享参数（水泥密度…）</div>
-        <div class="controls" id="controls"></div>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">真实井段 · Utah FORGE 56-32</button>
+    <button class="tab" data-tab="synth" role="tab">参数响应 · 合成井</button>
+  </div>
+
+  <!-- ================= 真实井段 ================= -->
+  <div class="tabpane active" id="pane-real">
+    <div class="src-bar">
+      <div>
+        <b>真实数据</b> · Utah FORGE 56-32 Monitor Well · Schlumberger CBL Main（2021-08-17）·
+        原始 0.5 ft 采样，本示范按 1 ft 抽稀 · 仅含 CBL 幅度与声波时差 TT，<b>不含 VDL 原始波形</b> · 许可 CC BY 4.0
       </div>
+      <a href="https://gdr.openei.org/submissions/1295" target="_blank" rel="noopener">数据来源 OpenEI GDR 1295 ↗</a>
+    </div>
 
+    <div class="section">
+      <div class="sec-head">
+        <h2>① 真实井段：CBL 幅度 / 胶结指数 BI / 参考评级</h2>
+        <span class="tag real">真实 CBL</span>
+      </div>
+      <div class="chart-box" id="r-cbl-box">
+        <svg id="r-cbl" viewBox="0 0 900 300" role="img" aria-label="真实井段 CBL 幅度、BI 与参考评级"></svg>
+        <div class="chart-tip" id="r-cbl-tip"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放 · 按住拖拽平移 · 双击复位（两图共享深度视窗）</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+      <p class="hint">悬停查看该深度采样点的 CBL / BI / 第二界面数值；点击曲线任一分段可选中，并与下方 VDL、逐段明细表联动。缩放只改变显示视窗，不改变数据与评价结果。</p>
+      <div class="legend">
+        <span><i style="background:#242b2e"></i>CBL 幅度 (mV)</span>
+        <span><i style="background:#2f7d6b"></i>BI 胶结指数</span>
+        <span><i style="background:#c9a15a"></i>第二界面代理评分</span>
+        <span><i style="background:#d8d4c8"></i>自由套管 FPA</span>
+        <span><i style="background:#8a9298"></i>AI 分段边界</span>
+        <span><i style="background:#2f7d6b"></i>A</span>
+        <span><i style="background:#5fa88a"></i>B</span>
+        <span><i style="background:#c9a15a"></i>C</span>
+        <span><i style="background:#b05a51"></i>D</span>
+      </div>
+      <p class="hint">三段真实井段按样本序号拼接（标注为原始井深 ft）：浅层 380–760 ft（中等—差）、自由套管 3400–3940 ft（FPA 标定）、良好胶结 5000–5200 ft。底部色带为参考评级：相对幅度 ≤20% 为 A、20–30% 为 B、30–40% 为 C、&gt;40% 为 D，由阈值生成，仅作教学对照，非独立人工解释。</p>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <h2>② VDL 变密度图</h2>
+        <div class="chart-tools">
+          <label>增益 <input type="range" id="vd-gain" min="70" max="170" step="5" value="100"><b id="vd-gain-val">100%</b></label>
+          <button id="vd-reset" type="button">清除选中</button>
+        </div>
+        <span class="tag sim">模拟</span>
+      </div>
+      <div class="chart-box" id="r-vdl-box">
+        <canvas id="r-vdl" width="900" height="160" role="img" aria-label="模拟 VDL 变密度图"></canvas>
+        <div class="chart-tip" id="r-vdl-tip"></div>
+      </div>
+      <div class="r-detail" id="r-detail">悬停曲线查看采样点；滚轮缩放深度视窗；点击曲线或 VDL 选区可选中分段，查看平均值并与明细表联动。</div>
+      <p class="hint">公开数据集不含 VDL 原始波形，本图按 AI 评级生成示意：胶结好 → 套管波弱、地层波强；自由套管 → 套管波强、地层波弱。仅用于讲解读图逻辑，不可用于定量解释。增益仅改变显示对比度，不改变数据；缩放与上方 CBL 图共享同一深度视窗。</p>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 评价指标</h2><span class="hint">以参考评级为基准</span></div>
+      <div class="metric-row">
+        <div class="metric"><span>FPA 自由套管幅度</span><b id="r-fpa">—</b></div>
+        <div class="metric"><span>段级一致率</span><b id="r-agree">—</b></div>
+        <div class="metric"><span>D 级召回（样本）</span><b id="r-recall">—</b></div>
+        <div class="metric"><span>平均置信度</span><b id="r-conf">—</b></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 逐段明细</h2><span class="hint">置信度低于 0.6 标记待复核；深度后带 * 表示跨拼接段</span></div>
+      <div class="table-wrap tall">
+        <table>
+          <thead><tr><th>#</th><th>深度 (ft)</th><th>厚度 (ft)</th><th>CBL 均值 (mV)</th><th>相对幅度</th><th>BI 均值</th><th>第二界面</th><th>AI 评级</th><th>置信度</th><th>参考评级</th></tr></thead>
+          <tbody id="r-seg-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>⑤ 混淆矩阵：AI vs 参考评级</h2><span class="hint">行为参考评级，列为 AI 评级</span></div>
+      <div id="r-confmat" class="confmat"></div>
+      <p class="hint">按 1 ft 样本统计。B/C 边界是最容易分歧的位置：幅度阈值与平滑后的 BI 在过渡段会给出不同等级，这正是人工复核对齐的重点。</p>
+    </div>
+  </div>
+
+  <!-- ================= 合成井（原交互） ================= -->
+  <div class="tabpane" id="pane-synth">
+    <p class="data-note">数据口径：本页为合成井，用于观察参数机理。CBL 自由套管幅度 FPA≈320 mV；相对幅度 ≤20% 为优(A)、20%–30% 为中(B)、&gt;30% 为差(C/D)；胶结指数 BI = 1 − amp/FPA，BI&gt;0.8 合格；衰减率(dB/ft)越高胶结越好；VDL 套管波早到、地层波晚到。参考 API RP 10B-2 / SY/T 6646。</p>
+
+    <p class="lead">调节窜槽位置、水泥密度、微环隙与噪声，观察 CBL 幅度、胶结指数 BI、VDL 变密度图与 AI 分段评级的同步重算。微环隙会压低 BI 但地层波仍清晰，可检验评价算法的假阳性。</p>
+
+    <div class="layout">
+      <div class="viz">
+
+        <div class="section">
+          <h2>① 井筒剖面与窜槽方位</h2>
+          <div class="two-col">
+            <svg id="well" viewBox="0 0 400 200" role="img" aria-label="井筒纵剖面"></svg>
+            <svg id="cross" viewBox="0 0 400 170" role="img" aria-label="井筒横截面"></svg>
+          </div>
+          <p class="hint">左：纵剖面按真实等级着色，顶部灰色为自由套管段，红色段为窜槽；右：井筒横截面，窜槽按方位角与弧宽张开，外环偏心量表示微环隙。</p>
+        </div>
+
+        <div class="section">
+          <h2>② CBL 幅度与衰减率双轴曲线</h2>
+          <svg id="cbl" viewBox="0 0 430 190" role="img" aria-label="CBL 幅度与衰减率曲线"></svg>
+          <div class="legend">
+            <span><i style="background:#2f7d6b"></i>A 优</span>
+            <span><i style="background:#5fa88a"></i>B 中</span>
+            <span><i style="background:#c9a15a"></i>C 差</span>
+            <span><i style="background:#b05a51"></i>D 窜槽</span>
+            <span><i style="background:#d8d4c8"></i>自由套管</span>
+          </div>
+          <p class="hint">实线为 CBL 幅度(mV，左轴)，虚线为衰减率(dB/ft，右轴)；背景色带为真值等级，竖虚线为 AI 分段边界，水平点线为 BI 阈值对应幅度。</p>
+        </div>
+
+        <div class="section">
+          <h2>③ VDL 变密度图</h2>
+          <canvas id="vdl" width="430" height="150" role="img" aria-label="VDL 变密度图"></canvas>
+          <p class="hint">横轴为深度(0–3000 m)，纵轴为时间(0–80 样点)；上部早到为套管波，下部晚到为地层波。胶结好则套管波弱、地层波清晰；胶结差则相反。</p>
+        </div>
+
+        <div class="section">
+          <h2>④ 评价指标</h2>
+          <div class="metric-row">
+            <div class="metric"><span>AI 分段数</span><b id="m-seg">—</b></div>
+            <div class="metric"><span>段级一致率</span><b id="m-agree">—</b></div>
+            <div class="metric"><span>D 级召回</span><b id="m-recall">—</b></div>
+            <div class="metric"><span>BI 达标覆盖</span><b id="m-pass">—</b></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>⑤ 逐段明细</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>深度段 (m)</th><th>厚度 (m)</th><th>CBL 均值 (mV)</th><th>BI 均值</th><th>AI 评级</th><th>等级概率</th><th>真值</th></tr></thead>
+              <tbody id="seg-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section" id="compare-sec">
+          <h2>⑦ 方案对比：当前 vs 推荐</h2>
+          <div class="compare-grid">
+            <div class="compare-col">
+              <h3>当前方案</h3>
+              <div class="metric"><span>段级一致率</span><b id="c-cur-agree">—</b></div>
+              <div class="metric"><span>D 级召回</span><b id="c-cur-recall">—</b></div>
+              <div class="metric"><span>BI 达标覆盖</span><b id="c-cur-pass">—</b></div>
+            </div>
+            <div class="compare-col rec">
+              <h3>推荐方案</h3>
+              <div class="metric"><span>段级一致率</span><b id="c-rec-agree">—</b></div>
+              <div class="metric"><span>D 级召回</span><b id="c-rec-recall">—</b></div>
+              <div class="metric"><span>BI 达标覆盖</span><b id="c-rec-pass">—</b></div>
+            </div>
+          </div>
+          <div class="compare-actions">
+            <button id="btn-apply-rec">应用推荐参数</button>
+            <button id="btn-cur" class="secondary">对比当前参数</button>
+          </div>
+          <p class="hint">推荐方案：低噪声、无窜槽、BI 阈值 0.8，可获得更高的段级一致率与 BI 达标覆盖。</p>
+        </div>
+
+      </div>
+      <div class="side">
+
+        <div class="section">
+          <h2>⑥ 参数控制</h2>
+          <div class="sync-note" id="sync-note">邻接参数联动：已同步 0 个共享参数（水泥密度…）</div>
+          <div class="controls" id="controls"></div>
+        </div>
+
+      </div>
     </div>
   </div>
 
 </div>
+<script src="data.js"></script>
 <script src="demo.js"></script>
 </body>
 </html>

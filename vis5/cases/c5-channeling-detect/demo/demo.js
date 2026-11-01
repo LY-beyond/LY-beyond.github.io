@@ -5,6 +5,20 @@
   var $ = function (id) { return document.getElementById(id); };
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
+  /* HiDPI 适配：canvas  backing  store 按 dpr × CSS 拉伸系数放大，
+     之后所有绘制仍使用逻辑坐标 (lw × lh)，保证线条与文字清晰 */
+  function setupCanvas(cv, lw, lh) {
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = cv.clientWidth || lw;
+    var ratio = dpr * (cssW / lw);
+    var bw = Math.max(1, Math.round(lw * ratio));
+    var bh = Math.max(1, Math.round(lh * ratio));
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return ctx;
+  }
+
   /* 固定种子噪声场：保证同一参数下成像图完全可复现 */
   function mulberry32(a) {
     return function () {
@@ -34,7 +48,7 @@
   };
   var MY_KEYS = Object.keys(KEY_MAP);
   function loadShared(){ try{ var s=JSON.parse(localStorage.getItem(SHARED_KEY)||'{}'); var n=0; MY_KEYS.forEach(function(k){ if(k in s && typeof s[k]==='number'){ S[KEY_MAP[k]]=s[k]; n++; } }); return n; }catch(e){ return 0; } }
-  function saveShared(){ var cur={}; try{ cur=JSON.parse(localStorage.getItem(SHARED_KEY)||'{}'); }catch(e){} MY_KEYS.forEach(function(k){ if(typeof S[KEY_MAP[k]]==='number') cur[k]=S[KEY_MAP[k]]; }); localStorage.setItem(SHARED_KEY,JSON.stringify(cur)); }
+  function saveShared(){ var cur={}; try{ cur=JSON.parse(localStorage.getItem(SHARED_KEY)||'{}'); }catch(e){} MY_KEYS.forEach(function(k){ if(typeof S[KEY_MAP[k]]==='number') cur[k]=S[KEY_MAP[k]]; }); try{ localStorage.setItem(SHARED_KEY,JSON.stringify(cur)); }catch(e){} }
 
   /* 固定井段参数 */
   var DEPTH_TOP = 1200, DEPTH_BOT = 1500;
@@ -249,8 +263,8 @@
     }
     octx.putImageData(img, 0, 0);
 
-    var cv = $('heat'), ctx = cv.getContext('2d');
-    var W = cv.width, H = cv.height, IH = H - 28;
+    var W = 430, H = 215;
+    var cv = $('heat'), ctx = setupCanvas(cv, W, H), IH = H - 28;
     var mapX = function (az) { return az / 360 * W; };
     var mapY = function (frac) { return frac / 100 * IH; };
 
@@ -515,6 +529,18 @@
     v.innerHTML = head + advice;
   }
 
+  /* ---------- 通道几何四参数 ---------- */
+  function renderGeom() {
+    var eta = currentEta();
+    var ang = residualAngle(eta);
+    var theta = Math.min(360, ang * 0.6 + S.len * 0.4);
+    var L = (1 - S.start / 100) * (DEPTH_BOT - DEPTH_TOP);
+    $('g-phi').innerHTML = '0<small> °</small>';
+    $('g-theta').innerHTML = theta.toFixed(0) + '<small> °</small>';
+    $('g-d').innerHTML = S.w.toFixed(1) + '<small> mm</small>';
+    $('g-len').innerHTML = L.toFixed(0) + '<small> m</small>';
+  }
+
   function render() {
     drawCross();
     drawHeat();
@@ -522,6 +548,7 @@
     drawRisk();
     renderMetrics();
     renderTable();
+    renderGeom();
     renderCompare();
     saveShared();
   }
@@ -624,8 +651,557 @@
     if (btn) btn.addEventListener('click', applyRec);
   }
 
+  /* =========================================================
+     真实参数页：脉冲回波反演
+     几何/材料参数取自 Mendeley 数据集；波形按这些参数重建，
+     反演过程只读取重建波形，不直接读取阻抗真值。
+     ========================================================= */
+  var REAL = window.__C5_REAL__ || null;
+  var W_DT = 0.02, W_N = 900, T0 = 6.0, F0 = 0.25, SIGW = 0.95;
+  var REAL_CACHE = {};
+  var RCASE = null;
+
+  function zOf(m) { return m.rho * m.vp / 1e6; } /* MRayl */
+  function zText(z) { return z < 0.05 ? '&lt; 0.05' : z.toFixed(2); }
+
+  function zClass(z) {
+    if (z >= 4.2) return { key: 'good', label: '胶结良好' };
+    if (z >= 2.2) return { key: 'micro', label: '微环隙/液膜' };
+    if (z >= 0.8) return { key: 'free', label: '自由套管/液环' };
+    return { key: 'gas', label: '气环/气窜通道' };
+  }
+
+  function sealRng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function envelopeOf(sig) {
+    var env = new Float64Array(sig.length), win = 5;
+    for (var i = 0; i < sig.length; i++) {
+      var m = 0, j;
+      for (j = Math.max(0, i - win); j <= Math.min(sig.length - 1, i + win); j++) {
+        var a = Math.abs(sig[j]); if (a > m) m = a;
+      }
+      env[i] = m;
+    }
+    return env;
+  }
+
+  function rmsAround(sig, idx, win) {
+    var s = 0, n = 0;
+    for (var i = Math.max(0, idx - win); i <= Math.min(sig.length - 1, idx + win); i++) {
+      s += sig[i] * sig[i]; n++;
+    }
+    return Math.sqrt(s / Math.max(1, n));
+  }
+
+  function peakIndex(env, from, thr) {
+    for (var i = Math.max(1, from); i < env.length - 1; i++) {
+      if (env[i] > thr && env[i] >= env[i - 1] && env[i] > env[i + 1]) return i;
+    }
+    return -1;
+  }
+
+  function refinePeak(env, i) {
+    if (i <= 0 || i >= env.length - 1) return i;
+    var a = env[i - 1], b = env[i], c = env[i + 1];
+    var den = a - 2 * b + c;
+    return Math.abs(den) > 1e-9 ? i + 0.5 * (a - c) / den : i;
+  }
+
+  function buildReal(c) {
+    var Zs = zOf(REAL.steel);
+    var Zout = c.gap ? zOf(c.gap) : zOf(c.out);
+    var Zin = c.inner === 'water based mud' ? 2.94 : 1.63; /* 内层泥浆阻抗 */
+    var Rin = (Zs - Zin) / (Zs + Zin);
+    var Rout = (Zs - Zout) / (Zs + Zout);
+    var trans = 1 - Rin * Rin;
+    var amp0 = 1.0;
+    var amp1 = trans * Math.abs(Rout);
+    var amp2 = amp1 * Math.abs(Rin) * Math.abs(Rout);
+    var Ttrue = 2 * (c.thickness * 1000) / (REAL.steel.vp / 1000); /* µs */
+
+    var rng = sealRng(c.fileId * 7919 + 13);
+    var sig = new Float64Array(W_N);
+    var echoes = [[T0, amp0], [T0 + Ttrue, amp1], [T0 + 2 * Ttrue, amp2]];
+    for (var i = 0; i < W_N; i++) {
+      var t = i * W_DT, v = 0;
+      for (var k = 0; k < echoes.length; k++) {
+        var tau = t - echoes[k][0];
+        v += echoes[k][1] * Math.exp(-(tau * tau) / (SIGW * SIGW)) * Math.cos(2 * Math.PI * F0 * tau);
+      }
+      var u1 = Math.max(1e-12, rng()), u2 = rng();
+      var nz = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      sig[i] = v + nz * 0.002;
+    }
+
+    var env = envelopeOf(sig);
+    var i0 = peakIndex(env, 1, 0.3);
+    if (i0 < 0) i0 = Math.round(T0 / W_DT);
+    var i1 = peakIndex(env, i0 + Math.round(2.0 / W_DT), 0.02);
+    if (i1 < 0) i1 = i0 + Math.round(Ttrue / W_DT);
+
+    var r0 = refinePeak(env, i0), r1 = refinePeak(env, i1);
+    var lag = (r1 - r0) * W_DT;
+    var thickEst = lag * (REAL.steel.vp / 1000) / 2;
+
+    var a0 = rmsAround(sig, i0, 30);
+    var a1 = rmsAround(sig, i1, 30);
+    var ratio = clamp((a1 / (a0 || 1)) / trans, 0.0005, 0.9999);
+    var Zest = Zs * (1 - ratio) / (1 + ratio);
+
+    return {
+      c: c, sig: sig, env: env, Zs: Zs, Zout: Zout, Ztrue: Zout,
+      Ttrue: Ttrue, trans: trans, amp0: amp0, amp1: amp1,
+      t0: r0 * W_DT, t1: r1 * W_DT, lag: lag,
+      thickTrue: c.thickness * 1000, thickEst: thickEst,
+      a0: a0, a1: a1, ratio: ratio, zEst: Zest,
+      dThick: thickEst - c.thickness * 1000
+    };
+  }
+
+  /* ---------- 波形图（时间窗缩放 · 悬停读数 · 回波锁定） ---------- */
+  var T_TOTAL = W_N * W_DT;
+  var MINSPAN_T = 1.0;
+  var ZI = { t0: 0, t1: T_TOTAL, hover: -1, sel: -1 };
+
+  function tSpan() { return ZI.t1 - ZI.t0; }
+
+  function updateViewLabel() {
+    var el = $('z-label');
+    if (!el) return;
+    var full = ZI.t0 <= 1e-3 && ZI.t1 >= T_TOTAL - 1e-3;
+    el.textContent = '视窗 ' + ZI.t0.toFixed(1) + '–' + ZI.t1.toFixed(1) + ' μs'
+      + (full ? '（全段）' : ' · 跨度 ' + tSpan().toFixed(1) + ' μs');
+  }
+
+  function setViewT(a, b) {
+    var span = b - a;
+    if (span < MINSPAN_T) { var c = (a + b) / 2; a = c - MINSPAN_T / 2; b = a + MINSPAN_T; }
+    if (a < 0) { b -= a; a = 0; }
+    if (b > T_TOTAL) { a -= (b - T_TOTAL); b = T_TOTAL; }
+    a = clamp(a, 0, T_TOTAL); b = clamp(b, a, T_TOTAL);
+    if (b - a < MINSPAN_T) { b = T_TOTAL; a = Math.max(0, T_TOTAL - MINSPAN_T); }
+    ZI.t0 = a; ZI.t1 = b;
+    if (ZI.hover >= 0 && (ZI.hover < a || ZI.hover > b)) ZI.hover = -1;
+    if (RCASE) drawRealWave(REAL_CACHE[RCASE.id]);
+    updateViewLabel();
+  }
+
+  function resetViewT() {
+    ZI.t0 = 0; ZI.t1 = T_TOTAL; ZI.hover = -1; ZI.sel = -1;
+    if (RCASE) drawRealWave(REAL_CACHE[RCASE.id]);
+    hideWaveTip();
+    renderDetail();
+    updateViewLabel();
+  }
+
+  function drawRealWave(rec) {
+    var cv = $('r-wave'); if (!cv) return;
+    var W = 860, H = 240;
+    var ctx = setupCanvas(cv, W, H);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fdfcf9'; ctx.fillRect(0, 0, W, H);
+
+    var pl = 46, pr = 12, pt = 10, topH = 126;
+    var plotW = W - pl - pr;
+    var span = Math.max(1e-6, tSpan());
+    var x = function (t) { return pl + (t - ZI.t0) / span * plotW; };
+    var zero = pt + topH / 2, half = topH / 2 - 6;
+    var yW = function (v) { return zero - v * half; };
+    var botTop = 160, botH = H - botTop - 22;
+    var dbMin = -40;
+    var yDb = function (v) {
+      var db = 20 * Math.log10(Math.max(1e-5, v));
+      db = clamp(db, dbMin, 0);
+      return botTop + botH - (db - dbMin) / (0 - dbMin) * botH;
+    };
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(pl, 0, plotW, H); ctx.clip();
+
+    /* 网格：步长随视窗自适应 */
+    var gStep = null, cand = [0.25, 0.5, 1, 2, 4, 8];
+    for (var gi = 0; gi < cand.length; gi++) {
+      if (tSpan() / cand[gi] <= 9) { gStep = cand[gi]; break; }
+    }
+    if (gStep === null) gStep = 8;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#efece1';
+    ctx.fillStyle = '#9ba3a9';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    var t, gx;
+    for (t = Math.ceil(ZI.t0 / gStep) * gStep; t <= ZI.t1 + 1e-6; t += gStep) {
+      gx = Math.round(x(t)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(gx, pt); ctx.lineTo(gx, pt + topH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gx, botTop); ctx.lineTo(gx, botTop + botH); ctx.stroke();
+      ctx.fillText(gStep < 1 ? t.toFixed(2) : t.toFixed(1), gx, botTop + botH + 13);
+    }
+
+    /* 零线 */
+    ctx.strokeStyle = '#d9d3c5';
+    ctx.beginPath(); ctx.moveTo(pl, zero + 0.5); ctx.lineTo(W - pr, zero + 0.5); ctx.stroke();
+
+    /* 视窗内采样范围（边界多取一点保证连续） */
+    var i0 = Math.max(0, Math.floor(ZI.t0 / W_DT) - 1);
+    var i1 = Math.min(W_N - 1, Math.ceil(ZI.t1 / W_DT) + 1);
+
+    /* 波形 */
+    ctx.strokeStyle = '#242b2e'; ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (var i = i0; i <= i1; i++) {
+      var px = x(i * W_DT), py = yW(rec.sig[i]);
+      if (i === i0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    /* 包络（dB） */
+    var j, ex, ey;
+    ctx.fillStyle = 'rgba(47,125,107,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(x(i0 * W_DT), botTop + botH);
+    for (j = i0; j <= i1; j++) ctx.lineTo(x(j * W_DT), yDb(rec.env[j]));
+    ctx.lineTo(x(i1 * W_DT), botTop + botH);
+    ctx.closePath(); ctx.fill();
+
+    ctx.strokeStyle = '#2f7d6b'; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (j = i0; j <= i1; j++) {
+      ex = x(j * W_DT); ey = yDb(rec.env[j]);
+      if (j === i0) ctx.moveTo(ex, ey); else ctx.lineTo(ex, ey);
+    }
+    ctx.stroke();
+
+    /* 理论回波时刻 + 反演回波时刻（仅视窗内） */
+    var tMarks = [
+      { t: T0, c: '#c9a15a', l: 't₀' },
+      { t: T0 + rec.Ttrue, c: '#c9a15a', l: 't₁ 理论' },
+      { t: rec.t0 + rec.lag, c: '#b05a51', l: '反演' }
+    ];
+    tMarks.forEach(function (m) {
+      if (m.t < ZI.t0 || m.t > ZI.t1) return;
+      var lx = Math.round(x(m.t)) + 0.5;
+      ctx.strokeStyle = m.c; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(lx, pt); ctx.lineTo(lx, botTop + botH); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = m.c; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(m.l, lx + 3, pt + 9);
+    });
+
+    /* 回波峰标记（点击可锁定） */
+    [[rec.t0, rec.a0], [rec.t1, rec.a1]].forEach(function (p, k) {
+      if (p[0] < ZI.t0 || p[0] > ZI.t1) return;
+      var cx2 = x(p[0]), cy2 = yDb(p[1]);
+      var on = ZI.sel === k;
+      ctx.fillStyle = on ? '#b05a51' : '#2f7d6b';
+      ctx.beginPath(); ctx.arc(cx2, cy2, on ? 5 : 3.2, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = on ? 2 : 1.2; ctx.stroke();
+      ctx.fillStyle = on ? '#b05a51' : '#2f7d6b'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+      ctx.fillText((k ? 'A₁' : 'A₀') + (on ? ' ✓' : ''), cx2 + 6, cy2 - 5);
+    });
+
+    /* 悬停十字线 */
+    if (ZI.hover >= 0 && ZI.hover >= ZI.t0 && ZI.hover <= ZI.t1) {
+      var idx = clamp(Math.round(ZI.hover / W_DT), 0, W_N - 1);
+      var hx = x(idx * W_DT);
+      ctx.strokeStyle = '#8a9298'; ctx.lineWidth = 1; ctx.setLineDash([3, 2]);
+      ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#242b2e';
+      ctx.beginPath(); ctx.arc(hx, yW(rec.sig[idx]), 3, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#2f7d6b';
+      ctx.beginPath(); ctx.arc(hx, yDb(rec.env[idx]), 3, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.stroke();
+    }
+
+    ctx.restore();
+
+    /* 左轴标注 */
+    ctx.fillStyle = '#5d666d'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('幅度', pl - 6, pt + 9);
+    ctx.fillText('包络', pl - 6, botTop + 10);
+    ctx.fillStyle = '#9ba3a9'; ctx.font = '8.5px monospace';
+    ctx.fillText('-40 dB', pl - 6, botTop + botH + 3);
+
+    /* 视窗角标 */
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#9ba3a9'; ctx.font = '9px monospace';
+    ctx.fillText('视窗 ' + ZI.t0.toFixed(1) + '–' + ZI.t1.toFixed(1) + ' μs', W - pr - 2, H - 20);
+
+    /* x 轴标题 + 峰值间隔说明 */
+    ctx.fillStyle = '#5d666d'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('时间 (μs)', pl + plotW / 2, H - 4);
+    ctx.fillStyle = '#2f7d6b'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Δt = ' + rec.lag.toFixed(2) + ' μs → 壁厚 ' + rec.thickEst.toFixed(2) + ' mm', pl + 4, botTop + 10);
+  }
+
+  /* ---------- 反演指标与判读 ---------- */
+  function renderRealMetrics(rec) {
+    var c = rec.c;
+    var estCls = zClass(rec.zEst);
+    var refCls = zClass(rec.Ztrue);
+    var agree = estCls.key === refCls.key;
+
+    $('r-th-true').innerHTML = rec.thickTrue.toFixed(1) + '<small> mm</small>';
+    var thEl = $('r-th-pred');
+    thEl.innerHTML = rec.thickEst.toFixed(2) + '<small> mm</small>';
+    thEl.parentNode.className = 'mcard' + (Math.abs(rec.dThick) > 0.5 ? ' warn' : '');
+
+    $('r-z-true').innerHTML = zText(rec.Ztrue) + '<small> MRayl</small>';
+    var zEl = $('r-z-pred');
+    zEl.innerHTML = zText(rec.zEst) + '<small> MRayl</small>';
+    zEl.parentNode.className = 'mcard' + (agree ? '' : ' warn');
+
+    var dTxt = (rec.dThick >= 0 ? '+' : '') + rec.dThick.toFixed(2);
+    $('r-verdict').className = 'verdict ' + (agree ? 'ok' : 'warn');
+    $('r-verdict').innerHTML =
+      '模型 file_ID ' + c.fileId + '（' + c.label + '）：包络峰值间隔 <b>' + rec.lag.toFixed(2) + '</b> μs → 壁厚 <b>' +
+      rec.thickEst.toFixed(2) + '</b> mm（真值 ' + rec.thickTrue.toFixed(1) + ' mm，误差 ' + dTxt + ' mm）；' +
+      '两次回波幅度比 r = ' + rec.ratio.toFixed(3) + ' → 外侧阻抗 <b>' + zText(rec.zEst) + '</b> MRayl（真值 ' +
+      zText(rec.Ztrue) + '）；判别「' + estCls.label + '」，与参考类别' + (agree ? '<b>一致</b>' : '<b>不一致</b>') + '。';
+  }
+
+  /* ---------- 五模型校验表 ---------- */
+  function renderRealTable() {
+    var html = '';
+    REAL.cases.forEach(function (c) {
+      var rec = REAL_CACHE[c.id];
+      var estCls = zClass(rec.zEst);
+      var agree = estCls.key === zClass(rec.Ztrue).key;
+      var gapTxt = c.gap ? (c.gap.thickness * 1000).toFixed(1) + ' mm ' + c.gap.material : '—';
+      html += '<tr>';
+      html += '<td>' + c.label + '</td>';
+      html += '<td class="mono">' + c.fileId + '</td>';
+      html += '<td>' + c.out.material + '</td>';
+      html += '<td>' + gapTxt + '</td>';
+      html += '<td class="mono">' + zText(rec.Ztrue) + '</td>';
+      html += '<td class="mono">' + zText(rec.zEst) + '</td>';
+      html += '<td>' + estCls.label + '</td>';
+      html += '<td class="' + (agree ? 'ok' : 'hot') + '">' + c.ref + (agree ? ' ✓' : ' ✗') + '</td>';
+      html += '</tr>';
+    });
+    $('r-case-body').innerHTML = html;
+  }
+
+  /* ---------- 读数与联动 ---------- */
+  function showWaveTip(html, evt) {
+    var tip = $('r-wave-tip'), box = $('r-wave-box');
+    if (!tip || !box) return;
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    var r = box.getBoundingClientRect();
+    var x = evt.clientX - r.left + 14;
+    if (x + 210 > r.width) x = evt.clientX - r.left - 210;
+    tip.style.left = Math.max(6, x) + 'px';
+    tip.style.top = '8px';
+  }
+  function hideWaveTip() {
+    var tip = $('r-wave-tip');
+    if (tip) tip.style.display = 'none';
+  }
+
+  function renderDetail() {
+    var box = $('r-detail');
+    if (!box || !RCASE) return;
+    var rec = REAL_CACHE[RCASE.id];
+    Array.prototype.forEach.call(document.querySelectorAll('#r-case-body tr'), function (tr, k) {
+      tr.classList.toggle('sel', REAL.cases[k] === RCASE);
+    });
+    if (ZI.sel < 0) {
+      box.className = 'r-detail';
+      box.innerHTML = '当前模型 <b>' + RCASE.label + '</b> · file_ID <b>' + RCASE.fileId + '</b>'
+        + ' ｜ 悬停波形读取该时刻幅度与包络 dB；点击 A₀ / A₁ 回波峰可锁定读数；点击右侧表格行切换模型。';
+      return;
+    }
+    var t = ZI.sel === 0 ? rec.t0 : rec.t1;
+    var a = ZI.sel === 0 ? rec.a0 : rec.a1;
+    box.className = 'r-detail active';
+    if (ZI.sel === 0) {
+      box.innerHTML = '已锁定 <b>A₀ 首次回波</b> · t₀ = <b>' + t.toFixed(2) + '</b> μs · 幅度 RMS <b>'
+        + a.toFixed(3) + '</b>（' + (20 * Math.log10(Math.max(1e-5, a))).toFixed(1) + ' dB）'
+        + ' ｜ 参考理论到达 ' + T0.toFixed(1) + ' μs';
+    } else {
+      box.innerHTML = '已锁定 <b>A₁ 二次回波</b> · t₁ = <b>' + t.toFixed(2) + '</b> μs · 幅度 RMS <b>'
+        + a.toFixed(3) + '</b>（' + (20 * Math.log10(Math.max(1e-5, a))).toFixed(1) + ' dB）'
+        + ' ｜ Δt = <b>' + rec.lag.toFixed(2) + '</b> μs → 壁厚 <b>' + rec.thickEst.toFixed(2) + '</b> mm（真值 '
+        + rec.thickTrue.toFixed(1) + ' mm）'
+        + ' ｜ 幅度比 r = <b>' + rec.ratio.toFixed(3) + '</b> → Z = <b>' + zText(rec.zEst) + '</b> MRayl';
+    }
+  }
+
+  function initWaveChart() {
+    var cv = $('r-wave');
+    if (!cv) return;
+    var drag = null, suppress = false;
+
+    function tAt(clientX) {
+      var r = cv.getBoundingClientRect();
+      var sx = (clientX - r.left) / r.width * 860;
+      return ZI.t0 + clamp((sx - 46) / (860 - 46 - 12), 0, 1) * tSpan();
+    }
+    function zoomWheel(e, centerFrac) {
+      e.preventDefault();
+      if (!e.deltaY) return;
+      var span = tSpan();
+      var cur = ZI.t0 + centerFrac * span;
+      var ns = span * (e.deltaY < 0 ? 0.8 : 1.25);
+      setViewT(cur - centerFrac * ns, cur - centerFrac * ns + ns);
+    }
+
+    cv.addEventListener('mousemove', function (e) {
+      if (drag) {
+        var r = cv.getBoundingClientRect();
+        var dx = e.clientX - drag.x;
+        if (Math.abs(dx) > 3) suppress = true;
+        var shift = -dx / r.width * tSpan();
+        setViewT(drag.t0 + shift, drag.t1 + shift);
+        hideWaveTip();
+        return;
+      }
+      var t = tAt(e.clientX);
+      var i = clamp(Math.round(t / W_DT), 0, W_N - 1);
+      ZI.hover = i * W_DT;
+      var rec = REAL_CACHE[RCASE.id];
+      drawRealWave(rec);
+      var db = 20 * Math.log10(Math.max(1e-5, rec.env[i]));
+      var near = Math.abs(i * W_DT - rec.t0) < 0.25 ? 'A₀' : (Math.abs(i * W_DT - rec.t1) < 0.25 ? 'A₁' : '');
+      showWaveTip(
+        '<b>' + (i * W_DT).toFixed(2) + ' μs</b> · ' + RCASE.label + (near ? ' · <b>' + near + '</b>' : '') + '<br>'
+        + '信号幅度 <b>' + rec.sig[i].toFixed(3) + '</b><br>'
+        + '包络 <b>' + rec.env[i].toFixed(3) + '</b>（' + db.toFixed(1) + ' dB）<br>'
+        + '理论到达 <b>' + (T0 + rec.Ttrue).toFixed(2) + '</b> μs · 视窗 ' + tSpan().toFixed(1) + ' μs',
+        e);
+    });
+    cv.addEventListener('mouseleave', function () {
+      ZI.hover = -1;
+      if (RCASE) drawRealWave(REAL_CACHE[RCASE.id]);
+      hideWaveTip();
+    });
+    cv.addEventListener('mousedown', function (e) {
+      if (tSpan() >= T_TOTAL) return;
+      drag = { x: e.clientX, t0: ZI.t0, t1: ZI.t1 };
+      suppress = false;
+      e.preventDefault();
+    });
+    cv.addEventListener('wheel', function (e) {
+      var r = cv.getBoundingClientRect();
+      zoomWheel(e, clamp(((e.clientX - r.left) / r.width * 860 - 46) / (860 - 46 - 12), 0, 1));
+    }, { passive: false });
+    cv.addEventListener('dblclick', resetViewT);
+    cv.addEventListener('click', function (e) {
+      if (suppress) { suppress = false; return; }
+      var t = tAt(e.clientX);
+      var rec = REAL_CACHE[RCASE.id];
+      var d0 = Math.abs(t - rec.t0), d1 = Math.abs(t - rec.t1);
+      if (d0 < 0.25 && d0 <= d1) ZI.sel = 0;
+      else if (d1 < 0.25) ZI.sel = 1;
+      else ZI.sel = -1;
+      drawRealWave(rec);
+      renderDetail();
+    });
+    window.addEventListener('mouseup', function () { drag = null; });
+
+    function zoomCenter(factor) {
+      var c = ZI.hover >= 0 ? ZI.hover : (ZI.t0 + ZI.t1) / 2;
+      var ns = Math.max(MINSPAN_T, tSpan() * factor);
+      setViewT(c - ns / 2, c + ns / 2);
+    }
+    var zin = $('z-in'); if (zin) zin.addEventListener('click', function () { zoomCenter(0.7); });
+    var zout = $('z-out'); if (zout) zout.addEventListener('click', function () { zoomCenter(1.4); });
+    var zreset = $('z-reset'); if (zreset) zreset.addEventListener('click', resetViewT);
+
+    var tbody = $('r-case-body');
+    if (tbody) {
+      tbody.addEventListener('click', function (e) {
+        var tr = e.target.closest('tr');
+        if (!tr) return;
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+        var k = rows.indexOf(tr);
+        if (k < 0 || !REAL.cases[k]) return;
+        switchCase(REAL.cases[k].id);
+      });
+    }
+  }
+
+  function switchCase(id) {
+    REAL.cases.forEach(function (c) { if (c.id === id) RCASE = c; });
+    ZI.t0 = 0; ZI.t1 = T_TOTAL; ZI.hover = -1; ZI.sel = -1;
+    var box = $('case-chips');
+    if (box) {
+      Array.prototype.forEach.call(box.querySelectorAll('.chip'), function (x) {
+        x.classList.toggle('active', x.getAttribute('data-case') === id);
+      });
+    }
+    renderReal();
+    renderDetail();
+    updateViewLabel();
+  }
+
+  function renderReal() {
+    if (!REAL || !RCASE) return;
+    var rec = REAL_CACHE[RCASE.id];
+    drawRealWave(rec);
+    renderRealMetrics(rec);
+    renderRealTable();
+  }
+
+  function bindReal() {
+    var box = $('case-chips');
+    if (!box || !REAL) return;
+    box.innerHTML = REAL.cases.map(function (c) {
+      return '<button class="chip' + (c.id === RCASE.id ? ' active' : '') + '" data-case="' + c.id + '">' + c.label + '</button>';
+    }).join('');
+    box.querySelectorAll('.chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        switchCase(this.getAttribute('data-case'));
+      });
+    });
+  }
+
+  function bindTabs() {
+    var tabs = document.querySelectorAll('.tab');
+    var panes = document.querySelectorAll('.tabpane');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var id = this.getAttribute('data-tab');
+        tabs.forEach(function (o) { o.classList.remove('active'); });
+        this.classList.add('active');
+        panes.forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + id); });
+      });
+    });
+  }
+
+  if (REAL) {
+    REAL.cases.forEach(function (c) { REAL_CACHE[c.id] = buildReal(c); });
+    RCASE = REAL.cases[0];
+  }
+
   bind();
   bindCompare();
+  bindReal();
+  bindTabs();
   readInputs();
   render();
+  renderReal();
+  initWaveChart();
+  renderDetail();
+  updateViewLabel();
+
+  /* 尺寸变化时按新宽度重建 backing store，保持清晰 */
+  var rsTimer = null;
+  window.addEventListener('resize', function () {
+    if (rsTimer) clearTimeout(rsTimer);
+    rsTimer = setTimeout(function () {
+      drawHeat();
+      if (RCASE) drawRealWave(REAL_CACHE[RCASE.id]);
+    }, 120);
+  });
 })();

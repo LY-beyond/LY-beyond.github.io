@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：测井曲线智能修复</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>测井曲线智能修复 · 交互式演示</h1>
+      <p class="lead">柴达木盆地西部某油田老井单井段（2100–2250 m，0.125 m 采样）：调节人为缺失段长度与垮塌段处理方式，对比线性插值 / 多元回归 / 跨曲线掩码自编码三种修复在缺失段内的形态、RMSE 退化曲线与对孔隙度计算的影响。</p>
+    </div>
+    <span class="badge">跨曲线掩码重建口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>合成单井 GR / DEN / CNL / CAL（0.125 m，含 0.8 m 薄砂层与井径垮塌段）；密度孔隙度 φ=(ρ<sub>ma</sub>−ρ<sub>b</sub>)/(ρ<sub>ma</sub>−ρ<sub>f</sub>)，ρ<sub>ma</sub>=2.65、ρ<sub>f</sub>=1.0 g/cm³；垮塌段按 CAL 超扩 &gt;3 in 或 Δρ 超 ±0.15 g/cm³ 判「无效」；评估用「完整段人工挖连续段」准真值口径，目标 GR RMSE ≤4 API、孔隙度误差 ≤1.5 pu。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 单井曲线修复</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源 · 判据与文献</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 综合修复图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 单井曲线修复综合图（2100–2250 m）</h2>
+          <span class="hint">悬停读数 · 灰底=人为缺失段 · 红底=井径垮塌段</span>
+        </div>
+        <div class="chart-box" id="log-box">
+          <canvas id="log" width="720" height="330" role="img" aria-label="测井曲线修复综合图"></canvas>
+          <div class="chart-tip" id="log-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#8a9298"></i>真实 GR（准真值）</span>
+          <span><i style="background:#3d464b"></i>观测 GR（缺失段断开）</span>
+          <span><i style="background:#c9a15a"></i>线性插值</span>
+          <span><i style="background:#41699b"></i>多元回归（DEN+CNL）</span>
+          <span><i style="background:#2f7d6b"></i>跨曲线掩码自编码</span>
+          <span><i style="background:rgba(47,125,107,.25)"></i>90% 置信区间</span>
+          <span><i style="background:#79828a"></i>井径 CAL</span>
+        </div>
+      </div>
+
+      <!-- 退化曲线 + 孔隙度影响 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 缺失长度退化曲线 &amp; 孔隙度影响</h2>
+          <span class="hint">左：RMSE 随缺失段长度退化 · 右：评估段平均孔隙度对比</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>GR 重建 RMSE × 缺失段长度（多段人工掩码汇总，悬停读数）</h3>
+            <div class="chart-box">
+              <canvas id="degrade" width="430" height="248" role="img" aria-label="RMSE退化曲线"></canvas>
+              <div class="chart-tip" id="deg-tip"></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#c9a15a"></i>线性插值</span>
+              <span><i style="background:#41699b"></i>多元回归</span>
+              <span><i style="background:#2f7d6b"></i>掩码自编码</span>
+              <span><i style="background:#b05a51"></i>目标线 4 API</span>
+            </div>
+          </div>
+          <div class="chart">
+            <h3>评估段（缺失段±2 m）平均孔隙度 φ̄</h3>
+            <div class="chart-wrap">
+              <svg id="phi" viewBox="0 0 430 210" role="img" aria-label="孔隙度对比柱状图"></svg>
+            </div>
+            <div class="legend">
+              <span><i style="background:#8a9298"></i>真值</span>
+              <span><i style="background:#c9a15a"></i>插值修复</span>
+              <span><i style="background:#2f7d6b"></i>模型修复</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 指标卡 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 修复质量指标（准真值口径）</h2>
+          <span class="hint">准真值 = 完整段人工挖连续缺失段 · 目标 RMSE ≤4 API / φ 误差 ≤1.5 pu</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span id="m-rmse-label">RMSE（掩码自编码）</span><b id="m-rmse">—</b></div>
+          <div class="mcard"><span>决定系数 R²</span><b id="m-r2">—</b></div>
+          <div class="mcard"><span>薄层(0.8 m)保留率</span><b id="m-thin">—</b></div>
+          <div class="mcard"><span>孔隙度误差（修复后）</span><b id="m-phi">—</b></div>
+          <div class="mcard"><span>垮塌段判定</span><b id="m-wash">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 缺失与修复参数</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>缺失段长度 <output id="o-len">15 m</output></label>
+            <input type="range" id="s-len" min="5" max="40" step="1" value="15">
+            <span class="tip">从完整段人工挖连续段模拟仪器故障缺失（5–40 m 真实分布）</span>
+          </div>
+          <div class="ctl">
+            <label>指标卡评估方法</label>
+            <select id="s-method">
+              <option value="model" selected>跨曲线掩码自编码（本方案）</option>
+              <option value="reg">多元回归（DEN+CNL）</option>
+              <option value="lin">线性插值（传统人工）</option>
+            </select>
+            <span class="tip">三种方法曲线全部叠加显示，指标卡跟随所选</span>
+          </div>
+          <div class="ctl">
+            <label>井径垮塌段处理</label>
+            <select id="s-wash">
+              <option value="invalid" selected>标为「无效」不补值（正确）</option>
+              <option value="fill">强行插值补值（错误示范）</option>
+            </select>
+            <span class="tip">垮塌段 DEN/CNL 本就失真，补值会制造假致密层</span>
+          </div>
+          <div class="ctl">
+            <label>深度游标 <output id="o-cursor">2162.5 m</output></label>
+            <input type="range" id="s-cursor" min="2100" max="2250" step="0.5" value="2162.5">
+            <span class="tip">联动综合图读数</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset" type="button">恢复默认</button>
+          <span class="btn-note">缺失段内含 0.8 m 薄砂层，用于检验薄层保留</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型设定：多元回归在可见段以最小二乘拟合 GR = a + b·DEN + c·CNL 后预测缺失段；跨曲线掩码自编码以可见曲线 + 邻井约束重建，输出 90% 置信区间（半宽随距缺失段边缘距离增大）；薄层保留率 = 修复曲线薄层幅度 / 真值薄层幅度（以缺失段边缘均值为基线）；孔隙度 φ=(2.65−DEN)/1.65，插值修复对 DEN 线性过桥。退化曲线对 5–40 m 各档长度重算 RMSE，验证「随机点掩码指标虚高、连续段才真实」的口径。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 跨曲线物理依据速览（文献关系 / 标准判据）</h2><span class="hint">悬停读数 · 点击元素看在本 demo 中的用法</span></div>
+      <div class="src-bar">
+        <span class="tag real">文献关系 / 判据</span>
+        <span><b>左图：Gardner et al. (1974) 密度—速度经验关系</b> ρ=0.31·V<sup>0.25</sup>（V 单位 ft/s，适用 1.5–6.1 km/s 沉积岩）——测井曲线间存在稳定经验关系，是跨曲线重建的物理基础；<b>右图：DEN–CNL 交会</b>——井径垮塌使密度偏低、中子偏高，点群向右上偏移（Δρ&gt;0.15 g/cm³ 或扩径 &gt;3 in 判资料作废），是「垮塌段标无效而非补值」的依据。</span>
+      </div>
+      <div class="grid-charts">
+        <div class="chart">
+          <h3>Gardner (1974) 密度—速度关系</h3>
+          <div class="chart-box">
+            <svg id="gardner" viewBox="0 0 430 250" role="img" aria-label="Gardner密度速度关系"></svg>
+            <div class="chart-tip" id="gard-tip"></div>
+          </div>
+        </div>
+        <div class="chart">
+          <h3>DEN–CNL 交会与垮塌段偏移</h3>
+          <div class="chart-box">
+            <svg id="xplot" viewBox="0 0 430 250" role="img" aria-label="密度中子交会图"></svg>
+            <div class="chart-tip" id="xp-tip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="r-detail" id="crit-detail">悬停数据点读数；点击 Gardner 曲线点或交会图点群，查看该依据如何用于「模拟演示」页签。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 数据来源汇总（8 条，均经检索核实）</h2><span class="hint">作者 / 年份 / 刊名卷期 / 编号齐全</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源（作者 / 年份 / 编号）</th><th>关键数据或判据</th><th>如何用于本 demo</th></tr></thead>
+        <tbody id="src-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

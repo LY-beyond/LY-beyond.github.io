@@ -97,9 +97,9 @@
     });
     if (cov < 0.999) {
       var x0 = L + Wp * cov;
-      s += '<rect x="' + x0 + '" y="' + T + '" width="' + (L + Wp - x0) + '" height="' + Hp + '" fill="#080c08" opacity=".93"/>';
+      s += '<rect x="' + x0 + '" y="' + T + '" width="' + (L + Wp - x0) + '" height="' + Hp + '" fill="#f3f7f3" opacity=".93"/>';
       for (var h = 0; h < 14; h++) {
-        s += '<line x1="' + (x0 + h * 5.5) + '" y1="' + (T + Hp) + '" x2="' + (x0 + h * 5.5 + 14) + '" y2="' + (T + Hp - 14) + '" stroke="#39402f" stroke-width=".6" opacity=".6"/>';
+        s += '<line x1="' + (x0 + h * 5.5) + '" y1="' + (T + Hp) + '" x2="' + (x0 + h * 5.5 + 14) + '" y2="' + (T + Hp - 14) + '" stroke="#c9d0bf" stroke-width=".6" opacity=".6"/>';
       }
       s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2) + '" font-size="8" fill="var(--tx-3)" text-anchor="middle">无覆盖</text>';
       s += '<text x="' + ((x0 + L + Wp) / 2) + '" y="' + (T + Hp / 2 + 8) + '" font-size="7.5" fill="var(--tx-3)" text-anchor="middle">' + Math.round((1 - cov) * 360) + '°</text>';
@@ -114,16 +114,16 @@
     var s = '<defs><clipPath id="plotClip"><rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '"/></clipPath></defs>';
     s += '<text x="10" y="14" font-size="8.5" fill="var(--tx-2)">电成像展开图 · 深度拉伸显示</text>';
     s += '<text x="420" y="14" font-size="7.5" fill="var(--tx-3)" text-anchor="end">方位 64 扇区 · 采样 0.0025 m</text>';
-    s += '<rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '" fill="#0e1410" stroke="var(--line-2)"/>';
+    s += '<rect x="' + L + '" y="' + T + '" width="' + Wp + '" height="' + Hp + '" fill="#ebf1ed" stroke="var(--line-2)"/>';
     var i, x, y;
     for (i = 0; i < 150; i++) {
       x = L + rnd(i * 1.7) * Wp;
       y = T + rnd(i * 2.9 + 4) * Hp;
-      s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (0.5 + rnd(i) * 0.9).toFixed(1) + '" fill="#3b4a36" opacity=".5"/>';
+      s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (0.5 + rnd(i) * 0.9).toFixed(1) + '" fill="#bac9b5" opacity=".5"/>';
     }
     for (i = 0; i < 8; i++) {
       y = T + Hp * (0.06 + i * 0.118);
-      s += '<line x1="' + L + '" y1="' + y + '" x2="' + (L + Wp) + '" y2="' + y + '" stroke="#55614e" stroke-width=".7" opacity=".45"/>';
+      s += '<line x1="' + L + '" y1="' + y + '" x2="' + (L + Wp) + '" y2="' + y + '" stroke="#a5b19e" stroke-width=".7" opacity=".45"/>';
     }
     s += axisMarkup(L, T, Wp, Hp);
     s += '<g clip-path="url(#plotClip)">' + fractureMarkup(L, T, Wp, Hp, list) + '</g>';

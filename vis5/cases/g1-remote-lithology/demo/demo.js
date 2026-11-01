@@ -4,12 +4,12 @@
 
   var COLS = 36, ROWS = 20, CW = 10, CH = 10, X0 = 10, Y0 = 28;
   var CLASSES = [
-    { n: '砂岩', c: '#c9b98e' },
-    { n: '泥岩', c: '#909a84' },
-    { n: '灰岩', c: '#9fb3b4' },
-    { n: '白云岩', c: '#78b7a8' },
-    { n: '玄武岩', c: '#93839f' },
-    { n: '冲积层', c: '#c08a5c' }
+    { n: '砂岩', c: '#716136' },
+    { n: '泥岩', c: '#717b65' },
+    { n: '灰岩', c: '#4b5f60' },
+    { n: '白云岩', c: '#488778' },
+    { n: '玄武岩', c: '#70607c' },
+    { n: '冲积层', c: '#a36d3f' }
   ];
   var CONFUSE = [0, 4, 3, 2, 1, 0];
   var cells = [];
@@ -72,37 +72,37 @@
   }
 
   function drawImage() {
-    var s = '<rect x="0" y="0" width="380" height="244" fill="#0e130d" rx="6"/>';
-    s += '<text x="10" y="17" font-size="10" fill="#a9b0a0">假彩色合成 R:G:B = 7:5:3 · 10 m/像元</text>';
+    var s = '<rect x="0" y="0" width="380" height="244" fill="#edf2ec" rx="6"/>';
+    s += '<text x="10" y="17" font-size="10" fill="#585f4f">假彩色合成 R:G:B = 7:5:3 · 10 m/像元</text>';
     cells.forEach(function (c, k) {
       var x = X0 + (k % COLS) * CW;
       var y = Y0 + Math.floor(k / COLS) * CH;
       var r1 = rnd(c.seed), r2 = rnd(c.seed + 3.1);
       s += '<rect x="' + x + '" y="' + y + '" width="' + CW + '" height="' + CH + '" fill="' + CLASSES[c.t].c + '"/>';
       s += '<rect x="' + (x + r1 * 6).toFixed(1) + '" y="' + (y + r2 * 6).toFixed(1)
-        + '" width="2.6" height="2.6" fill="#0b0f0a" opacity="' + (0.16 + r1 * 0.26).toFixed(2) + '"/>';
+        + '" width="2.6" height="2.6" fill="#f1f5f0" opacity="' + (0.16 + r1 * 0.26).toFixed(2) + '"/>';
     });
-    s += '<path d="M10 228 L10 156 L120 124 L196 168 L196 228 Z" fill="#0b0f0a" opacity="0.40"/>';
-    s += '<text x="24" y="214" font-size="9.5" fill="#c9c2b0">地形阴影</text>';
+    s += '<path d="M10 228 L10 156 L120 124 L196 168 L196 228 Z" fill="#f1f5f0" opacity="0.40"/>';
+    s += '<text x="24" y="214" font-size="9.5" fill="#4f4836">地形阴影</text>';
     var i, cx, cy, r;
     for (i = 0; i < 70; i++) {
       cx = 272 + rnd(i * 4.7 + 1) * 100;
       cy = 30 + rnd(i * 6.1 + 9) * 66;
       r = 0.9 + rnd(i * 2.3 + 5) * 1.5;
       s += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + r.toFixed(1)
-        + '" fill="#5f7d4a" opacity="' + (0.32 + rnd(i + 11) * 0.3).toFixed(2) + '"/>';
+        + '" fill="#97b582" opacity="' + (0.32 + rnd(i + 11) * 0.3).toFixed(2) + '"/>';
     }
-    s += '<text x="298" y="94" font-size="9.5" fill="#c9c2b0">植被</text>';
-    s += '<line x1="12" y1="236" x2="62" y2="236" stroke="#c9c2b0" stroke-width="1.4"/>';
-    s += '<text x="66" y="239" font-size="8.5" fill="#a9b0a0">0 — 500 m</text>';
+    s += '<text x="298" y="94" font-size="9.5" fill="#4f4836">植被</text>';
+    s += '<line x1="12" y1="236" x2="62" y2="236" stroke="#4f4836" stroke-width="1.4"/>';
+    s += '<text x="66" y="239" font-size="8.5" fill="#585f4f">0 — 500 m</text>';
     $('img').innerHTML = s;
   }
 
   function drawMask(m) {
-    var s = '<rect x="0" y="0" width="380" height="244" fill="#0e130d" rx="6"/>';
-    s += '<text x="10" y="17" font-size="10" fill="#a9b0a0">语义分割掩膜 · 阈值 ' + state.thr.toFixed(2) + '</text>';
+    var s = '<rect x="0" y="0" width="380" height="244" fill="#edf2ec" rx="6"/>';
+    s += '<text x="10" y="17" font-size="10" fill="#585f4f">语义分割掩膜 · 阈值 ' + state.thr.toFixed(2) + '</text>';
     s += '<defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
-      + '<rect width="5" height="5" fill="#141a11"/><line x1="0" y1="0" x2="0" y2="5" stroke="#3a4433" stroke-width="1.6"/></pattern></defs>';
+      + '<rect width="5" height="5" fill="#e8eee5"/><line x1="0" y1="0" x2="0" y2="5" stroke="#c2ccbb" stroke-width="1.6"/></pattern></defs>';
     var k, c, x, y;
     for (k = 0; k < cells.length; k++) {
       c = cells[k];
@@ -124,15 +124,15 @@
         var down = k + COLS < cells.length ? cells[k + COLS] : null;
         if (right && c.pred !== right.pred) {
           s += '<line x1="' + (x + CW) + '" y1="' + y + '" x2="' + (x + CW) + '" y2="' + (y + CH)
-            + '" stroke="#0b0f0a" stroke-width="1.3"/>';
+            + '" stroke="#f1f5f0" stroke-width="1.3"/>';
         }
         if (down && c.pred !== down.pred) {
           s += '<line x1="' + x + '" y1="' + (y + CH) + '" x2="' + (x + CW) + '" y2="' + (y + CH)
-            + '" stroke="#0b0f0a" stroke-width="1.3"/>';
+            + '" stroke="#f1f5f0" stroke-width="1.3"/>';
         }
       }
     }
-    s += '<text x="10" y="236" font-size="9" fill="#7c8474">斜线格 = 置信度不足，交人工复核</text>';
+    s += '<text x="10" y="236" font-size="9" fill="#838b7b">斜线格 = 置信度不足，交人工复核</text>';
     $('mask').innerHTML = s;
   }
 

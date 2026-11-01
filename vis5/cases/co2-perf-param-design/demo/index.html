@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：射孔参数智能设计</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>射孔参数智能设计 · 交互式演示</h1>
+      <p class="lead">调节孔密、相位、穿深与储层参数，实时查看孔眼几何、产能比曲线与三目标帕累托前沿——代理模型把单套方案评估从 25 min 压到 40 ms。</p>
+    </div>
+    <span class="badge">塔里木某砂岩气田 · 38 口水平井</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>产能比按 Karakas &amp; Tariq (1991, SPE 18247-PA) 半解析射孔表皮模型 S_p = S_h + S_v + S_wb 实时计算；穿深按 Thompson (1962) 抗压强度校正折减；出砂阈值口径参考 Mohammed et al. (2025, J. GeoMine)。候选空间：孔密 12–24 孔/m（步长 2）× 相位 60°/90°/120° × 穿深 500–900 mm，共 4,320 套。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">参数优化模拟</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 参数优化模拟 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- ① 孔眼几何 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 射孔孔眼几何示意（横截面 + 1 m 纵向展开）</h2>
+          <span class="hint">相位角决定每平面孔数，孔密决定每米孔数，穿深为进入地层深度</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="geo" viewBox="0 0 500 250" role="img" aria-label="射孔孔眼几何示意图"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b;height:4px"></i>射孔孔眼（穿深已按强度折减）</span>
+          <span><i style="background:#d8d0bc;height:4px"></i>水泥环</span>
+          <span><i style="background:#8a9298;height:4px"></i>套管</span>
+          <span><i style="background:#c9a15a"></i>相位角标注</span>
+        </div>
+      </div>
+
+      <!-- ② 产能比曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 产能比 PR 随孔密变化（Karakas–Tariq 半解析模型）</h2>
+          <span class="hint">悬停显示十字线与三档穿深读数</span>
+        </div>
+        <div class="chart-box" id="pr-box">
+          <svg id="prchart" viewBox="0 0 460 240" role="img" aria-label="产能比随孔密变化曲线"></svg>
+          <div class="chart-tip" id="pr-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>穿深 500 mm</span>
+          <span><i style="background:#2f7d6b;height:3px"></i>当前穿深（加粗）</span>
+          <span><i style="background:#c9a15a"></i>穿深 900 mm</span>
+          <span><i style="background:#b05a51"></i>当前孔密</span>
+        </div>
+      </div>
+
+      <!-- ③ 帕累托散点 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 三目标权衡 · 帕累托散点（189 套局部候选）</h2>
+          <span class="hint">悬停读数 · 点击散点载入该方案 · 当前方案大红圈高亮</span>
+        </div>
+        <p class="hint">横轴产能比（越大越好），纵轴出砂指数（越小越好），点大小 = 相对成本；金边点为帕累托前沿。候选 = 孔密 12–24（步长 2）× 相位 × 穿深（步长 50 mm），其余参数沿用当前储层设置。</p>
+        <div class="chart-box" id="pf-box">
+          <canvas id="pareto" width="460" height="260" role="img" aria-label="帕累托前沿散点图"></canvas>
+          <div class="chart-tip" id="pf-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#3f8560"></i>出砂指数 &lt;0.7</span>
+          <span><i class="dot" style="background:#c9a15a"></i>0.7–1.0</span>
+          <span><i class="dot" style="background:#b05a51"></i>≥1.0（高风险）</span>
+          <span><i style="background:#c9a15a"></i>帕累托前沿连线</span>
+        </div>
+      </div>
+
+      <!-- ④ 指标 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 当前方案关键指标</h2>
+          <span class="hint">代理模型输出 · 单次推理 ≈ 40 ms</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>产能比 PR</span><b id="m-pr">—</b></div>
+          <div class="mcard"><span>出砂指数</span><b id="m-sand">—</b></div>
+          <div class="mcard"><span>孔眼应力集中指数</span><b id="m-dmg">—</b></div>
+          <div class="mcard"><span>机理模型评估耗时</span><b id="m-speed">25<small> min → 40 ms</small></b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>设计参数（6 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>孔密 <output id="o-sd">16 孔/m</output></label>
+            <input type="range" id="s-sd" min="12" max="24" step="2" value="16">
+            <span class="tip">离散步长 2 孔/m（装弹约束）</span>
+          </div>
+          <div class="ctl">
+            <label>相位角 <output id="o-phase">90°</output></label>
+            <input type="range" id="s-phase" min="60" max="120" step="30" value="90">
+            <span class="tip">仅取 60° / 90° / 120° 有限集合</span>
+          </div>
+          <div class="ctl">
+            <label>穿深 <output id="o-lp">700 mm</output></label>
+            <input type="range" id="s-lp" min="500" max="900" step="10" value="700">
+            <span class="tip">按 Thompson 公式随抗压强度折减</span>
+          </div>
+          <div class="ctl">
+            <label>渗透率 <output id="o-k">8 mD</output></label>
+            <input type="range" id="s-k" min="3" max="18" step="0.5" value="8">
+            <span class="tip">低渗 → 近井压降漏斗更陡 → 出砂加剧</span>
+          </div>
+          <div class="ctl">
+            <label>抗压强度 UCS <output id="o-ucs">78 MPa</output></label>
+            <input type="range" id="s-ucs" min="62" max="95" step="1" value="78">
+            <span class="tip">强度越高穿深折减越大、出砂风险越低</span>
+          </div>
+          <div class="ctl">
+            <label>生产压差 <output id="o-dd">6 MPa</output></label>
+            <input type="range" id="s-dd" min="2" max="14" step="0.5" value="6">
+            <span class="tip">压差越大出砂指数越高</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">方案参数自动保存在本地</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型公式（示范口径）：穿深折减 Lp = Lp₀·10^(3.7×10⁻⁵·(6500 − UCS_psi))（Thompson 1962）；表皮 S_p = S_h + S_v + S_wb，S_h = ln(r_w/r_w′(θ))，r_w′ = α_θ·(r_w + Lp)，S_v = 10^a·h_D^(b−1)·r_pD^b，S_wb = c1_θ·e^(c2_θ·r_wD)，系数见「真实数据来源」页（Karakas &amp; Tariq 1991）；产能比 PR = ln(r_e/r_w) / (ln(r_e/r_w) + S_p)，r_w = 0.108 m、r_e = 250 m、k_h/k_v = 10；出砂指数 = (Δp / (0.32·UCS^0.85))·(孔密/16)^0.85·(10/k)^0.25·(1+(120°−θ)/500)，≥1.0 判为高风险；应力集中指数以 16 孔/m、700 mm、90° 为基准 1.0。注：示范用垂井简化口径，仅演示参数联动趋势；工程口径为水平井三维供流模型。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① Karakas–Tariq 半解析模型：相位角系数表（原文 Table 1–3）</h2><span class="hint">悬停柱条读数 · 相位角越小产能越优</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Karakas M., Tariq S.M. (1991), "Semianalytical Productivity Models for Perforated Completions", SPE Production Engineering 6(1):73–82, SPE-18247-PA</b>：有效井径系数 α_θ、井筒表皮系数 c1_θ/c2_θ、垂向汇聚表皮系数 a1/a2/b1/b2，按相位角 0°(360°)/180°/120°/90°/60°/45° 给出。本演示「参数优化模拟」页的产能比即用此模型实时计算。</span>
+        <a href="https://doi.org/10.2118/18247-PA" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="kt-box">
+        <svg id="lit-alpha" viewBox="0 0 880 210" role="img" aria-label="有效井径系数随相位角变化柱状图"></svg>
+        <div class="chart-tip" id="kt-tip"></div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>相位角</th><th>α_θ（有效井径）</th><th>a1</th><th>a2</th><th>b1</th><th>b2</th><th>c1_θ</th><th>c2_θ</th></tr></thead>
+        <tbody id="kt-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 射孔弹 API 穿深实测：4 种 HSD 枪（Schlumberger 弹型）</h2><span class="hint">悬停柱条读数 · 装药量越大穿深越深</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Elsharafi M.O., Bodi T. (2017), "Evaluation of the Productivity of Vertical Oil Wells by Using Different High Shot Density (HSD) Guns", Int. J. Petrochem. Sci. Eng. 2(2): IPCSE.00032</b>：四种 2⅞ in 高孔密射孔枪的 API RP 19B 混凝土靶穿深与入口孔径（匈牙利油田实井评价所用弹型数据）。</span>
+        <a href="https://doi.org/10.15406/ipcse.2017.02.00032" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>API 穿深（in）</h3>
+          <div class="chart-box" id="pen-box">
+            <svg id="lit-pen" viewBox="0 0 430 210" role="img" aria-label="射孔弹穿深柱状图"></svg>
+            <div class="chart-tip" id="pen-tip"></div>
+          </div>
+        </div>
+        <div>
+          <h3>入口孔径（in）</h3>
+          <div class="chart-box" id="eh-box">
+            <svg id="lit-eh" viewBox="0 0 430 210" role="img" aria-label="射孔弹入口孔径柱状图"></svg>
+            <div class="chart-tip" id="eh-tip"></div>
+          </div>
+        </div>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>弹型</th><th>炸药</th><th>最大装药 (g)</th><th>API 穿深 (in)</th><th>入口孔径 (in)</th></tr></thead>
+        <tbody id="charge-body"></tbody>
+      </table>
+      <div class="formula-box">
+        <b>强度折减（本演示采用）：</b>Thompson G.D. (1962), "Effects of Formation Compressive Strength on Perforator Performance", API Drilling and Production Practice, 191–197：实际穿深
+        <code>Lp = Lp_Berea · 10^(3.7×10⁻⁵·(6500 − C_rock))</code>，C 为岩石抗压强度（psi），Berea 基准 6500 psi。本案例 UCS 62–95 MPa（≈9000–13800 psi），穿深折减至标称的 54%–81%。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 出砂启动阈值（疏松砂岩统计判据）</h2><span class="hint">本案例储层 UCS 区间与阈值对比</span></div>
+      <div class="src-bar">
+        <span class="tag real">论文数据</span>
+        <span><b>Mohammed A.O. et al. (2025), "Predictive study to identify the sanding initiation threshold depending on physical and mechanical rock characteristics", Journal of GeoMine, Vol. 3</b>（收稿 2025-08）：UCS 低于 4,200 psi（≈29.0 MPa）、体积模量指数 B-index 低于 1.6×10⁶ psi、S-index 低于 9.2×10⁹ psi² 或总孔隙度 PHIT 高于 20% 时可能出砂。</span>
+        <a href="https://journals.birjand.ac.ir/article_3810.html" target="_blank" rel="noopener">原文↗</a>
+      </div>
+      <div class="chart-wrap">
+        <svg id="lit-ucs" viewBox="0 0 880 120" role="img" aria-label="本案例抗压强度区间与出砂阈值对比"></svg>
+      </div>
+      <table class="lit-table">
+        <thead><tr><th>判据</th><th>阈值</th><th>出砂条件</th><th>本案例储层</th></tr></thead>
+        <tbody>
+          <tr><td>单轴抗压强度 UCS</td><td class="num">4,200 psi（29.0 MPa）</td><td>UCS 低于阈值</td><td class="num">62–95 MPa，高于阈值 2.1–3.3 倍</td></tr>
+          <tr><td>体积模量指数 B-index</td><td class="num">1.6×10⁶ psi</td><td>B 低于阈值</td><td>中低渗致密砂岩，高于阈值</td></tr>
+          <tr><td>S-index（G·cb 组合）</td><td class="num">9.2×10⁹ psi²</td><td>S 低于阈值</td><td>—</td></tr>
+          <tr><td>总孔隙度 PHIT</td><td class="num">20%</td><td>PHIT 高于阈值</td><td>低渗砂岩，通常低于 20%</td></tr>
+        </tbody>
+      </table>
+      <div class="formula-box">
+        <b>解读：</b>本案例储层强度远高于出砂启动阈值，属「不易出砂」区间；但孔密升高会显著放大孔眼间应力集中（案例库口径：孔密 16→24 孔/m 出砂指数 +40%），且含水上升会使临界压差下降 25%–35%（全生命周期校核），故优化模型仍将出砂指数作为独立目标。
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 数据来源汇总</h2><span class="hint">演示页全部模型系数均可查证</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>本演示中的用途</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Karakas &amp; Tariq (1991), SPE 18247-PA, SPE Prod. Eng. 6(1):73–82</td><td>半解析模型 + 相位系数表</td><td>产能比 PR 计算（S_h、S_v、S_wb 全套系数）</td></tr>
+          <tr><td class="num">2</td><td>Thompson (1962), API Drill. &amp; Prod. Prac. 191–197</td><td>穿深-强度校正公式</td><td>穿深随 UCS 折减（Berea 6500 psi 基准）</td></tr>
+          <tr><td class="num">3</td><td>Elsharafi &amp; Bodi (2017), IPCSE 2(2): 00032</td><td>射孔弹 API RP 19B 实测数据</td><td>弹型穿深/孔径展示，验证穿深量级</td></tr>
+          <tr><td class="num">4</td><td>Mohammed et al. (2025), J. GeoMine Vol. 3</td><td>出砂启动统计阈值</td><td>出砂判据口径与储层区间对比</td></tr>
+          <tr><td class="num">5</td><td>案例库业务数据（塔里木某砂岩气田）</td><td>工程边界条件</td><td>埋深 4150–4400 m、UCS 62–95 MPa、渗透率 3–18 mD、候选 4,320 套、评估 25 min → 40 ms、周期 3 天 → 4 h</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

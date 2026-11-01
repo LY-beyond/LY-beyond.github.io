@@ -352,21 +352,54 @@ html[data-theme="dark"] .kicker.jade{color:var(--jade)}
   gap:14px;
 }
 .case-card{
+  --cc-hue:var(--jade);
   position:relative;
   display:flex;flex-direction:column;gap:8px;
   padding:16px 34px 16px 18px;
-  background:var(--card);
-  border:1px solid var(--line);
+  background:linear-gradient(158deg,
+    color-mix(in srgb,var(--cc-hue) 11%,var(--card)) 0%,
+    color-mix(in srgb,var(--cc-hue) 4%,var(--card)) 66%,
+    var(--card) 100%);
+  border:1px solid color-mix(in srgb,var(--cc-hue) 22%,var(--line));
   border-radius:var(--r-m);
   text-decoration:none;color:inherit;
   box-shadow:var(--sh-1);
   transition:transform .16s,border-color .16s,box-shadow .16s;
   min-height:132px;
 }
+/* 左侧色条：以环节色调标识分组 */
+.case-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;pointer-events:none;
+  border-radius:var(--r-m) 0 0 var(--r-m);
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--cc-hue) 72%,transparent),
+    color-mix(in srgb,var(--cc-hue) 24%,transparent));
+}
+/* 五个环节色调：jade / clay / opt 蓝 / nlp 紫 / kg 橄榄绿 */
+.case-card[data-tone="2"]{--cc-hue:var(--clay)}
+.case-card[data-tone="3"]{--cc-hue:var(--c-opt)}
+.case-card[data-tone="4"]{--cc-hue:var(--c-nlp)}
+.case-card[data-tone="5"]{--cc-hue:var(--c-kg)}
 .case-card:hover{
   transform:translateY(-2px);
-  border-color:color-mix(in srgb,var(--jade) 55%,var(--line));
-  box-shadow:0 6px 18px -8px rgba(47,125,107,.42);
+  border-color:color-mix(in srgb,var(--cc-hue) 58%,var(--line));
+  box-shadow:0 8px 20px -10px color-mix(in srgb,var(--cc-hue) 42%,transparent);
+}
+html[data-theme="dark"] .case-card{
+  background:linear-gradient(158deg,
+    color-mix(in srgb,var(--cc-hue) 26%,var(--card)) 0%,
+    color-mix(in srgb,var(--cc-hue) 10%,var(--card)) 66%,
+    var(--card) 100%);
+  border-color:color-mix(in srgb,var(--cc-hue) 34%,var(--line));
+}
+html[data-theme="dark"] .case-card::before{
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--cc-hue) 85%,transparent),
+    color-mix(in srgb,var(--cc-hue) 30%,transparent));
+}
+html[data-theme="dark"] .case-card:hover{
+  border-color:color-mix(in srgb,var(--cc-hue) 66%,var(--line));
+  box-shadow:0 8px 22px -10px color-mix(in srgb,var(--cc-hue) 55%,transparent);
 }
 .case-card .cc-top{display:flex;align-items:center;gap:8px}
 .case-card .cc-stage{

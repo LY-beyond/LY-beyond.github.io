@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：常减压装置操作智能优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>常减压装置操作智能优化 · 交互式演示</h1>
+      <p class="lead">调节炉出口温度、塔顶压力、汽提蒸汽、中段回流与过汽化率，看侧线产品切割、拔出率、重叠度与能耗如何联动，并用网格寻优在安全包络内找更优设定值（SP）。</p>
+    </div>
+    <span class="badge">1,200 万吨/年 · 42 个可调 SP</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>实沸点馏程（TBP）按 GB/T 17280-2017（修改采用 ASTM D2892）；产品馏程按 GB/T 6536-2010 / ASTM D86；减压深拔口径参照 ASTM D5236 真空釜式蒸馏；能耗参照 GB 30251 炼油单位产品能耗限额思路。代理模型为演示用降阶 surrogate，非工业模型。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：装置流程示意 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 装置流程与实时切割（常压塔 + 减压塔）</h2>
+          <span class="hint">侧线收率与炉出口温度随滑块实时刷新</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="flow" viewBox="0 0 470 236" role="img" aria-label="常减压装置流程示意图"></svg>
+        </div>
+        <div class="legend">
+          <span><i style="background:#41699b"></i>石脑油（常顶）</span>
+          <span><i style="background:#2f7d6b"></i>煤油（常一）</span>
+          <span><i style="background:#c9a15a"></i>柴油（常二/三）</span>
+          <span><i style="background:#79828a"></i>蜡油 VGO（减线）</span>
+          <span><i style="background:#b05a51"></i>减压渣油</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：塔内温度剖面 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 塔内温度剖面（常压塔 → 减压塔）</h2>
+          <span class="hint">悬停读数 · 红虚线为 370 ℃ 炉出口安全上限</span>
+        </div>
+        <div class="chart-box" id="box-profile">
+          <canvas id="cv-profile" width="470" height="240" role="img" aria-label="塔内温度剖面曲线"></canvas>
+          <div class="chart-tip" id="tip-profile"></div>
+        </div>
+      </div>
+
+      <!-- 面板 3：侧线产品 TBP 切割与重叠 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 侧线产品 TBP 切割与馏程重叠</h2>
+          <span class="hint">悬停读数 · 刻度为 ASTM D86 95%/5% 点 · 红色为重叠区</span>
+        </div>
+        <div class="chart-box" id="box-cuts">
+          <canvas id="cv-cuts" width="470" height="216" role="img" aria-label="侧线产品馏程切割图"></canvas>
+          <div class="chart-tip" id="tip-cuts"></div>
+        </div>
+        <p class="hint" style="margin-top:4px">短竖线刻度为 ASTM D86 95%（上馏分）/ 5%（下馏分）点；间隙 = 下一馏分 5% 点 − 上一馏分 95% 点，负值即重叠（红框区）。分馏锐度由中段回流与汽提蒸汽决定，重叠过深说明塔板负荷不足或切割太贪。</p>
+      </div>
+
+      <!-- 面板 4：指标卡 + 约束诊断 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 关键指标与约束越限诊断</h2>
+          <span class="hint">对标影子运行考核：轻油收率、总拔、能耗指数</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>轻油收率</span><b id="m-light">—</b></div>
+          <div class="mcard"><span>总拔（轻油+VGO）</span><b id="m-total">—</b></div>
+          <div class="mcard"><span>减压拔出率</span><b id="m-vgo">—</b></div>
+          <div class="mcard"><span>常一/常二间隙</span><b id="m-gap">—</b></div>
+          <div class="mcard"><span>加热炉能耗指数</span><b id="m-energy">—</b></div>
+          <div class="mcard"><span>边际收益</span><b id="m-margin">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 面板 5：可行域散点 + 一键寻优 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 操作点可行域与一键寻优</h2>
+          <span class="hint">横轴常压炉出口温度 · 纵轴减压塔顶压力 · 颜色为边际收益</span>
+        </div>
+        <p class="hint">每个格点对其余变量（减压炉温 / 回流 / 汽提蒸汽）做网格最大化，灰色为越限不可行域。金圈为当前操作点，红星为寻优推荐 SP。</p>
+        <div class="chart-box" id="box-region">
+          <canvas id="cv-region" width="470" height="240" role="img" aria-label="操作点可行域散点"></canvas>
+          <div class="chart-tip" id="tip-region"></div>
+        </div>
+        <div class="btn-row">
+          <button id="btn-opt" type="button">一键寻优（SQP 思路的网格搜索）</button>
+          <button id="btn-reset2" type="button">恢复基线</button>
+        </div>
+        <table class="cmp-table" id="cmp-table">
+          <thead><tr><th>项目</th><th>优化前</th><th>优化后</th><th>Δ</th></tr></thead>
+          <tbody id="cmp-body"><tr><td colspan="4" class="muted">点击「一键寻优」后在此显示优化前后对比</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>操作变量（7 个可调 SP）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="sync-note">RTO 只改 SP、APC 负责执行；相邻两轮 SP 限幅 ±3 ℃ / ±5% 流量。</div>
+        <div class="controls">
+          <div class="ctl">
+            <label>常压炉出口温度 <output id="o-tf">356 ℃</output></label>
+            <input type="range" id="s-tf" min="340" max="370" step="1" value="356">
+            <span class="tip">安全包络上限 370 ℃，越高切割越深</span>
+          </div>
+          <div class="ctl">
+            <label>减压炉出口温度 <output id="o-tvf">398 ℃</output></label>
+            <input type="range" id="s-tvf" min="380" max="412" step="1" value="398">
+            <span class="tip">深拔手段，受结焦风险限制 ≤412 ℃</span>
+          </div>
+          <div class="ctl">
+            <label>常压塔顶压力 <output id="o-ptop">0.050 MPa(g)</output></label>
+            <input type="range" id="s-ptop" min="0.03" max="0.08" step="0.005" value="0.05">
+            <span class="tip">影响塔顶温度与轻烃冷凝</span>
+          </div>
+          <div class="ctl">
+            <label>减压塔顶压力 <output id="o-pvac">3.5 kPa(a)</output></label>
+            <input type="range" id="s-pvac" min="2.0" max="6.5" step="0.1" value="3.5">
+            <span class="tip">真空度越高减压拔出率越高，受抽空器能力限制</span>
+          </div>
+          <div class="ctl">
+            <label>汽提蒸汽（对进料）<output id="o-steam">1.40 %</output></label>
+            <input type="range" id="s-steam" min="0.8" max="2.5" step="0.05" value="1.4">
+            <span class="tip">降低油气分压，助拔但增加蒸汽消耗</span>
+          </div>
+          <div class="ctl">
+            <label>常压中段回流取热比 <output id="o-reflux">0.35</output></label>
+            <input type="range" id="s-reflux" min="0.20" max="0.50" step="0.01" value="0.35">
+            <span class="tip">回流比大则分馏锐度高、重叠小，但能耗上升</span>
+          </div>
+          <div class="ctl">
+            <label>减压过汽化率 <output id="o-ovap">2.5 %</output></label>
+            <input type="range" id="s-ovap" min="1.5" max="5.0" step="0.1" value="2.5">
+            <span class="tip">保证洗涤油，过低易结焦夹带</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">进料 3.3 万 t/d · 产品价差与能耗单价按日更新</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">代理模型（演示用降阶式）：常压切割深度 dA=(Tf−330)/40；真空度因子 vacF=(8−P减顶)/6.5；减压深拔 dV=(T减炉−370)/45·vacF；收率 y_i=基准+灵敏度·(dA, dV, 汽提, 回流)；切割点 cutNK=148+16(dA−0.65)−6Δ回流，cutKD=268+14(dA−0.65)−8Δ回流；分馏锐度 sharp=0.4+0.6·(回流−0.20)/0.35；D86 95%/5% 点由切割点±锐度展开；能耗指数=100·(0.8·炉负荷+0.2·汽提蒸汽）·(1+0.06·Δ回流)；边际收益=Σ(收率×产品价差)−能耗成本，相对基线。硬约束：炉出口温度 ≤370 ℃、柴油 95% 点 ≤365 ℃、石脑油干点 ≤175 ℃、常一/常二间隙 ≥−8 ℃、炉负荷指数 ≤112、渣油收率 ≥12%。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 馏程与切割口径：TBP / ASTM D86 / 减压蒸馏标准</h2><span class="hint">对应 demo 面板 ③「TBP 切割与重叠」与质量约束</span></div>
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB/T 17280-2017《原油蒸馏标准试验方法 15-理论塔板蒸馏柱》</b>（现行，修改采用 ASTM D2892:13）：规定 14–18 块理论板蒸馏柱、回流比 5∶1 下测定原油实沸点（TBP）馏程的方法。<b>对应模块：</b>原油 TBP 曲线与侧线 TBP 切割点（面板 ③ 横轴口径）。</span>
+        <a href="https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=B87DD1E04A8956A716FF8CAAEBA62217" target="_blank" rel="noopener">标准全文↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB/T 6536-2010《石油产品常压蒸馏特性测定法》</b>（现行，修改采用 ASTM D86:2007a）：规定石油产品常压馏程（初馏点、5%–95% 点、干点）测定，是侧线产品馏程与「95% 点 / 5% 点」间隙-重叠计算的法定口径。<b>对应模块：</b>常一线 95% 点、常一/常二间隙（面板 ③ 刻度与指标卡）。</span>
+        <a href="https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D7F0A1D3A7E05397BE0A0AB82A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">国际标准</span>
+        <span><b>ASTM D86-23ae2 <i>Standard Test Method for Distillation of Petroleum Products and Liquid Fuels at Atmospheric Pressure</i></b>：D86 馏程的原始方法标准，炼厂化验室侧线质量控制（如柴油 95% 点）的通用基准。<b>对应模块：</b>质量约束「柴油 95% 点 ≤ 365 ℃」与重叠度定义。</span>
+        <a href="https://www.astm.org/standards/d86.htm" target="_blank" rel="noopener">ASTM↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">国际标准</span>
+        <span><b>ASTM D2892-24 <i>Distillation of Crude Petroleum (15-Theoretical Plate Column)</i> 与 ASTM D5236-18a <i>Distillation of Heavy Hydrocarbon Mixtures (Vacuum Potstill Method)</i></b>：前者为原油 TBP 蒸馏，后者为初沸点 &gt;150 ℃ 重质烃（常底渣油、减压馏分）的减压蒸馏方法，是「减压深拔 / 拔出率」评价的实验室口径。<b>对应模块：</b>减压拔出率、蜡油切割终点（面板 ③ VGO 段与指标卡）。</span>
+        <a href="https://www.astm.org/d5236-18a.html" target="_blank" rel="noopener">ASTM↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 能耗与操作考核口径</h2><span class="hint">对应 demo 指标卡「加热炉能耗指数」与边际收益</span></div>
+      <div class="src-bar">
+        <span class="tag real">国家标准</span>
+        <span><b>GB 30251-2013《炼油单位产品能源消耗限额》</b>（已被新版能耗限额标准代替，限额分级思路沿用）：规定炼油单位产品（能量因数法）能耗限额等级，是加热炉单耗、综合能耗考核与「能耗 −2%~−3%」目标设定的依据。<b>对应模块：</b>能耗指数（基线=100）与优化目标中的能耗成本项。</span>
+        <a href="https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=300737CF9C87769FA891F17D178A7DF9" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 软测量 / 代理模型与 APC-RTO 协同文献</h2><span class="hint">对应 demo 的收率代理模型、约束诊断与「一键寻优→SP 下发」流程</span></div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>《基于多神经网络结构的常压塔侧线产品质量软测量》</b>（厦门大学学报，厦门大学机构库收录）：针对常压塔进料与产品多变，用马氏距离分类 + 多神经网络结构建立侧线产品质量软测量，并用化验值在线校正。<b>对应模块：</b>「原油性质 + 操作变量 → 产品质量」代理模型的训练-校正思路（面板 ② 温度剖面→质量推断）。</span>
+        <a href="https://dspace.xmu.edu.cn/bitstream/handle/2288/13080/%E5%9F%BA%E4%BA%8E%E5%A4%9A%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84%E7%9A%84%E5%B8%B8%E5%8E%8B%E5%A1%94%E4%BE%A7%E7%BA%BF%E4%BA%A7%E5%93%81%E8%B4%A8%E9%87%8F%E8%BD%AF%E6%B5%8B%E9%87%8F.pdf?isAllowed=y&amp;sequence=1" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b><i>Machine Learning-Based Soft Sensors for Vacuum Distillation Unit</i></b>（arXiv:2111.11251，2021）：以 1 小时均值、31 个过程测点为输入，用 MLP（2×30 隐层）预测减压塔侧线 7 个馏出点（2 vol%–100 vol%）的化验值。<b>对应模块：</b>减压侧线馏程软测量与 VGO 切割终点预测（面板 ③ VGO 段）。</span>
+        <a href="https://arxiv.org/abs/2111.11251" target="_blank" rel="noopener">arXiv↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>《常减压装置实时优化中的先进控制系统提升》</b>（维普收录）：某 5 Mt/a 燃料型常减压装置闭环实时优化实践，DCS 为中控 JX300、APC 采用 AVEVA APC + 内嵌 Python 平台，论述基础控制层与先进控制层在 RTO 下的性能提升。<b>对应模块：</b>「RTO 只改 SP、APC 执行、限幅下发」的协同机制（侧栏提示与一键寻优流程）。</span>
+        <a href="http://dianda.cqvip.com/Qikan/Article/Detail?id=7107775755&amp;from=Qikan_Article_Detail" target="_blank" rel="noopener">维普↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>《基于上位机的先进控制与实时优化系统及其应用》</b>（ACROS 系统，280 万吨/年原油蒸馏装置）：覆盖原油预热脱盐、蒸发塔、常压炉、常压塔、减压炉、减压塔的先进控制与实时优化实施案例。<b>对应模块：</b>装置流程拓扑（面板 ① 流程示意）与全装置 RTO 工程形态。</span>
+        <a href="http://www.ipcm.com.cn/zxyd/20020514.pdf" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 来源 ↔ demo 模块对照表</h2><span class="hint">共 8 条真实可查证来源</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>类型</th><th>对应 demo 模块</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>GB/T 17280-2017 原油蒸馏标准试验方法（15 理论板，mod ASTM D2892）</td><td>国家标准</td><td>TBP 切割口径（面板 ③ 横轴）</td></tr>
+          <tr><td class="num">2</td><td>GB/T 6536-2010 石油产品常压蒸馏特性测定法（mod ASTM D86）</td><td>国家标准</td><td>侧线 D86 95%/5% 点、间隙/重叠（面板 ③、指标卡）</td></tr>
+          <tr><td class="num">3</td><td>ASTM D86-23ae2 石油产品常压蒸馏试验方法</td><td>国际标准</td><td>质量约束「柴油 95% 点 ≤365 ℃」</td></tr>
+          <tr><td class="num">4</td><td>ASTM D2892-24 / D5236-18a 原油 TBP 与减压真空釜式蒸馏</td><td>国际标准</td><td>减压拔出率与 VGO 切割终点</td></tr>
+          <tr><td class="num">5</td><td>GB 30251-2013 炼油单位产品能源消耗限额</td><td>国家标准</td><td>能耗指数与能耗成本项</td></tr>
+          <tr><td class="num">6</td><td>厦门大学学报·常压塔侧线产品质量多神经网络软测量</td><td>期刊论文</td><td>产品质量代理模型（面板 ②→质量）</td></tr>
+          <tr><td class="num">7</td><td>arXiv:2111.11251·减压蒸馏装置 ML 软测量</td><td>期刊论文</td><td>减压侧线馏程软测量</td></tr>
+          <tr><td class="num">8</td><td>常减压装置 RTO 中的 APC 系统提升 / ACROS 上位机 APC-RTO 应用</td><td>期刊论文</td><td>RTO→SP 限幅下发与装置流程拓扑（面板 ①⑤）</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" style="margin-top:6px">说明：demo 中的收率-操作变量响应为教学用降阶 surrogate，方向性与上述文献/标准口径一致，数值不用于生产决策。</p>
+    </div>
+
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

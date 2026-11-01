@@ -2,6 +2,18 @@
 (function () {
   'use strict';
 
+  // HiDPI 适配：canvas backing store 按 dpr × CSS 拉伸系数放大，绘制仍用逻辑坐标
+  function setupCanvas(cv, lw, lh) {
+    const dpr = window.devicePixelRatio || 1;
+    const ratio = dpr * ((cv.clientWidth || lw) / lw);
+    const bw = Math.max(1, Math.round(lw * ratio));
+    const bh = Math.max(1, Math.round(lh * ratio));
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return ctx;
+  }
+
   // ---------- 常量 ----------
   const G = 9.81;              // 重力加速度 m/s²
   const M2FT = 3.28084;        // 米转英尺
@@ -159,7 +171,7 @@
     for (let v = Math.ceil(xMin); v <= Math.floor(xMax); v += vStep) {
       const x = x2px(v);
       s += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + ph}" stroke="#efece1" stroke-width="1"/>`;
-      s += `<text x="${x}" y="${H - padB + 12}" font-size="7.5" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${v}</text>`;
+      s += `<text x="${x}" y="${H - 16}" font-size="7.5" fill="#9ba3a9" text-anchor="middle" font-family="monospace">${v}</text>`;
     }
 
     // 孔隙线
@@ -204,13 +216,14 @@
     s += `<text x="${(padL + W - padR) / 2}" y="${H - 4}" font-size="8.5" fill="#79828a" text-anchor="middle">压力梯度 / ECD (ppg)</text>`;
     s += `<text x="10" y="${(padT + padT + ph) / 2}" font-size="8.5" fill="#79828a" text-anchor="middle" transform="rotate(-90 10 ${(padT + padT + ph) / 2})">井深 (m)</text>`;
 
-    // 图例
-    s += `<rect x="${padL}" y="${H - 18}" width="9" height="3" fill="#41699b"/>`;
-    s += `<text x="${padL + 12}" y="${H - 13}" font-size="8" fill="#5d666d">ECD</text>`;
-    s += `<rect x="${padL + 42}" y="${H - 18}" width="9" height="3" fill="#2f7d6b"/>`;
-    s += `<text x="${padL + 54}" y="${H - 13}" font-size="8" fill="#5d666d">孔隙</text>`;
-    s += `<rect x="${padL + 86}" y="${H - 18}" width="9" height="3" fill="#c9a15a"/>`;
-    s += `<text x="${padL + 98}" y="${H - 13}" font-size="8" fill="#5d666d">破裂</text>`;
+    // 图例（移到绘图区内左上角，避开底部刻度与轴标题）
+    const lgY = padT + 12;
+    s += `<rect x="${padL + 4}" y="${lgY - 4}" width="9" height="3" fill="#41699b"/>`;
+    s += `<text x="${padL + 16}" y="${lgY}" font-size="8" fill="#5d666d">ECD</text>`;
+    s += `<rect x="${padL + 46}" y="${lgY - 4}" width="9" height="3" fill="#2f7d6b"/>`;
+    s += `<text x="${padL + 58}" y="${lgY}" font-size="8" fill="#5d666d">孔隙</text>`;
+    s += `<rect x="${padL + 90}" y="${lgY - 4}" width="9" height="3" fill="#c9a15a"/>`;
+    s += `<text x="${padL + 102}" y="${lgY}" font-size="8" fill="#5d666d">破裂</text>`;
 
     svg.innerHTML = s;
   }
@@ -365,8 +378,8 @@
   // ---------- 面板2b：漏失概率热力图 (Canvas) ----------
   function drawHeat(r) {
     const canvas = $('panel-heat');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const W = 430, H = 170;
+    const ctx = setupCanvas(canvas, W, H);
     const padL = 36, padR = 10, padT = 10, padB = 22;
     const pw = W - padL - padR, ph = H - padT - padB;
 
@@ -592,4 +605,300 @@
 
   $('btn-apply-rec').addEventListener('click', applyRecommended);
   $('btn-cur').addEventListener('click', renderCompare);
+
+  // 尺寸变化时重建 canvas backing store，保持清晰
+  let rsTimer = null;
+  window.addEventListener('resize', () => {
+    if (rsTimer) clearTimeout(rsTimer);
+    rsTimer = setTimeout(() => drawHeat(compute()), 120);
+  });
+})();
+
+/* ======= 现场数据页：IODP 348 C0002P 漏失事件（真实数据） ======= */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  // 数据来源：IODP Exp. 348, Site C0002, Hole C0002P（DOI 10.2204/iodp.proc.348.103.2015, CC BY）
+  var MUD = 9.43, ECD = 9.70;               // 泥浆当量 / 实测漏失阈值 ECD（ppg）
+  var EV = [
+    { z: 1954.5, rate: 40,   txt: '40',   desc: '明显漏失，漏速约 40 m³/h' },
+    { z: 1994.5, rate: 7.5,  txt: '5–10', desc: '渗漏，漏速 5–10 m³/h' },
+    { z: 2036.5, rate: 48,   txt: '48',   desc: '严重漏失，漏速约 48 m³/h' },
+    { z: 2041.5, rate: 50,   txt: '50',   desc: '完全漏失，漏速约 50 m³/h（本段最大）' },
+    { z: 2117.5, rate: 27,   txt: '27',   desc: '漏速约 27 m³/h' }
+  ];
+  var ZMIN = 1900, ZMAX = 2140, MINSPAN = 20, RMAX = 60;
+  var Z = { z0: ZMIN, z1: ZMAX, sel: -1 };
+  var PL = 52, PR = 14;
+
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function txt(x, y, s, attrs, parent) {
+    var t = el('text', attrs || {}, parent);
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.textContent = s; return t;
+  }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  function xOf(z, plotW) { return PL + (z - Z.z0) / (Z.z1 - Z.z0) * plotW; }
+
+  function pickStep(span, target) {
+    var cand = [2, 5, 10, 20, 40, 80];
+    for (var i = 0; i < cand.length; i++) if (span / cand[i] <= target) return cand[i];
+    return 160;
+  }
+
+  function drawA() {
+    var svg = document.getElementById('lit-chartA');
+    if (!svg) return;
+    var W = 900, H = 300, PT = 24, PB = 36;
+    var plotW = W - PL - PR, plotH = H - PT - PB;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    // 网格与刻度
+    for (var r = 0; r <= RMAX; r += 10) {
+      var y = PT + plotH - r / RMAX * plotH;
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: r ? '#eee7d8' : '#d8d0bc', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, String(r), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    var span = Z.z1 - Z.z0, step = pickStep(span, 8);
+    for (var z = Math.ceil(Z.z0 / step) * step; z <= Z.z1; z += step) {
+      var x = xOf(z, plotW);
+      el('line', { x1: x, y1: PT, x2: x, y2: PT + plotH, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(x, PT + plotH + 14, String(z), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '深度 (mbsf)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '漏失速率 (m³/h)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // 严重漏失参考线
+    var ys = PT + plotH - 30 / RMAX * plotH;
+    el('line', { x1: PL, y1: ys, x2: W - PR, y2: ys, stroke: '#c9a15a', 'stroke-width': 1, 'stroke-dasharray': '5 3' }, svg);
+    txt(W - PR - 4, ys - 4, '严重漏失 ≥30 m³/h', { 'font-size': 9, fill: '#9a7a1c', 'text-anchor': 'end' }, svg);
+    // 事件柱
+    var bw = Math.max(8, Math.min(46, plotW / span * 4));
+    EV.forEach(function (e, i) {
+      if (e.z < Z.z0 || e.z > Z.z1) return;
+      var x = xOf(e.z, plotW), h = e.rate / RMAX * plotH, y = PT + plotH - h;
+      el('rect', {
+        x: x - bw / 2, y: y, width: bw, height: h, rx: 2,
+        fill: '#b05a51', opacity: Z.sel === i ? 1 : 0.72,
+        stroke: Z.sel === i ? '#7d3a33' : 'none', 'stroke-width': Z.sel === i ? 2 : 0
+      }, svg);
+      txt(x, y - 4, e.txt, { 'font-size': 9.5, fill: Z.sel === i ? '#7d3a33' : '#8a5a52', 'text-anchor': 'middle', 'font-weight': Z.sel === i ? 700 : 400 }, svg);
+    });
+    txt(PL + 4, PT + 12, '视窗 ' + Z.z0.toFixed(0) + '–' + Z.z1.toFixed(0) + ' mbsf', { 'font-size': 9, fill: '#8a9298' }, svg);
+  }
+
+  function drawB() {
+    var svg = document.getElementById('lit-chartB');
+    if (!svg) return;
+    var W = 900, H = 200, PT = 20, PB = 30;
+    var plotW = W - PL - PR, plotH = H - PT - PB;
+    var G0 = 9.2, G1 = 10.0;
+    function yOf(g) { return PT + (G1 - g) / (G1 - G0) * plotH; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fdfcf8', rx: 6 }, svg);
+    for (var g = G0; g <= G1 + 1e-9; g += 0.2) {
+      var gv = Math.round(g * 10) / 10;
+      var y = yOf(gv);
+      el('line', { x1: PL, y1: y, x2: W - PR, y2: y, stroke: '#f1ebdd', 'stroke-width': 1 }, svg);
+      txt(PL - 6, y + 3, gv.toFixed(1), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'end' }, svg);
+    }
+    var span = Z.z1 - Z.z0, step = pickStep(span, 8);
+    for (var z = Math.ceil(Z.z0 / step) * step; z <= Z.z1; z += step) {
+      txt(xOf(z, plotW), PT + plotH + 14, String(z), { 'font-size': 9, fill: '#8a9298', 'text-anchor': 'middle' }, svg);
+    }
+    txt(W / 2, H - 4, '深度 (mbsf)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle' }, svg);
+    txt(12, PT + plotH / 2, '当量密度 (ppg)', { 'font-size': 9.5, fill: '#79828a', 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (PT + plotH / 2) + ')' }, svg);
+    // 泥浆线 / 漏失阈值线
+    var ym = yOf(MUD), ye = yOf(ECD);
+    el('line', { x1: PL, y1: ym, x2: W - PR, y2: ym, stroke: '#2f7d6b', 'stroke-width': 2 }, svg);
+    txt(W - PR - 4, ym + 12, '随钻泥浆 9.43 ppg', { 'font-size': 9, fill: '#2f7d6b', 'text-anchor': 'end' }, svg);
+    el('line', { x1: PL, y1: ye, x2: W - PR, y2: ye, stroke: '#b05a51', 'stroke-width': 2, 'stroke-dasharray': '6 3' }, svg);
+    /* 说明放在阈值线下方，避免与事件数值标签（dot 上方）相撞 */
+    txt(W - PR - 4, ye + 12, '实测漏失阈值 ECD ≈ 9.70 ppg', { 'font-size': 9, fill: '#b05a51', 'text-anchor': 'end' }, svg);
+    // 事件点：漏失发生时环空当量触及阈值
+    EV.forEach(function (e, i) {
+      if (e.z < Z.z0 || e.z > Z.z1) return;
+      var x = xOf(e.z, plotW);
+      el('circle', {
+        cx: x, cy: ye, r: Z.sel === i ? 8 : 5.5,
+        fill: '#b05a51', opacity: Z.sel === i ? 1 : 0.75,
+        stroke: Z.sel === i ? '#7d3a33' : '#fdfcf8', 'stroke-width': Z.sel === i ? 2 : 1.2
+      }, svg);
+      txt(x, ye - 10, e.txt, { 'font-size': 9, fill: '#8a5a52', 'text-anchor': 'middle' }, svg);
+    });
+  }
+
+  function drawAll() { drawA(); drawB(); updateLabel(); }
+
+  function updateLabel() {
+    var l = document.getElementById('z-label');
+    if (l) l.textContent = '视窗 ' + Z.z0.toFixed(0) + '–' + Z.z1.toFixed(0) + ' mbsf';
+  }
+
+  function setView(a, b) {
+    var span = b - a;
+    if (span < MINSPAN) { var c = (a + b) / 2; a = c - MINSPAN / 2; b = a + MINSPAN; }
+    if (a < ZMIN) { b -= (a - ZMIN); a = ZMIN; }
+    if (b > ZMAX) { a -= (b - ZMAX); b = ZMAX; }
+    a = clamp(a, ZMIN, ZMAX); b = clamp(b, a, ZMAX);
+    if (b - a < MINSPAN) { b = ZMAX; a = ZMAX - MINSPAN; }
+    Z.z0 = a; Z.z1 = b;
+    drawAll();
+  }
+
+  function renderDetail() {
+    var d = document.getElementById('lit-detail');
+    if (!d) return;
+    if (Z.sel < 0) {
+      d.className = 'r-detail';
+      d.innerHTML = '悬停读取事件读数；点击柱状或圆点锁定该次漏失事件；点击下表行同样联动。共 5 次事件，漏速 5–50 m³/h，阈值裕度仅 Δ = 9.70 − 9.43 = <b>0.27 ppg</b>。';
+      return;
+    }
+    var e = EV[Z.sel];
+    d.className = 'r-detail active';
+    d.innerHTML = '<b>事件 #' + (Z.sel + 1) + ' · ' + e.z.toFixed(1) + ' mbsf</b>：漏失速率 <b>' + e.txt + ' m³/h</b>；' + e.desc +
+      '。当量密度触及漏失阈值 <b>≈9.70 ppg</b>（随钻泥浆 9.43 ppg，环空摩阻增量 ≈0.27 ppg）。' +
+      (e.rate >= 30 ? '漏速 ≥30 m³/h，属严重漏失，需立即降排量/降密度并考虑堵漏材料。' : '漏速较低，属渗漏，可通过降排量与随钻堵漏控制。');
+  }
+
+  function select(i, pan) {
+    Z.sel = i;
+    if (pan && i >= 0) {
+      var e = EV[i];
+      if (e.z < Z.z0 || e.z > Z.z1) {
+        var span = Z.z1 - Z.z0;
+        setView(e.z - span / 2, e.z + span / 2);
+      }
+    }
+    drawAll(); renderDetail();
+    var rows = document.querySelectorAll('#lit-body tr');
+    rows.forEach(function (r, k) { r.classList.toggle('sel', k === Z.sel); });
+  }
+
+  function bindChart(svgId, tipId, boxId) {
+    var svg = document.getElementById(svgId);
+    var tip = document.getElementById(tipId);
+    var box = document.getElementById(boxId);
+    if (!svg || !tip || !box) return;
+    var W = svgId === 'lit-chartA' ? 900 : 900;
+    function vxz(evt) {
+      var r = svg.getBoundingClientRect();
+      return { vx: (evt.clientX - r.left) * (W / r.width), z: 0, rect: r };
+    }
+    function zAt(evt) {
+      var r = svg.getBoundingClientRect();
+      var vx = (evt.clientX - r.left) * (W / r.width);
+      var plotW = W - PL - PR;
+      return Z.z0 + clamp((vx - PL) / plotW, 0, 1) * (Z.z1 - Z.z0);
+    }
+    function nearest(z) {
+      var best = -1, bd = 1e9;
+      EV.forEach(function (e, i) {
+        var d = Math.abs(e.z - z);
+        if (d < bd) { bd = d; best = i; }
+      });
+      return { i: best, d: bd };
+    }
+    function showTip(html, evt) {
+      var r = box.getBoundingClientRect();
+      tip.innerHTML = html;
+      tip.style.display = 'block';
+      tip.style.left = clamp(evt.clientX - r.left + 12, 4, r.width - 170) + 'px';
+      tip.style.top = clamp(evt.clientY - r.top - 8, 4, r.height - 70) + 'px';
+    }
+    function hideTip() { tip.style.display = 'none'; }
+    var drag = null, moved = 0;
+    svg.addEventListener('wheel', function (evt) {
+      evt.preventDefault();
+      var z = zAt(evt);
+      var f = evt.deltaY > 0 ? 1.25 : 0.8;
+      var a = z - (z - Z.z0) * f, b = z + (Z.z1 - z) * f;
+      setView(a, b);
+    }, { passive: false });
+    svg.addEventListener('mousedown', function (evt) {
+      drag = { x: evt.clientX, a: Z.z0, b: Z.z1 }; moved = 0;
+      evt.preventDefault();
+    });
+    window.addEventListener('mousemove', function (evt) {
+      if (drag) {
+        var r = svg.getBoundingClientRect();
+        var dx = (evt.clientX - drag.x) * (W / r.width);
+        moved = Math.max(moved, Math.abs(dx));
+        if (moved > 3) {
+          var plotW = W - PL - PR;
+          var dz = dx / plotW * (drag.b - drag.a);
+          setView(drag.a - dz, drag.b - dz);
+        }
+        return;
+      }
+      // 悬停读数
+      var z = zAt(evt);
+      var n = nearest(z);
+      var tol = (Z.z1 - Z.z0) / 40 + 1;
+      if (n.i >= 0 && n.d <= tol) {
+        var e = EV[n.i];
+        showTip('<b>#' + (n.i + 1) + ' · ' + e.z.toFixed(1) + ' mbsf</b><br>漏速 ' + e.txt + ' m³/h<br><span style="color:#8a9298">点击锁定</span>', evt);
+      } else hideTip();
+    });
+    svg.addEventListener('mouseleave', hideTip);
+    window.addEventListener('mouseup', function () { drag = null; });
+    svg.addEventListener('dblclick', function () { setView(ZMIN, ZMAX); });
+    svg.addEventListener('click', function (evt) {
+      if (moved > 3) return;
+      var z = zAt(evt);
+      var n = nearest(z);
+      var tol = (Z.z1 - Z.z0) / 40 + 1;
+      select(n.i >= 0 && n.d <= tol ? n.i : -1, false);
+    });
+  }
+
+  function bindTable() {
+    var body = document.getElementById('lit-body');
+    if (!body) return;
+    EV.forEach(function (e, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="num">' + (i + 1) + '</td><td class="num">' + e.z.toFixed(1) + '</td><td class="num">' + e.txt + '</td><td>' + e.desc + '</td>';
+      tr.addEventListener('click', function () { select(i, true); });
+      body.appendChild(tr);
+    });
+  }
+
+  function bindZoomBtns() {
+    var zi = document.getElementById('z-in'), zo = document.getElementById('z-out'), zr = document.getElementById('z-reset');
+    if (zi) zi.addEventListener('click', function () {
+      var c = (Z.z0 + Z.z1) / 2, s = (Z.z1 - Z.z0) * 0.7;
+      setView(c - s / 2, c + s / 2);
+    });
+    if (zo) zo.addEventListener('click', function () {
+      var c = (Z.z0 + Z.z1) / 2, s = (Z.z1 - Z.z0) * 1.4;
+      setView(c - s / 2, c + s / 2);
+    });
+    if (zr) zr.addEventListener('click', function () { setView(ZMIN, ZMAX); });
+  }
+
+  function bindTabs() {
+    var tabs = document.querySelectorAll('.tab');
+    var panes = document.querySelectorAll('.tabpane');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var id = this.getAttribute('data-tab');
+        tabs.forEach(function (o) { o.classList.remove('active'); });
+        this.classList.add('active');
+        panes.forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + id); });
+      });
+    });
+  }
+
+  bindTabs();
+  bindChart('lit-chartA', 'lit-tipA', 'lit-boxA');
+  bindChart('lit-chartB', 'lit-tipB', 'lit-boxB');
+  bindTable();
+  bindZoomBtns();
+  drawAll();
+  renderDetail();
 })();

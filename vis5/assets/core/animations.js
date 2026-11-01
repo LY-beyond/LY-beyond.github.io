@@ -45,14 +45,15 @@
      ═════════════════════════════════════════════════════════════ */
 
   // 单个图表面板外壳：返回 SVG 片段（含背景/标题/绘图区）
-  function panel(x, y, title, color, chartH) {
+  function panel(x, y, title, color, chartH, w) {
     chartH = chartH || 72;
+    w = w || 230;
     return '' +
       '<g transform="translate(' + x + ',' + y + ')">' +
-      '  <rect width="230" height="' + (chartH + 40) + '" rx="6" fill="var(--card)" fill-opacity=".82" stroke="' + color + '" stroke-opacity=".35"/>' +
+      '  <rect width="' + w + '" height="' + (chartH + 40) + '" rx="6" fill="var(--card)" fill-opacity=".82" stroke="' + color + '" stroke-opacity=".35"/>' +
       '  <text x="10" y="16" font-size="10" fill="' + color + '" font-weight="bold">' + title + '</text>' +
-      '  <line x1="10" y1="24" x2="220" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-      '  <rect x="10" y="30" width="210" height="' + chartH + '" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
+      '  <line x1="10" y1="24" x2="' + (w - 10) + '" y2="24" stroke="var(--line)" stroke-width="1"/>' +
+      '  <rect x="10" y="30" width="' + (w - 20) + '" height="' + chartH + '" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
       '</g>';
   }
 
@@ -116,14 +117,16 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="geoClip"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#geoClip)">' +
           '  <!-- 渐变天空 + 星空 -->' +
           '  <rect width="800" height="90" fill="url(#sky)"/>' +
           '  <circle cx="80" cy="30" r="1" fill="var(--ink-3)"/><circle cx="200" cy="15" r="1.2" fill="var(--ink-3)"/>' +
-          '  <circle cx="380" cy="40" r="0.8" fill="var(--ink-3)"/><circle cx="550" cy="20" r="1" fill="var(--ink-3)"/>' +
-          '  <circle cx="700" cy="35" r="1.1" fill="var(--ink-3)"/>' +
+          '  <circle cx="380" cy="40" r="0.8" fill="var(--ink-3)"/><circle cx="455" cy="20" r="1" fill="var(--ink-3)"/>' +
+          '  <circle cx="486" cy="35" r="1.1" fill="var(--ink-3)"/>' +
           '  <!-- 太阳（c-opt 蓝+clay 橙） -->' +
-          '  <circle cx="720" cy="60" r="18" fill="none" stroke="var(--clay)" stroke-width="1" stroke-dasharray="3 2"/>' +
-          '  <circle cx="720" cy="60" r="10" fill="var(--clay)" fill-opacity=".25"/>' +
+          '  <circle cx="465" cy="62" r="14" fill="none" stroke="var(--clay)" stroke-width="1" stroke-dasharray="3 2"/>' +
+          '  <circle cx="465" cy="62" r="8" fill="var(--clay)" fill-opacity=".25"/>' +
           '  <!-- 山脉：三层立体（ink-3 / jade / clay） -->' +
           '  <path d="M0,290 Q80,220 160,260 T320,245 T480,270 T640,240 T800,260 L800,420 L0,420Z" fill="var(--ink-3)" fill-opacity=".25"/>' +
           '  <path d="M0,320 Q100,260 200,290 T400,280 T600,300 T800,280 L800,420 L0,420Z" fill="var(--jade)" fill-opacity=".28"/>' +
@@ -135,7 +138,7 @@
           '  <g fill="var(--c-kg)" fill-opacity=".25">' +
           '    <circle cx="130" cy="330" r="4"/><circle cx="145" cy="338" r="3"/><circle cx="155" cy="328" r="3.5"/>' +
           '    <circle cx="380" cy="315" r="4"/><circle cx="395" cy="322" r="3"/><circle cx="405" cy="310" r="3.5"/>' +
-          '    <circle cx="600" cy="300" r="4"/><circle cx="615" cy="308" r="3"/><circle cx="625" cy="296" r="3.5"/>' +
+          '    <circle cx="455" cy="300" r="4"/><circle cx="470" cy="308" r="3"/><circle cx="480" cy="296" r="3.5"/>' +
           '  </g>' +
           '  <!-- 卫星（jade 绿机体 + clay 橙太阳能板 + c-opt 蓝通讯天线） -->' +
           '  <g class="geo-sat">' +
@@ -148,44 +151,48 @@
           '  </g>' +
           '  <!-- 化探采样点（jade 普通 + clay 异常） -->' +
           '  <g class="geo-samples">' +
-          '    <g class="smpl s1"><circle cx="150" cy="290" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
-          '    <g class="smpl s2"><circle cx="270" cy="330" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
-          '    <g class="smpl s3"><circle cx="390" cy="285" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
-          '    <g class="smpl s4"><circle cx="510" cy="310" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
-          '    <g class="smpl s5"><circle cx="630" cy="275" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
-          '    <g class="smpl s6"><circle cx="700" cy="320" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
+          '    <g class="smpl s1"><circle cx="120" cy="290" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
+          '    <g class="smpl s2"><circle cx="205" cy="330" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
+          '    <g class="smpl s3"><circle cx="295" cy="285" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
+          '    <g class="smpl s4"><circle cx="375" cy="310" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
+          '    <g class="smpl s5"><circle cx="440" cy="278" r="5" fill="var(--jade)"/><circle r="14" fill="url(#jadePulse)"/></g>' +
+          '    <g class="smpl s6"><circle cx="482" cy="325" r="5" fill="var(--clay)"/><circle r="14" fill="url(#clayPulse)"/></g>' +
           '  </g>' +
           '  <!-- AI 分割多边形（c-cv 青色 + 标注） -->' +
           '  <g class="geo-ai" opacity="0">' +
-          '    <polygon points="80,340 200,310 260,360 140,380" fill="var(--c-cv)" fill-opacity=".18" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
-          '    <polygon points="320,300 440,275 520,320 400,340" fill="var(--c-nlp)" fill-opacity=".15" stroke="var(--c-nlp)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
-          '    <polygon points="560,280 680,260 740,310 620,320" fill="var(--c-cv)" fill-opacity=".2" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
-          '    <text x="82" y="336" font-size="9" fill="var(--c-cv)">砂岩 92%</text>' +
-          '    <text x="322" y="296" font-size="9" fill="var(--c-nlp)">泥岩 88%</text>' +
-          '    <text x="562" y="276" font-size="9" fill="var(--c-cv)">砂岩 85%</text>' +
+          '    <polygon points="70,340 190,310 250,360 130,380" fill="var(--c-cv)" fill-opacity=".18" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+          '    <polygon points="275,300 370,278 410,320 315,340" fill="var(--c-nlp)" fill-opacity=".15" stroke="var(--c-nlp)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+          '    <polygon points="400,285 462,270 492,310 420,325" fill="var(--c-cv)" fill-opacity=".2" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+          '    <text x="72" y="336" font-size="9" fill="var(--c-cv)">砂岩 92%</text>' +
+          '    <text x="277" y="296" font-size="9" fill="var(--c-nlp)">泥岩 88%</text>' +
+          '    <text x="402" y="281" font-size="9" fill="var(--c-cv)">砂岩 85%</text>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- 右侧数据栏底衬：与场景分区，避免面板压住背景物体 -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
           '  <!-- 数据面板1：化探元素浓度曲线（clay 橙） -->' +
-          panel(540, 110, '化探浓度曲线 (ppm)', 'var(--clay)', 52) +
-          '  <path class="geo-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(540,110)"/>' +
-          '  <path class="geo-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(540,110)"/>' +
+          panel(544, 156, '化探浓度曲线 (ppm)', 'var(--clay)', 70) +
+          '  <path class="geo-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,156)"/>' +
+          '  <path class="geo-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(544,156)"/>' +
           '  <!-- 数据面板2：岩性分割置信度柱状图（c-cv 青） -->' +
-          panel(540, 215, '岩性分割置信度', 'var(--c-cv)', 52) +
-          '  <g class="geo-chart2" transform="translate(540,215)"></g>' +
+          panel(544, 290, '岩性分割置信度', 'var(--c-cv)', 70) +
+          '  <g class="geo-chart2" transform="translate(544,290)"></g>' +
           '  <!-- HUD 面板：jade 标题 + clay 异常 + c-cv 方法色 -->' +
-          '  <g transform="translate(580,20)"><rect width="200" height="82" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--jade)" stroke-opacity=".25"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--jade-d)" font-weight="bold">CV · 遥感解译</text>' +
-          '    <line x1="10" y1="24" x2="190" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="40" font-size="9" fill="var(--ink-2)">岩性区 <tspan class="hud-g1" fill="var(--c-cv)">0 / 3</tspan></text>' +
-          '    <text x="10" y="55" font-size="9" fill="var(--ink-2)">化探异常 <tspan class="hud-g2" fill="var(--clay)">0</tspan></text>' +
-          '    <text x="10" y="70" font-size="9" fill="var(--ink-2)">置信度 <tspan class="hud-g3" fill="var(--jade-d)">--%</tspan></text>' +
-          '    <circle cx="190" cy="16" r="5" fill="none" stroke="var(--c-cv)" stroke-width="1.2"/><text x="182" y="19" font-size="7" fill="var(--c-cv)">AI</text>' +
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--jade)" stroke-opacity=".25"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--jade-d)" font-weight="bold">CV · 遥感解译</text>' +
+          '    <line x1="12" y1="26" x2="218" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="50" font-size="9" fill="var(--ink-2)">岩性区 <tspan class="hud-g1" fill="var(--c-cv)">0 / 3</tspan></text>' +
+          '    <text x="12" y="68" font-size="9" fill="var(--ink-2)">化探异常 <tspan class="hud-g2" fill="var(--clay)">0</tspan></text>' +
+          '    <text x="12" y="86" font-size="9" fill="var(--ink-2)">置信度 <tspan class="hud-g3" fill="var(--jade-d)">--%</tspan></text>' +
+          '    <circle cx="216" cy="18" r="5" fill="none" stroke="var(--c-cv)" stroke-width="1.2"/><text x="208" y="21" font-size="7" fill="var(--c-cv)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
         var step = Math.min(4, Math.floor(p * 4.001)), sub = (p * 4) - step;
         var sat = $('.geo-sat', svg);
         if (step === 0) {
-          var sx = lerp(40, 720, sub);
+          var sx = lerp(40, 400, sub);
           sat.setAttribute('transform', 'translate(' + (sx - 87) + ',0)');
         } else if (step === 1) {
           $all('.smpl', svg).forEach(function (el, i) {
@@ -197,8 +204,8 @@
           var n1 = 60, cut1 = Math.floor(n1 * sub);
           var w1 = genWave(n1, 0.3, 3, 1.2, 0.5);
           var w1b = genWave(n1, 0.1, 5, 0.5, 0.3);
-          $('.geo-chart1', svg).setAttribute('d', linePath(w1.slice(0, cut1 + 1), 12, 32, 206, 48));
-          $('.geo-chart1b', svg).setAttribute('d', linePath(w1b.slice(0, cut1 + 1), 12, 32, 206, 48));
+          $('.geo-chart1', svg).setAttribute('d', linePath(w1.slice(0, cut1 + 1), 12, 32, 206, 66));
+          $('.geo-chart1b', svg).setAttribute('d', linePath(w1b.slice(0, cut1 + 1), 12, 32, 206, 66));
         } else if (step === 2) {
           $('.geo-ai', svg).setAttribute('opacity', sub.toFixed(2));
           $('.hud-g1', svg).textContent = '3 / 3';
@@ -206,7 +213,7 @@
           // 岩性分割置信度柱状图（6 个采样区）
           var conf = [0.92, 0.88, 0.85, 0.78 + sub * 0.15, 0.82 + sub * 0.1, 0.75 + sub * 0.18];
           var g2 = $('.geo-chart2', svg);
-          g2.innerHTML = bars(conf, 14, 32, 202, 48, 'var(--c-cv)', 3);
+          g2.innerHTML = bars(conf, 14, 32, 202, 66, 'var(--c-cv)', 3);
         } else if (step === 3) { $('.geo-ai', svg).setAttribute('opacity', '1'); $('.hud-g3', svg).textContent = '96'; }
       }
     },
@@ -219,6 +226,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipSeismic"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipSeismic)">' +
           '  <!-- 天空 + 海面（jade 浅绿） -->' +
           '  <rect width="800" height="120" fill="url(#sky)"/>' +
           '  <rect width="800" x="0" y="120" height="110" fill="var(--jade)" fill-opacity=".1"/>' +
@@ -270,30 +279,34 @@
           '    <path class="ray r5" d="M145,190 L145,190" stroke="var(--clay)" stroke-width="1.5"/>' +
           '    <path class="ray r6" d="M145,190 L145,190" stroke="var(--jade-d)" stroke-width="1.5"/>' +
           '  </g>' +
-          '  <!-- 检波器拖缆（5 个） -->' +
-          '  <line x1="200" y1="185" x2="780" y2="185" stroke="var(--ink-2)" stroke-width="1.2" stroke-opacity=".7"/>' +
+          '  <!-- 检波器拖缆（5 个，整体收进场景裁剪区） -->' +
+          '  <line x1="200" y1="185" x2="508" y2="185" stroke="var(--ink-2)" stroke-width="1.2" stroke-opacity=".7"/>' +
           '  <g>' +
           '    <g class="gh g1"><rect x="230" y="180" width="8" height="12" fill="var(--c-cv)"/><rect x="232" y="182" width="4" height="4" fill="var(--clay)"/></g>' +
-          '    <g class="gh g2"><rect x="340" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="342" y="182" width="4" height="4" fill="none"/></g>' +
-          '    <g class="gh g3"><rect x="450" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="452" y="182" width="4" height="4" fill="none"/></g>' +
-          '    <g class="gh g4"><rect x="560" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="562" y="182" width="4" height="4" fill="none"/></g>' +
-          '    <g class="gh g5"><rect x="670" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="672" y="182" width="4" height="4" fill="none"/></g>' +
+          '    <g class="gh g2"><rect x="300" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="302" y="182" width="4" height="4" fill="none"/></g>' +
+          '    <g class="gh g3"><rect x="370" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="372" y="182" width="4" height="4" fill="none"/></g>' +
+          '    <g class="gh g4"><rect x="435" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="437" y="182" width="4" height="4" fill="none"/></g>' +
+          '    <g class="gh g5"><rect x="500" y="180" width="8" height="12" fill="var(--c-cv)" fill-opacity=".3"/><rect x="502" y="182" width="4" height="4" fill="none"/></g>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- 右侧数据栏底衬：与场景分区，避免面板压住背景物体 -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
           '  <!-- 数据面板1：地震波振幅衰减曲线（c-cv 青） -->' +
-          panel(550, 120, '地震波振幅衰减', 'var(--c-cv)', 52) +
-          '  <path class="sh-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(550,120)"/>' +
-          '  <path class="sh-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(550,120)"/>' +
+          panel(544, 155, '地震波振幅衰减', 'var(--c-cv)', 70) +
+          '  <path class="sh-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(544,155)"/>' +
+          '  <path class="sh-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(544,155)"/>' +
           '  <!-- 数据面板2：检波器信号强度（c-ts 橙） -->' +
-          panel(550, 225, '检波器信号强度', 'var(--c-ts)', 52) +
-          '  <g class="sh-chart2" transform="translate(550,225)"></g>' +
+          panel(544, 288, '检波器信号强度', 'var(--c-ts)', 70) +
+          '  <g class="sh-chart2" transform="translate(544,288)"></g>' +
           '  <!-- HUD：c-ts 时序面板 + clay 断层置信度 -->' +
-          '  <g transform="translate(560,20)"><rect width="220" height="92" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-ts)" stroke-opacity=".25"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-ts)" font-weight="bold">CV · 断层解释</text>' +
-          '    <line x1="10" y1="24" x2="210" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">炮次 <tspan class="sh-s1" fill="var(--jade-d)">0 / 120</tspan></text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">检波器 <tspan class="sh-s2" fill="var(--c-cv)">0 激活</tspan></text>' +
-          '    <text x="10" y="74" font-size="9" fill="var(--ink-2)">AI 断层 <tspan class="sh-s3" fill="var(--clay)">--</tspan></text>' +
-          '    <circle cx="210" cy="16" r="5" fill="none" stroke="var(--c-ts)" stroke-width="1.2"/><text x="202" y="19" font-size="7" fill="var(--c-ts)">AI</text>' +
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-ts)" stroke-opacity=".25"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-ts)" font-weight="bold">CV · 断层解释</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="52" font-size="9" fill="var(--ink-2)">炮次 <tspan class="sh-s1" fill="var(--jade-d)">0 / 120</tspan></text>' +
+          '    <text x="12" y="74" font-size="9" fill="var(--ink-2)">检波器 <tspan class="sh-s2" fill="var(--c-cv)">0 激活</tspan></text>' +
+          '    <text x="12" y="96" font-size="9" fill="var(--ink-2)">AI 断层 <tspan class="sh-s3" fill="var(--clay)">--</tspan></text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-ts)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-ts)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -320,17 +333,17 @@
           var ns = 60, cuts = Math.floor(ns * sub);
           var decay = genWave(ns, 0.4, 2, 0, 0.7).map(function (v, i) { return v * (1 - i / ns * 0.6); });
           var reflect = genWave(ns, 0.25, 4, 2, 0.4).map(function (v, i) { return v * (i / ns); });
-          $('.sh-chart1', svg).setAttribute('d', linePath(decay.slice(0, cuts + 1), 12, 32, 206, 48));
-          $('.sh-chart1b', svg).setAttribute('d', linePath(reflect.slice(0, cuts + 1), 12, 32, 206, 48));
+          $('.sh-chart1', svg).setAttribute('d', linePath(decay.slice(0, cuts + 1), 12, 32, 206, 66));
+          $('.sh-chart1b', svg).setAttribute('d', linePath(reflect.slice(0, cuts + 1), 12, 32, 206, 66));
           // 检波器信号柱状图
           var sig = [0.9, 0.7, 0.5, 0.35, 0.2].map(function (v, i) { return sub > i * 0.2 ? v : 0; });
-          $('.sh-chart2', svg).innerHTML = bars(sig, 14, 32, 202, 48, 'var(--c-ts)', 4);
+          $('.sh-chart2', svg).innerHTML = bars(sig, 14, 32, 202, 66, 'var(--c-ts)', 4);
         } else if (step === 2) {
           $('.fault', svg).setAttribute('stroke-opacity', sub.toFixed(2)); $('.fault', svg).setAttribute('filter', sub > 0.5 ? 'url(#stgGlow)' : '');
           $('.sh-s1', svg).textContent = '120 / 120';
           $('.sh-s3', svg).textContent = Math.round(60 + sub * 30) + '%';
           var sig2 = [0.9, 0.7, 0.5, 0.35, 0.2];
-          $('.sh-chart2', svg).innerHTML = bars(sig2, 14, 32, 202, 48, 'var(--c-ts)', 4);
+          $('.sh-chart2', svg).innerHTML = bars(sig2, 14, 32, 202, 66, 'var(--c-ts)', 4);
         } else if (step === 3) { $('.sh-s3', svg).textContent = '90%'; $('.fault', svg).setAttribute('stroke-opacity', '1'); }
       }
     },
@@ -343,6 +356,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipDrilling"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipDrilling)">' +
           '  <!-- 地面 + 4 层地层（jade + clay 油气层高亮） -->' +
           '  <rect y="140" width="800" height="280" fill="url(#earthG)" fill-opacity=".5"/>' +
           '  <line x1="0" y1="140" x2="800" y2="140" stroke="var(--ink-3)" stroke-opacity=".5"/>' +
@@ -354,13 +369,13 @@
           '  <g class="dl-gas">' +
           '    <circle class="gs g1" cx="200" cy="245" r="2.5" fill="var(--c-cv)" fill-opacity=".5"/>' +
           '    <circle class="gs g2" cx="320" cy="255" r="2" fill="var(--c-cv)" fill-opacity=".5"/>' +
-          '    <circle class="gs g3" cx="550" cy="240" r="3" fill="var(--c-cv)" fill-opacity=".5"/>' +
-          '    <circle class="gs g4" cx="680" cy="250" r="2.5" fill="var(--c-cv)" fill-opacity=".5"/>' +
+          '    <circle class="gs g3" cx="440" cy="240" r="3" fill="var(--c-cv)" fill-opacity=".5"/>' +
+          '    <circle class="gs g4" cx="500" cy="250" r="2.5" fill="var(--c-cv)" fill-opacity=".5"/>' +
           '  </g>' +
           '  <!-- 井眼 + 套管 -->' +
-          '  <rect x="485" y="140" width="30" height="280" fill="var(--ink-2)" fill-opacity=".25"/>' +
+          '  <rect x="465" y="140" width="30" height="280" fill="var(--ink-2)" fill-opacity=".25"/>' +
           '  <!-- 完整井架 Derrick（4 面 X bracing + 天车 + 游车） -->' +
-          '  <g transform="translate(500,0)">' +
+          '  <g transform="translate(480,0)">' +
           '    <!-- 主柱 -->' +
           '    <line x1="-38" y1="0" x2="-28" y2="130" stroke="var(--ink-2)" stroke-width="3"/>' +
           '    <line x1="38" y1="0" x2="28" y2="130" stroke="var(--ink-2)" stroke-width="3"/>' +
@@ -382,15 +397,15 @@
           '    <rect x="-8" y="28" width="16" height="6" fill="var(--ink-2)"/>' +
           '  </g>' +
           '  <!-- 转盘（带旋转标记） -->' +
-          '  <g class="dl-rot" transform="translate(500,145)">' +
+          '  <g class="dl-rot" transform="translate(480,145)">' +
           '    <circle cx="0" cy="0" r="16" fill="var(--jade)" fill-opacity=".3" stroke="var(--jade)" stroke-width="1.5"/>' +
           '    <circle cx="0" cy="0" r="8" fill="var(--ink-2)"/>' +
           '    <line class="rot-l1" x1="-6" y1="0" x2="6" y2="0" stroke="var(--clay)" stroke-width="2"/>' +
           '    <line class="rot-l2" x1="0" y1="-6" x2="0" y2="6" stroke="var(--clay)" stroke-width="2"/>' +
           '  </g>' +
           '  <!-- 钻杆 + 钻头 -->' +
-          '  <g class="dl-pipe"><rect x="496" y="145" width="8" height="0" fill="var(--ink-2)"/></g>' +
-          '  <g class="dl-bit"><polygon points="494,145 506,145 500,158" fill="var(--clay)"/><rect x="496" y="142" width="8" height="3" fill="var(--ink-2)"/></g>' +
+          '  <g class="dl-pipe"><rect x="476" y="145" width="8" height="0" fill="var(--ink-2)"/></g>' +
+          '  <g class="dl-bit"><polygon points="474,145 486,145 480,158" fill="var(--clay)"/><rect x="476" y="142" width="8" height="3" fill="var(--ink-2)"/></g>' +
           '  <!-- 泥浆罐（clay 陶土橙，表示泥浆） -->' +
           '  <g transform="translate(60,100)">' +
           '    <rect width="70" height="45" fill="var(--ink-2)" fill-opacity=".7" rx="2"/>' +
@@ -399,14 +414,14 @@
           '    <text x="35" y="62" text-anchor="middle" font-size="8" fill="var(--clay)">Mud Tank</text>' +
           '  </g>' +
           '  <!-- 泥浆管线（clay 橙流动粒子） -->' +
-          '  <path d="M130,120 Q200,120 250,130 Q380,145 490,145" fill="none" stroke="var(--clay)" stroke-width="2.5" stroke-opacity=".5"/>' +
+          '  <path d="M130,120 Q200,120 250,130 Q380,145 470,145" fill="none" stroke="var(--clay)" stroke-width="2.5" stroke-opacity=".5"/>' +
           '  <g class="dl-mudflow">' +
           '    <circle class="mf mf1" cx="160" cy="123" r="2" fill="var(--clay)"/>' +
           '    <circle class="mf mf2" cx="250" cy="130" r="2" fill="var(--clay)"/>' +
           '    <circle class="mf mf3" cx="380" cy="142" r="2" fill="var(--clay)"/>' +
           '  </g>' +
-          '  <!-- 振动筛（下方，jade 绿 + clay 岩屑） -->' +
-          '  <g transform="translate(620,320)"><rect width="120" height="60" fill="var(--ink-2)" fill-opacity=".5"/>' +
+          '  <!-- 振动筛（左下方，jade 绿 + clay 岩屑） -->' +
+          '  <g transform="translate(340,320)"><rect width="120" height="60" fill="var(--ink-2)" fill-opacity=".5"/>' +
           '    <rect x="6" y="6" width="108" height="30" fill="none" stroke="var(--jade)" stroke-width="1"/>' +
           '    <text x="60" y="54" text-anchor="middle" font-size="8" fill="var(--jade)">Shale Shaker</text>' +
           '    <g class="dl-cuttings">' +
@@ -416,22 +431,26 @@
           '      <circle class="cut c4" cx="95" cy="22" r="1.5" fill="var(--clay)"/>' +
           '    </g>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- 右侧数据栏底衬：与场景分区，避免面板压住背景物体 -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
           '  <!-- 数据面板1：ROP 机械钻速曲线（clay 橙） -->' +
-          panel(300, 155, 'ROP 机械钻速 (m/h)', 'var(--clay)', 52) +
-          '  <path class="dl-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(300,155)"/>' +
+          panel(544, 155, 'ROP 机械钻速 (m/h)', 'var(--clay)', 70) +
+          '  <path class="dl-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,155)"/>' +
           '  <!-- 数据面板2：钻压 WOB + 扭矩 Torque 双曲线 -->' +
-          panel(300, 260, 'WOB & Torque', 'var(--c-ts)', 52) +
-          '  <path class="dl-chart2" d="" fill="none" stroke="var(--c-ts)" stroke-width="1.4" transform="translate(300,260)"/>' +
-          '  <path class="dl-chart2b" d="" fill="none" stroke="var(--c-kg)" stroke-width="1.2" transform="translate(300,260)"/>' +
+          panel(544, 288, 'WOB & Torque', 'var(--c-ts)', 70) +
+          '  <path class="dl-chart2" d="" fill="none" stroke="var(--c-ts)" stroke-width="1.4" transform="translate(544,288)"/>' +
+          '  <path class="dl-chart2b" d="" fill="none" stroke="var(--c-kg)" stroke-width="1.2" transform="translate(544,288)"/>' +
           '  <!-- HUD：OPT 面板（蓝）+ 多色参数 -->' +
-          '  <g transform="translate(320,30)"><rect width="170" height="115" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-opt)" stroke-opacity=".3"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · Drilling Params</text>' +
-          '    <line x1="10" y1="24" x2="160" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">Depth</text><text class="dl-p1" x="160" y="42" font-size="9" text-anchor="end" fill="var(--jade-d)">0 m</text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">ROP</text><text class="dl-p2" x="160" y="58" font-size="9" text-anchor="end" fill="var(--clay)">0 m/h</text>' +
-          '    <text x="10" y="74" font-size="9" fill="var(--ink-2)">WOB</text><text class="dl-p3" x="160" y="74" font-size="9" text-anchor="end" fill="var(--c-ts)">0 kN</text>' +
-          '    <text x="10" y="90" font-size="9" fill="var(--ink-2)">Torque</text><text class="dl-p4" x="160" y="90" font-size="9" text-anchor="end" fill="var(--c-kg)">0 kN·m</text>' +
-          '    <circle cx="160" cy="16" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="152" y="19" font-size="7" fill="var(--c-opt)">AI</text>' +
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-opt)" stroke-opacity=".3"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · Drilling Params</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="48" font-size="9" fill="var(--ink-2)">Depth</text><text class="dl-p1" x="220" y="48" font-size="9" text-anchor="end" fill="var(--jade-d)">0 m</text>' +
+          '    <text x="12" y="64" font-size="9" fill="var(--ink-2)">ROP</text><text class="dl-p2" x="220" y="64" font-size="9" text-anchor="end" fill="var(--clay)">0 m/h</text>' +
+          '    <text x="12" y="80" font-size="9" fill="var(--ink-2)">WOB</text><text class="dl-p3" x="220" y="80" font-size="9" text-anchor="end" fill="var(--c-ts)">0 kN</text>' +
+          '    <text x="12" y="96" font-size="9" fill="var(--ink-2)">Torque</text><text class="dl-p4" x="220" y="96" font-size="9" text-anchor="end" fill="var(--c-kg)">0 kN·m</text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-opt)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -451,9 +470,9 @@
           var rop = genWave(nd, 0.2, 3, 0.5, 0.5);
           var wob = genWave(nd, 0.15, 2, 1, 0.6);
           var tor = genWave(nd, 0.12, 4, 2, 0.4);
-          $('.dl-chart1', svg).setAttribute('d', linePath(rop.slice(0, cutd + 1), 12, 32, 206, 48));
-          $('.dl-chart2', svg).setAttribute('d', linePath(wob.slice(0, cutd + 1), 12, 32, 206, 48));
-          $('.dl-chart2b', svg).setAttribute('d', linePath(tor.slice(0, cutd + 1), 12, 32, 206, 48));
+          $('.dl-chart1', svg).setAttribute('d', linePath(rop.slice(0, cutd + 1), 12, 32, 206, 66));
+          $('.dl-chart2', svg).setAttribute('d', linePath(wob.slice(0, cutd + 1), 12, 32, 206, 66));
+          $('.dl-chart2b', svg).setAttribute('d', linePath(tor.slice(0, cutd + 1), 12, 32, 206, 66));
         } else if (step === 2) {
           $('.dl-pipe rect', svg).setAttribute('height', '200');
           $('.dl-bit', svg).setAttribute('transform', 'translate(0,200)');
@@ -463,9 +482,9 @@
           var rop2 = genWave(50, 0.2, 3, 0.5, 0.55);
           var wob2 = genWave(50, 0.15, 2, 1, 0.62);
           var tor2 = genWave(50, 0.12, 4, 2, 0.42);
-          $('.dl-chart1', svg).setAttribute('d', linePath(rop2, 12, 32, 206, 48));
-          $('.dl-chart2', svg).setAttribute('d', linePath(wob2, 12, 32, 206, 48));
-          $('.dl-chart2b', svg).setAttribute('d', linePath(tor2, 12, 32, 206, 48));
+          $('.dl-chart1', svg).setAttribute('d', linePath(rop2, 12, 32, 206, 66));
+          $('.dl-chart2', svg).setAttribute('d', linePath(wob2, 12, 32, 206, 66));
+          $('.dl-chart2b', svg).setAttribute('d', linePath(tor2, 12, 32, 206, 66));
           $all('.cut', svg).forEach(function (el, i) {
             // 用正弦替代随机数，避免逐帧闪烁造成的跳动感
             var t = 0.5 + 0.5 * Math.sin(sub * Math.PI * 6 + i * 1.7);
@@ -487,6 +506,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipMudlogging"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipMudlogging)">' +
           '  <!-- 地面 + 背景 -->' +
           '  <rect y="290" width="800" height="130" fill="var(--jade)" fill-opacity=".05"/>' +
           '  <!-- 振动筛（jade 绿框 + 网格 + clay 岩屑槽） -->' +
@@ -526,23 +547,27 @@
           '    </g>' +
           '    <text x="80" y="168" text-anchor="middle" font-size="9" fill="var(--c-cv)">CV · 岩屑显微识别</text>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- 右侧数据栏底衬：与场景分区，避免面板压住背景物体 -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
           '  <!-- 数据面板1：气测全烃曲线（c-cv 青） -->' +
-          panel(580, 20, '气测全烃 (Total HC)', 'var(--c-cv)', 52) +
-          '  <path class="ml-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(580,20)"/>' +
-          '  <path class="ml-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(580,20)"/>' +
+          panel(544, 22, '气测全烃 (Total HC)', 'var(--c-cv)', 70) +
+          '  <path class="ml-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(544,22)"/>' +
+          '  <path class="ml-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(544,22)"/>' +
           '  <!-- 数据面板2：岩屑粒度分布（c-ts 橙） -->' +
-          panel(580, 125, '岩屑粒度分布', 'var(--c-ts)', 52) +
-          '  <g class="ml-chart2" transform="translate(580,125)"></g>' +
+          panel(544, 155, '岩屑粒度分布', 'var(--c-ts)', 70) +
+          '  <g class="ml-chart2" transform="translate(544,155)"></g>' +
           '  <!-- NLP 报告面板（c-nlp 紫色） + 多色字段 -->' +
-          '  <g transform="translate(580,250)"><rect width="200" height="165" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-nlp)" stroke-opacity=".3"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-nlp)" font-weight="bold">NLP · 录井报告</text>' +
-          '    <line x1="10" y1="24" x2="190" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text class="ml-rpt r1" x="10" y="42" font-size="9" fill="var(--ink-3)">岩性： --</text>' +
-          '    <text class="ml-rpt r2" x="10" y="58" font-size="9" fill="var(--ink-3)">颜色： --</text>' +
-          '    <text class="ml-rpt r3" x="10" y="74" font-size="9" fill="var(--ink-3)">粒度： --</text>' +
-          '    <text class="ml-rpt r4" x="10" y="90" font-size="9" fill="var(--ink-3)">气测： --</text>' +
-          '    <text class="ml-rpt r5" x="10" y="115" font-size="8" fill="var(--c-nlp)" opacity="0">✓ AI · 自动生成完成</text>' +
-          '    <circle cx="190" cy="16" r="5" fill="none" stroke="var(--c-nlp)" stroke-width="1.2"/><text x="182" y="19" font-size="7" fill="var(--c-nlp)">AI</text>' +
+          '  <g transform="translate(544,288)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".7" stroke="var(--c-nlp)" stroke-opacity=".3"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-nlp)" font-weight="bold">NLP · 录井报告</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text class="ml-rpt r1" x="12" y="44" font-size="9" fill="var(--ink-3)">岩性： --</text>' +
+          '    <text class="ml-rpt r2" x="12" y="60" font-size="9" fill="var(--ink-3)">颜色： --</text>' +
+          '    <text class="ml-rpt r3" x="12" y="76" font-size="9" fill="var(--ink-3)">粒度： --</text>' +
+          '    <text class="ml-rpt r4" x="12" y="92" font-size="9" fill="var(--ink-3)">气测： --</text>' +
+          '    <text class="ml-rpt r5" x="12" y="105" font-size="8" fill="var(--c-nlp)" opacity="0">✓ AI · 自动生成完成</text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-nlp)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-nlp)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -556,8 +581,8 @@
           var hc = genWave(nm, 0.15, 4, 0, 0.2);
           hc[25] = 0.85; hc[26] = 0.9; // 异常峰
           var hc2 = genWave(nm, 0.1, 6, 1, 0.15);
-          $('.ml-chart1', svg).setAttribute('d', linePath(hc.slice(0, cutm + 1), 12, 32, 206, 48));
-          $('.ml-chart1b', svg).setAttribute('d', linePath(hc2.slice(0, cutm + 1), 12, 32, 206, 48));
+          $('.ml-chart1', svg).setAttribute('d', linePath(hc.slice(0, cutm + 1), 12, 32, 206, 66));
+          $('.ml-chart1b', svg).setAttribute('d', linePath(hc2.slice(0, cutm + 1), 12, 32, 206, 66));
         } else if (step === 2) {
           $('.ml-rocks', svg).setAttribute('opacity', sub.toFixed(2));
           $all('.ai-box', svg).forEach(function (el, i) { el.setAttribute('opacity', Math.max(0, sub * 1.5 - i).toFixed(2)); });
@@ -565,13 +590,13 @@
           $('.ml-rpt.r2', svg).textContent = '颜色： 浅灰 (87%)'; $('.ml-rpt.r2', svg).setAttribute('fill', 'var(--clay)');
           // 岩屑粒度分布柱状图（细粒为主）
           var grain = [0.1, 0.25, 0.55, 0.8, 0.6, 0.35, 0.15];
-          $('.ml-chart2', svg).innerHTML = bars(grain, 14, 32, 202, 48, 'var(--c-ts)', 3);
+          $('.ml-chart2', svg).innerHTML = bars(grain, 14, 32, 202, 66, 'var(--c-ts)', 3);
         } else if (step === 3) {
           $('.ml-rpt.r3', svg).textContent = '粒度： 细粒 0.12mm'; $('.ml-rpt.r3', svg).setAttribute('fill', 'var(--c-ts)');
           $('.ml-rpt.r4', svg).textContent = '气测： 0.8% (背景)'; $('.ml-rpt.r4', svg).setAttribute('fill', 'var(--jade-d)');
           $('.ml-rpt.r5', svg).setAttribute('opacity', sub.toFixed(2));
           var grain2 = [0.1, 0.25, 0.55, 0.8, 0.6, 0.35, 0.15];
-          $('.ml-chart2', svg).innerHTML = bars(grain2, 14, 32, 202, 48, 'var(--c-ts)', 3);
+          $('.ml-chart2', svg).innerHTML = bars(grain2, 14, 32, 202, 66, 'var(--c-ts)', 3);
         }
       }
     },
@@ -584,6 +609,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipWelllog"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipWelllog)">' +
           '  <!-- 背景 + 井筒骨架 -->' +
           '  <rect width="800" height="420" fill="var(--ink-1)" fill-opacity=".3"/>' +
           '  <!-- 左侧深度尺 -->' +
@@ -609,53 +636,57 @@
           '    <rect x="90" y="104" width="30" height="6" fill="var(--clay)" fill-opacity=".4"/>' +
           '    <rect x="88" y="110" width="34" height="30" fill="var(--c-opt)" fill-opacity=".4" rx="2"/>' +
           '  </g>' +
-          '  <!-- 四个 Track（测井曲线道） -->' +
+          '  <!-- 四个 Track（测井曲线道，宽度压缩后全部落在场景裁剪区） -->' +
           '  <!-- Track1: GR 自然伽马 (jade-d 亮绿) -->' +
-          '  <rect x="150" y="20" width="140" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
-          '  <text x="220" y="18" font-size="9" fill="var(--jade-d)" text-anchor="middle">GR</text>' +
+          '  <rect x="150" y="20" width="85" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
+          '  <text x="192" y="16" font-size="9" fill="var(--jade-d)" text-anchor="middle">GR</text>' +
           '  <g class="wl-gr" fill="var(--c-nlp)" fill-opacity=".22">' +
           '    <path class="gr-fill" d=""/>' +
           '  </g>' +
           '  <path class="gr-curve" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.4"/>' +
           '  <!-- Track2: DT 声波 (clay 橙) -->' +
-          '  <rect x="295" y="20" width="140" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
-          '  <text x="365" y="18" font-size="9" fill="var(--clay)" text-anchor="middle">DT</text>' +
+          '  <rect x="240" y="20" width="85" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
+          '  <text x="282" y="16" font-size="9" fill="var(--clay)" text-anchor="middle">DT</text>' +
           '  <path class="dt-curve" d="" fill="none" stroke="var(--clay)" stroke-width="1.4"/>' +
           '  <!-- Track3: SP 自然电位 (c-opt 蓝) -->' +
-          '  <rect x="440" y="20" width="140" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
-          '  <text x="510" y="18" font-size="9" fill="var(--c-opt)" text-anchor="middle">SP</text>' +
+          '  <rect x="330" y="20" width="85" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
+          '  <text x="372" y="16" font-size="9" fill="var(--c-opt)" text-anchor="middle">SP</text>' +
           '  <path class="sp-curve" d="" fill="none" stroke="var(--c-opt)" stroke-width="1.4"/>' +
           '  <!-- Track4: RHOB 密度 (c-kg 黄绿 + clay 油气层高亮) -->' +
-          '  <rect x="585" y="20" width="140" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
-          '  <text x="655" y="18" font-size="9" fill="var(--c-kg)" text-anchor="middle">RHOB</text>' +
+          '  <rect x="420" y="20" width="85" height="390" fill="none" stroke="var(--ink-3)" stroke-width=".5"/>' +
+          '  <text x="462" y="16" font-size="9" fill="var(--c-kg)" text-anchor="middle">RHOB</text>' +
           '  <path class="rhob-curve" d="" fill="none" stroke="var(--c-kg)" stroke-width="1.4"/>' +
           '  <!-- AI 分层虚线 (c-nlp 紫) -->' +
           '  <g class="wl-ai" opacity="0">' +
-          '    <line x1="80" y1="160" x2="725" y2="160" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
-          '    <line x1="80" y1="235" x2="725" y2="235" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
-          '    <line x1="80" y1="320" x2="725" y2="320" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
-          '    <text x="730" y="163" font-size="8" fill="var(--c-nlp)">砂岩 88%</text>' +
-          '    <text x="730" y="238" font-size="8" fill="var(--c-nlp)">泥岩 94%</text>' +
-          '    <text x="730" y="323" font-size="8" fill="var(--c-nlp)">粉砂 82%</text>' +
+          '    <line x1="80" y1="160" x2="505" y2="160" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
+          '    <line x1="80" y1="235" x2="505" y2="235" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
+          '    <line x1="80" y1="320" x2="505" y2="320" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="5 3"/>' +
+          '    <text x="503" y="156" font-size="8" fill="var(--c-nlp)" text-anchor="end">砂岩 88%</text>' +
+          '    <text x="503" y="231" font-size="8" fill="var(--c-nlp)" text-anchor="end">泥岩 94%</text>' +
+          '    <text x="503" y="316" font-size="8" fill="var(--c-nlp)" text-anchor="end">粉砂 82%</text>' +
           '  </g>' +
           '  <!-- 油气层高亮带 (clay 橙) -->' +
           '  <g class="wl-pay" opacity="0">' +
-          '    <rect x="80" y="250" width="645" height="30" fill="var(--clay)" fill-opacity=".18"/>' +
-          '    <text x="730" y="268" font-size="8" fill="var(--clay)">⌁ PAY ZONE</text>' +
+          '    <rect x="80" y="250" width="425" height="30" fill="var(--clay)" fill-opacity=".18"/>' +
+          '    <text x="503" y="268" font-size="8" fill="var(--clay)" text-anchor="end">⌁ PAY ZONE</text>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- 右侧数据栏底衬：与场景分区，避免面板压住背景物体 -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
           '  <!-- 数据面板1：储层参数雷达图（c-nlp 紫） -->' +
-          panel(595, 20, '储层参数雷达', 'var(--c-nlp)', 72) +
-          '  <g class="wl-chart1" transform="translate(595,20)"></g>' +
+          panel(544, 22, '储层参数雷达', 'var(--c-nlp)', 70) +
+          '  <g class="wl-chart1" transform="translate(544,22)"></g>' +
           '  <!-- 数据面板2：测井响应统计（c-cv 青） -->' +
-          panel(595, 145, '测井响应统计', 'var(--c-cv)', 52) +
-          '  <g class="wl-chart2" transform="translate(595,145)"></g>' +
+          panel(544, 155, '测井响应统计', 'var(--c-cv)', 70) +
+          '  <g class="wl-chart2" transform="translate(544,155)"></g>' +
           '  <!-- HUD：OPT 蓝面板 -->' +
-          '  <g transform="translate(595,340)"><rect width="195" height="70" rx="6" fill="var(--card)" fill-opacity=".75" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · Logging Summary</text>' +
-          '    <line x1="10" y1="24" x2="185" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">AI 分层 <tspan class="wl-h1" fill="var(--c-nlp)">--</tspan></text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">储层 <tspan class="wl-h2" fill="var(--clay)">--</tspan> · 孔隙度 <tspan class="wl-h3" fill="var(--jade-d)">--</tspan></text>' +
-          '    <circle cx="185" cy="16" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="177" y="19" font-size="7" fill="var(--c-opt)">AI</text>' +
+          '  <g transform="translate(544,288)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".75" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · Logging Summary</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="58" font-size="9" fill="var(--ink-2)">AI 分层 <tspan class="wl-h1" fill="var(--c-nlp)">--</tspan></text>' +
+          '    <text x="12" y="84" font-size="9" fill="var(--ink-2)">储层 <tspan class="wl-h2" fill="var(--clay)">--</tspan> · 孔隙度 <tspan class="wl-h3" fill="var(--jade-d)">--</tspan></text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-opt)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -670,17 +701,17 @@
             for (var i = 0; i <= pts; i++) {
               var y = y0 + (h * i / pts);
               var v = fn(i / pts);
-              var x = baseX + v * 110 + 15;
+              var x = baseX + v * 60 + 12;
               d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
             }
             return d;
           }
           $('.gr-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.2, 0.8, Math.abs(Math.sin(t * Math.PI * 3))); }, 150));
-          $('.dt-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.3, 0.7, Math.abs(Math.sin(t * Math.PI * 2 + 0.5))); }, 295));
-          $('.sp-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.4, 0.6, Math.abs(Math.sin(t * Math.PI * 4 + 1))); }, 440));
-          $('.rhob-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.25, 0.75, Math.abs(Math.sin(t * Math.PI * 2.5 + 1.2))); }, 585));
+          $('.dt-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.3, 0.7, Math.abs(Math.sin(t * Math.PI * 2 + 0.5))); }, 240));
+          $('.sp-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.4, 0.6, Math.abs(Math.sin(t * Math.PI * 4 + 1))); }, 330));
+          $('.rhob-curve', svg).setAttribute('d', curve(function (t) { return lerp(0.25, 0.75, Math.abs(Math.sin(t * Math.PI * 2.5 + 1.2))); }, 420));
           var gr = $('.gr-curve', svg).getAttribute('d');
-          $('.gr-fill', svg).setAttribute('d', gr + 'L165,410 L165,20 Z');
+          $('.gr-fill', svg).setAttribute('d', gr + 'L235,410 L235,20 Z');
         } else if (step === 2) {
           $('.wl-ai', svg).setAttribute('opacity', sub.toFixed(2));
           $('.wl-pay', svg).setAttribute('opacity', sub.toFixed(2));
@@ -702,7 +733,7 @@
           $('.wl-chart1', svg).innerHTML = rgrid + raxes + '<path d="' + radarPath(rvals, rcx, rcy, rr) + '" fill="var(--c-nlp)" fill-opacity=".25" stroke="var(--c-nlp)" stroke-width="1.5"/>';
           // 测井响应统计柱状图（4 条曲线均值）
           var logStats = [0.75, 0.6, 0.5, 0.45 + sub * 0.2];
-          $('.wl-chart2', svg).innerHTML = bars(logStats, 14, 32, 202, 48, 'var(--c-cv)', 4);
+          $('.wl-chart2', svg).innerHTML = bars(logStats, 14, 32, 202, 66, 'var(--c-cv)', 4);
         } else if (step === 3) {
           $('.wl-ai', svg).setAttribute('opacity', '1');
           $('.wl-pay', svg).setAttribute('opacity', '1');
@@ -719,7 +750,7 @@
             raxes2 += '<line x1="' + rcx2 + '" y1="' + rcy2 + '" x2="' + (rcx2 + Math.cos(aa2) * rr2) + '" y2="' + (rcy2 + Math.sin(aa2) * rr2) + '" stroke="var(--ink-3)" stroke-opacity=".2"/>';
           }
           $('.wl-chart1', svg).innerHTML = rgrid2 + raxes2 + '<path d="' + radarPath(rvals2, rcx2, rcy2, rr2) + '" fill="var(--c-nlp)" fill-opacity=".25" stroke="var(--c-nlp)" stroke-width="1.5"/>';
-          $('.wl-chart2', svg).innerHTML = bars([0.75, 0.6, 0.5, 0.65], 14, 32, 202, 48, 'var(--c-cv)', 4);
+          $('.wl-chart2', svg).innerHTML = bars([0.75, 0.6, 0.5, 0.65], 14, 32, 202, 66, 'var(--c-cv)', 4);
         }
       }
     },
@@ -732,6 +763,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipCementing"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipCementing)">' +
           '  <!-- ===== 背景：天空 + 地层分层 ===== -->' +
           '  <rect width="800" height="100" fill="url(#sky)"/>' +
           '  <rect y="100" width="800" height="320" fill="url(#earthG)" fill-opacity=".4"/>' +
@@ -827,40 +860,6 @@
           '    <path class="w w-form" d="" stroke="var(--c-cv)" stroke-width="1.1" fill="none"/>' +
           '  </g>' +
 
-          '  <!-- ===== 右侧数据面板 ===== -->' +
-          '  <!-- 施工参数：泵压 / 排量 / 密度 -->' +
-          '  <g class="cm-job-panel" transform="translate(290,20)" opacity="0">' +
-          '    <rect width="230" height="115" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--clay)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--clay)" font-weight="bold">Job · 施工参数</text>' +
-          '    <line x1="10" y1="24" x2="220" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <!-- 泵压曲线 -->' +
-          '    <text x="10" y="38" font-size="7" fill="var(--ink-3)">Pump Pressure (MPa)</text>' +
-          '    <rect x="10" y="42" width="210" height="26" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
-          '    <path class="pr-curve" d="" fill="none" stroke="var(--clay)" stroke-width="1.5"/>' +
-          '    <text class="pr-val" x="218" y="38" font-size="7" fill="var(--clay)" text-anchor="end">0</text>' +
-          '    <!-- 排量曲线 -->' +
-          '    <text x="10" y="80" font-size="7" fill="var(--ink-3)">Flow Rate (bbl/min)</text>' +
-          '    <rect x="10" y="84" width="210" height="22" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
-          '    <path class="fr-curve" d="" fill="none" stroke="var(--jade)" stroke-width="1.5"/>' +
-          '    <text class="fr-val" x="218" y="80" font-size="7" fill="var(--jade)" text-anchor="end">0</text>' +
-          '  </g>' +
-
-          '  <!-- CBL 幅度 + VDL 面板 -->' +
-          '  <g class="cm-cbl-panel" transform="translate(290,145)" opacity="0">' +
-          '    <rect width="230" height="120" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-opt)" font-weight="bold">CBL / VDL · 胶结测井</text>' +
-          '    <line x1="10" y1="24" x2="220" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <!-- CBL 幅度曲线（jade，低幅=胶结好） -->' +
-          '    <text x="10" y="38" font-size="7" fill="var(--ink-3)">CBL Amplitude (mV)</text>' +
-          '    <rect x="10" y="42" width="100" height="72" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
-          '    <path class="cbl-curve" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.4"/>' +
-          '    <!-- VDL 变密度条带（c-cv 青地层波） -->' +
-          '    <text x="120" y="38" font-size="7" fill="var(--ink-3)">VDL Formation Wave</text>' +
-          '    <rect x="120" y="42" width="100" height="72" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
-          '    <g class="vdl-bands"></g>' +
-          '    <text class="cbl-bi" x="10" y="114" font-size="8" fill="var(--jade-d)">BI: --</text>' +
-          '  </g>' +
-
           '  <!-- ===== 失败模式叠加（气窜 / 窜槽 / 微环空） ===== -->' +
           '  <g class="cm-fail" opacity="0">' +
           '    <!-- 气窜箭头（clay 橙从产层上升） -->' +
@@ -873,7 +872,6 @@
           '    <!-- 微环空（c-opt 蓝细缝） -->' +
           '    <rect class="microann" x="232" y="96" width="2" height="324" fill="var(--c-opt)" fill-opacity=".6"/>' +
           '  </g>' +
-
           '  <!-- ===== 油气层气泡（c-cv 青） ===== -->' +
           '  <g class="cm-gas">' +
           '    <circle class="gas g1" cx="216" cy="300" r="2" fill="var(--c-cv)" fill-opacity="0"/>' +
@@ -881,18 +879,54 @@
           '    <circle class="gas g3" cx="218" cy="290" r="1.5" fill="var(--c-cv)" fill-opacity="0"/>' +
           '    <circle class="gas g4" cx="226" cy="305" r="2" fill="var(--c-cv)" fill-opacity="0"/>' +
           '  </g>' +
+          '  </g>' +
+          '  <!-- ===== 右侧数据栏 ===== -->' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)" stroke-width="1"/>' +
+          '  <!-- 施工参数：泵压 / 排量 / 密度 -->' +
+          '  <g class="cm-job-panel" transform="translate(544,22)" opacity="0">' +
+          '    <rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--clay)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--clay)" font-weight="bold">Job · 施工参数</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <!-- 泵压曲线 -->' +
+          '    <text x="12" y="40" font-size="7" fill="var(--ink-3)">Pump Pressure (MPa)</text>' +
+          '    <rect x="12" y="44" width="206" height="24" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
+          '    <path class="pr-curve" d="" fill="none" stroke="var(--clay)" stroke-width="1.5"/>' +
+          '    <text class="pr-val" x="218" y="40" font-size="7" fill="var(--clay)" text-anchor="end">0</text>' +
+          '    <!-- 排量曲线 -->' +
+          '    <text x="12" y="82" font-size="7" fill="var(--ink-3)">Flow Rate (bbl/min)</text>' +
+          '    <rect x="12" y="86" width="206" height="20" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
+          '    <path class="fr-curve" d="" fill="none" stroke="var(--jade)" stroke-width="1.5"/>' +
+          '    <text class="fr-val" x="218" y="82" font-size="7" fill="var(--jade)" text-anchor="end">0</text>' +
+          '  </g>' +
+
+          '  <!-- CBL 幅度 + VDL 面板 -->' +
+          '  <g class="cm-cbl-panel" transform="translate(544,155)" opacity="0">' +
+          '    <rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-opt)" font-weight="bold">CBL / VDL · 胶结测井</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <!-- CBL 幅度曲线（jade，低幅=胶结好） -->' +
+          '    <text x="12" y="40" font-size="7" fill="var(--ink-3)">CBL Amplitude (mV)</text>' +
+          '    <rect x="12" y="44" width="100" height="58" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
+          '    <path class="cbl-curve" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.4"/>' +
+          '    <!-- VDL 变密度条带（c-cv 青地层波） -->' +
+          '    <text x="122" y="40" font-size="7" fill="var(--ink-3)">VDL Formation Wave</text>' +
+          '    <rect x="122" y="44" width="98" height="58" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
+          '    <g class="vdl-bands"></g>' +
+          '    <text class="cbl-bi" x="12" y="106" font-size="8" fill="var(--jade-d)">BI: --</text>' +
+          '  </g>' +
 
           '  <!-- ===== HUD：固井质量评价 ===== -->' +
-          '  <g transform="translate(290,280)"><rect width="230" height="120" rx="6" fill="var(--card)" fill-opacity=".8" stroke="var(--jade)" stroke-opacity=".3"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--jade-d)" font-weight="bold">Cement Integrity · 固井质量</text>' +
-          '    <line x1="10" y1="24" x2="220" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">阶段 <tspan class="cm-stage" fill="var(--jade-d)">--</tspan></text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">套管下入 <tspan class="cm-h1" fill="var(--clay)">-- m</tspan></text>' +
-          '    <text x="10" y="74" font-size="9" fill="var(--ink-2)">水泥返高 <tspan class="cm-h2" fill="var(--jade-d)">-- m</tspan> · 碰压 <tspan class="cm-bump" fill="var(--c-ts)">-- MPa</tspan></text>' +
-          '    <text x="10" y="90" font-size="9" fill="var(--ink-2)">第一界面 BI <tspan class="cm-h3" fill="var(--c-opt)">--</tspan></text>' +
-          '    <text x="10" y="106" font-size="9" fill="var(--ink-2)">第二界面 BI <tspan class="cm-h4" fill="var(--c-nlp)">--</tspan></text>' +
+          '  <g transform="translate(544,288)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".8" stroke="var(--jade)" stroke-opacity=".3"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--jade-d)" font-weight="bold">Cement Integrity · 固井质量</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="44" font-size="9" fill="var(--ink-2)">阶段 <tspan class="cm-stage" fill="var(--jade-d)">--</tspan></text>' +
+          '    <text x="12" y="60" font-size="9" fill="var(--ink-2)">套管下入 <tspan class="cm-h1" fill="var(--clay)">-- m</tspan></text>' +
+          '    <text x="12" y="76" font-size="9" fill="var(--ink-2)">水泥返高 <tspan class="cm-h2" fill="var(--jade-d)">-- m</tspan> · 碰压 <tspan class="cm-bump" fill="var(--c-ts)">-- MPa</tspan></text>' +
+          '    <text x="12" y="92" font-size="9" fill="var(--ink-2)">第一界面 BI <tspan class="cm-h3" fill="var(--c-opt)">--</tspan></text>' +
+          '    <text x="12" y="106" font-size="9" fill="var(--ink-2)">第二界面 BI <tspan class="cm-h4" fill="var(--c-nlp)">--</tspan></text>' +
           '    <text class="cm-verdict" x="220" y="106" font-size="9" fill="var(--c-kg)" text-anchor="end">--</text>' +
-          '    <circle cx="220" cy="16" r="5" fill="none" stroke="var(--jade)" stroke-width="1.2"/><text x="212" y="19" font-size="7" fill="var(--jade)">AI</text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--jade)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--jade)">AI</text>' +
           '  </g>' +
           '</svg>';
       },
@@ -1007,7 +1041,7 @@
             }
           });
           // CBL 幅度曲线（低幅=胶结好）
-          var cblPts = 60, bx = 14, bw = 92, by = 46, bh = 64;
+          var cblPts = 60, bx = 14, bw = 92, by = 44, bh = 58;
           var cblD = '';
           for (var ci = 0; ci <= cblPts; ci++) {
             var ct = ci / cblPts;
@@ -1022,7 +1056,7 @@
           var vdl = $('.vdl-bands', svg);
           vdl.innerHTML = '';
           for (var vi = 0; vi < 12; vi++) {
-            var vy = 46 + vi * 5.5;
+            var vy = 44 + vi * 4.8;
             var opacity = (vi % 3 === 0) ? 0.8 : 0.3;
             var line = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             line.setAttribute('x', '122'); line.setAttribute('y', vy.toFixed(1));
@@ -1069,29 +1103,31 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipCompletion"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipCompletion)">' +
           '  <!-- 地层背景 -->' +
           '  <rect y="260" width="800" height="160" fill="var(--clay)" fill-opacity=".06"/>' +
           '  <rect y="290" width="800" height="35" fill="var(--c-kg)" fill-opacity=".1"/><text x="10" y="312" font-size="8" fill="var(--c-kg)">目标储层</text>' +
-          '  <line x1="0" y1="290" x2="800" y2="290" stroke="var(--c-kg)" stroke-width=".7" stroke-dasharray="4 3"/>' +
-          '  <line x1="0" y1="325" x2="800" y2="325" stroke="var(--c-kg)" stroke-width=".7" stroke-dasharray="4 3"/>' +
-          '  <!-- 三方案分栏（各 250px 宽） -->' +
+          '  <line x1="0" y1="290" x2="518" y2="290" stroke="var(--c-kg)" stroke-width=".7" stroke-dasharray="4 3"/>' +
+          '  <line x1="0" y1="325" x2="518" y2="325" stroke="var(--c-kg)" stroke-width=".7" stroke-dasharray="4 3"/>' +
+          '  <!-- 三方案分栏（各 150px 宽） -->' +
           '  <g transform="translate(40,30)">' +
           '    <!-- 方案一：射孔完井 (jade 绿) -->' +
           '    <g class="cp-col cp-1" transform="translate(0,0)">' +
-          '      <rect width="235" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--jade)" stroke-width="1"/>' +
-          '      <rect x="0" y="0" width="235" height="24" fill="var(--jade)" fill-opacity=".35"/>' +
-          '      <text x="117" y="16" text-anchor="middle" font-size="10" fill="var(--jade-d)" font-weight="bold">① 射孔完井</text>' +
+          '      <rect width="150" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--jade)" stroke-width="1"/>' +
+          '      <rect x="0" y="0" width="150" height="24" fill="var(--jade)" fill-opacity=".35"/>' +
+          '      <text x="75" y="16" text-anchor="middle" font-size="10" fill="var(--jade-d)" font-weight="bold">① 射孔完井</text>' +
           '      <!-- 套管孔眼 -->' +
-          '      <rect x="88" y="100" width="18" height="190" fill="var(--clay)" fill-opacity=".6"/>' +
-          '      <rect x="91" y="100" width="12" height="190" fill="var(--ink-1)"/>' +
+          '      <rect x="63" y="100" width="24" height="190" fill="var(--clay)" fill-opacity=".6"/>' +
+          '      <rect x="66" y="100" width="18" height="190" fill="var(--ink-1)"/>' +
           '      <!-- 射孔孔眼 (jade 绿圆) -->' +
           '      <g class="cp-perfs">' +
-          '        <circle class="p p1" cx="88" cy="160" r="3" fill="var(--jade)"/>' +
-          '        <circle class="p p2" cx="106" cy="180" r="3" fill="var(--jade)"/>' +
-          '        <circle class="p p3" cx="88" cy="200" r="3" fill="var(--jade)"/>' +
-          '        <circle class="p p4" cx="106" cy="220" r="3" fill="var(--jade)"/>' +
-          '        <circle class="p p5" cx="88" cy="240" r="3" fill="var(--jade)"/>' +
-          '        <circle class="p p6" cx="106" cy="260" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p1" cx="66" cy="160" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p2" cx="84" cy="180" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p3" cx="66" cy="200" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p4" cx="84" cy="220" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p5" cx="66" cy="240" r="3" fill="var(--jade)"/>' +
+          '        <circle class="p p6" cx="84" cy="260" r="3" fill="var(--jade)"/>' +
           '      </g>' +
           '      <!-- 评价条（clay 高亮最优） -->' +
           '      <g class="cp-bars">' +
@@ -1101,15 +1137,15 @@
           '      </g>' +
           '    </g>' +
           '    <!-- 方案二：筛管完井 (clay 陶土橙) -->' +
-          '    <g class="cp-col cp-2" transform="translate(245,0)">' +
-          '      <rect width="235" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--clay)" stroke-width="1"/>' +
-          '      <rect x="0" y="0" width="235" height="24" fill="var(--clay)" fill-opacity=".35"/>' +
-          '      <text x="117" y="16" text-anchor="middle" font-size="10" fill="var(--clay)" font-weight="bold">② 筛管完井</text>' +
-          '      <rect x="85" y="100" width="24" height="190" fill="var(--clay)" fill-opacity=".55"/>' +
+          '    <g class="cp-col cp-2" transform="translate(160,0)">' +
+          '      <rect width="150" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--clay)" stroke-width="1"/>' +
+          '      <rect x="0" y="0" width="150" height="24" fill="var(--clay)" fill-opacity=".35"/>' +
+          '      <text x="75" y="16" text-anchor="middle" font-size="10" fill="var(--clay)" font-weight="bold">② 筛管完井</text>' +
+          '      <rect x="63" y="100" width="24" height="190" fill="var(--clay)" fill-opacity=".55"/>' +
           '      <g stroke="var(--clay)" stroke-width=".6" stroke-opacity=".6">' +
-          '        <line x1="85" y1="130" x2="109" y2="130"/><line x1="85" y1="160" x2="109" y2="160"/>' +
-          '        <line x1="85" y1="190" x2="109" y2="190"/><line x1="85" y1="220" x2="109" y2="220"/>' +
-          '        <line x1="85" y1="250" x2="109" y2="250"/><line x1="85" y1="280" x2="109" y2="280"/>' +
+          '        <line x1="63" y1="130" x2="87" y2="130"/><line x1="63" y1="160" x2="87" y2="160"/>' +
+          '        <line x1="63" y1="190" x2="87" y2="190"/><line x1="63" y1="220" x2="87" y2="220"/>' +
+          '        <line x1="63" y1="250" x2="87" y2="250"/><line x1="63" y1="280" x2="87" y2="280"/>' +
           '      </g>' +
           '      <g class="cp-bars">' +
           '        <text x="10" y="310" font-size="8" fill="var(--ink-2)">产能</text><rect x="50" y="303" class="b b-cap" width="0" height="5" fill="var(--jade)"/>' +
@@ -1118,22 +1154,22 @@
           '      </g>' +
           '    </g>' +
           '    <!-- 方案三：砾石充填 (c-nlp 紫) -->' +
-          '    <g class="cp-col cp-3" transform="translate(490,0)">' +
-          '      <rect width="235" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--c-nlp)" stroke-width="1"/>' +
-          '      <rect x="0" y="0" width="235" height="24" fill="var(--c-nlp)" fill-opacity=".35"/>' +
-          '      <text x="117" y="16" text-anchor="middle" font-size="10" fill="var(--c-nlp)" font-weight="bold">③ 砾石充填</text>' +
-          '      <rect x="85" y="100" width="24" height="190" fill="var(--ink-1)" fill-opacity=".9"/>' +
+          '    <g class="cp-col cp-3" transform="translate(320,0)">' +
+          '      <rect width="150" height="350" fill="var(--ink-2)" fill-opacity=".1" stroke="var(--c-nlp)" stroke-width="1"/>' +
+          '      <rect x="0" y="0" width="150" height="24" fill="var(--c-nlp)" fill-opacity=".35"/>' +
+          '      <text x="75" y="16" text-anchor="middle" font-size="10" fill="var(--c-nlp)" font-weight="bold">③ 砾石充填</text>' +
+          '      <rect x="63" y="100" width="24" height="190" fill="var(--ink-1)" fill-opacity=".9"/>' +
           '      <g class="cp-gravel">' +
-          '        <circle class="gr g1" cx="90" cy="170" r="2.2" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g2" cx="99" cy="175" r="2.5" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g3" cx="93" cy="190" r="2" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g4" cx="105" cy="195" r="2.3" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g5" cx="97" cy="210" r="2.1" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g6" cx="101" cy="225" r="2.4" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g7" cx="92" cy="240" r="2" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g8" cx="107" cy="255" r="2.2" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g9" cx="95" cy="270" r="2.5" fill="var(--c-nlp)"/>' +
-          '        <circle class="gr g10" cx="104" cy="280" r="2" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g1" cx="68" cy="170" r="2.2" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g2" cx="78" cy="175" r="2.5" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g3" cx="71" cy="190" r="2" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g4" cx="83" cy="195" r="2.3" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g5" cx="75" cy="210" r="2.1" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g6" cx="80" cy="225" r="2.4" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g7" cx="70" cy="240" r="2" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g8" cx="85" cy="255" r="2.2" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g9" cx="73" cy="270" r="2.5" fill="var(--c-nlp)"/>' +
+          '        <circle class="gr g10" cx="82" cy="280" r="2" fill="var(--c-nlp)"/>' +
           '      </g>' +
           '      <g class="cp-bars">' +
           '        <text x="10" y="310" font-size="8" fill="var(--ink-2)">产能</text><rect x="50" y="303" class="b b-cap" width="0" height="5" fill="var(--jade)"/>' +
@@ -1142,17 +1178,20 @@
           '      </g>' +
           '    </g>' +
           '  </g>' +
-          '  <!-- 产量递减预测曲线（浮动面板，三方案对比） -->' +
-          '  <g transform="translate(555,15)"><rect width="235" height="62" rx="5" fill="var(--card)" fill-opacity=".85" stroke="var(--c-kg)" stroke-opacity=".3"/>' +
-          '    <text x="8" y="14" font-size="9" fill="var(--c-kg)" font-weight="bold">产量递减预测 (bbl/d)</text>' +
-          '    <rect x="8" y="20" width="219" height="34" fill="var(--ink-3)" fill-opacity=".1" rx="2"/>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
+          '  <!-- 产量递减预测曲线（三方案对比） -->' +
+          '  <g transform="translate(544,67)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-kg)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-kg)" font-weight="bold">产量递减预测 (bbl/d)</text>' +
+          '    <rect x="12" y="30" width="206" height="64" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
           '    <path class="cp-fc1" d="" fill="none" stroke="var(--jade)" stroke-width="1.3"/>' +
           '    <path class="cp-fc2" d="" fill="none" stroke="var(--clay)" stroke-width="1.3"/>' +
           '    <path class="cp-fc3" d="" fill="none" stroke="var(--c-nlp)" stroke-width="1.3"/>' +
           '  </g>' +
           '  <!-- AI 推荐面板 (c-kg 黄绿) -->' +
-          '  <g class="cp-rec" opacity="0" transform="translate(550,380)"><rect width="235" height="30" rx="4" fill="var(--c-kg)" fill-opacity=".25" stroke="var(--c-kg)" stroke-width="1"/>' +
-          '    <text x="117" y="20" text-anchor="middle" font-size="11" fill="var(--c-kg)" font-weight="bold">✓ AI 推荐：射孔完井 · 邻井 89% 相似</text>' +
+          '  <g class="cp-rec" opacity="0" transform="translate(544,243)"><rect width="230" height="110" rx="6" fill="var(--c-kg)" fill-opacity=".18" stroke="var(--c-kg)" stroke-width="1"/>' +
+          '    <text x="115" y="64" text-anchor="middle" font-size="10" fill="var(--c-kg)" font-weight="bold">✓ AI 推荐：射孔完井 · 邻井 89% 相似</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -1176,7 +1215,7 @@
             });
           });
           // 产量递减预测曲线：射孔(jade) / 筛管(clay) / 砾石(c-nlp)
-          var nf = 40, fx = 9, fy = 22, fw = 217, fh = 30;
+          var nf = 40, fx = 14, fy = 33, fw = 202, fh = 58;
           function decline(qi, D, n) {
             var arr = [];
             for (var i = 0; i < n; i++) { var t = i / n * 3; arr.push(qi * Math.exp(-D * t)); }
@@ -1188,7 +1227,7 @@
           $('.cp-fc3', svg).setAttribute('d', linePath(decline(0.5, 0.8, nf).slice(0, cutf + 1), fx, fy, fw, fh));
         } else if (step === 3) {
           $('.cp-rec', svg).setAttribute('opacity', sub.toFixed(2));
-          var nf2 = 40, fx2 = 9, fy2 = 22, fw2 = 217, fh2 = 30;
+          var nf2 = 40, fx2 = 14, fy2 = 33, fw2 = 202, fh2 = 58;
           function decline2(qi, D, n) {
             var arr = [];
             for (var i = 0; i < n; i++) { var t = i / n * 3; arr.push(qi * Math.exp(-D * t)); }
@@ -1216,73 +1255,79 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipPerforation"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipPerforation)">' +
           '  <!-- 背景 -->' +
           '  <rect width="800" height="150" fill="url(#sky)"/>' +
           '  <rect y="150" width="800" height="270" fill="url(#earthG)" fill-opacity=".35"/>' +
           '  <!-- 射孔段地层（c-kg 黄绿 + clay 高亮） -->' +
           '  <rect y="260" width="800" height="50" fill="var(--c-kg)" fill-opacity=".12"/>' +
-          '  <rect y="270" width="800" height="30" fill="var(--clay)" fill-opacity=".15"/><text x="730" y="290" font-size="8" fill="var(--clay)">射孔段 PERF ZONE</text>' +
+          '  <rect y="270" width="800" height="30" fill="var(--clay)" fill-opacity=".15"/><text x="430" y="290" font-size="8" fill="var(--clay)" text-anchor="end">射孔段 PERF ZONE</text>' +
           '  <!-- 井筒 (ink + clay) -->' +
-          '  <rect x="485" y="150" width="30" height="270" fill="var(--ink-2)" fill-opacity=".3"/>' +
-          '  <rect x="480" y="150" width="5" height="270" fill="var(--clay)" fill-opacity=".5"/>' +
-          '  <rect x="515" y="150" width="5" height="270" fill="var(--clay)" fill-opacity=".5"/>' +
+          '  <rect x="435" y="150" width="30" height="270" fill="var(--ink-2)" fill-opacity=".3"/>' +
+          '  <rect x="430" y="150" width="5" height="270" fill="var(--clay)" fill-opacity=".5"/>' +
+          '  <rect x="465" y="150" width="5" height="270" fill="var(--clay)" fill-opacity=".5"/>' +
           '  <!-- 射孔枪 (clay 橙完整设备模型) -->' +
           '  <g class="pf-gun">' +
           '    <!-- 枪身（clay 橙圆柱体） -->' +
-          '    <rect x="488" y="155" width="24" height="180" fill="var(--clay)" fill-opacity=".85" rx="2"/>' +
+          '    <rect x="438" y="155" width="24" height="180" fill="var(--clay)" fill-opacity=".85" rx="2"/>' +
           '    <!-- 枪头 -->' +
-          '    <polygon points="488,155 512,155 500,145" fill="var(--clay)"/>' +
+          '    <polygon points="438,155 462,155 450,145" fill="var(--clay)"/>' +
           '    <!-- 射孔弹（4 排，6 颗） -->' +
           '    <g class="pf-shots">' +
-          '      <circle class="sh sh1" cx="500" cy="190" r="2.5" fill="var(--jade)"/>' +
-          '      <circle class="sh sh2" cx="500" cy="220" r="2.5" fill="var(--jade)"/>' +
-          '      <circle class="sh sh3" cx="500" cy="250" r="2.5" fill="var(--jade)"/>' +
-          '      <circle class="sh sh4" cx="500" cy="280" r="2.5" fill="var(--jade)"/>' +
-          '      <circle class="sh sh5" cx="500" cy="310" r="2.5" fill="var(--jade)"/>' +
-          '      <circle class="sh sh6" cx="500" cy="340" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh1" cx="450" cy="190" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh2" cx="450" cy="220" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh3" cx="450" cy="250" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh4" cx="450" cy="280" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh5" cx="450" cy="310" r="2.5" fill="var(--jade)"/>' +
+          '      <circle class="sh sh6" cx="450" cy="340" r="2.5" fill="var(--jade)"/>' +
           '    </g>' +
           '    <!-- 导线 -->' +
-          '    <line x1="500" y1="145" x2="500" y2="110" stroke="var(--ink-2)" stroke-width="1"/>' +
-          '    <circle cx="500" cy="110" r="4" fill="var(--c-opt)"/>' +
+          '    <line x1="450" y1="145" x2="450" y2="110" stroke="var(--ink-2)" stroke-width="1"/>' +
+          '    <circle cx="450" cy="110" r="4" fill="var(--c-opt)"/>' +
           '  </g>' +
           '  <!-- 冲击波双环 (jade 绿 + c-cv 青) -->' +
           '  <g class="pf-blast" opacity="0">' +
-          '    <circle class="bl bl1" cx="500" cy="280" r="3" fill="none" stroke="var(--jade)" stroke-width="2"/>' +
-          '    <circle class="bl bl2" cx="500" cy="280" r="3" fill="none" stroke="var(--c-cv)" stroke-width="1.5"/>' +
-          '    <circle class="bl bl3" cx="500" cy="280" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
+          '    <circle class="bl bl1" cx="450" cy="280" r="3" fill="none" stroke="var(--jade)" stroke-width="2"/>' +
+          '    <circle class="bl bl2" cx="450" cy="280" r="3" fill="none" stroke="var(--c-cv)" stroke-width="1.5"/>' +
+          '    <circle class="bl bl3" cx="450" cy="280" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
           '  </g>' +
           '  <!-- 6 相位不同色射线 (c-cv/c-ts/c-opt/c-kg/clay/jade-d) -->' +
           '  <g class="pf-rays" opacity="0">' +
-          '    <path class="pr pr1" d="M500,280 L500,280" stroke="var(--c-cv)" stroke-width="1.5"/>' +
-          '    <path class="pr pr2" d="M500,280 L500,280" stroke="var(--c-ts)" stroke-width="1.5"/>' +
-          '    <path class="pr pr3" d="M500,280 L500,280" stroke="var(--c-opt)" stroke-width="1.5"/>' +
-          '    <path class="pr pr4" d="M500,280 L500,280" stroke="var(--c-kg)" stroke-width="1.5"/>' +
-          '    <path class="pr pr5" d="M500,280 L500,280" stroke="var(--clay)" stroke-width="1.5"/>' +
-          '    <path class="pr pr6" d="M500,280 L500,280" stroke="var(--jade-d)" stroke-width="1.5"/>' +
+          '    <path class="pr pr1" d="M450,280 L450,280" stroke="var(--c-cv)" stroke-width="1.5"/>' +
+          '    <path class="pr pr2" d="M450,280 L450,280" stroke="var(--c-ts)" stroke-width="1.5"/>' +
+          '    <path class="pr pr3" d="M450,280 L450,280" stroke="var(--c-opt)" stroke-width="1.5"/>' +
+          '    <path class="pr pr4" d="M450,280 L450,280" stroke="var(--c-kg)" stroke-width="1.5"/>' +
+          '    <path class="pr pr5" d="M450,280 L450,280" stroke="var(--clay)" stroke-width="1.5"/>' +
+          '    <path class="pr pr6" d="M450,280 L450,280" stroke="var(--jade-d)" stroke-width="1.5"/>' +
           '  </g>' +
           '  <!-- 射孔孔痕 (clay 高亮) -->' +
           '  <g class="pf-holes" opacity="0">' +
-          '    <circle cx="470" cy="280" r="4" fill="var(--clay)" fill-opacity=".6"/><line x1="470" y1="276" x2="470" y2="284" stroke="var(--clay)" stroke-width="1"/>' +
-          '    <circle cx="530" cy="280" r="4" fill="var(--clay)" fill-opacity=".6"/><line x1="530" y1="276" x2="530" y2="284" stroke="var(--clay)" stroke-width="1"/>' +
-          '    <circle cx="490" cy="295" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
-          '    <circle cx="510" cy="265" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
+          '    <circle cx="420" cy="280" r="4" fill="var(--clay)" fill-opacity=".6"/><line x1="420" y1="276" x2="420" y2="284" stroke="var(--clay)" stroke-width="1"/>' +
+          '    <circle cx="480" cy="280" r="4" fill="var(--clay)" fill-opacity=".6"/><line x1="480" y1="276" x2="480" y2="284" stroke="var(--clay)" stroke-width="1"/>' +
+          '    <circle cx="440" cy="295" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
+          '    <circle cx="460" cy="265" r="3" fill="var(--clay)" fill-opacity=".5"/>' +
+          '  </g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
+          '  <!-- HUD：clay 橙面板 -->' +
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--clay)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--clay)" font-weight="bold">Perf · 射孔参数</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="50" font-size="9" fill="var(--ink-2)">枪型 <tspan class="pf-h1" fill="var(--jade-d)">--</tspan> · 相位 <tspan class="pf-h2" fill="var(--c-opt)">--°</tspan></text>' +
+          '    <text x="12" y="68" font-size="9" fill="var(--ink-2)">孔密 <tspan class="pf-h3" fill="var(--c-ts)">-- spm</tspan> · 总弹 <tspan class="pf-h4" fill="var(--c-kg)">--</tspan></text>' +
+          '    <text x="12" y="88" font-size="9" fill="var(--ink-2)">监测 <tspan class="pf-h5" fill="var(--clay)">--</tspan></text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--clay)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--clay)">AI</text>' +
           '  </g>' +
           '  <!-- 数据面板1：射孔压力脉冲曲线（clay 橙） -->' +
-          panel(575, 125, '射孔压力脉冲 (MPa)', 'var(--clay)', 52) +
-          '  <path class="pf-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(575,125)"/>' +
-          '  <path class="pf-chart1b" d="" fill="none" stroke="var(--c-ts)" stroke-width="1.2" transform="translate(575,125)"/>' +
+          panel(544, 155, '射孔压力脉冲 (MPa)', 'var(--clay)', 70) +
+          '  <path class="pf-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,155)"/>' +
+          '  <path class="pf-chart1b" d="" fill="none" stroke="var(--c-ts)" stroke-width="1.2" transform="translate(544,155)"/>' +
           '  <!-- 数据面板2：孔眼相位分布（c-opt 蓝极坐标） -->' +
-          panel(575, 230, '孔眼相位分布', 'var(--c-opt)', 52) +
-          '  <g class="pf-chart2" transform="translate(575,230)"></g>' +
-          '  <!-- HUD：clay 橙面板 -->' +
-          '  <g transform="translate(575,20)"><rect width="215" height="95" rx="6" fill="var(--card)" fill-opacity=".75" stroke="var(--clay)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--clay)" font-weight="bold">Perf · 射孔参数</text>' +
-          '    <line x1="10" y1="24" x2="205" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">枪型 <tspan class="pf-h1" fill="var(--jade-d)">--</tspan> · 相位 <tspan class="pf-h2" fill="var(--c-opt)">--°</tspan></text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">孔密 <tspan class="pf-h3" fill="var(--c-ts)">-- spm</tspan> · 总弹 <tspan class="pf-h4" fill="var(--c-kg)">--</tspan></text>' +
-          '    <text x="10" y="78" font-size="9" fill="var(--ink-2)">监测 <tspan class="pf-h5" fill="var(--clay)">--</tspan></text>' +
-          '    <circle cx="205" cy="16" r="5" fill="none" stroke="var(--clay)" stroke-width="1.2"/><text x="197" y="19" font-size="7" fill="var(--clay)">AI</text>' +
-          '  </g></svg>';
+          panel(544, 288, '孔眼相位分布', 'var(--c-opt)', 70) +
+          '  <g class="pf-chart2" transform="translate(544,288)"></g>' +
+          '</svg>';
       },
       update: function (svg, p) {
         var step = Math.min(4, Math.floor(p * 4.001)), sub = (p * 4) - step;
@@ -1301,7 +1346,7 @@
             $('.bl3', svg).setAttribute('fill-opacity', Math.max(0, 0.6 - t * 0.6).toFixed(2));
           }
           $('.pf-rays', svg).setAttribute('opacity', '1');
-          var cx = 500, cy = 280, L = sub * 65;
+          var cx = 450, cy = 280, L = sub * 65;
           [0, 1, 2, 3, 4, 5].forEach(function (i) {
             var a = -Math.PI / 2 + (i - 2.5) * (Math.PI / 8);
             var r = $('.pr' + (i + 1), svg);
@@ -1317,8 +1362,8 @@
             var v = 0.1 + 0.7 * Math.exp(-Math.pow((pt * 6 - Math.floor(pt * 6)) / 0.06, 2));
             pulse.push(v);
           }
-          $('.pf-chart1', svg).setAttribute('d', linePath(pulse.slice(0, cutp + 1), 12, 32, 206, 48));
-          $('.pf-chart1b', svg).setAttribute('d', linePath(genWave(np, 0.08, 8, 0, 0.15).slice(0, cutp + 1), 12, 32, 206, 48));
+          $('.pf-chart1', svg).setAttribute('d', linePath(pulse.slice(0, cutp + 1), 12, 32, 206, 66));
+          $('.pf-chart1b', svg).setAttribute('d', linePath(genWave(np, 0.08, 8, 0, 0.15).slice(0, cutp + 1), 12, 32, 206, 66));
         } else if (step === 2) {
           $('.pf-holes', svg).setAttribute('opacity', '1');
           $all('.pf-shots .sh', svg).forEach(function (el, i) {
@@ -1349,7 +1394,7 @@
           $('.pf-blast', svg).setAttribute('opacity', sub < 0.3 ? sub * 3 : 0);
           $all('.pf-shots .sh', svg).forEach(function (el) { el.setAttribute('fill', 'var(--clay)'); });
           // 最终压力曲线 + 全相位点亮
-          $('.pf-chart1', svg).setAttribute('d', linePath(genWave(60, 0.1, 10, 0, 0.2), 12, 32, 206, 48));
+          $('.pf-chart1', svg).setAttribute('d', linePath(genWave(60, 0.1, 10, 0, 0.2), 12, 32, 206, 66));
           var pcx2 = 115, pcy2 = 56, prr2 = 20;
           var pgrid2 = '<circle cx="' + pcx2 + '" cy="' + pcy2 + '" r="' + prr2 + '" fill="none" stroke="var(--ink-3)" stroke-opacity=".2"/>';
           var pmarks2 = '';
@@ -1370,6 +1415,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipProduction"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipProduction)">' +
           '  <!-- 背景 -->' +
           '  <rect width="800" height="100" fill="url(#sky)"/>' +
           '  <rect y="100" width="800" height="320" fill="url(#earthG)" fill-opacity=".35"/>' +
@@ -1412,7 +1459,7 @@
           '    <rect x="-4" y="0" width="32" height="3" fill="var(--clay)"/>' +
           '  </g>' +
           '  <!-- 采油管线 (jade 绿 + clay 橙流动粒子) -->' +
-          '  <path d="M64,275 Q120,275 180,265 L350,265" fill="none" stroke="var(--jade)" stroke-width="4" stroke-opacity=".55"/>' +
+          '  <path d="M64,275 Q120,275 180,265 L400,265" fill="none" stroke="var(--jade)" stroke-width="4" stroke-opacity=".55"/>' +
           '  <g class="pr-pipe">' +
           '    <circle class="pp pp1" cx="100" cy="272" r="2" fill="var(--clay)"/>' +
           '    <circle class="pp pp2" cx="160" cy="268" r="2" fill="var(--clay)"/>' +
@@ -1420,7 +1467,7 @@
           '    <circle class="pp pp4" cx="290" cy="265" r="2" fill="var(--clay)"/>' +
           '  </g>' +
           '  <!-- 储油罐 (c-kg 黄绿) -->' +
-          '  <g transform="translate(520,215)">' +
+          '  <g transform="translate(400,215)">' +
           '    <rect width="80" height="55" fill="var(--ink-2)" fill-opacity=".7"/>' +
           '    <rect x="4" y="6" width="72" height="20" fill="var(--c-kg)" fill-opacity=".4"/>' +
           '    <line x1="0" y1="15" x2="80" y2="15" stroke="var(--ink-3)" stroke-width=".5" stroke-dasharray="2 2"/>' +
@@ -1428,7 +1475,7 @@
           '    <text x="40" y="78" text-anchor="middle" font-size="8" fill="var(--c-kg)">Tank</text>' +
           '  </g>' +
           '  <!-- 示功图 (c-cv 青椭圆轨迹) -->' +
-          '  <g transform="translate(560,40)">' +
+          '  <g transform="translate(310,20)">' +
           '    <rect width="200" height="120" fill="var(--card)" fill-opacity=".8" stroke="var(--c-cv)" stroke-width="1"/>' +
           '    <text x="10" y="16" font-size="9" fill="var(--c-cv)" font-weight="bold">示功图 · Dynamometer Card</text>' +
           '    <!-- 网格 -->' +
@@ -1443,21 +1490,24 @@
           '      <circle class="card-pt" cx="30" cy="70" r="3" fill="var(--clay)"/>' +
           '    </g>' +
           '  </g>' +
-          '  <!-- 数据面板1：日产油量曲线（clay 橙） -->' +
-          panel(555, 20, '日产油量 (m³/d)', 'var(--clay)', 52) +
-          '  <path class="pr-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(555,20)"/>' +
-          '  <path class="pr-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(555,20)"/>' +
-          '  <!-- 数据面板2：泵效与充满系数（c-kg 黄绿） -->' +
-          panel(555, 125, '泵效 & 充满系数', 'var(--c-kg)', 52) +
-          '  <g class="pr-chart2" transform="translate(555,125)"></g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
           '  <!-- HUD：c-cv 青面板 -->' +
-          '  <g transform="translate(555,340)"><rect width="240" height="75" rx="6" fill="var(--card)" fill-opacity=".75" stroke="var(--c-cv)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-cv)" font-weight="bold">CV · 示功图诊断</text>' +
-          '    <line x1="10" y1="24" x2="230" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">冲程 <tspan class="pr-h1" fill="var(--jade-d)">-- m</tspan> · 冲次 <tspan class="pr-h2" fill="var(--c-ts)">-- spm</tspan></text>' +
-          '    <text x="10" y="60" font-size="9" fill="var(--ink-2)">日产量 <tspan class="pr-h3" fill="var(--clay)">-- m³</tspan> · 诊断 <tspan class="pr-h4" fill="var(--c-nlp)">--</tspan></text>' +
-          '    <circle cx="230" cy="16" r="5" fill="none" stroke="var(--c-cv)" stroke-width="1.2"/><text x="222" y="19" font-size="7" fill="var(--c-cv)">AI</text>' +
-          '  </g></svg>';
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-cv)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-cv)" font-weight="bold">CV · 示功图诊断</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="50" font-size="9" fill="var(--ink-2)">冲程 <tspan class="pr-h1" fill="var(--jade-d)">-- m</tspan> · 冲次 <tspan class="pr-h2" fill="var(--c-ts)">-- spm</tspan></text>' +
+          '    <text x="12" y="72" font-size="9" fill="var(--ink-2)">日产量 <tspan class="pr-h3" fill="var(--clay)">-- m³</tspan> · 诊断 <tspan class="pr-h4" fill="var(--c-nlp)">--</tspan></text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-cv)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-cv)">AI</text>' +
+          '  </g>' +
+          panel(544, 155, '日产油量 (m³/d)', 'var(--clay)', 70) +
+          '  <path class="pr-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,155)"/>' +
+          '  <path class="pr-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(544,155)"/>' +
+          '  <!-- 数据面板2：泵效与充满系数（c-kg 黄绿） -->' +
+          panel(544, 288, '泵效 & 充满系数', 'var(--c-kg)', 70) +
+          '  <g class="pr-chart2" transform="translate(544,288)"></g>' +
+          '</svg>';
       },
       update: function (svg, p) {
         var step = Math.min(4, Math.floor(p * 4.001)), sub = (p * 4) - step;
@@ -1504,11 +1554,11 @@
           $('.pr-h3', svg).textContent = Math.round(120 + sub * 30);
           // 日产油量曲线（clay 橙）+ 含水率（jade 绿）
           var npr = 50, cutpr = Math.floor(npr * sub);
-          $('.pr-chart1', svg).setAttribute('d', linePath(genWave(npr, 0.15, 2, 0.5, 0.6).slice(0, cutpr + 1), 12, 32, 206, 48));
-          $('.pr-chart1b', svg).setAttribute('d', linePath(genWave(npr, 0.1, 3, 1, 0.3).slice(0, cutpr + 1), 12, 32, 206, 48));
+          $('.pr-chart1', svg).setAttribute('d', linePath(genWave(npr, 0.15, 2, 0.5, 0.6).slice(0, cutpr + 1), 12, 32, 206, 66));
+          $('.pr-chart1b', svg).setAttribute('d', linePath(genWave(npr, 0.1, 3, 1, 0.3).slice(0, cutpr + 1), 12, 32, 206, 66));
           // 泵效 & 充满系数柱状图
           var peff = [0.85, 0.72, 0.68 + sub * 0.15, 0.9, 0.78];
-          $('.pr-chart2', svg).innerHTML = bars(peff, 14, 32, 202, 48, 'var(--c-kg)', 4);
+          $('.pr-chart2', svg).innerHTML = bars(peff, 14, 32, 202, 66, 'var(--c-kg)', 4);
         } else if (step === 3) {
           $('.cr-disc', svg).setAttribute('transform', 'rotate(' + (sub * 360) + ')');
           $('.cr-arm', svg).setAttribute('transform', 'rotate(' + (sub * 360) + ')');
@@ -1517,8 +1567,8 @@
             var x = 100 + ((sub * 400 + i * 30) % 300);
             el.setAttribute('cx', x.toFixed(1));
           });
-          $('.pr-chart1', svg).setAttribute('d', linePath(genWave(50, 0.15, 2, 0.5, 0.6), 12, 32, 206, 48));
-          $('.pr-chart2', svg).innerHTML = bars([0.85, 0.72, 0.83, 0.9, 0.78], 14, 32, 202, 48, 'var(--c-kg)', 4);
+          $('.pr-chart1', svg).setAttribute('d', linePath(genWave(50, 0.15, 2, 0.5, 0.6), 12, 32, 206, 66));
+          $('.pr-chart2', svg).innerHTML = bars([0.85, 0.72, 0.83, 0.9, 0.78], 14, 32, 202, 66, 'var(--c-kg)', 4);
         }
       }
     },
@@ -1531,17 +1581,19 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipWorkover"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipWorkover)">' +
           '  <!-- 背景 + 井筒 -->' +
           '  <rect width="800" height="110" fill="url(#sky)"/>' +
           '  <rect y="110" width="800" height="310" fill="url(#earthG)" fill-opacity=".35"/>' +
           '  <rect y="130" width="800" height="60" fill="var(--ink-3)" fill-opacity=".22"/>' +
           '  <rect y="190" width="800" height="50" fill="var(--ink-2)" fill-opacity=".2"/>' +
           '  <!-- 井筒 (clay 橙) -->' +
-          '  <rect x="485" y="110" width="30" height="310" fill="var(--ink-2)" fill-opacity=".3"/>' +
-          '  <rect x="480" y="110" width="5" height="310" fill="var(--clay)" fill-opacity=".45"/>' +
-          '  <rect x="515" y="110" width="5" height="310" fill="var(--clay)" fill-opacity=".45"/>' +
+          '  <rect x="475" y="110" width="30" height="310" fill="var(--ink-2)" fill-opacity=".3"/>' +
+          '  <rect x="470" y="110" width="5" height="310" fill="var(--clay)" fill-opacity=".45"/>' +
+          '  <rect x="505" y="110" width="5" height="310" fill="var(--clay)" fill-opacity=".45"/>' +
           '  <!-- 井口 (jade 绿 + clay 橙) -->' +
-          '  <g transform="translate(495,80)">' +
+          '  <g transform="translate(485,80)">' +
           '    <rect x="-30" y="0" width="60" height="30" fill="var(--ink-2)"/>' +
           '    <rect x="-25" y="-12" width="50" height="14" fill="var(--jade)" fill-opacity=".7"/>' +
           '    <rect x="-35" y="-2" width="70" height="4" fill="var(--clay)" fill-opacity=".6"/>' +
@@ -1557,48 +1609,50 @@
           '  <!-- 打捞筒 (jade 绿，完整设备模型) -->' +
           '  <g class="wo-liber">' +
           '    <!-- 钢丝 -->' +
-          '    <line class="wo-wire" x1="500" y1="110" x2="500" y2="110" stroke="var(--ink-2)" stroke-width="1"/>' +
+          '    <line class="wo-wire" x1="490" y1="110" x2="490" y2="110" stroke="var(--ink-2)" stroke-width="1"/>' +
           '    <!-- 打捞筒主体 -->' +
           '    <g class="wo-sleeve">' +
-          '      <rect x="492" y="120" width="16" height="28" fill="var(--jade)" fill-opacity=".8"/>' +
-          '      <rect x="494" y="125" width="12" height="4" fill="var(--clay)" fill-opacity=".6"/>' +
-          '      <polygon points="492,148 508,148 500,156" fill="var(--jade)"/>' +
+          '      <rect x="482" y="120" width="16" height="28" fill="var(--jade)" fill-opacity=".8"/>' +
+          '      <rect x="484" y="125" width="12" height="4" fill="var(--clay)" fill-opacity=".6"/>' +
+          '      <polygon points="482,148 498,148 490,156" fill="var(--jade)"/>' +
           '    </g>' +
           '  </g>' +
           '  <!-- 落鱼残骸 (clay 橙 + ink-2 残片) -->' +
           '  <g class="wo-fish">' +
-          '    <polygon class="ff f1" points="490,290 510,285 508,300 492,298" fill="var(--clay)" fill-opacity=".8"/>' +
-          '    <rect class="ff f2" x="495" y="305" width="10" height="14" fill="var(--ink-2)" fill-opacity=".7" transform="rotate(15 500 312)"/>' +
-          '    <circle class="ff f3" cx="500" cy="335" r="6" fill="var(--clay)" fill-opacity=".6"/>' +
-          '    <polygon class="ff f4" points="488,350 512,348 510,365 490,362" fill="var(--ink-2)" fill-opacity=".8"/>' +
-          '    <text x="525" y="320" font-size="8" fill="var(--clay)">⚠ 落鱼</text>' +
+          '    <polygon class="ff f1" points="480,290 500,285 498,300 482,298" fill="var(--clay)" fill-opacity=".8"/>' +
+          '    <rect class="ff f2" x="485" y="305" width="10" height="14" fill="var(--ink-2)" fill-opacity=".7" transform="rotate(15 490 312)"/>' +
+          '    <circle class="ff f3" cx="490" cy="335" r="6" fill="var(--clay)" fill-opacity=".6"/>' +
+          '    <polygon class="ff f4" points="478,350 502,348 500,365 480,362" fill="var(--ink-2)" fill-opacity=".8"/>' +
+          '    <text x="472" y="320" font-size="8" fill="var(--clay)" text-anchor="end">⚠ 落鱼</text>' +
           '  </g>' +
           '  <!-- 打捞成功标记 (c-cv 青) -->' +
           '  <g class="wo-mark" opacity="0">' +
-          '    <circle cx="500" cy="293" r="15" fill="none" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="3 2"/>' +
-          '    <text x="500" y="278" font-size="8" fill="var(--c-cv)" text-anchor="middle">✓ 捕获</text>' +
+          '    <circle cx="490" cy="293" r="15" fill="none" stroke="var(--c-cv)" stroke-width="1.5" stroke-dasharray="3 2"/>' +
+          '    <text x="490" y="278" font-size="8" fill="var(--c-cv)" text-anchor="middle">✓ 捕获</text>' +
           '  </g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
           '  <!-- 数据面板1：打捞张力曲线（c-cv 青） -->' +
-          panel(560, 20, '打捞张力 (kN)', 'var(--c-cv)', 52) +
-          '  <path class="wo-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(560,20)"/>' +
-          '  <path class="wo-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(560,20)"/>' +
+          panel(544, 22, '打捞张力 (kN)', 'var(--c-cv)', 70) +
+          '  <path class="wo-chart1" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.4" transform="translate(544,22)"/>' +
+          '  <path class="wo-chart1b" d="" fill="none" stroke="var(--clay)" stroke-width="1.2" transform="translate(544,22)"/>' +
           '  <!-- 数据面板2：落鱼深度 & 卡点（clay 橙） -->' +
-          panel(560, 125, '落鱼深度 & 卡点', 'var(--clay)', 52) +
-          '  <g class="wo-chart2" transform="translate(560,125)"></g>' +
+          panel(544, 155, '落鱼深度 & 卡点', 'var(--clay)', 70) +
+          '  <g class="wo-chart2" transform="translate(544,155)"></g>' +
           '  <!-- AI 诊断面板 (c-nlp 紫，4 条逐项亮起) -->' +
-          '  <g transform="translate(40,215)"><rect width="260" height="195" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--c-nlp)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-nlp)" font-weight="bold">NLP · 落鱼诊断</text>' +
-          '    <line x1="10" y1="24" x2="250" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text class="wo-diag d1" x="10" y="44" font-size="9" fill="var(--ink-3)">① 落鱼类型： --</text>' +
-          '    <text class="wo-diag d2" x="10" y="62" font-size="9" fill="var(--ink-3)">② 卡点深度： -- m</text>' +
-          '    <text class="wo-diag d3" x="10" y="80" font-size="9" fill="var(--ink-3)">③ 打捞工具： --</text>' +
-          '    <text class="wo-diag d4" x="10" y="98" font-size="9" fill="var(--ink-3)">④ 邻井案例： -- 例</text>' +
-          '    <line x1="10" y1="115" x2="250" y2="115" stroke="var(--line)" stroke-width=".5"/>' +
-          '    <text x="10" y="132" font-size="8" fill="var(--c-nlp)">方案匹配度</text>' +
-          '    <rect x="10" y="138" width="240" height="10" fill="var(--ink-3)" fill-opacity=".25" rx="2"/>' +
-          '    <rect class="wo-bar" x="10" y="138" width="0" height="10" fill="var(--c-nlp)" rx="2"/>' +
-          '    <text class="wo-score" x="250" y="162" font-size="10" fill="var(--c-nlp)" text-anchor="end">0%</text>' +
-          '    <circle cx="250" cy="16" r="5" fill="none" stroke="var(--c-nlp)" stroke-width="1.2"/><text x="242" y="19" font-size="7" fill="var(--c-nlp)">AI</text>' +
+          '  <g transform="translate(544,288)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-nlp)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-nlp)" font-weight="bold">NLP · 落鱼诊断</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text class="wo-diag d1" x="12" y="42" font-size="9" fill="var(--ink-3)">① 落鱼类型： --</text>' +
+          '    <text class="wo-diag d2" x="12" y="56" font-size="9" fill="var(--ink-3)">② 卡点深度： -- m</text>' +
+          '    <text class="wo-diag d3" x="12" y="70" font-size="9" fill="var(--ink-3)">③ 打捞工具： --</text>' +
+          '    <text class="wo-diag d4" x="12" y="84" font-size="9" fill="var(--ink-3)">④ 邻井案例： -- 例</text>' +
+          '    <text x="12" y="101" font-size="8" fill="var(--c-nlp)">匹配度</text>' +
+          '    <rect x="54" y="93" width="118" height="10" fill="var(--ink-3)" fill-opacity=".25" rx="2"/>' +
+          '    <rect class="wo-bar" x="54" y="93" width="0" height="10" fill="var(--c-nlp)" rx="2"/>' +
+          '    <text class="wo-score" x="220" y="102" font-size="10" fill="var(--c-nlp)" text-anchor="end">0%</text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-nlp)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-nlp)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -1615,7 +1669,7 @@
           });
           $('.wo-diag.d1', svg).textContent = '① 落鱼类型：钻杆接头';
           $('.wo-diag.d2', svg).textContent = '② 卡点深度： ' + Math.round(2150 + sub * 20) + ' m';
-          $('.wo-bar', svg).setAttribute('width', (sub * 200).toFixed(1));
+          $('.wo-bar', svg).setAttribute('width', (sub * 118).toFixed(1));
           $('.wo-score', svg).textContent = Math.round(sub * 85) + '%';
           // 打捞张力曲线：捕获时张力突升
           var nwo = 50, cutwo = Math.floor(nwo * sub);
@@ -1625,13 +1679,13 @@
             var wv = 0.3 + 0.5 * Math.exp(-Math.pow((wt - 0.6) / 0.12, 2));
             tens.push(wv);
           }
-          $('.wo-chart1', svg).setAttribute('d', linePath(tens.slice(0, cutwo + 1), 12, 32, 206, 48));
-          $('.wo-chart1b', svg).setAttribute('d', linePath(genWave(nwo, 0.06, 6, 0, 0.2).slice(0, cutwo + 1), 12, 32, 206, 48));
+          $('.wo-chart1', svg).setAttribute('d', linePath(tens.slice(0, cutwo + 1), 12, 32, 206, 66));
+          $('.wo-chart1b', svg).setAttribute('d', linePath(genWave(nwo, 0.06, 6, 0, 0.2).slice(0, cutwo + 1), 12, 32, 206, 66));
         } else if (step === 2) {
           $all('.wo-diag', svg).forEach(function (el) { el.setAttribute('fill', 'var(--c-nlp)'); });
           $('.wo-diag.d3', svg).textContent = '③ 打捞工具：反扣捞筒 + 震击器';
           $('.wo-diag.d4', svg).textContent = '④ 邻井案例： 12 例 / 成功率 92%';
-          $('.wo-bar', svg).setAttribute('width', '210');
+          $('.wo-bar', svg).setAttribute('width', '118');
           $('.wo-score', svg).textContent = '88%';
           // 落鱼残骸开始被向上拖（模拟打捞）
           $all('.ff', svg).forEach(function (el, i) {
@@ -1639,13 +1693,13 @@
             el.setAttribute('opacity', (1 - sub * 0.5).toFixed(2));
           });
           // 落鱼深度 & 卡点柱状图
-          $('.wo-chart2', svg).innerHTML = bars([0.95, 0.7, 0.85], 14, 32, 202, 48, 'var(--clay)', 8);
+          $('.wo-chart2', svg).innerHTML = bars([0.95, 0.7, 0.85], 14, 32, 202, 66, 'var(--clay)', 8);
         } else if (step === 3) {
           $('.wo-wire', svg).setAttribute('y1', (290 - sub * 100).toFixed(1));
           $('.wo-wire', svg).setAttribute('y2', (290 - sub * 100).toFixed(1));
           $('.wo-sleeve', svg).setAttribute('transform', 'translate(0,' + (180 - sub * 80).toFixed(1) + ')');
           $('.wo-mark', svg).setAttribute('opacity', '1');
-          $('.wo-chart2', svg).innerHTML = bars([0.95, 0.7, 0.4], 14, 32, 202, 48, 'var(--clay)', 8);
+          $('.wo-chart2', svg).innerHTML = bars([0.95, 0.7, 0.4], 14, 32, 202, 66, 'var(--clay)', 8);
         }
       }
     },
@@ -1658,6 +1712,8 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipEor"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipEor)">' +
           '  <!-- 背景 + 油藏 -->' +
           '  <rect y="100" width="800" height="320" fill="url(#earthG)" fill-opacity=".4"/>' +
           '  <rect y="160" width="800" height="80" fill="var(--clay)" fill-opacity=".15"/><text x="10" y="182" font-size="8" fill="var(--clay)">目标储层 (致密油)</text>' +
@@ -1720,24 +1776,28 @@
           '    <circle class="sd sd5" cx="307" cy="258" r="1.7" fill="var(--c-kg)"/>' +
           '    <circle class="sd sd6" cx="303" cy="275" r="1.5" fill="var(--clay)"/>' +
           '  </g>' +
-          '  <!-- 数据面板1：压裂施工压力曲线（clay 橙） -->' +
-          panel(560, 160, '压裂施工压力 (MPa)', 'var(--clay)', 52) +
-          '  <path class="er-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(560,160)"/>' +
-          '  <path class="er-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(560,160)"/>' +
-          '  <!-- 数据面板2：支撑剂浓度 & 裂缝半长（c-ts 橙） -->' +
-          panel(560, 265, '支撑剂浓度 & 半长', 'var(--c-ts)', 52) +
-          '  <g class="er-chart2" transform="translate(560,265)"></g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
           '  <!-- HUD：OPT 蓝面板 + 多色参数 -->' +
-          '  <g transform="translate(560,20)"><rect width="225" height="130" rx="6" fill="var(--card)" fill-opacity=".78" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · 压裂施工</text>' +
-          '    <line x1="10" y1="24" x2="215" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">泵压 <tspan class="er-h1" fill="var(--clay)">-- MPa</tspan></text>' +
-          '    <text x="10" y="58" font-size="9" fill="var(--ink-2)">排量 <tspan class="er-h2" fill="var(--jade-d)">-- m³/min</tspan></text>' +
-          '    <text x="10" y="74" font-size="9" fill="var(--ink-2)">砂浓度 <tspan class="er-h3" fill="var(--c-ts)">-- kg/m³</tspan></text>' +
-          '    <text x="10" y="90" font-size="9" fill="var(--ink-2)">裂缝半长 <tspan class="er-h4" fill="var(--c-nlp)">-- m</tspan></text>' +
-          '    <text x="10" y="108" font-size="8" fill="var(--c-kg)">代理模型：预测产量 ↑ 28%</text>' +
-          '    <circle cx="215" cy="16" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="207" y="19" font-size="7" fill="var(--c-opt)">AI</text>' +
-          '  </g></svg>';
+          '  <g transform="translate(544,22)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-opt)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-opt)" font-weight="bold">OPT · 压裂施工</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="46" font-size="9" fill="var(--ink-2)">泵压 <tspan class="er-h1" fill="var(--clay)">-- MPa</tspan></text>' +
+          '    <text x="12" y="62" font-size="9" fill="var(--ink-2)">排量 <tspan class="er-h2" fill="var(--jade-d)">-- m³/min</tspan></text>' +
+          '    <text x="12" y="78" font-size="9" fill="var(--ink-2)">砂浓度 <tspan class="er-h3" fill="var(--c-ts)">-- kg/m³</tspan></text>' +
+          '    <text x="12" y="94" font-size="9" fill="var(--ink-2)">裂缝半长 <tspan class="er-h4" fill="var(--c-nlp)">-- m</tspan></text>' +
+          '    <text x="12" y="106" font-size="8" fill="var(--c-kg)">代理模型：预测产量 ↑ 28%</text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--c-opt)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--c-opt)">AI</text>' +
+          '  </g>' +
+          '  <!-- 数据面板1：压裂施工压力曲线（clay 橙） -->' +
+          panel(544, 155, '压裂施工压力 (MPa)', 'var(--clay)', 70) +
+          '  <path class="er-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,155)"/>' +
+          '  <path class="er-chart1b" d="" fill="none" stroke="var(--jade-d)" stroke-width="1.2" transform="translate(544,155)"/>' +
+          '  <!-- 数据面板2：支撑剂浓度 & 裂缝半长（c-ts 橙） -->' +
+          panel(544, 288, '支撑剂浓度 & 半长', 'var(--c-ts)', 70) +
+          '  <g class="er-chart2" transform="translate(544,288)"></g>' +
+          '</svg>';
       },
       update: function (svg, p) {
         var step = Math.min(4, Math.floor(p * 4.001)), sub = (p * 4) - step;
@@ -1778,18 +1838,18 @@
           $('.er-h3', svg).textContent = Math.round(300 + sub * 200);
           // 压裂施工压力曲线（clay 橙）+ 排量（jade 绿）
           var ner = 50, cuter = Math.floor(ner * sub);
-          $('.er-chart1', svg).setAttribute('d', linePath(genWave(ner, 0.2, 2, 0.3, 0.5).slice(0, cuter + 1), 12, 32, 206, 48));
-          $('.er-chart1b', svg).setAttribute('d', linePath(genWave(ner, 0.15, 3, 1, 0.4).slice(0, cuter + 1), 12, 32, 206, 48));
+          $('.er-chart1', svg).setAttribute('d', linePath(genWave(ner, 0.2, 2, 0.3, 0.5).slice(0, cuter + 1), 12, 32, 206, 66));
+          $('.er-chart1b', svg).setAttribute('d', linePath(genWave(ner, 0.15, 3, 1, 0.4).slice(0, cuter + 1), 12, 32, 206, 66));
           // 支撑剂浓度 & 裂缝半长柱状图
-          $('.er-chart2', svg).innerHTML = bars([0.4, 0.6, 0.8 + sub * 0.15, 0.9, 0.7], 14, 32, 202, 48, 'var(--c-ts)', 4);
+          $('.er-chart2', svg).innerHTML = bars([0.4, 0.6, 0.8 + sub * 0.15, 0.9, 0.7], 14, 32, 202, 66, 'var(--c-ts)', 4);
         } else if (step === 3) {
           $('.er-h4', svg).textContent = Math.round(80 + sub * 30);
           $all('.pu', svg).forEach(function (el, i) {
             var ring = el.querySelector('circle');
             if (ring) ring.setAttribute('r', (12 + 15).toFixed(1));
           });
-          $('.er-chart1', svg).setAttribute('d', linePath(genWave(50, 0.2, 2, 0.3, 0.55), 12, 32, 206, 48));
-          $('.er-chart2', svg).innerHTML = bars([0.4, 0.6, 0.95, 0.9, 0.7], 14, 32, 202, 48, 'var(--c-ts)', 4);
+          $('.er-chart1', svg).setAttribute('d', linePath(genWave(50, 0.2, 2, 0.3, 0.55), 12, 32, 206, 66));
+          $('.er-chart2', svg).innerHTML = bars([0.4, 0.6, 0.95, 0.9, 0.7], 14, 32, 202, 66, 'var(--c-ts)', 4);
         }
       }
     },
@@ -1802,30 +1862,32 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipTransport"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipTransport)">' +
           '  <!-- 背景 -->' +
           '  <rect width="800" height="420" fill="var(--ink-1)" fill-opacity=".25"/>' +
           '  <!-- 管网主管道 (jade 绿 + clay 橙内芯) -->' +
           '  <g class="tr-main">' +
-          '    <rect x="20" y="150" width="760" height="30" fill="var(--ink-2)" fill-opacity=".55" rx="4"/>' +
-          '    <rect x="24" y="154" width="752" height="22" fill="var(--jade)" fill-opacity=".22" rx="3"/>' +
-          '    <rect x="28" y="158" width="744" height="14" fill="var(--clay)" fill-opacity=".18"/>' +
+          '    <rect x="20" y="200" width="760" height="30" fill="var(--ink-2)" fill-opacity=".55" rx="4"/>' +
+          '    <rect x="24" y="204" width="752" height="22" fill="var(--jade)" fill-opacity=".22" rx="3"/>' +
+          '    <rect x="28" y="208" width="744" height="14" fill="var(--clay)" fill-opacity=".18"/>' +
           '  </g>' +
           '  <!-- 三个站场 (clay 橙完整模型) -->' +
-          '  <g class="tr-station st1" transform="translate(80,95)">' +
+          '  <g class="tr-station st1" transform="translate(80,145)">' +
           '    <rect width="50" height="55" fill="var(--ink-2)" fill-opacity=".7"/>' +
           '    <rect x="5" y="5" width="40" height="25" fill="var(--clay)" fill-opacity=".6"/>' +
           '    <circle cx="25" cy="43" r="5" fill="var(--c-opt)"/>' +
           '    <text x="25" y="72" text-anchor="middle" font-size="7" fill="var(--clay)">Pump A</text>' +
           '    <line x1="25" y1="55" x2="25" y2="95" stroke="var(--clay)" stroke-width="1.5"/>' +
           '  </g>' +
-          '  <g class="tr-station st2" transform="translate(360,95)">' +
+          '  <g class="tr-station st2" transform="translate(360,145)">' +
           '    <rect width="50" height="55" fill="var(--ink-2)" fill-opacity=".7"/>' +
           '    <rect x="5" y="5" width="40" height="25" fill="var(--clay)" fill-opacity=".6"/>' +
           '    <circle cx="25" cy="43" r="5" fill="var(--c-opt)"/>' +
           '    <text x="25" y="72" text-anchor="middle" font-size="7" fill="var(--clay)">Mid B</text>' +
           '    <line x1="25" y1="55" x2="25" y2="95" stroke="var(--clay)" stroke-width="1.5"/>' +
           '  </g>' +
-          '  <g class="tr-station st3" transform="translate(640,95)">' +
+          '  <g class="tr-station st3" transform="translate(450,145)">' +
           '    <rect width="50" height="55" fill="var(--ink-2)" fill-opacity=".7"/>' +
           '    <rect x="5" y="5" width="40" height="25" fill="var(--clay)" fill-opacity=".6"/>' +
           '    <circle cx="25" cy="43" r="5" fill="var(--c-opt)"/>' +
@@ -1834,46 +1896,52 @@
           '  </g>' +
           '  <!-- 流动油粒子 (clay 橙主色) -->' +
           '  <g class="tr-flow">' +
-          '    <circle class="fl f1" cx="80" cy="165" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
-          '    <circle class="fl f2" cx="180" cy="165" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
-          '    <circle class="fl f3" cx="280" cy="165" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
-          '    <circle class="fl f4" cx="380" cy="165" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
-          '    <circle class="fl f5" cx="480" cy="165" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
-          '    <circle class="fl f6" cx="580" cy="165" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
-          '    <circle class="fl f7" cx="680" cy="165" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
+          '    <circle class="fl f1" cx="80" cy="215" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
+          '    <circle class="fl f2" cx="180" cy="215" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
+          '    <circle class="fl f3" cx="280" cy="215" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
+          '    <circle class="fl f4" cx="380" cy="215" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
+          '    <circle class="fl f5" cx="480" cy="215" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
+          '    <circle class="fl f6" cx="580" cy="215" r="2.5" fill="var(--clay)" fill-opacity=".85"/>' +
+          '    <circle class="fl f7" cx="680" cy="215" r="3" fill="var(--clay)" fill-opacity=".9"/>' +
           '  </g>' +
           '  <!-- 压力传感器 (c-cv 青) -->' +
           '  <g>' +
-          '    <g class="sen s1"><rect x="160" y="182" width="10" height="14" fill="var(--c-cv)"/><circle cx="165" cy="189" r="2" fill="var(--clay)"/></g>' +
-          '    <g class="sen s2"><rect x="320" y="182" width="10" height="14" fill="var(--c-cv)"/><circle cx="325" cy="189" r="2" fill="var(--clay)"/></g>' +
-          '    <g class="sen s3"><rect x="470" y="182" width="10" height="14" fill="var(--c-cv)"/><circle cx="475" cy="189" r="2" fill="var(--clay)"/></g>' +
-          '    <g class="sen s4"><rect x="600" y="182" width="10" height="14" fill="var(--c-cv)"/><circle cx="605" cy="189" r="2" fill="var(--clay)"/></g>' +
+          '    <g class="sen s1"><rect x="160" y="232" width="10" height="14" fill="var(--c-cv)"/><circle cx="165" cy="239" r="2" fill="var(--clay)"/></g>' +
+          '    <g class="sen s2"><rect x="320" y="232" width="10" height="14" fill="var(--c-cv)"/><circle cx="325" cy="239" r="2" fill="var(--clay)"/></g>' +
+          '    <g class="sen s3"><rect x="400" y="232" width="10" height="14" fill="var(--c-cv)"/><circle cx="405" cy="239" r="2" fill="var(--clay)"/></g>' +
+          '    <g class="sen s4"><rect x="490" y="232" width="10" height="14" fill="var(--c-cv)"/><circle cx="495" cy="239" r="2" fill="var(--clay)"/></g>' +
           '  </g>' +
           '  <!-- 泄漏点预警 (clay 橙闪烁 + 冲击波 c-opt 蓝) -->' +
           '  <g class="tr-leak" opacity="0">' +
-          '    <circle cx="475" cy="165" r="10" fill="var(--clay)" fill-opacity=".3"/>' +
-          '    <circle class="lk-r1" cx="475" cy="165" r="8" fill="none" stroke="var(--clay)" stroke-width="2"/>' +
-          '    <circle class="lk-r2" cx="475" cy="165" r="8" fill="none" stroke="var(--c-opt)" stroke-width="1.5"/>' +
-          '    <text x="475" y="135" font-size="9" fill="var(--clay)" text-anchor="middle" font-weight="bold">⚠ LEAK DETECTED</text>' +
+          '    <circle cx="475" cy="215" r="10" fill="var(--clay)" fill-opacity=".3"/>' +
+          '    <circle class="lk-r1" cx="475" cy="215" r="8" fill="none" stroke="var(--clay)" stroke-width="2"/>' +
+          '    <circle class="lk-r2" cx="475" cy="215" r="8" fill="none" stroke="var(--c-opt)" stroke-width="1.5"/>' +
+          '    <text x="475" y="185" font-size="9" fill="var(--clay)" text-anchor="middle" font-weight="bold">⚠ LEAK DETECTED</text>' +
           '  </g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
           '  <!-- 管道分段健康度（c-cv 青柱状图） -->' +
-          '  <g transform="translate(560,18)"><rect width="225" height="62" rx="5" fill="var(--card)" fill-opacity=".8" stroke="var(--c-cv)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="14" font-size="9" fill="var(--c-cv)" font-weight="bold">管道分段健康度</text>' +
-          '    <rect x="10" y="20" width="205" height="34" fill="var(--ink-3)" fill-opacity=".1" rx="2"/>' +
+          '  <g transform="translate(544,67)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-cv)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-cv)" font-weight="bold">管道分段健康度</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <rect x="12" y="30" width="206" height="64" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
           '    <g class="tr-health"></g>' +
           '  </g>' +
           '  <!-- 压力时序曲线 (c-ts 橙 + c-opt 蓝 + c-nlp 紫检测线) -->' +
-          '  <g transform="translate(40,230)"><rect width="720" height="175" fill="var(--card)" fill-opacity=".7" stroke="var(--c-ts)" stroke-width="1"/>' +
-          '    <text x="10" y="16" font-size="9" fill="var(--c-ts)" font-weight="bold">压力时序 · Pipeline Pressure</text>' +
+          '  <g transform="translate(544,243)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--c-ts)" stroke-width="1"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--c-ts)" font-weight="bold">压力时序 · Pipeline Pressure</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <rect x="12" y="30" width="206" height="64" fill="var(--ink-3)" fill-opacity=".12" rx="2"/>' +
           '    <g stroke="var(--ink-3)" stroke-width=".5" stroke-opacity=".3">' +
-          '      <line x1="30" y1="30" x2="700" y2="30"/><line x1="30" y1="70" x2="700" y2="70"/>' +
-          '      <line x1="30" y1="110" x2="700" y2="110"/><line x1="30" y1="150" x2="700" y2="150"/>' +
+          '      <line x1="14" y1="45" x2="202" y2="45"/><line x1="14" y1="60" x2="202" y2="60"/>' +
+          '      <line x1="14" y1="75" x2="202" y2="75"/><line x1="14" y1="90" x2="202" y2="90"/>' +
           '    </g>' +
           '    <path class="tr-pcurve" d="" fill="none" stroke="var(--c-ts)" stroke-width="1.8"/>' +
           '    <g class="tr-anom" opacity="0">' +
           '      <path class="tr-abnormal" d="" fill="none" stroke="var(--clay)" stroke-width="2.5"/>' +
-          '      <line class="tr-nlp-line" x1="30" y1="110" x2="700" y2="110" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="4 3"/>' +
-          '      <text x="695" y="105" font-size="8" fill="var(--c-nlp)" text-anchor="end">AI 检测阈值</text>' +
+          '      <line class="tr-nlp-line" x1="14" y1="76" x2="202" y2="76" stroke="var(--c-nlp)" stroke-width="1" stroke-dasharray="4 3"/>' +
+          '      <text x="202" y="72" font-size="8" fill="var(--c-nlp)" text-anchor="end">AI 检测阈值</text>' +
           '    </g>' +
           '  </g></svg>';
       },
@@ -1881,12 +1949,12 @@
         var step = Math.min(4, Math.floor(p * 4.001)), sub = (p * 4) - step;
         if (step === 0) {
           $all('.fl', svg).forEach(function (el, i) {
-            var x = 80 + ((sub * 800 + i * 100) % 700);
+            var x = 80 + ((sub * 800 + i * 100) % 430);
             el.setAttribute('cx', x.toFixed(1));
           });
         } else if (step === 1) {
           // 画完整压力时序曲线（基线平稳）
-          var pts = 80, ox = 30, oy = 100, w = 670;
+          var pts = 80, ox = 14, oy = 64, w = 202;
           var d = '';
           for (var i = 0; i <= pts; i++) {
             var x = ox + (w * i / pts);
@@ -1896,9 +1964,9 @@
           $('.tr-pcurve', svg).setAttribute('d', d);
           // 管道分段健康度柱状图（8 段，第 5 段对应泄漏点健康度低）
           var health = [0.95, 0.9, 0.88, 0.92, 0.95, 0.9, 0.85, 0.93];
-          $('.tr-health', svg).innerHTML = bars(health, 12, 22, 201, 30, 'var(--c-cv)', 2);
+          $('.tr-health', svg).innerHTML = bars(health, 14, 32, 202, 66, 'var(--c-cv)', 2);
           $all('.fl', svg).forEach(function (el, i) {
-            var x = 80 + ((sub * 800 + i * 100) % 700);
+            var x = 80 + ((sub * 800 + i * 100) % 430);
             el.setAttribute('cx', x.toFixed(1));
           });
         } else if (step === 2) {
@@ -1911,18 +1979,18 @@
           $('.tr-anom', svg).setAttribute('opacity', sub.toFixed(2));
           // 泄漏段健康度下降
           var health2 = [0.95, 0.9, 0.88, 0.92, 0.5 - sub * 0.2, 0.88, 0.85, 0.93];
-          $('.tr-health', svg).innerHTML = bars(health2, 12, 22, 201, 30, 'var(--c-cv)', 2);
+          $('.tr-health', svg).innerHTML = bars(health2, 14, 32, 202, 66, 'var(--c-cv)', 2);
           // 异常段曲线（带锯齿下倾）
           var d2 = '';
           for (var j = 50; j <= 80; j++) {
-            var xa = 30 + (670 * j / 80);
-            var ya = 100 + Math.sin(j * 0.2) * 3 - 5 * (j - 50) / 30 + (j > 60 ? Math.sin(j) * 4 * sub : 0);
+            var xa = 14 + (202 * j / 80);
+            var ya = 64 + Math.sin(j * 0.2) * 3 - 5 * (j - 50) / 30 + (j > 60 ? Math.sin(j) * 4 * sub : 0);
             d2 += (j === 50 ? 'M' : 'L') + xa.toFixed(1) + ',' + ya.toFixed(1) + ' ';
           }
           $('.tr-abnormal', svg).setAttribute('d', d2);
         } else if (step === 3) {
           $all('.fl', svg).forEach(function (el, i) {
-            var x = 80 + ((sub * 800 + i * 100) % 700);
+            var x = 80 + ((sub * 800 + i * 100) % 430);
             el.setAttribute('cx', x.toFixed(1));
           });
           $('.tr-leak', svg).setAttribute('opacity', '1');
@@ -1945,12 +2013,14 @@
       frames: function () {
         return '' +
           '<svg viewBox="0 0 800 420" class="stg-svg">' + commonDefs() +
+          '  <defs><clipPath id="clipRefining"><rect width="518" height="420"/></clipPath></defs>' +
+          '  <g clip-path="url(#clipRefining)">' +
           '  <!-- 背景 (工业厂区) -->' +
           '  <rect width="800" height="130" fill="url(#sky)"/>' +
           '  <rect y="130" width="800" height="290" fill="var(--ink-1)" fill-opacity=".3"/>' +
           '  <rect y="370" width="800" height="50" fill="var(--ink-2)" fill-opacity=".5"/>' +
           '  <!-- 分馏塔 (clay 陶土橙主体 + 阶梯式塔盘) -->' +
-          '  <g class="rf-tower" transform="translate(280,60)">' +
+          '  <g class="rf-tower" transform="translate(240,60)">' +
           '    <!-- 塔顶 -->' +
           '    <polygon points="40,0 80,0 60,-25" fill="var(--clay)" fill-opacity=".8"/>' +
           '    <!-- 塔主体（上窄下宽锥形） -->' +
@@ -1987,8 +2057,8 @@
           '    </g>' +
           '  </g>' +
           '  <!-- 进料管线 (jade 绿 + clay 橙热液) -->' +
-          '  <path d="M160,230 Q220,230 280,260" fill="none" stroke="var(--jade)" stroke-width="3" stroke-opacity=".6"/>' +
-          '  <path class="rf-inflow" d="M160,230 Q220,230 280,260" fill="none" stroke="var(--clay)" stroke-width="1.5" stroke-dasharray="6 3"/>' +
+          '  <path d="M160,230 Q200,230 240,260" fill="none" stroke="var(--jade)" stroke-width="3" stroke-opacity=".6"/>' +
+          '  <path class="rf-inflow" d="M160,230 Q200,230 240,260" fill="none" stroke="var(--clay)" stroke-width="1.5" stroke-dasharray="6 3"/>' +
           '  <!-- 四层产品采出 (4 色：c-cv汽油 / jade煤油 / c-nlp柴油 / clay渣油) -->' +
           '  <g class="rf-products">' +
           '    <!-- 塔顶汽油 (c-cv 青) -->' +
@@ -2002,35 +2072,37 @@
           '  </g>' +
           '  <!-- 采出管线 (jade 绿 + clay 橙流动) -->' +
           '  <g stroke="var(--jade)" stroke-width="2" fill="none" opacity=".55">' +
-          '    <path d="M500,81 Q560,81 580,110"/><path d="M500,121 Q560,121 580,130"/>' +
-          '    <path d="M500,171 Q560,171 580,150"/><path d="M500,231 Q560,231 580,170"/>' +
+          '    <path d="M500,81 C520,120 440,240 435,300"/><path d="M500,121 C520,160 470,250 467,300"/>' +
+          '    <path d="M500,171 C520,220 440,320 435,355"/><path d="M500,231 C520,260 470,320 467,355"/>' +
           '  </g>' +
           '  <!-- 罐区 (ink-2 + 4 色盖) -->' +
-          '  <g transform="translate(580,100)">' +
+          '  <g transform="translate(420,300)">' +
           '    <g class="tk t1"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--c-cv)"/></g>' +
-          '    <g class="tk t2" transform="translate(40,0)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--jade)"/></g>' +
-          '    <g class="tk t3" transform="translate(80,30)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--c-nlp)"/></g>' +
-          '    <g class="tk t4" transform="translate(120,70)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--clay)"/></g>' +
+          '    <g class="tk t2" transform="translate(32,0)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--jade)"/></g>' +
+          '    <g class="tk t3" transform="translate(0,55)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--c-nlp)"/></g>' +
+          '    <g class="tk t4" transform="translate(32,55)"><rect width="30" height="40" fill="var(--ink-2)"/><rect x="0" y="0" width="30" height="6" fill="var(--clay)"/></g>' +
           '    <g stroke="var(--jade)" stroke-width="1" stroke-opacity=".5" fill="none">' +
-          '      <line x1="15" y1="40" x2="15" y2="100"/><line x1="55" y1="40" x2="55" y2="100"/>' +
-          '      <line x1="95" y1="70" x2="95" y2="100"/><line x1="135" y1="110" x2="135" y2="100"/>' +
-          '      <path d="M15,100 Q55,95 95,100 Q115,100 135,100"/>' +
+          '      <line x1="15" y1="40" x2="15" y2="55"/><line x1="47" y1="40" x2="47" y2="55"/>' +
+          '      <line x1="15" y1="98" x2="47" y2="98"/>' +
           '    </g>' +
           '  </g>' +
+          '  </g>' +
+          '  <rect x="518" y="0" width="282" height="420" fill="var(--card)" fill-opacity=".42"/>' +
+          '  <line x1="518" y1="8" x2="518" y2="412" stroke="var(--line)"/>' +
           '  <!-- 数据面板1：分馏塔温度梯度曲线（clay 实际温度 + c-cv 设定值） -->' +
-          panel(540, 20, '塔温梯度 (°C)', 'var(--clay)', 52) +
-          '  <path class="rf-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(540,20)"/>' +
-          '  <path class="rf-chart1b" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.2" stroke-dasharray="3 2" transform="translate(540,20)"/>' +
+          panel(544, 22, '塔温梯度 (°C)', 'var(--clay)', 70) +
+          '  <path class="rf-chart1" d="" fill="none" stroke="var(--clay)" stroke-width="1.4" transform="translate(544,22)"/>' +
+          '  <path class="rf-chart1b" d="" fill="none" stroke="var(--c-cv)" stroke-width="1.2" stroke-dasharray="3 2" transform="translate(544,22)"/>' +
           '  <!-- 数据面板2：产品收率柱状图（4 色：汽油/煤油/柴油/渣油） -->' +
-          panel(540, 225, '产品收率 (%)', 'var(--c-cv)', 52) +
-          '  <g class="rf-chart2" transform="translate(540,225)"></g>' +
+          panel(544, 155, '产品收率 (%)', 'var(--c-cv)', 70) +
+          '  <g class="rf-chart2" transform="translate(544,155)"></g>' +
           '  <!-- HUD：clay 橙温控面板 -->' +
-          '  <g transform="translate(40,350)"><rect width="200" height="60" rx="6" fill="var(--card)" fill-opacity=".8" stroke="var(--clay)" stroke-opacity=".35"/>' +
-          '    <text x="10" y="16" font-size="10" fill="var(--clay)" font-weight="bold">Refine · AI 温控</text>' +
-          '    <line x1="10" y1="24" x2="190" y2="24" stroke="var(--line)" stroke-width="1"/>' +
-          '    <text x="10" y="42" font-size="9" fill="var(--ink-2)">进料 <tspan class="rf-h1" fill="var(--c-ts)">-- °C</tspan> · 回流比 <tspan class="rf-h2" fill="var(--jade-d)">--</tspan></text>' +
-          '    <text x="10" y="56" font-size="9" fill="var(--ink-2)">塔顶 <tspan class="rf-h3" fill="var(--c-cv)">-- °C</tspan> · 塔底 <tspan class="rf-h4" fill="var(--clay)">-- °C</tspan></text>' +
-          '    <circle cx="190" cy="16" r="5" fill="none" stroke="var(--clay)" stroke-width="1.2"/><text x="182" y="19" font-size="7" fill="var(--clay)">AI</text>' +
+          '  <g transform="translate(544,288)"><rect width="230" height="110" rx="6" fill="var(--card)" fill-opacity=".82" stroke="var(--clay)" stroke-opacity=".35"/>' +
+          '    <text x="12" y="18" font-size="10" fill="var(--clay)" font-weight="bold">Refine · AI 温控</text>' +
+          '    <line x1="12" y1="26" x2="220" y2="26" stroke="var(--line)" stroke-width="1"/>' +
+          '    <text x="12" y="50" font-size="9" fill="var(--ink-2)">进料 <tspan class="rf-h1" fill="var(--c-ts)">-- °C</tspan> · 回流比 <tspan class="rf-h2" fill="var(--jade-d)">--</tspan></text>' +
+          '    <text x="12" y="74" font-size="9" fill="var(--ink-2)">塔顶 <tspan class="rf-h3" fill="var(--c-cv)">-- °C</tspan> · 塔底 <tspan class="rf-h4" fill="var(--clay)">-- °C</tspan></text>' +
+          '    <circle cx="220" cy="18" r="5" fill="none" stroke="var(--clay)" stroke-width="1.2"/><text x="212" y="21" font-size="7" fill="var(--clay)">AI</text>' +
           '  </g></svg>';
       },
       update: function (svg, p) {
@@ -2043,8 +2115,8 @@
           // 塔温梯度：进料阶段环境温度平直基线
           var n = 60, base = [];
           for (var i = 0; i < n; i++) base.push(0.05 + Math.sin(i * 0.5) * 0.008);
-          $('.rf-chart1', svg).setAttribute('d', linePath(base, 12, 32, 206, 48));
-          $('.rf-chart1b', svg).setAttribute('d', linePath(base, 12, 32, 206, 48));
+          $('.rf-chart1', svg).setAttribute('d', linePath(base, 12, 32, 206, 66));
+          $('.rf-chart1b', svg).setAttribute('d', linePath(base, 12, 32, 206, 66));
         } else if (step === 1) {
           // 火焰跳动
           $all('.fl', svg).forEach(function (el, i) {
@@ -2062,8 +2134,8 @@
             sp.push(tv);
             grad.push(Math.max(0, Math.min(1, tv * sub + 0.05 * (1 - sub) + Math.sin(i * 1.7) * 0.012)));
           }
-          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 48));
-          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 48));
+          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 66));
+          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 66));
         } else if (step === 2) {
           $('.rf-products', svg).setAttribute('opacity', sub.toFixed(2));
           $all('.prod', svg).forEach(function (el, i) {
@@ -2080,12 +2152,12 @@
             sp.push(tv);
             grad.push(Math.max(0, Math.min(1, tv + Math.sin(i * 1.7 + sub * 6) * 0.02)));
           }
-          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 48));
-          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 48));
+          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 66));
+          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 66));
           // 产品收率柱状图（4 色：汽油/煤油/柴油/渣油）
           var yields = [0.32 * sub, 0.22 * sub, 0.28 * sub, 0.18 * sub];
           var colors = ['var(--c-cv)', 'var(--jade)', 'var(--c-nlp)', 'var(--clay)'];
-          var bpx = 12, bpy = 32, bpw = 206, bph = 48, bgap = 10;
+          var bpx = 12, bpy = 32, bpw = 206, bph = 66, bgap = 10;
           var bw = (bpw - bgap * (yields.length - 1)) / yields.length;
           var barHtml = '';
           for (var bi = 0; bi < yields.length; bi++) {
@@ -2112,12 +2184,12 @@
             sp.push(tv);
             grad.push(Math.max(0, Math.min(1, tv + Math.sin(i * 1.7 + sub * 8) * 0.018)));
           }
-          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 48));
-          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 48));
+          $('.rf-chart1', svg).setAttribute('d', linePath(grad, 12, 32, 206, 66));
+          $('.rf-chart1b', svg).setAttribute('d', linePath(sp, 12, 32, 206, 66));
           // 产品收率满值
           var yields = [0.32, 0.22, 0.28, 0.18];
           var colors = ['var(--c-cv)', 'var(--jade)', 'var(--c-nlp)', 'var(--clay)'];
-          var bpx = 12, bpy = 32, bpw = 206, bph = 48, bgap = 10;
+          var bpx = 12, bpy = 32, bpw = 206, bph = 66, bgap = 10;
           var bw = (bpw - bgap * (yields.length - 1)) / yields.length;
           var barHtml = '';
           for (var bi = 0; bi < yields.length; bi++) {
@@ -2156,7 +2228,6 @@
       '</div>' +
       '<div class="stg-stage">' + s.frames() +
       '  <i class="stg-grid" aria-hidden="true"></i>' +
-      '  <i class="stg-scan" aria-hidden="true"></i>' +
       '</div>' +
       '<div class="stg-ctrl">' +
       '  <button class="stg-btn stg-play" title="播放/暂停">▶</button>' +

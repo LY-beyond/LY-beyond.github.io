@@ -14,6 +14,60 @@
   <h1>水泥浆配方智能优化</h1>
   <p class="lead">调节密度、水灰比、外加剂与温度，实时查看稠化时间、流变性、失水、强度与 ECD 压力窗口，下方体检卡对每项指标给出 PASS/FAIL。</p>
 
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="real" role="tab">实验数据 · 稠化时间与强度</button>
+    <button class="tab" data-tab="sim" role="tab">配方模拟 · 参数联动</button>
+  </div>
+
+  <!-- ================= 实验数据页 ================= -->
+  <div class="tabpane active" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 缓凝剂加量 → 稠化时间（HPHT 稠化实验）</h2><span class="hint">滚轮缩放 · 拖拽平移 · 双击复位 · 点击数据点锁定</span></div>
+      <div class="src-bar">
+        <span class="tag real">实验数据</span>
+        <span><b>Joel O. F. (2009), ARPN J. Eng. Appl. Sci. 4(9)</b>：Dyckerhoff G 级水泥，BHCT 121℉（49.4℃）、BHST 153℉、2980 psi，木质素磺酸盐缓凝剂 0.01–0.11 gal/sk 五档加量，按 API RP 10B-2 以 70 Bc 判定稠化时间。加量从 0.01 增至 0.11，稠化时间由 2:43 延至 16:48。</span>
+        <a href="https://www.arpnjournals.com/jeas/research_papers/rp_2009/jeas_1109_258.pdf" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxA">
+        <svg id="lit-chartA" viewBox="0 0 900 300" role="img" aria-label="缓凝剂加量与稠化时间关系图"></svg>
+        <div class="chart-tip" id="lit-tipA"></div>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-tip">滚轮缩放加量轴 · 按住拖拽平移 · 双击复位</span>
+        <span class="zoom-label" id="z-label">视窗 —</span>
+        <button id="z-out" type="button" title="缩小">−</button>
+        <button id="z-in" type="button" title="放大">＋</button>
+        <button id="z-reset" type="button">复位</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② AMND 缓凝剂水泥石早期强度（150℃ 大温差工况）</h2><span class="hint">悬停读数 · 点击柱条联动</span></div>
+      <div class="src-bar">
+        <span class="tag real">实验数据</span>
+        <span><b>谢云媚等（2025）《钻井液与完井液》42(3):379-385</b>：AMPS 系早强型缓凝剂 AMND，嘉华 G 级水泥，3% 加量、150℃/75 MPa 下稠化时间 <b>316 min</b>；150℃ 循环 / 60℃ 养护下 1d / 2d / 3d 抗压强度 6.34 / 8.24 / 14.66 MPa，缓解长封固段大温差顶部超缓凝问题。</span>
+        <a href="https://doi.org/10.12358/j.issn.1001-5620.2025.03.014" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="lit-boxB">
+        <svg id="lit-chartB" viewBox="0 0 900 250" role="img" aria-label="早期抗压强度柱状图"></svg>
+        <div class="chart-tip" id="lit-tipB"></div>
+      </div>
+      <div class="r-detail" id="lit-detail">悬停读取数据点；点击散点 / 柱条锁定该条实验数据；点击下表行同样联动。</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 实验数据汇总</h2><span class="hint">稠化时间以 70 Bc 判定；强度为 60℃ 养护抗压强度</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>工况</th><th>加量</th><th>稠化时间</th><th>备注</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ================= 模拟页 ================= -->
+  <div class="tabpane" id="pane-sim">
   <div class="layout">
     <div class="viz">
 
@@ -71,6 +125,7 @@
 
     </div>
   </div>
+  </div><!-- /pane-sim -->
 
 </div>
 <script src="demo.js"></script>

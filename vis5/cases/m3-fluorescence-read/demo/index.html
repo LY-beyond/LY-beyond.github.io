@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：荧光图像智能判读</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>荧光图像智能判读 · 交互式演示</h1>
+      <p class="lead">程序生成 365 nm 紫外灯下的荧光岩屑图像，完成 HSV 分割、特征提取与 1—4 级有序判读；调节井深、油品、灯源老化与油基泥浆污染，观察判读结果如何随之变化。</p>
+    </div>
+    <span class="badge">SY/T 6611 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>SY/T 6611-2017《石油定量荧光录井规范》；荧光强度 F = K·I·θ·C（激发光强 I、荧光效率 θ、含油浓度 C）；紫外灯管累计点亮 500 h 强度衰减约 30% 须强制换灯；稠油发暗黄褐（主波长 ≈585 nm）、轻质油发蓝白（≈470 nm）；油性指数 Oc = 荧光面积比 × 归一化亮度 × 100。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示 · 图像判读</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：模拟图像 + 分割 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 荧光岩屑图像与 HSV 分割（程序生成）</h2>
+          <span class="hint">悬停查看斑块 HSV 与是否通过阈值</span>
+        </div>
+        <div class="grid-charts">
+          <div class="chart">
+            <h3>原图 · 365 nm 紫外灯下湿样</h3>
+            <canvas id="imgRaw" width="430" height="250" role="img" aria-label="模拟荧光岩屑图像"></canvas>
+          </div>
+          <div class="chart">
+            <h3>分割结果 · 荧光区高亮 / 泥浆反光剔除</h3>
+            <canvas id="imgSeg" width="430" height="250" role="img" aria-label="荧光区域分割结果"></canvas>
+          </div>
+        </div>
+        <div class="chart-tip" id="img-tip"></div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>荧光区（通过阈值）</span>
+          <span><i style="background:#c9a15a"></i>荧光区（被阈值拦截）</span>
+          <span><i style="background:#41699b"></i>油基泥浆反光（低饱和·剔除）</span>
+          <span><i style="background:#b05a51"></i>泥浆反光误入（阈值过低）</span>
+          <span><i style="background:#79828a"></i>岩屑 / 本底</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：判读指标 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 判读指标与建议级别</h2>
+          <span class="hint">拖动阈值滑块实时重判</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>荧光面积比 FAR</span><b id="m-far">—</b></div>
+          <div class="mcard"><span>荧光区平均亮度</span><b id="m-val">—</b></div>
+          <div class="mcard"><span>主波长 / 颜色</span><b id="m-wave">—</b></div>
+          <div class="mcard"><span>油性指数 Oc</span><b id="m-oc">—</b></div>
+          <div class="mcard"><span>建议级别</span><b id="m-level">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在判读…</div>
+      </div>
+
+      <!-- 面板 3：发光强度直方图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 发光强度直方图与分割阈值</h2>
+          <span class="hint">竖线为当前亮度阈值，悬停读取各亮度档像元构成</span>
+        </div>
+        <div class="chart-box" id="hist-box">
+          <canvas id="hist" width="430" height="200" role="img" aria-label="发光强度直方图"></canvas>
+          <div class="chart-tip" id="hist-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>荧光·通过</span>
+          <span><i style="background:#9db8ac"></i>荧光·被拦截</span>
+          <span><i style="background:#41699b"></i>泥浆反光·误入</span>
+          <span><i style="background:#c3ccd8"></i>泥浆反光·剔除</span>
+          <span><i style="background:#d5cfbf"></i>岩屑 / 本底</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：井深剖面 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 荧光级别井深剖面 · 与岩性 / 气测对比</h2>
+          <span class="hint">随灯源与泥浆参数整剖面重判；红绿点=判读与描述是否一致；横虚线为当前采样深度</span>
+        </div>
+        <div class="chart-box" id="prof-box">
+          <canvas id="prof" width="430" height="300" role="img" aria-label="荧光级别井深剖面"></canvas>
+          <div class="chart-tip" id="prof-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>岩屑描述级别（阶梯线）</span>
+          <span><i style="background:#2f7d6b"></i>模型判读一致</span>
+          <span><i style="background:#b05a51"></i>模型判读偏差</span>
+          <span><i style="background:#b05a51"></i>气测全烃 TG（对数轴）</span>
+          <span><i style="background:#d8c49a"></i>砂岩&nbsp;&nbsp;<i style="background:#b9bec2"></i>泥岩</span>
+        </div>
+      </div>
+
+      <p class="foot">判读模型：F = K·I·θ·C，灯管衰减 I(h) = I₀·(1 − 0.3·min(h,500)/500)；荧光面积比 FAR = 通过阈值的荧光像元 / 岩屑像元；油性指数 Oc = FAR × V̄ × 100，分级边界 7 / 20 / 42（1 级 荧光 · 2 级 油迹 · 3 级 油斑 · 4 级 油浸）；评估口径（SY/T 6020）：严格一致率 ≥75%、相邻一级一致率 ≥95%、加权 κ ≥0.80。</p>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>样品与成像参数（8 项）</h2>
+          <span class="hint">拖动即时重判</span>
+        </div>
+        <div class="sync-note" id="true-note">岩屑描述（真实级别）：<b id="true-level">—</b></div>
+        <div class="controls">
+          <div class="ctl">
+            <label>采样井深 <output id="o-depth">1260 m</output></label>
+            <input type="range" id="s-depth" min="800" max="1600" step="5" value="1260">
+            <span class="tip">沿剖面取样，真实级别由岩屑描述给定</span>
+          </div>
+          <div class="ctl">
+            <label>油品类型</label>
+            <select id="sel-oil">
+              <option value="heavy" selected>稠油 18–22°API（暗黄褐 ≈585 nm）</option>
+              <option value="light">轻质油 ≈38°API（蓝白 ≈470 nm）</option>
+            </select>
+            <span class="tip">荧光颜色由芳香烃组分决定</span>
+          </div>
+          <div class="ctl">
+            <label>岩性</label>
+            <select id="sel-lith">
+              <option value="sand" selected>砂岩</option>
+              <option value="gravel">含砾砂岩</option>
+              <option value="muddy">泥质砂岩</option>
+            </select>
+            <span class="tip">影响岩屑形态与本底反光</span>
+          </div>
+          <div class="ctl">
+            <label>灯管累计点亮 <output id="o-lamp">120 h</output></label>
+            <input type="range" id="s-lamp" min="0" max="800" step="10" value="120">
+            <span class="tip">满 500 h 强度衰减约 30%，须强制换灯</span>
+          </div>
+          <div class="ctl">
+            <label>油基泥浆附着 <output id="o-mud">0 %</output></label>
+            <input type="range" id="s-mud" min="0" max="60" step="2" value="0">
+            <span class="tip">油基钻井液发蓝白、连片低饱和假荧光</span>
+          </div>
+          <div class="ctl">
+            <label>饱和度阈值 <output id="o-sat">0.35</output></label>
+            <input type="range" id="s-sat" min="0.10" max="0.60" step="0.01" value="0.35">
+            <span class="tip">低于此饱和度视为非荧光（剔除泥浆反光）</span>
+          </div>
+          <div class="ctl">
+            <label>亮度阈值 <output id="o-val">0.18</output></label>
+            <input type="range" id="s-val" min="0.05" max="0.50" step="0.01" value="0.18">
+            <span class="tip">低于此亮度不计入荧光面积</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reseed">换一块岩屑</button>
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">灯源 &gt; 500 h 触发换灯警告</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 行业标准：分级与统计口径</h2><span class="hint">demo 的判读级别定义与评估指标来源</span></div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 6611-2017《石油定量荧光录井规范》</b>（代替 SY/T 6611-2005，国家能源局 2017-03-28 发布）：规定定量荧光录井的样品选取、分析、资料解释与报告编制要求。<b>用于本 demo：</b>样品制备流程、油性指数 Oc 与含油浓度的换算口径、标准荧光片校准要求。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F24403BB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准全文↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 6020-1994《探井地质录井油气水层解释符合率统计方法》</b>（中国石油天然气总公司，1995-01-18 发布、1995-07-01 实施）。<b>用于本 demo：</b>判读「合格」的统计口径——严格一致率、相邻一级一致率与符合率的定义，对应页脚评估指标（≥75% / ≥95% / κ≥0.80）。</span>
+        <a href="https://std.samr.gov.cn/hb/search/stdHBDetailed?id=8B1827F14286BB19E05397BE0A0AB44A" target="_blank" rel="noopener">标准信息↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 定量荧光物理模型与灯源衰减</h2><span class="hint">亮度生成与「换灯」滑块的依据</span></div>
+      <div class="src-bar">
+        <span class="tag real">技术文献</span>
+        <span><b>中国石油集团《定量荧光录井识别低孔低渗油气层新技术》（cnpc.com.cn 技术手册）</b>：被测物质浓度 &lt; 60 mg/L 时，荧光强度 F = K·I·θ·C——与激发光强 I、荧光效率 θ、含油浓度 C 成正比。<b>用于本 demo：</b>图像亮度的生成公式；灯管老化即 I 下降，500 h 衰减 30% 时同一岩屑的亮度与判读级别同步下移。</span>
+        <a href="https://www.cnpc.com.cn/syzs/ktkf/201206/bc080f0bbb534d3a9f3aec8a9fa67760.shtml" target="_blank" rel="noopener">来源↗</a>
+      </div>
+      <div class="chart-wrap">
+        <svg id="lit-chartF" viewBox="0 0 900 240" role="img" aria-label="荧光强度与含油浓度线性响应及灯源衰减示意图"></svg>
+      </div>
+      <div class="legend" style="margin-top:4px">
+        <span><i style="background:#2f7d6b"></i>新灯管 I₀（F = K·I₀·θ·C）</span>
+        <span><i style="background:#b05a51"></i>500 h 灯管 0.7·I₀</span>
+        <span><i style="background:#c9a15a"></i>同一岩屑：3 级 → 2 级误判</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 油质-荧光颜色关系与油基泥浆干扰</h2><span class="hint">油品选择器与「泥浆反光剔除」规则的依据</span></div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>Liu K., Eadington P. et al. (2005), Organic Geochemistry 36(7):1023–1036</b>：提出储层颗粒定量荧光 QGF 与萃取液定量荧光 QGF-E，以荧光发射光谱（主波长 / 强度）识别现今油层与残留油层；发射波长随油质变重而红移。<b>用于本 demo：</b>稠油暗黄褐（≈585 nm）与轻质油蓝白（≈470 nm）的颜色-主波长映射。</span>
+        <a href="https://www.osti.gov/etdeweb/biblio/20714660" target="_blank" rel="noopener">摘要↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>Reyes et al. (1994), Application of Fluorescence Techniques for Mud-Logging Analysis of Oil Drilled With Oil-Based Muds</b>：油基钻井液在紫外下整体发蓝白荧光，需用溶剂萃取与固定滤光片荧光计（QFT 便携荧光计原型）区分泥浆荧光与地层油荧光。<b>用于本 demo：</b>「油基泥浆附着」滑块的假荧光建模——低饱和度、连片、无颗粒边界，须靠饱和度阈值剔除。</span>
+        <a href="https://www.sci-hub.st/download/2024/5332/3a0c84358edf73d1c1b04e0a68f69d65/reyes1994.pdf" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">综述</span>
+        <span><b>《储层定量荧光技术及其在油气成藏研究中的应用》，地球科学 2016, 41(3):373–384</b>：系统总结 QGF / QGF-E / TSF 系列技术，荧光强度与含油饱和度存在单调对应关系。<b>用于本 demo：</b>含油级别 1—4 级 → 荧光面积比与亮度的单调生成模型。</span>
+        <a href="http://www.earth-science.net/fileDQKX/journal/article/dqkxzx/2016/3/dqkx-41-3-373.pdf" target="_blank" rel="noopener">PDF↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 色彩空间与跨井色差度量</h2><span class="hint">成像标准化的度量依据</span></div>
+      <div class="src-bar">
+        <span class="tag real">国际标准</span>
+        <span><b>CIE Publication 15:2004《Colorimetry》（CIELAB / ΔE*ab）</b>：与设备无关的颜色度量与色差公式。<b>用于本 demo：</b>「跨井色差 ΔE 11.4 → 3.2」的度量口径；HSV 阈值分割前先做白平衡与色温归一的动机。</span>
+        <a href="https://cie.co.at/publications/colorimetry-4th-edition" target="_blank" rel="noopener">CIE↗</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>⑤ 数据来源汇总（7 条）</h2><span class="hint">每条数据如何用于本 demo</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>关键数据 / 结论</th><th>在本 demo 中的用途</th></tr></thead>
+        <tbody id="lit-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

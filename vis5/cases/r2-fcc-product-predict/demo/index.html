@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：催化裂化产物分布智能预测</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>催化裂化产物分布智能预测 · 交互式演示</h1>
+      <p class="lead">350 万吨/年装置（420 t/h）。拖动反应温度、剂油比、回炼比与原料 / 催化剂性质，看转化率、五类产品收率、辛烷值与再生温度约束如何联动，并在「多产汽油 ↔ 多产柴油」之间寻优。</p>
+    </div>
+    <span class="badge">多任务深度回归口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>典型产品分布 干气 3%—5%、液化气 13%—18%、汽油 40%—48%、柴油 20%—26%、油浆 5%—9%（收率 + 损失闭合至 100%）；剂油比 6—8、再生温度 680—700 ℃；汽油收率绝对误差目标 ≤0.8 个百分点；预测刷新 1 h/次。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+
+      <!-- 面板 1：装置示意 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 提升管反应器 — 再生器系统示意</h2>
+          <span class="hint">再生器颜色随再生温度加深，超限变红</span>
+        </div>
+        <div class="chart-wrap"><svg id="unit" viewBox="0 0 460 262" role="img" aria-label="提升管反应器与再生器示意"></svg></div>
+        <div class="readouts">
+          <div class="ro"><span>反应温度</span><b id="r-treact">—</b></div>
+          <div class="ro"><span>再生温度</span><b id="r-treg">—</b></div>
+          <div class="ro"><span>生焦量</span><b id="r-coke">—</b></div>
+          <div class="ro"><span>汽油产量</span><b id="r-gas">—</b></div>
+        </div>
+      </div>
+
+      <!-- 面板 2：产品分布堆叠条图 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 产品分布（收率闭合 = 100%，含 0.5% 损失）</h2>
+          <span class="hint">悬停读数 · 干气/液化气/汽油/柴油/油浆/焦炭</span>
+        </div>
+        <div class="chart-box" id="stk-box">
+          <canvas id="stack" width="430" height="168" role="img" aria-label="产品分布堆叠条图"></canvas>
+          <div class="chart-tip" id="stk-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:rgba(121,130,138,.45)"></i>干气</span>
+          <span><i style="background:#c9a15a"></i>液化气</span>
+          <span><i style="background:#2f7d6b"></i>汽油</span>
+          <span><i style="background:#41699b"></i>柴油</span>
+          <span><i style="background:#b05a51"></i>油浆</span>
+          <span><i style="background:#79828a"></i>焦炭</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：收率-转化率曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 收率 — 转化率曲线（其余参数取当前值）</h2>
+          <span class="hint">悬停读数 · 竖线为当前转化率 · 汽油过裂化拐点 ≈75%</span>
+        </div>
+        <div class="chart-box" id="cv-box">
+          <canvas id="conv" width="430" height="230" role="img" aria-label="收率随转化率变化曲线"></canvas>
+          <div class="chart-tip" id="cv-tip"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>汽油（先升后降 · 过裂化）</span>
+          <span><i style="background:#41699b"></i>柴油</span>
+          <span><i style="background:#c9a15a"></i>液化气</span>
+          <span><i style="background:#b05a51"></i>焦炭</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 诊断 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 关键指标与诊断</h2>
+          <span class="hint">转化率 / 收率 / RON / 再生温度约束</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>总转化率</span><b id="m-conv">—</b></div>
+          <div class="mcard"><span>汽油收率</span><b id="m-gas">—</b></div>
+          <div class="mcard"><span>柴油收率</span><b id="m-die">—</b></div>
+          <div class="mcard"><span>焦炭收率</span><b id="m-coke">—</b></div>
+          <div class="mcard"><span>汽油 RON</span><b id="m-ron">—</b></div>
+          <div class="mcard"><span>再生温度</span><b id="m-treg">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+
+      <!-- 面板 5：操作点寻优 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑥ 操作点可行域与目标优化</h2>
+          <span class="hint">42 个候选 = 7 档反应温度 × 6 档剂油比（其余参数沿用当前）</span>
+        </div>
+        <p class="hint">横轴汽油收率、纵轴柴油收率；红色点为再生温度 &gt; 715 ℃ 的不可行候选；金色描边为帕累托前沿（汽油、柴油不可同时再增）。点击散点载入该候选的反应温度与剂油比。</p>
+        <div class="chart-wrap"><svg id="opt" viewBox="0 0 430 250" role="img" aria-label="汽油柴油收率权衡散点图"></svg></div>
+        <div class="btn-row">
+          <button id="btn-gen" type="button">生成 42 个候选方案</button>
+          <button id="btn-gas" type="button">多产汽油方案</button>
+          <button id="btn-die" type="button">多产柴油方案</button>
+          <button id="btn-front" type="button">仅显示帕累托前沿</button>
+        </div>
+        <div class="legend" style="margin-top:6px">
+          <span><i style="background:#2f7d6b"></i>可行候选</span>
+          <span><i style="background:#b05a51"></i>再生温度超限</span>
+          <span><i style="background:#c9a15a"></i>帕累托前沿</span>
+          <span style="color:#79828a;font-size:10px">大点 = 当前操作点</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 操作变量 · 原料 · 催化剂（7 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>反应温度 <output id="o-temp">505 ℃</output></label>
+            <input type="range" id="s-temp" min="490" max="530" step="1" value="505">
+            <span class="tip">升温加深裂化：气体↑、RON↑，过高汽油过裂化</span>
+          </div>
+          <div class="ctl">
+            <label>剂油比 C/O <output id="o-co">6.5</output></label>
+            <input type="range" id="s-co" min="4" max="10" step="0.1" value="6.5">
+            <span class="tip">剂油比↑转化率↑，但再生器负荷↑</span>
+          </div>
+          <div class="ctl">
+            <label>回炼比 <output id="o-rec">0.20</output></label>
+            <input type="range" id="s-rec" min="0" max="0.6" step="0.02" value="0.20">
+            <span class="tip">回炼比↑单程转化率↓，油浆↓</span>
+          </div>
+          <div class="ctl">
+            <label>原料残炭 CCR <output id="o-ccr">2.0 %</output></label>
+            <input type="range" id="s-ccr" min="0" max="6" step="0.1" value="2.0">
+            <span class="tip">残炭↑焦炭↑、油浆↑，再生温度压力大</span>
+          </div>
+          <div class="ctl">
+            <label>原料密度 <output id="o-rho">0.915 g/cm³</output></label>
+            <input type="range" id="s-rho" min="0.890" max="0.950" step="0.001" value="0.915">
+            <span class="tip">密度大原料变重，可裂化性下降</span>
+          </div>
+          <div class="ctl">
+            <label>馏程 50% 点 <output id="o-t50">420 ℃</output></label>
+            <input type="range" id="s-t50" min="380" max="460" step="2" value="420">
+            <span class="tip">馏程越重，转化率越低、油浆越多</span>
+          </div>
+          <div class="ctl">
+            <label>平衡剂微反活性 MAT <output id="o-mat">66</output></label>
+            <input type="range" id="s-mat" min="55" max="75" step="1" value="66">
+            <span class="tip">ASTM D3907 口径；活性↓转化率与汽油↓</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">再生温度约束 ≤ 715 ℃（典型 680—700 ℃）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">代理模型：转化率 X = 66 + 0.9·(T−505) + 3.0·(C/O−6.5) − 9·(回炼比−0.2) + 0.55·(MAT−66) − 1.5·(CCR−2) − 40·(ρ−0.915) − 0.10·(T50−420)，截断 50—92%；汽油 = 1.2X − 0.008X²（拐点 X=75%，过裂化下降），干气 = 0.07X − 1.6 + 0.03(T−505)，液化气 = 0.34X − 10.2 + 0.09(T−505)，油浆 = (100−X)·(0.20+0.03·CCR)，柴油 = 未转化 − 油浆，焦炭 = 0.075X + 0.5·CCR − 0.9 − 0.02(T−505)，六类 + 0.5% 损失归一闭合至 100%；RON = 88 + 0.10(T−505) + 0.05(X−66) + 0.15(MAT−66)；再生温度 = 630 + 12·焦炭 + 4·(C/O−6.5) + 1.5·CCR，约束 ≤ 715 ℃。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 典型工业产品分布区间（工艺手册口径）</h2><span class="hint">悬停读数 · 区间为 350 万吨/年级装置常见范围</span></div>
+      <div class="src-bar">
+        <span class="tag real">手册数据</span>
+        <span><b>陈俊武、曹汉昌《催化裂化工艺与工程》（中国石化出版社，2005 再版，ISBN 9787800435379）</b>：工业装置典型产品分布 —— 干气 3%—5%、液化气 13%—18%、汽油 40%—48%、柴油 20%—26%、油浆 5%—9%、焦炭 4%—6%；剂油比 6—8、再生温度 680—700 ℃。</span>
+      </div>
+      <div class="chart-box" id="rg-box">
+        <canvas id="range" width="900" height="230" role="img" aria-label="典型产品分布区间图"></canvas>
+        <div class="chart-tip" id="rg-tip"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 集总动力学趋势：汽油收率存在过裂化拐点</h2><span class="hint">趋势示意（按文献结论绘制，非逐点数字化） · 悬停读数</span></div>
+      <div class="src-bar">
+        <span class="tag real">经典文献</span>
+        <span><b>Weekman &amp; Nace (1970), AIChE J. 16(3):397–404</b>：三集总模型（瓦斯油 → 汽油 → 气体+焦炭）预言汽油收率随转化率先升后降；<b>Lee et al. (1989), Can. J. Chem. Eng. 67(4):615–619</b> 四集总模型进一步分出焦炭集总，并指出 C₁—C₄ 气体收率随反应温度升高而增大。</span>
+        <a href="https://doi.org/10.1002/aic.690160329" target="_blank" rel="noopener">DOI↗</a>
+      </div>
+      <div class="chart-box" id="tr-box">
+        <canvas id="trend" width="900" height="240" role="img" aria-label="汽油收率随转化率变化趋势示意图"></canvas>
+        <div class="chart-tip" id="tr-tip"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 文献与标准清单（8 条，均真实可查证）</h2><span class="hint">每条注明与本 demo 模块的对应关系</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>关键内容 / 数据</th><th>对应本 demo 模块</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Weekman V.W., Nace D.M. (1970). <i>Kinetics of Catalytic Cracking Selectivity in Fixed, Moving, and Fluid Bed Reactors</i>. AIChE Journal 16(3):397–404. DOI:10.1002/aic.690160329</td><td>三集总（瓦斯油/汽油/气体+焦炭）动力学；汽油为中间产物，收率随转化率先升后降</td><td>面板④ 收率—转化率曲线的过裂化趋势</td></tr>
+          <tr><td class="num">2</td><td>Lee L.-S., Chen Y.-W., Huang T.-N., Pan W.-Y. (1989). <i>Four-lump kinetic model for fluid catalytic cracking process</i>. Can. J. Chem. Eng. 67(4):615–619. DOI:10.1002/cjce.5450670414</td><td>四集总分出焦炭集总；C₁—C₄ 气体收率随温度升高，汽油存在极大值</td><td>面板③ 产品分布中干气/液化气的温度敏感性</td></tr>
+          <tr><td class="num">3</td><td>Jacob S.M., Gross B., Voltz S.E., Weekman V.W. (1976). <i>A Lumping and Reaction Scheme for Catalytic Cracking</i>. AIChE Journal 22(4):701–713. DOI:10.1002/aic.690220412</td><td>十集总模型：按馏分段 × 烷烃/环烷/芳烃族组成刻画原料</td><td>侧栏原料性质入模方式（密度/残炭/馏程）</td></tr>
+          <tr><td class="num">4</td><td>陈俊武、曹汉昌 主编《催化裂化工艺与工程》，中国石化出版社，2005 年再版（1995 首版），ISBN 9787800435379</td><td>工艺参数范围：剂油比 6—8、再生温度 680—700 ℃、回炼操作；典型产品分布区间</td><td>滑块取值范围 + 面板① 装置示意 + 区间图①</td></tr>
+          <tr><td class="num">5</td><td>Sadeghbeigi R. <i>Fluid Catalytic Cracking Handbook</i>, 3rd ed., Elsevier, 2012. ISBN 9780123869654</td><td>反应—再生热平衡：生焦量决定再生温度，剂油比受约束</td><td>再生温度约束（指标卡 + 面板⑥ 可行域）</td></tr>
+          <tr><td class="num">6</td><td>ASTM D3907/D3907M-25 <i>Testing FCC Catalysts by Microactivity Test</i>；ASTM D5154/D5154M-25 <i>Determining Activity and Selectivity of FCC Catalysts by MAT</i></td><td>微反活性（MAT）是平衡剂活性的标准测度，工业平衡剂 MAT 常见 55—75</td><td>侧栏「平衡剂微反活性 MAT」滑块</td></tr>
+          <tr><td class="num">7</td><td>MsrtNet（多尺度 CNN）用于 2.8 Mt/a 工业 FCC 装置产品收率预测，<i>Petroleum Science</i>（中国石油大学（北京）学报英文版，2024 录用稿）</td><td>时序深度学习预测汽油/柴油收率，较常规时序模型误差降约 30%</td><td>本案例「多任务深度回归」定位与误差口径</td></tr>
+          <tr><td class="num">8</td><td>Feed-aware FCC 建模（异常检测 + 按原料化学分段 + 贝叶斯优化回归，GPR/BT），<i>J. Chem. Inf. Model.</i> 66(1)，2026</td><td>按原料性质分段建模显著提升 FCC 中试装置收率预测精度</td><td>案例流程中「原料切换快速适应」环节</td></tr>
+        </tbody>
+      </table>
+      <div class="r-detail" id="real-note">说明：本页图表中，区间图① 取自手册典型范围；趋势图② 为按文献结论绘制的<b>趋势示意</b>（汽油收率先升后降、气体随温度增大），非逐点数字化数据。模拟页所有数值由页脚代理模型实时计算，仅用于交互演示。</div>
+    </div>
+
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

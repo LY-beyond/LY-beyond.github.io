@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：蒸汽吞吐注采参数智能优化</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>蒸汽吞吐注采参数智能优化 · 交互式演示</h1>
+      <p class="lead">调节注汽量、注汽速度、井口干度、焖井天数与采液速度，看多周期产油量与油汽比（OSR）递减曲线、地层温度剖面与注汽量—净收益权衡如何联动，并给出多周期口径下的最优注汽量建议。</p>
+    </div>
+    <span class="badge">SY/T 6257 口径</span>
+  </div>
+
+  <p class="data-src"><b>数据口径：</b>SY/T 6257《蒸汽吞吐注采工艺方案设计》；加热半径按 Marx &amp; Langenheim (1959) 热侵模型估计；周期产量形态参照 Boberg &amp; Lantz (1966, SPE-1294-PA) 三段式热损失方法；注汽速度上限 12 t/h（管网约束）；井筒热损失使井底干度较井口低约 10 个百分点；蒸汽成本 200 元/t、油价 3,000 元/t；油汽比 OSR = 周期产油 / 周期注汽量（t/t）。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="real" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <!-- 面板 1：多周期递减曲线 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 多周期吞吐：周期产油与油汽比递减</h2>
+          <span class="hint">柱 = 周期产油（左轴）· 线 = 油汽比（右轴）· 悬停读数</span>
+        </div>
+        <div class="chart-box" id="boxA">
+          <canvas id="cv-cycles" width="460" height="252" role="img" aria-label="多周期产油量与油汽比递减图"></canvas>
+          <div class="chart-tip" id="tipA"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>周期产油量 (t)</span>
+          <span><i style="background:#c9a15a"></i>周期油汽比 OSR (t/t)</span>
+          <span><i style="background:#b05a51"></i>目标 OSR 0.48</span>
+        </div>
+      </div>
+
+      <!-- 面板 2：地层温度剖面 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 地层温度剖面与加热半径</h2>
+          <span class="hint">距井径向温度分布 · 注汽末 / 焖井末 / 生产 30 天三阶段 · 悬停读数</span>
+        </div>
+        <div class="chart-box" id="boxB">
+          <canvas id="cv-temp" width="460" height="238" role="img" aria-label="地层温度径向剖面图"></canvas>
+          <div class="chart-tip" id="tipB"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#b05a51"></i>注汽结束</span>
+          <span><i style="background:#c9a15a"></i>焖井结束</span>
+          <span><i style="background:#41699b"></i>生产 30 天</span>
+          <span><i style="background:#79828a"></i>油层原始温度 45 ℃</span>
+        </div>
+      </div>
+
+      <!-- 面板 3：注汽量—净收益权衡 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 注汽量—净收益权衡（未来 3 周期累计）</h2>
+          <span class="hint">其余参数固定为当前值，扫描周期注汽量 · 虚线 = 当前方案 · 金点 = 净收益最优 · 悬停读数</span>
+        </div>
+        <div class="chart-box" id="boxC">
+          <canvas id="cv-trade" width="460" height="238" role="img" aria-label="注汽量与净收益权衡曲线"></canvas>
+          <div class="chart-tip" id="tipC"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>3 周期累计产油收入</span>
+          <span><i style="background:#79828a"></i>3 周期累计成本</span>
+          <span><i style="background:#b05a51"></i>3 周期累计净收益</span>
+        </div>
+      </div>
+
+      <!-- 面板 4：指标卡 + 结论 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>⑤ 关键指标与方案评价</h2>
+          <span class="hint">按当前滑块参数即时重算</span>
+        </div>
+        <div class="metrics">
+          <div class="mcard"><span>本周期产油</span><b id="m-oil">—</b></div>
+          <div class="mcard"><span>本周期油汽比</span><b id="m-osr">—</b></div>
+          <div class="mcard"><span>3 周期累计 OSR</span><b id="m-osr3">—</b></div>
+          <div class="mcard"><span>加热半径</span><b id="m-rh">—</b></div>
+          <div class="mcard"><span>3 周期净收益</span><b id="m-net3">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <!-- 控制面板 -->
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 注采参数（6 项）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>周期注汽量 <output id="o-V">2000 t</output></label>
+            <input type="range" id="s-V" min="1200" max="3000" step="50" value="2000">
+            <span class="tip">区块现状 1800–2400 t；边际收益递减</span>
+          </div>
+          <div class="ctl">
+            <label>注汽速度 <output id="o-qi">10 t/h</output></label>
+            <input type="range" id="s-qi" min="6" max="14" step="0.5" value="10">
+            <span class="tip">管网硬约束上限约 12 t/h；过快加剧汽窜</span>
+          </div>
+          <div class="ctl">
+            <label>井口干度 <output id="o-xw">72 %</output></label>
+            <input type="range" id="s-xw" min="55" max="80" step="1" value="72">
+            <span class="tip">井筒热损失使井底干度低约 10 个百分点</span>
+          </div>
+          <div class="ctl">
+            <label>焖井天数 <output id="o-soak">6 d</output></label>
+            <input type="range" id="s-soak" min="3" max="12" step="1" value="6">
+            <span class="tip">文献常规 3–14 d；收益递减且受排产约束</span>
+          </div>
+          <div class="ctl">
+            <label>采液速度 <output id="o-qo">70 t/d</output></label>
+            <input type="range" id="s-qo" min="30" max="120" step="5" value="70">
+            <span class="tip">强采提本周期产量，但加速下周期递减</span>
+          </div>
+          <div class="ctl">
+            <label>当前周期序号 <output id="o-n0">第 5 周期</output></label>
+            <input type="range" id="s-n0" min="1" max="12" step="1" value="5">
+            <span class="tip">区块单井已吞吐 10–22 周期；序号越大基数越低</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">蒸汽 200 元/t · 油价 3,000 元/t</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型（示意级，非油藏数值模拟）：井底干度 x_bh = 井口干度 − 10pp；注入热量指数 E = 注汽量 × x_bh；加热半径 r_h = 14·√(E/1000)·(1+0.04·(焖井−6)) m（Marx-Langenheim 形式）；周期产油 O(n) = 1300·(V/2000)^0.55·(qi/10)^0.15·(x_bh/0.62)^0.8·f(焖井)·(qo/70)^0.35·d^(n−1)，递减因子 d = 0.90 − 0.006·(qo−70)/10 − 0.005·(V−2000)/200（强采与大注汽透支下周期）；周期净收益 = 0.3·O − 0.02·V − 10（万元）。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 真实数据来源页 ================= -->
+  <div class="tabpane" id="pane-real">
+
+    <div class="section">
+      <div class="sec-head"><h2>① 经典理论模型（周期产量与加热半径的物理基础）</h2></div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Marx, J.W. &amp; Langenheim, R.H. (1959), “Reservoir Heating by Hot Fluid Injection”, Trans. AIME 216: 312</b>：给出注热流体过程中受热面积与累积注热量的解析关系，是估算蒸汽吞吐加热体积/加热半径的经典模型。<b>在本 demo 中：</b>加热半径 r_h 随 √(注汽量×井底干度) 增长、并随焖井时间小幅扩展的函数形式即取自该模型的平方根时间律。</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Boberg, T.C. &amp; Lantz, R.B. (1966), “Calculation of the Production Rate of a Thermally Stimulated Well”, JPT 18(12): 1613–1623（SPE-1294-PA）</b>：把蒸汽吞吐分为注入、焖井、生产三段计算热损失与产量响应，被广泛用于优选处理规模。<b>在本 demo 中：</b>周期产油对注汽量的次线性（指数 0.55）响应、焖井收益的 (1−e^(−t/τ)) 递减形态，以及三阶段温度剖面曲线，均按该方法的结构搭建。</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">SPE 文献</span>
+        <span><b>Towson, D.E. &amp; Boberg, T.C. (1967), “Gravity Drainage in Thermally Stimulated Wells”, JPT 19(11): 1481–1491</b>：指出热采井增产中重力泄油的作用，修正 Boberg-Lantz 方法在高黏度油藏的偏差。<b>在本 demo 中：</b>采液速度对周期产量的有限正效应（指数 0.35）与其对下周期递减的加速作用，体现「排液—能量消耗」权衡的机理设定。</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>② 行业标准与参数窗口</h2></div>
+      <div class="src-bar">
+        <span class="tag real">行业标准</span>
+        <span><b>SY/T 6257—2010《蒸汽吞吐注采工艺方案设计》（2024 年修订版现行）</b>：规定蒸汽吞吐注采参数设计的内容、方法与方案编制流程，是油田配注方案的行业口径。<b>在本 demo 中：</b>注汽量、干度、注汽速度、焖井天数、采液速度五项可调参数的选取与「方案编制」叙述框架对齐该标准。</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业文献</span>
+        <span><b>《石油地质与工程》：普通稠油油藏蒸汽吞吐后期注汽参数优化设计方法</b>：动态分析表明吞吐后期注汽速度超过 14 t/h 后油汽比基本不变，低于 12 t/h 时油汽比较高——高速度加剧蒸汽指进。<b>在本 demo 中：</b>注汽速度滑块上限设为 14 t/h、12 t/h 处给出管网约束提示，其收益指数取弱值 0.15。</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">行业文献</span>
+        <span><b>《石油学报》：稠油蒸汽吞吐注汽系统优化</b>：胜利单家寺热采油田吞吐井平均吸汽能力 8–15 t/h，单井周期注汽量 2500–5000 t，匹配 11.2 t/h 蒸发量锅炉。<b>在本 demo 中：</b>注汽速度量程 6–14 t/h 与「锅炉额定蒸发量决定速度上限」的约束说明取自该文献给出的装备口径。</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>③ 近期优化研究与工程经验</h2></div>
+      <div class="src-bar">
+        <span class="tag real">期刊论文</span>
+        <span><b>J. Mar. Sci. Eng. 2024, 12(7): 1186（海上稠油热采开发方案设计）</b>：数值模拟逐井寻优显示周期注汽量存在净收益最大值（示例井 1500 t 最优），且最优值随油层厚度变化。<b>在本 demo 中：</b>「注汽量—净收益权衡」曲线出现内点最优（而非单调增）正是该结论的复现，支撑「单周期最优 ≠ 累计最优」的案例论点。</span>
+      </div>
+      <div class="src-bar">
+        <span class="tag real">工程资料</span>
+        <span><b>Oil Authority Glossary, “Soak Phase”（加拿大 WCSB 稠油蒸汽吞吐工程口径）</b>：焖井期通常 3–14 天，取决于油层厚度、原油黏度与注汽量。<b>在本 demo 中：</b>焖井滑块范围取 3–12 天，并在 &lt;4 天与 &gt;10 天时给出热量未扩散 / 排产约束的工程提示。</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><h2>④ 关键口径对照表</h2><span class="hint">案例区块（辽河某稠油区块 210 井）与文献/标准口径的对应关系</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>参数 / 指标</th><th>本案例取值</th><th>文献 / 标准依据</th><th>在 demo 中的体现</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>周期注汽量</td><td class="num">1800–2400 t</td><td>石油学报·注汽系统优化：2500–5000 t（单家寺）；JMSE 2024：1500 t 最优示例</td><td>滑块 1200–3000 t，默认 2000 t</td></tr>
+          <tr><td class="num">2</td><td>注汽速度上限</td><td class="num">≤ 12 t/h</td><td>石油地质与工程：&gt;14 t/h 油汽比不再提升；单家寺吸汽能力 8–15 t/h</td><td>滑块上限 14 t/h，&gt;12 t/h 触发约束警告</td></tr>
+          <tr><td class="num">3</td><td>焖井天数</td><td class="num">5–9 d</td><td>Oil Authority：焖井 3–14 d；SY/T 6257 方案设计口径</td><td>滑块 3–12 d，默认 6 d</td></tr>
+          <tr><td class="num">4</td><td>井口→井底干度损失</td><td class="num">8–15 个百分点</td><td>Boberg-Lantz 三段热损失框架；井筒测温校正（案例流程第 2 步）</td><td>井底干度 = 井口干度 − 10pp 后参与热量计算</td></tr>
+          <tr><td class="num">5</td><td>周期油汽比递减</td><td class="num">0.68 → 0.42</td><td>Boberg-Lantz 周期递减结构；多周期数值模拟递减形态（JMSE 2024）</td><td>递减因子 d≈0.90，受注汽量与采液速度调制</td></tr>
+          <tr><td class="num">6</td><td>蒸汽成本 / 油价</td><td class="num">200 元/t · 3000 元/t</td><td>案例背景（注汽成本）；净收益评估口径（案例指标表）</td><td>净收益 = 0.3·产油 − 0.02·注汽量 − 10（万元）</td></tr>
+          <tr><td class="num">7</td><td>加热半径量级</td><td class="num">10–25 m</td><td>Marx-Langenheim 平方根律；Towson-Boberg 热区近似</td><td>r_h = 14·√(E/1000)·焖井修正，温度剖面标注</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="foot">说明：本页文献用于确定 demo 的模型结构、参数量程与工程约束，未逐点数字化原文图表；演示数据由案例给定的区块统计（210 井、OSR 0.68→0.42、蒸汽 200 元/t、油价 3000 元/t）经简化物理模型生成，非实测井数据。</p>
+  </div><!-- /pane-real -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

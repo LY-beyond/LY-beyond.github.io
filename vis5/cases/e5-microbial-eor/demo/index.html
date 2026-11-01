@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范：微生物采油菌群活性智能预测</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div>
+      <h1>微生物采油菌群活性智能预测 · 交互式演示</h1>
+      <p class="lead">调节油藏温度 / 矿化度 / 渗透率 / pH 与菌液注入量、营养液浓度、补注周期，看适应性筛选、菌群增殖—代谢产物时序、产油与含水响应如何联动，并测算增油量与投入产出比。</p>
+    </div>
+    <span class="badge">Monod 机理打底</span>
+  </div>
+
+  <p class="data-src"><b>筛选口径：</b>油藏温度 &lt; 80℃、地层水矿化度 &lt; 100,000 mg/L、pH 6–8、渗透率 &gt; 30 mD（SPE 145054 / DuPont 准则；Lazar 罗马尼亚矿场：≤55–60℃、≤70–100 g/L、150–300 mD）；注入营养液后 1–2 周菌群活化、产量响应滞后 3–8 周；综合含水基线 91%。</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="sim" role="tab">模拟演示</button>
+    <button class="tab" data-tab="src" role="tab">真实数据来源</button>
+  </div>
+
+  <!-- ================= 模拟演示页 ================= -->
+  <div class="tabpane active" id="pane-sim">
+  <div class="layout">
+    <div class="viz">
+      <div class="section">
+        <div class="sec-head">
+          <h2>① 油藏适应性筛选</h2>
+          <span class="hint">绿色为适宜带、黄色为边缘带；标记为当前工况，悬停读取评分</span>
+        </div>
+        <div class="chart-box" id="boxA">
+          <canvas id="cv-suit" width="430" height="212" role="img" aria-label="油藏适应性筛选图"></canvas>
+          <div class="chart-tip" id="tipA"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>② 菌群增殖 · 代谢产物时序（两轮补注）</h2>
+          <span class="hint">Monod 生长 + 营养消耗 + 代谢产物生成；悬停读取周值</span>
+        </div>
+        <div class="chart-box" id="boxB">
+          <canvas id="cv-grow" width="430" height="216" role="img" aria-label="菌浓与代谢产物时序曲线"></canvas>
+          <div class="chart-tip" id="tipB"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>菌浓 log₁₀(CFU/mL)（左轴）</span>
+          <span><i style="background:#41699b"></i>代谢产物强度（右轴）</span>
+          <span><i style="background:#c9a15a"></i>营养余量 %（右轴）</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>③ 产油量与含水率响应（井组平均）</h2>
+          <span class="hint">增油响应滞后注入 3–8 周；虚线为不补注基线</span>
+        </div>
+        <div class="chart-box" id="boxC">
+          <canvas id="cv-prod" width="430" height="216" role="img" aria-label="产油量与含水率响应曲线"></canvas>
+          <div class="chart-tip" id="tipC"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2f7d6b"></i>日产油（左轴，t/d）</span>
+          <span><i style="background:#8a9298"></i>不补注基线</span>
+          <span><i style="background:#b05a51"></i>综合含水率（右轴，%）</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head">
+          <h2>④ 关键指标与决策提示</h2>
+          <span class="hint">按 9 口注入井对应井组测算单轮效果</span>
+        </div>
+        <div class="metrics" style="margin-bottom:8px">
+          <div class="mcard"><span>综合适应性指数</span><b id="m-adapt">—</b></div>
+          <div class="mcard"><span>峰值菌浓</span><b id="m-npeak">—</b></div>
+          <div class="mcard"><span>试验区单轮增油</span><b id="m-oil">—</b></div>
+          <div class="mcard"><span>轮次注入成本</span><b id="m-cost">—</b></div>
+          <div class="mcard"><span>投入产出比</span><b id="m-roi">—</b></div>
+        </div>
+        <div class="verdict" id="verdict">正在计算…</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="section">
+        <div class="sec-head">
+          <h2>油藏条件（筛选输入）</h2>
+          <span class="hint">拖动即时重算</span>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>油藏温度 <output id="o-temp">65 ℃</output></label>
+            <input type="range" id="s-temp" min="30" max="95" step="1" value="65">
+            <span class="tip">适宜 35–70℃；&gt;80℃ 多数菌种失活</span>
+          </div>
+          <div class="ctl">
+            <label>地层水矿化度 <output id="o-sal">30,000 mg/L</output></label>
+            <input type="range" id="s-sal" min="0" max="150000" step="5000" value="30000">
+            <span class="tip">适宜 &lt; 6×10⁴ mg/L；&gt; 10⁵ mg/L 受抑</span>
+          </div>
+          <div class="ctl">
+            <label>渗透率 <output id="o-perm">300 mD</output></label>
+            <input type="range" id="s-perm" min="10" max="2000" step="10" value="300">
+            <span class="tip">&lt; 30 mD 菌群与营养难以运移</span>
+          </div>
+          <div class="ctl">
+            <label>地层水 pH <output id="o-ph">7.0</output></label>
+            <input type="range" id="s-ph" min="4" max="10" step="0.1" value="7">
+            <span class="tip">中性 6–8 最佳</span>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="sec-head">
+          <h2>注入方案（决策变量）</h2>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>单井次菌液+营养液量 <output id="o-vol">500 m³</output></label>
+            <input type="range" id="s-vol" min="200" max="800" step="50" value="500">
+            <span class="tip">先导试验口径 400–600 m³/井次</span>
+          </div>
+          <div class="ctl">
+            <label>营养液浓度 <output id="o-conc">2.2 %</output></label>
+            <input type="range" id="s-conc" min="0.5" max="4" step="0.1" value="2.2">
+            <span class="tip">先导试验口径 1.5%–3%；过量易堵塞</span>
+          </div>
+          <div class="ctl">
+            <label>补注周期 <output id="o-period">45 天</output></label>
+            <input type="range" id="s-period" min="20" max="60" step="5" value="45">
+            <span class="tip">现场原按固定 45 天一轮；过频增成本，过疏菌群衰亡</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button id="btn-reset">恢复默认</button>
+          <span class="btn-note">26 周 · 两轮补注 · 井组平均</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">模型口径：适应性 A = 0.30·s(T) + 0.25·s(S) + 0.25·s(k) + 0.20·s(pH)；剂量 dose = (V/500)·(C/2.2)；菌浓按 Monod 型脉冲增长（滞后 1–2 周活化，峰后指数衰减），营养余量随消耗衰减，代谢产物强度 ∝ A·dose^0.5；增油响应滞后 L = 3 + 2·(1−A) 周，Δq_max = 0.35·A·dose^0.5 t/d；含水基线 91%，降幅 ∝ 响应；成本 = 9 井 × 7.5 万元 × (V/500)^0.85 × (C/2.2)^0.6；油价按 2,600 元/t 折算投入产出比。</p>
+  </div><!-- /pane-sim -->
+
+  <!-- ================= 数据来源页 ================= -->
+  <div class="tabpane" id="pane-src">
+    <div class="section">
+      <div class="sec-head"><h2>真实文献与矿场数据来源</h2><span class="hint">本 demo 的筛选阈值、时序形态与测算量级均锚定下列公开来源；页面本身离线运行、数值为教学化简化</span></div>
+      <div id="src-list"></div>
+    </div>
+    <div class="section">
+      <div class="sec-head"><h2>来源速览表</h2><span class="hint">点击卡片或表行无跳转外链，DOI/编号可在出版方页面检索</span></div>
+      <table class="lit-table">
+        <thead><tr><th>#</th><th>来源</th><th>关键数据</th><th>在 demo 中的用途</th></tr></thead>
+        <tbody id="src-body"></tbody>
+      </table>
+    </div>
+  </div><!-- /pane-src -->
+</div>
+<script src="demo.js"></script>
+</body>
+</html>
